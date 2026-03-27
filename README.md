@@ -15,10 +15,10 @@ Dự án được phát triển cho môn **Lập trình nâng cao** tại Đại
 ## 👥 Thành viên nhóm
 | STT | Họ và tên |
 | :--- | :--- |
-| 1 | **Trương Bảo Kiên**  |
-| 2 | **Nguyễn Trung Hiếu** |
-| 3 | **Phạm Việt Hoàng** |
-| 4 | **Vũ Gia Khánh** |
+| 1 | **Nguyễn Trung Hiếu**  |
+| 2 | **Phạm Việt Hoàng** |
+| 3 | **Vũ Gia Khánh** |
+| 4 | **Trương Bảo Kiên** |
 
 ---
 
