@@ -39,7 +39,7 @@ Hệ thống tuân thủ mô hình phân tầng để tách biệt giao diện, 
 - [ ] **Kết thúc phiên:** Tự động xác định người thắng và đóng phiên khi hết giờ.
 - [ ] **Xử lý ngoại lệ:** Chống đặt giá sai logic hoặc thao tác khi phiên đã đóng.
 
-### 🟡 Chức năng nâng cao (Target điểm 10+)
+### 🟡 Chức năng nâng cao 
 - [ ] **Concurrent Bidding:** Xử lý đấu giá đồng thời an toàn (tránh Race Condition).
 - [ ] **Realtime Update:** Sử dụng Observer Pattern để đồng bộ giá cho tất cả Client.
 - [ ] **Auto-Bidding:** Hệ thống tự động trả giá thay người dùng dựa trên mức tối đa.
