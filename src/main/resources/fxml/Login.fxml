@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/17.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.ui.controller.LoginController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+
+    <Label fx:id="statusLabel" text="Trạng thái hệ thống" />
+    <ComboBox fx:id="roleComboBox" prefWidth="150.0" promptText="Chọn vai trò" />
+    <TextField fx:id="usernameField" prefHeight="26.0" prefWidth="200.0" promptText="Tên đăng nhập" />
+
+    <HBox alignment="CENTER" prefHeight="29.0" prefWidth="233.0">
+        <children>
+            <StackPane HBox.hgrow="ALWAYS">
+                <children>
+                    <PasswordField fx:id="passwordField" maxWidth="1.7976931348623157E308" prefHeight="26.0" prefWidth="200.0" promptText="Mật khẩu" />
+                    <TextField fx:id="passwordTextField" maxWidth="1.7976931348623157E308" prefWidth="200.0" visible="false" />
+                </children>
+            </StackPane>
+            <Button fx:id="showPasswordButton" mnemonicParsing="false" onAction="#onShowPasswordButtonClick" prefHeight="26.0" prefWidth="30.0" text="👁" />
+        </children>
+    </HBox>
+
+    <Button mnemonicParsing="false" onAction="#onLogInButtonClick" text="Đăng nhập" />
+</VBox>
