@@ -6,11 +6,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="OnlineAuctionSystem" />
         <module name="auction -client" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="OnlineAuctionSystem" target="25" />
+      <module name="auction -client" target="25" />
     </bytecodeTargetLevel>
   </component>
 </project>

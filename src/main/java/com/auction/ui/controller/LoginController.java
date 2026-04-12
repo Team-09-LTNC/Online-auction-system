@@ -1,4 +1,4 @@
-package com.example.videcodeauctionclient;
+package com.auction.ui.controller;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -6,7 +6,7 @@ import javafx.scene.control.*;
 
 import java.net.URL;
 import java.util.ResourceBundle;
-public class HelloController implements Initializable {
+public class LoginController implements Initializable {
     @FXML
     private Label welcomeText;
 // Khai báo biến
@@ -57,7 +57,7 @@ public class HelloController implements Initializable {
            statusLabel.setStyle("-fx-text-fill: red;");
 
        } else {
-        //Nếu đã nhập tên ,mật khẩu, via trò hiện thông báo đang xử lý
+        //Nếu đã nhập tên ,mật khẩu, vai trò hiện thông báo đang xử lý
         statusLabel.setText("Đang kiểm tra đăng nhập cho: " + usernameField.getText());
         statusLabel.setStyle("-fx-text-fill: green;");
        }

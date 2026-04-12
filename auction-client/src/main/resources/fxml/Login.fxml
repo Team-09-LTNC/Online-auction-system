@@ -4,12 +4,11 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.videcodeauctionclient.HelloController">
+<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/17.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.ui.controller.LoginController">
   <padding>
     <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
   </padding>
 
-  <Label fx:id="statusLabel" />
   <Button onAction="#onLogInButtonClick" text="ĐĂNG NHẬP " />
    <Label fx:id="statusLabel" text="Label" />
    <ComboBox fx:id="roleComboBox" prefWidth="150.0" promptText="Chọn vai trò" />
