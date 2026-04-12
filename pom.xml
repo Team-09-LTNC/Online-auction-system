@@ -59,7 +59,7 @@
                     <execution>
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.auction.MainApp</mainClass>
+                            <mainClass>com.auction.ui.MainApp</mainClass>
                         </configuration>
                     </execution>
                 </executions>

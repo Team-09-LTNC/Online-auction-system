@@ -1,4 +1,4 @@
-package com.auction;
+package com.auction.ui;
 
 public class AppLauncher {
     public static void main(String[] args){
