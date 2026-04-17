@@ -1,29 +1,114 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Polygon?>
+<?import javafx.scene.image.*?>
+<?import java.lang.Double?>
 
-<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/17.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.ui.controller.LoginController">
-    <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-    </padding>
+<StackPane prefHeight="650.0" prefWidth="1000.0" styleClass="main-background" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/17.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.ui.controller.LoginController">
+    <children>
+        <Pane prefHeight="650.0" prefWidth="1000.0">
+            <children>
+                <Region layoutX="50.0" layoutY="450.0" styleClass="glowing-orb, orb-1" />
+                <Region layoutX="700.0" layoutY="50.0" styleClass="glowing-orb, orb-2" />
+                <Polygon layoutX="100.0" layoutY="150.0" rotate="15.0" styleClass="floating-polygon">
+                    <points>
+                        <Double fx:value="-10.0" /> <Double fx:value="20.0" />
+                        <Double fx:value="30.0" /> <Double fx:value="30.0" />
+                        <Double fx:value="40.0" /> <Double fx:value="-10.0" />
+                        <Double fx:value="0.0" /> <Double fx:value="-20.0" />
+                    </points>
+                </Polygon>
+            </children>
+        </Pane>
 
-    <Label fx:id="statusLabel" text="Trạng thái hệ thống" />
-    <ComboBox fx:id="roleComboBox" prefWidth="150.0" promptText="Chọn vai trò" />
-    <TextField fx:id="usernameField" prefHeight="26.0" prefWidth="200.0" promptText="Tên đăng nhập" />
+        <HBox maxWidth="800.0" maxHeight="580.0" styleClass="white-card">
+            <children>
+                <VBox alignment="CENTER" prefWidth="400.0" spacing="10.0">
+                    <padding>
+                        <Insets bottom="20.0" left="50.0" right="50.0" top="20.0" />
+                    </padding>
+                    <children>
+                        <Label styleClass="icon-label, title-icon" text="🛡" />
+                        <Label styleClass="title-text" text="ĐĂNG NHẬP" />
+                        <Label styleClass="sub-title-text" text="Đăng nhập để tham gia đấu giá " textAlignment="CENTER" wrapText="true" />
 
-    <HBox alignment="CENTER" prefHeight="29.0" prefWidth="233.0">
-        <children>
-            <StackPane HBox.hgrow="ALWAYS">
-                <children>
-                    <PasswordField fx:id="passwordField" maxWidth="1.7976931348623157E308" prefHeight="26.0" prefWidth="200.0" promptText="Mật khẩu" />
-                    <TextField fx:id="passwordTextField" maxWidth="1.7976931348623157E308" prefWidth="200.0" visible="false" />
-                </children>
-            </StackPane>
-            <Button fx:id="showPasswordButton" mnemonicParsing="false" onAction="#onShowPasswordButtonClick" prefHeight="26.0" prefWidth="30.0" text="👁" />
-        </children>
-    </HBox>
+                        <VBox spacing="10.0">
+                            <VBox spacing="5.0">
+                                <Label text="Tên đăng nhập" styleClass="field-label-text" />
+                                <HBox alignment="CENTER_LEFT" styleClass="input-field">
+                                    <Label styleClass="icon-label, field-icon" text="👤" />
+                                    <TextField fx:id="usernameField" promptText="Nhập tên đăng nhập của bạn" styleClass="password-field-inner" HBox.hgrow="ALWAYS" />
+                                </HBox>
+                            </VBox>
 
-    <Button mnemonicParsing="false" onAction="#onLogInButtonClick" text="Đăng nhập" />
-</VBox>
+                            <VBox spacing="5.0">
+                                <Label text="Mật khẩu" styleClass="field-label-text" />
+                                <HBox alignment="CENTER_RIGHT" styleClass="input-field">
+                                    <Label styleClass="icon-label, field-icon" text="🔒" />
+                                    <StackPane HBox.hgrow="ALWAYS">
+                                        <PasswordField fx:id="passwordField" promptText="........" styleClass="password-field-inner" />
+                                        <TextField fx:id="passwordTextField" styleClass="password-field-inner" visible="false" />
+                                    </StackPane>
+                                    <Button fx:id="showPasswordButton" onAction="#onShowPasswordButtonClick" styleClass="icon-button-custom" text="👁" />
+                                </HBox>
+                            </VBox>
+
+                            <HBox alignment="CENTER_LEFT" styleClass="input-field">
+                                <Label styleClass="icon-label, field-icon" text="💼" />
+                                <ComboBox fx:id="roleComboBox" maxWidth="1.7976931348623157E308" promptText="-- Chọn vai trò --" styleClass="password-field-inner" HBox.hgrow="ALWAYS" />
+                            </HBox>
+
+                            <HBox alignment="CENTER_LEFT">
+                                <children>
+                                    <CheckBox text="Ghi nhớ đăng nhập" styleClass="sub-title-text" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <Hyperlink text="Quên mật khẩu?" styleClass="forgot-password-link" />
+                                </children>
+                            </HBox>
+                        </VBox>
+
+                        <Button maxWidth="1.7976931348623157E308" onAction="#onLogInButtonClick" styleClass="login-btn" text="Đăng nhập" />
+
+                        <HBox alignment="BASELINE_CENTER" spacing="5.0">
+                            <children>
+                                <Label styleClass="sub-title-text" text="Chưa có tài khoản?" />
+                                <Hyperlink styleClass="forgot-password-link" text="Đăng ký ngay" />
+                            </children>
+                        </HBox>
+
+                        <HBox alignment="CENTER" spacing="10.0">
+                            <Separator HBox.hgrow="ALWAYS" />
+                            <Label styleClass="sub-title-text" text="Hoặc" />
+                            <Separator HBox.hgrow="ALWAYS" />
+                        </HBox>
+
+                        <Button maxWidth="1.7976931348623157E308" styleClass="gmail-btn" text="Đăng nhập với Gmail" />
+                    </children>
+                </VBox>
+
+                <VBox alignment="CENTER" prefWidth="400.0" styleClass="root-pane" HBox.hgrow="NEVER" spacing="15.0">
+                    <children>
+                        <Label styleClass="logo-text-large" text="AUCTION ONLINE" textFill="white" />
+                        <Label styleClass="illustration-text" text="An toàn. Uy tín. Mọi lúc mọi nơi." />
+
+                        <StackPane>
+                            <children>
+                                <ImageView fitHeight="320.0" fitWidth="320.0" pickOnBounds="true" preserveRatio="true">
+                                    <image>
+                                        <Image url="@../images/bua_dau_gia.png" />
+                                    </image>
+                                </ImageView>
+                            </children>
+                            <padding>
+                                <Insets top="20.0" />
+                            </padding>
+                        </StackPane>
+                    </children>
+                </VBox>
+
+            </children>
+        </HBox>
+    </children>
+</StackPane>

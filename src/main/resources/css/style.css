@@ -1,0 +1,125 @@
+/* --- Nền tổng thể mờ ảo --- */
+.main-background {
+    -fx-background-color: linear-gradient(to bottom right, #4e54c8, #8f94fb);
+}
+
+.root-pane {
+    -fx-background-color: linear-gradient(to bottom right, #4e54c8, #8f94fb);
+}
+
+/* --- Thẻ trắng trung tâm --- */
+.white-card {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 20, 0, 0, 8);
+}
+
+/* --- Chữ nghĩa và Fix lệch --- */
+.title-text {
+    -fx-text-fill: #3f449e;
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+}
+
+.sub-title-text {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 13px; /* Thu nhỏ chút cho thanh thoát */
+}
+
+/* Quan trọng: Fix lệch hàng cho link */
+.forgot-password-link {
+    -fx-text-fill: #4e54c8;
+    -fx-underline: false;
+    -fx-padding: 0; /* Xóa khoảng trống thừa gây lệch */
+    -fx-font-size: 13px;
+}
+.forgot-password-link:hover {
+    -fx-text-fill: #3f449e;
+    -fx-underline: true;
+}
+
+/* Nhãn phía trên ô nhập */
+.field-label-text {
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1b41;
+    -fx-font-size: 13px;
+    -fx-padding: 0 0 2 0;
+}
+
+/* --- Các ô nhập liệu --- */
+.input-field {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8; /* Tăng padding chút cho thoáng */
+}
+.input-field:focused-within {
+    -fx-border-color: #4e54c8;
+}
+
+.password-field-inner {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0 0 0 5;
+    -fx-text-fill: #1a1b41;
+}
+
+/* --- Icon --- */
+.icon-label { -fx-text-fill: #4e54c8; }
+.title-icon { -fx-font-size: 40px; -fx-padding: 0 0 10 0; }
+.field-icon { -fx-font-size: 16px; }
+
+/* Minh họa bên phải */
+.right-illustration { -fx-font-size: 80px; -fx-text-fill: white; }
+.logo-text { -fx-font-weight: bold; -fx-font-size: 20px; }
+
+/* ĐÂY CHÍNH LÀ CLASS LÀM TO CHỮ MỚI THÊM VÀO */
+.logo-text-large {
+    -fx-font-weight: bold;
+    -fx-font-size: 32px; /* Tăng hẳn lên 32px cho to và rõ */
+    -fx-text-fill: white;
+    -fx-padding: 0 0 5 0;
+}
+
+.illustration-text { -fx-text-fill: white; -fx-font-size: 14px; -fx-opacity: 0.9; }
+
+/* --- Nút bấm --- */
+.login-btn {
+    -fx-background-color: #4e54c8;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-padding: 12;
+    -fx-cursor: hand;
+}
+.login-btn:hover { -fx-background-color: #3f449e; }
+
+.gmail-btn {
+    -fx-background-color: white;
+    -fx-text-fill: #1a1b41;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 10;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+.gmail-btn:hover { -fx-background-color: #f8fafc; }
+
+/* --- Hiệu ứng mờ ảo (Giữ nguyên) --- */
+.glowing-orb {
+    -fx-background-radius: 50%;
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.3), 100, 0, 0, 0);
+}
+.orb-1 { -fx-pref-width: 350px; -fx-pref-height: 350px; -fx-background-color: rgba(255, 255, 255, 0.15); }
+.orb-2 { -fx-pref-width: 250px; -fx-pref-height: 250px; -fx-background-color: rgba(78, 84, 200, 0.4); }
+
+.floating-polygon {
+    -fx-fill: #00f5d4;
+    -fx-opacity: 0.3;
+    -fx-effect: gaussian-blur(radius=10);
+}
+
+.icon-button-custom { -fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: #a0aec0; }
+.icon-button-custom:hover { -fx-text-fill: #4e54c8; }
