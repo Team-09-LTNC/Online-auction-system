@@ -1,8 +1,9 @@
 package com.auction.model.bid;
 
+import java.time.LocalDateTime;
+
 import com.auction.model.entity.Entity;
 import com.auction.model.user.Bidder;
-import java.time.LocalDateTime;
 
 // lưu lại lịch sử đặt giá
 public class BidTransaction extends Entity {
