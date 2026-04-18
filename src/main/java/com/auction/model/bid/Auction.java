@@ -36,10 +36,19 @@ public class Auction extends Entity {
     }
 
     // câp nhật người đặt giá cao nhất ( chiến thắng tạm thời)
-    public void addValidBid(BidTransaction transaction) {
-        this.bidHistory.add(transaction);
-        this.currentHighestBid = transaction.getBidAmount();
-        this.currentWinner = transaction.getBidder();
+    public synchronized boolean addValidBid(BidTransaction transaction) {
+        if (this.status != AuctionStatus.RUNNING) {
+            System.out.println("Phiên đấu giá không hoạt động");
+            return false;
+        }
+        if (this.currentHighestBid < transaction.getBidAmount()) {
+            this.bidHistory.add(transaction);
+            this.currentHighestBid = transaction.getBidAmount();
+            this.currentWinner = transaction.getBidder();
+            System.out.println("Đặt giá thành công!");
+            return true;
+        }
+        return false;
     }
 
     public AuctionStatus getStatus() {
@@ -65,4 +74,33 @@ public class Auction extends Entity {
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
     }
+
+    public Item getItem() {
+        return item;
+    }
+
+    public void setItem(Item item) {
+        this.item = item;
+    }
+
+    public Seller getSeller() {
+        return seller;
+    }
+
+    public void setSeller(Seller seller) {
+        this.seller = seller;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public List<BidTransaction> getBidHistory() {
+        return bidHistory;
+    }
+
 }
