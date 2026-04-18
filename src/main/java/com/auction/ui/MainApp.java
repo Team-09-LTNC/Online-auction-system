@@ -13,13 +13,13 @@ public class MainApp extends Application {
     public void start(Stage stage) throws IOException {
         // Kiểm tra xem nó có tìm thấy file không
         URL fxmllocation = getClass().getResource("/fxml/Login.fxml");
-        System.out.println("Mày dò máy dò hihi: " + fxmllocation);
+        System.out.println(fxmllocation);
 
         // Nạp file FXML
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/Login.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
 
-        stage.setTitle("HỆ THỐNG ĐẤU GIÁ - ĐĂNG NHẬP");
+        stage.setTitle("HỆ THỐNG ĐẤU GIÁ");
         stage.setScene(scene);
         stage.show();
     }

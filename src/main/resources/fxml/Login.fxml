@@ -25,6 +25,7 @@
 
         <HBox maxWidth="800.0" maxHeight="580.0" styleClass="white-card">
             <children>
+                <!-- Bên trái: Form đăng nhập -->
                 <VBox alignment="CENTER" prefWidth="400.0" spacing="10.0">
                     <padding>
                         <Insets bottom="20.0" left="50.0" right="50.0" top="20.0" />
@@ -32,7 +33,7 @@
                     <children>
                         <Label styleClass="icon-label, title-icon" text="🛡" />
                         <Label styleClass="title-text" text="ĐĂNG NHẬP" />
-                        <Label styleClass="sub-title-text" text="Đăng nhập để tham gia đấu giá " textAlignment="CENTER" wrapText="true" />
+                        <Label styleClass="sub-title-text" text="Đăng nhập để tham gia đấu giá" textAlignment="CENTER" wrapText="true" />
 
                         <VBox spacing="10.0">
                             <VBox spacing="5.0">
@@ -69,12 +70,14 @@
                             </HBox>
                         </VBox>
 
+                        <Label fx:id="statusLabel" text="" wrapText="true" maxWidth="1.7976931348623157E308" />
+
                         <Button maxWidth="1.7976931348623157E308" onAction="#onLogInButtonClick" styleClass="login-btn" text="Đăng nhập" />
 
                         <HBox alignment="BASELINE_CENTER" spacing="5.0">
                             <children>
                                 <Label styleClass="sub-title-text" text="Chưa có tài khoản?" />
-                                <Hyperlink styleClass="forgot-password-link" text="Đăng ký ngay" />
+                                <Hyperlink fx:id="registerLink" onAction="#onRegisterLinkClick" styleClass="forgot-password-link" text="Đăng ký ngay" />
                             </children>
                         </HBox>
 
@@ -88,9 +91,10 @@
                     </children>
                 </VBox>
 
-                <VBox alignment="CENTER" prefWidth="400.0" styleClass="root-pane" HBox.hgrow="NEVER" spacing="15.0">
+                <!-- Bên phải: Minh họa — dùng right-panel để bo tròn góc phải -->
+                <VBox alignment="CENTER" prefWidth="400.0" styleClass="right-panel" HBox.hgrow="NEVER" spacing="15.0">
                     <children>
-                        <Label styleClass="logo-text-large" text="AUCTION ONLINE" textFill="white" />
+                        <Label styleClass="logo-text-large" text="AuctionHub" />
                         <Label styleClass="illustration-text" text="An toàn. Uy tín. Mọi lúc mọi nơi." />
 
                         <StackPane>
