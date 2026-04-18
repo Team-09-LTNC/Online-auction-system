@@ -1,6 +1,10 @@
 package com.auction.model.item;
 
+// Tạo một class chứa TẤT CẢ các thuộc tính của các sản phẩm, từ đó dễ truy cập vào constructor của mỗi loại sản phẩm hơn
+// Về sau nếu có add thêm sản phẩm nào thì chỉ cần thêm thuộc tính vào class này
 public class ItemAttributes {
+    // Để public cũng được, vì các biến này chỉ đóng vai trò trung gian để ta gọi
+    // thông qua constructor
     private String name;
     private String description;
     private double startingPrice;
@@ -15,6 +19,8 @@ public class ItemAttributes {
     private String make;
     private String model;
     private int year;
+
+    // Getters/Setters
 
     public String getName() {
         return name;

@@ -1,7 +1,7 @@
 package com.auction.model.item;
 
 public class ArtFactory extends ItemFactory {
-
+    // Override method của lớp cha cho phù hợp với ArtFactory
     @Override
     Item createItem(ItemAttributes item) {
 
