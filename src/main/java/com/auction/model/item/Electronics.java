@@ -16,13 +16,14 @@ public class Electronics extends Item {
         return "ELECTRONICS";
     }
 
-    public String getBrand(){
+    public String getBrand() {
         return brand;
     }
 
-    public void setBrand(String brand){
+    public void setBrand(String brand) {
         this.brand = brand;
     }
+
     public void setWarrantyMonths(int warrantyMonths) {
         this.warrantyMonths = warrantyMonths;
     }

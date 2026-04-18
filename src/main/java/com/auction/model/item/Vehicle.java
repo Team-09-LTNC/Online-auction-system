@@ -1,9 +1,9 @@
 package com.auction.model.item;
 
 public class Vehicle extends Item {
-    private String make;    // Hãng xe (VD: Toyota, Ford)
-    private String model;   // Mẫu xe (VD: Camry, Mustang)
-    private int year;       // Năm sản xuất
+    private String make; // Hãng xe (VD: Toyota, Ford)
+    private String model; // Mẫu xe (VD: Camry, Mustang)
+    private int year; // Năm sản xuất
 
     public Vehicle(String name, String description, double startingPrice, String make, String model, int year) {
         super(name, description, startingPrice);

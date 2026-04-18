@@ -17,10 +17,17 @@ public abstract class Item extends Entity {
     // Phân loại sản phẩm
     public abstract String getItemCategory();
 
-    public double getStartingPrice() { 
-        return startingPrice; 
-    }
+    
+   
     public String getName() { 
         return name; 
     }
+
+    public String getDescription() {
+        return description;
+    }
+     public double getStartingPrice() { 
+        return startingPrice; 
+    }
+
 }
