@@ -73,21 +73,22 @@ public class Auction extends Entity {
         return "Không có ai đặt giá cho phiên này";
     }
 
-    public void startAuction(int durationSeconds) {
-        this.status = AuctionStatus.RUNNING;
+    // Bắt đầu phiên đấu giá
+    public void startAuction(int durationSeconds) { // Thời gian phiên đấu giá
+        this.status = AuctionStatus.RUNNING; // Khởi tạo trạng thái cho phiên đấu giá
         Callable<String> timer = () -> {
             try {
-                Thread.sleep(durationSeconds * 1000L);
+                Thread.sleep(durationSeconds * 1000L); // Cho luồng nghỉ trong thời gian đấu giá
 
             } catch (InterruptedException e) {
                 return "Phiên đấu giá bị hủy bởi ADMIN";
             }
 
-            return this.closeAuction();
+            return this.closeAuction(); // Khi luồng "dậy" thì đóng phiên đấu giá lại
 
         };
 
-        this.timerFuture = executor.submit(timer);
+        this.timerFuture = executor.submit(timer); // Thêm task vào Future
         executor.shutdown();
     }
 
