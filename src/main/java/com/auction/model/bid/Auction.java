@@ -3,6 +3,10 @@ package com.auction.model.bid;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import com.auction.auction.AuctionStatus;
 import com.auction.model.entity.Entity;
@@ -49,6 +53,42 @@ public class Auction extends Entity {
             return true;
         }
         return false;
+    }
+
+    // SingleThread vì chỉ cần 1 luồng đếm giờ cho mỗi phiên
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    // Tờ biên lai (Future) để sau này lôi ra kiểm tra hoặc hủy phiên đấu giá giữa
+    // chừng
+    private Future<String> timerFuture;
+
+    public synchronized String closeAuction() {
+        if (this.status == AuctionStatus.FINISHED) {
+            return "Phiên đấu giá đã kết thúc";
+        }
+
+        if (this.currentWinner != null) {
+            return "Người chiến thắng là: " + this.currentWinner + "\n Với giá là: " + this.currentHighestBid;
+        }
+        return "Không có ai đặt giá cho phiên này";
+    }
+
+    public void startAuction(int durationSeconds) {
+        this.status = AuctionStatus.RUNNING;
+        Callable<String> timer = () -> {
+            try {
+                Thread.sleep(durationSeconds * 1000L);
+
+            } catch (InterruptedException e) {
+                return "Phiên đấu giá bị hủy bởi ADMIN";
+            }
+
+            return this.closeAuction();
+
+        };
+
+        this.timerFuture = executor.submit(timer);
+        executor.shutdown();
     }
 
     public AuctionStatus getStatus() {
@@ -101,6 +141,14 @@ public class Auction extends Entity {
 
     public List<BidTransaction> getBidHistory() {
         return bidHistory;
+    }
+
+    public Future<String> getTimerFuture() {
+        return timerFuture;
+    }
+
+    public void setTimerFuture(Future<String> timerFuture) {
+        this.timerFuture = timerFuture;
     }
 
 }
