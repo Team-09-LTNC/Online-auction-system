@@ -15,4 +15,20 @@ public class Electronics extends Item {
     public String getItemCategory() {
         return "ELECTRONICS";
     }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public void setWarrantyMonths(int warrantyMonths) {
+        this.warrantyMonths = warrantyMonths;
+    }
+
+    public int getWarrantyMonths() {
+        return warrantyMonths;
+    }
 }

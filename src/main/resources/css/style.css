@@ -1,0 +1,127 @@
+/* =====================================================
+   AUCTIONHUB — Palette nâu đỏ, đậm hơn một chút
+   Primary  : #6E1C1C
+   Accent   : #8B2C2C
+   BG nền   : #EDE6DF  (kem đậm hơn)
+   Panel    : #F0EAE4
+   Text đậm : #1A0F0A
+   Text nhạt: #5C3D30
+   Border   : #C8AFA0
+   ===================================================== */
+
+.main-background { -fx-background-color: #EDE6DF; }
+.root-pane       { -fx-background-color: #EDE6DF; }
+
+.white-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 20;
+    -fx-effect: dropshadow(three-pass-box, rgba(70,30,15,0.20), 30, 0, 0, 6);
+}
+
+.right-panel {
+    -fx-background-color: #F0EAE4;
+    -fx-background-radius: 0 20 20 0;
+}
+
+.left-panel {
+    -fx-background-color: #F0EAE4;
+    -fx-background-radius: 20 0 0 20;
+}
+
+.title-text {
+    -fx-text-fill: #1A0F0A;
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+}
+
+.sub-title-text {
+    -fx-text-fill: #5C3D30;
+    -fx-font-size: 13px;
+}
+
+.forgot-password-link {
+    -fx-text-fill: #6E1C1C;
+    -fx-underline: false;
+    -fx-padding: 0;
+    -fx-font-size: 13px;
+}
+.forgot-password-link:hover {
+    -fx-text-fill: #4A1010;
+    -fx-underline: true;
+}
+
+.field-label-text {
+    -fx-font-weight: bold;
+    -fx-text-fill: #1A0F0A;
+    -fx-font-size: 13px;
+    -fx-padding: 0 0 2 0;
+}
+
+.input-field {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #C8AFA0;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8;
+}
+.input-field:focused-within { -fx-border-color: #6E1C1C; }
+
+.password-field-inner {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0 0 0 5;
+    -fx-text-fill: #1A0F0A;
+}
+
+.icon-label  { -fx-text-fill: #6E1C1C; }
+.title-icon  { -fx-font-size: 40px; -fx-padding: 0 0 10 0; }
+.field-icon  { -fx-font-size: 16px; }
+
+.logo-text-large {
+    -fx-font-weight: bold;
+    -fx-font-size: 28px;
+    -fx-text-fill: #6E1C1C;
+    -fx-padding: 0 0 5 0;
+}
+
+.illustration-text {
+    -fx-text-fill: #5C3D30;
+    -fx-font-size: 13px;
+}
+
+.login-btn {
+    -fx-background-color: #6E1C1C;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-padding: 12;
+    -fx-cursor: hand;
+}
+.login-btn:hover { -fx-background-color: #4A1010; }
+
+.gmail-btn {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #6E1C1C;
+    -fx-border-color: #6E1C1C;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 10;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+.gmail-btn:hover { -fx-background-color: #FAF0F0; }
+
+.glowing-orb { -fx-background-radius: 50%; }
+.orb-1 {
+    -fx-pref-width: 350px; -fx-pref-height: 350px;
+    -fx-background-color: rgba(160,100,80,0.10);
+}
+.orb-2 {
+    -fx-pref-width: 250px; -fx-pref-height: 250px;
+    -fx-background-color: rgba(110,28,28,0.10);
+}
+
+.floating-polygon { -fx-fill: #B07060; -fx-opacity: 0.18; }
+
+.icon-button-custom { -fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: #A07060; }
+.icon-button-custom:hover { -fx-text-fill: #6E1C1C; }

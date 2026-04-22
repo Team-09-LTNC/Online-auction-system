@@ -1,9 +1,9 @@
 package com.auction.model.item;
 
 public class Art extends Item {
-    private String artist;      // Tác giả
-    private int yearCreated;    // Năm sáng tác
-    private String medium;      // Chất liệu (VD: Sơn dầu, Điêu khắc)
+    private String artist; // Tác giả
+    private int yearCreated; // Năm sáng tác
+    private String medium; // Chất liệu (VD: Sơn dầu, Điêu khắc)
 
     public Art(String name, String description, double startingPrice, String artist, int yearCreated, String medium) {
         super(name, description, startingPrice);

@@ -1,8 +1,9 @@
 package com.auction.model.bid;
 
+import java.time.LocalDateTime;
+
 import com.auction.model.entity.Entity;
 import com.auction.model.user.Bidder;
-import java.time.LocalDateTime;
 
 // lưu lại lịch sử đặt giá
 public class BidTransaction extends Entity {
@@ -16,7 +17,16 @@ public class BidTransaction extends Entity {
         this.timestamp = LocalDateTime.now();
     }
 
-    public Bidder getBidder() { return bidder; }
-    public double getBidAmount() { return bidAmount; }
-    public LocalDateTime getTimestamp() { return timestamp; }
+    public Bidder getBidder() {
+        return bidder;
+    }
+
+    public double getBidAmount() {
+        return bidAmount;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
 }
