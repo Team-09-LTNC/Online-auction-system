@@ -1,10 +1,11 @@
 package com.auction.manager;
 
-import com.auction.model.bid.Auction;
-import com.auction.model.user.User;
 import java.util.ArrayList;
 import java.util.List;
+
 import com.auction.exception.AuthenticationException;
+import com.auction.model.bid.Auction;
+import com.auction.model.user.User;
 
 public class AuctionManager {
     private static AuctionManager instance;
@@ -39,6 +40,7 @@ public class AuctionManager {
     public User findUserByUsername(String username) {
         return users.stream().filter(u -> u.getUsername().equals(username)).findFirst().orElse(null);
     }
+
     public User authenticate(String username, String password, String role) throws AuthenticationException {
         User user = findUserByUsername(username);
         if (user == null) {
