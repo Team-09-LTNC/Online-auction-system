@@ -1,13 +1,17 @@
 package com.auction.model.bid;
 
-import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDateTime;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.auction.auction.AuctionStatus;
-import com.auction.exception.InvalidBidException;
 import com.auction.exception.AuctionClosedException;
+import com.auction.exception.InvalidBidException;
 import com.auction.model.item.Art;
 import com.auction.model.item.Item;
 import com.auction.model.user.Bidder;

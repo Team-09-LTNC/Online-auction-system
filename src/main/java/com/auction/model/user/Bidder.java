@@ -10,4 +10,5 @@ public class Bidder extends User {
     public String getRoleName() {
         return "BIDDER";
     }
+
 }

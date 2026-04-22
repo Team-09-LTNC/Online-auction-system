@@ -28,4 +28,5 @@ public class BidTransaction extends Entity {
     public LocalDateTime getTimestamp() {
         return timestamp;
     }
+
 }
