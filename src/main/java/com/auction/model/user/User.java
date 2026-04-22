@@ -19,4 +19,5 @@ public abstract class User extends Entity {
 
     public String getUsername() { return username; }
     public String getFullName() { return fullName; }
+    public String getPassword() { return password; }
 }
