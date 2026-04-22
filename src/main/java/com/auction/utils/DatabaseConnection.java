@@ -10,7 +10,7 @@ public class DatabaseConnection {
     private static final String USER = "root";
 
     // Thay đoạn này bằng mật khẩu MySQL để chạy!
-    private static final String PASSWORD = "uetteam09ltnc@@";
+    private static final String PASSWORD = "***************";
 
     public static Connection getConnection() {
         try {
