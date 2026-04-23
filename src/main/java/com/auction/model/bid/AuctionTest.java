@@ -2,12 +2,8 @@ package com.auction.model.bid;
 
 import java.time.LocalDateTime;
 
+import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import com.auction.auction.AuctionStatus;
 import com.auction.exception.AuctionClosedException;
@@ -16,6 +12,9 @@ import com.auction.model.item.Art;
 import com.auction.model.item.Item;
 import com.auction.model.user.Bidder;
 import com.auction.model.user.Seller;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 
 public class AuctionTest {
 
