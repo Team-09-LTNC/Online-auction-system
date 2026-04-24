@@ -6,7 +6,7 @@
 <?import javafx.scene.image.*?>
 <?import java.lang.Double?>
 
-<StackPane prefHeight="650.0" prefWidth="1000.0" styleClass="main-background" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/17.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.ui.controller.LoginController">
+<StackPane prefHeight="650.0" prefWidth="1000.0" styleClass="main-background" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/17.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.LoginController">
     <children>
         <Pane prefHeight="650.0" prefWidth="1000.0">
             <children>

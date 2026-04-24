@@ -1,13 +1,13 @@
 package com.auction.auction;
 
-import com.auction.exception.InvalidBidException;
-import com.auction.model.bid.Auction;
-import com.auction.model.bid.BidTransaction;
-import com.auction.model.item.Item;
-import com.auction.model.item.Art; // Import lớp con Art
-import com.auction.model.user.Bidder;
-import com.auction.dao.BidTransactionDAO;
-import com.auction.utils.DatabaseConnection;
+import com.auction.common.exception.InvalidBidException;
+import com.auction.common.model.bid.Auction;
+import com.auction.common.model.bid.BidTransaction;
+import com.auction.common.model.item.Item;
+import com.auction.common.model.item.Art; // Import lớp con Art
+import com.auction.common.model.user.Bidder;
+import com.auction.server.dao.BidTransactionDAO;
+import com.auction.server.utils.DatabaseConnection;
 
 public class Main {
     public static void main(String[] args) {
