@@ -14,29 +14,22 @@ import com.auction.common.exception.InvalidBidException;
 import com.auction.common.model.entity.Entity;
 import com.auction.common.model.item.Item;
 import com.auction.common.model.user.Bidder;
-import com.auction.common.model.user.Seller;
 import com.auction.common.observer.AuctionObserver;
 import com.auction.server.dao.BidTransactionDAO;
 import com.auction.server.utils.DatabaseConnection;
 
 public class Auction extends Entity {
     private Item item;
-    private Seller seller;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
     private AuctionStatus status;
     private double currentHighestBid;
     private Bidder currentWinner;
-    private List<BidTransaction> bidHistory = new ArrayList<>();
+    private final List<BidTransaction> bidHistory = new ArrayList<>();
 
-    // Quan trọng: Đối tượng DAO để làm việc với Database
     private BidTransactionDAO dao;
-
-    // Sử dụng CopyOnWriteArrayList để an toàn khi thêm/xóa observer trong môi trường đa luồng
     private final List<AuctionObserver> observers = new CopyOnWriteArrayList<>();
-
-    // Quản lý luồng đếm ngược thời gian đấu giá
     private transient final ExecutorService executor = Executors.newSingleThreadExecutor();
     private transient Future<String> timerFuture;
 
@@ -44,47 +37,43 @@ public class Auction extends Entity {
         this.item = item;
         this.currentHighestBid = item.getStartingPrice();
         this.status = AuctionStatus.OPEN;
-        // Khởi tạo kết nối DAO ngay khi tạo Auction
         this.dao = new BidTransactionDAO(DatabaseConnection.getConnection());
     }
 
     /**
-     * Xử lý đặt giá mới (Thread-safe)
-     * Từ khóa synchronized đảm bảo tại một thời điểm chỉ có 1 luồng được cập nhật giá
+     * REFACTOR: tách lời gọi DB thành protected method.
+     * Mục đích: AuctionTest override method này để bypass DB,
+     * không cần mock framework, không cần kết nối mạng khi test.
+     */
+    protected boolean persistBid(int auctionId, BidTransaction tx) {
+        if (dao == null) return false;
+        return dao.saveTransaction(auctionId, tx);
+    }
+
+    /**
+     * Xử lý đặt giá mới (Thread-safe).
+     * synchronized đảm bảo tại 1 thời điểm chỉ 1 luồng cập nhật giá.
      */
     public synchronized boolean addValidBid(BidTransaction transaction) throws InvalidBidException {
-        // 1. Kiểm tra trạng thái phiên
         if (this.status != AuctionStatus.RUNNING) {
             throw new InvalidBidException("Phiên đấu giá đang không diễn ra!");
         }
-
-        // 2. Kiểm tra giá đặt có cao hơn giá hiện tại không
         if (transaction.getBidAmount() <= this.currentHighestBid) {
             throw new InvalidBidException("Giá đặt phải cao hơn giá hiện tại: " + this.currentHighestBid);
         }
 
-        // 3. LƯU VÀO DATABASE CLOUD TRƯỚC
-        // Chúng ta giả định auctionId = 1 cho bản test này
-        if (dao != null && dao.saveTransaction(1, transaction)) {
-            // 4. Cập nhật dữ liệu trên bộ nhớ (RAM) nếu lưu DB thành công
+        if (persistBid(1, transaction)) {
             this.bidHistory.add(transaction);
             this.currentHighestBid = transaction.getBidAmount();
             this.currentWinner = transaction.getBidder();
-
-            System.out.println("✅ [DB] Đã lưu: " + transaction.getBidder().getUsername() + " -> $" + transaction.getBidAmount());
-
-            // Thông báo cho các Observer (giao diện) cập nhật
             notifyNewBid(transaction);
             return true;
         } else {
-            System.err.println("❌ Lỗi: Không thể lưu lượt đặt giá vào Database!");
+            System.err.println("Lỗi: Không thể lưu lượt đặt giá vào Database!");
             return false;
         }
     }
 
-    /**
-     * Bắt đầu phiên đấu giá với thời gian đếm ngược
-     */
     public void startAuction(int durationSeconds) {
         this.status = AuctionStatus.RUNNING;
         this.startTime = LocalDateTime.now();
@@ -98,7 +87,7 @@ public class Auction extends Entity {
                 try {
                     Thread.sleep(durationSeconds * 1000L);
                 } catch (InterruptedException e) {
-                    return "Phiên đấu giá bị gián đoạn.";
+                    return "Phiên bị gián đoạn.";
                 }
                 return endAuction();
             }
@@ -107,20 +96,13 @@ public class Auction extends Entity {
 
     private String endAuction() {
         this.status = AuctionStatus.FINISHED;
-        System.out.println("\n>>> PHIÊN ĐẤU GIÁ KẾT THÚC!");
-
-        // Giải phóng tài nguyên luồng
-        if (executor != null && !executor.isShutdown()) {
-            executor.shutdown();
-        }
-
-        if (this.currentWinner != null) {
-            return "Người chiến thắng là: " + this.currentWinner.getFullName() + " với giá $" + this.currentHighestBid;
-        }
-        return "Không có ai đặt giá cho phiên này.";
+        System.out.println(">>> PHIÊN ĐẤU GIÁ KẾT THÚC!");
+        if (executor != null && !executor.isShutdown()) executor.shutdown();
+        if (this.currentWinner != null)
+            return "Người thắng: " + this.currentWinner.getFullName() + " - $" + this.currentHighestBid;
+        return "Không có ai đặt giá.";
     }
 
-    // --- Observer Pattern Methods ---
     public void addObserver(AuctionObserver observer) {
         observers.add(observer);
     }
@@ -131,9 +113,10 @@ public class Auction extends Entity {
         }
     }
 
-    // --- Getters and Setters ---
+    // Getters
     public AuctionStatus getStatus() { return status; }
     public double getCurrentHighestBid() { return currentHighestBid; }
     public Bidder getCurrentWinner() { return currentWinner; }
     public Item getItem() { return item; }
+    public List<BidTransaction> getBidHistory() { return bidHistory; }
 }
