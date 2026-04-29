@@ -99,6 +99,20 @@ public class ItemDao {
         }
         return list;
     }
+//    Lấy Item theo seller_id
+    public List<ItemRecord> findBySellerId(String sellerId) {
+        List<ItemRecord> list = new ArrayList<>();
+        String sql = "SELECT * FROM items WHERE seller_id = ? ORDER BY id DESC";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, sellerId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi khi lấy item theo sellerId: " + e.getMessage());
+        }
+        return list;
+    }
 
     // -------------------------------------------------------------------------
     // LẤY ITEM THEO TRẠNG THÁI (VD: OPEN, RUNNING)

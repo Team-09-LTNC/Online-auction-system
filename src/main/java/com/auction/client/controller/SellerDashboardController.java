@@ -89,16 +89,11 @@ public class SellerDashboardController {
         itemTable.setItems(danhSachSanPham);
 
         hienPaneMyItems();
-
-        // FIX BUG 4 (phần 1): Xóa lệnh gọi loadDanhSach() ở đây.
-        // initSeller() sẽ được gọi ngay sau từ LoginController và đã gọi loadDanhSach() rồi.
-        // Gọi ở đây vừa thừa (tải 2 lần) vừa sai vì currentSeller chưa được gán.
     }
 
     public void initSeller(User seller) {
         this.currentSeller = seller;
         lblWelcome.setText("Xin chào, " + seller.getFullName() + "!");
-        // FIX BUG 4 (phần 2): Thêm null check trước khi gọi loadDanhSach()
         if (itemDao != null) {
             loadDanhSach();
         }
@@ -107,7 +102,6 @@ public class SellerDashboardController {
     @FXML
     private void onMenuMyItemsClick() {
         hienPaneMyItems();
-        // FIX BUG 4 (phần 2): Thêm null check
         if (itemDao != null) {
             loadDanhSach();
         }
@@ -139,14 +133,17 @@ public class SellerDashboardController {
     }
 
     private void loadDanhSach() {
-        // FIX BUG 4 (guard clause): Bảo vệ khỏi NullPointerException nếu itemDao null
         if (itemDao == null) {
             hienThiLoi("Lỗi: Không có kết nối Database!");
             return;
         }
+        if (currentSeller == null) {
+            hienThiLoi("Lỗi: Chưa xác định người bán!");
+            return;
+        }
 
         danhSachSanPham.clear();
-        List<ItemDao.ItemRecord> records = itemDao.findAll();
+        List<ItemDao.ItemRecord> records = itemDao.findBySellerId(currentSeller.getId());
 
         for (ItemDao.ItemRecord record : records) {
             danhSachSanPham.add(new ItemRow(
@@ -372,7 +369,6 @@ public class SellerDashboardController {
 
     @FXML
     private void onRefreshClick() {
-        // FIX BUG 4 (guard clause)
         if (itemDao != null) {
             loadDanhSach();
         }
