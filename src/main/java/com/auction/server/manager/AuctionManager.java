@@ -10,7 +10,7 @@ public class AuctionManager {
     private UserDao userDao;
 
     private AuctionManager() {
-        this.userDao = new UserDao(DatabaseConnection.getConnection());
+        this.userDao = new UserDao();
     }
 
     public static synchronized AuctionManager getInstance() {

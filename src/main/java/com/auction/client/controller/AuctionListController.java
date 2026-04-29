@@ -1,6 +1,14 @@
 package com.auction.client.controller;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
@@ -12,16 +20,12 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import com.auction.server.utils.DatabaseConnection;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 public class AuctionListController {
 
@@ -59,16 +63,70 @@ public class AuctionListController {
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
         colTime.setCellValueFactory(new PropertyValueFactory<>("timeLeft"));
 
+        // CẤU HÌNH CỘT THỜI GIAN ĐỂ ĐẾM NGƯỢC
+        colTime.setCellFactory(column -> {
+            return new TableCell<AuctionItem, String>() {
+                @Override
+                protected void updateItem(String endTimeStr, boolean empty) {
+                    super.updateItem(endTimeStr, empty);
+
+                    if (empty || endTimeStr == null || endTimeStr.isEmpty()) {
+                        setText(null);
+                        setStyle("");
+                    } else {
+                        try {
+                            // Cắt phần đuôi .0 nếu MySQL tự thêm vào
+                            String cleanTimeStr = endTimeStr;
+                            if (endTimeStr.endsWith(".0")) {
+                                cleanTimeStr = endTimeStr.substring(0, endTimeStr.length() - 2);
+                            }
+
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                            LocalDateTime endTime = LocalDateTime.parse(cleanTimeStr, formatter);
+                            LocalDateTime now = LocalDateTime.now();
+
+                            if (now.isAfter(endTime)) {
+                                setText("Đã kết thúc");
+                                setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                            } else {
+                                java.time.Duration duration = java.time.Duration.between(now, endTime);
+                                long days = duration.toDays();
+                                long hours = duration.toHoursPart();
+                                long minutes = duration.toMinutesPart();
+                                long seconds = duration.toSecondsPart();
+
+                                String timeRemaining = "";
+                                if (days > 0) {
+                                    timeRemaining = days + " ngày " + hours + " giờ";
+                                } else if (hours > 0) {
+                                    timeRemaining = hours + " giờ " + minutes + " phút";
+                                } else {
+                                    timeRemaining = minutes + " phút " + seconds + " giây";
+                                }
+
+                                setText("Còn " + timeRemaining);
+                                setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+                            }
+                        } catch (Exception e) {
+                            setText(endTimeStr); // Nếu lỗi format thì in ra chuỗi gốc
+                            setStyle("");
+                        }
+                    }
+                }
+            };
+        });
+
         // Khởi tạo list trống
         auctionList = FXCollections.observableArrayList();
 
         // GỌI HÀM LẤY DỮ LIỆU TỪ DATABASE Ở ĐÂY
         loadDataFromDatabase();
+
         // Gán sự kiện cho nút Đăng xuất
         btnLogout.setOnAction(event -> logout());
 
         // Thread cập nhật danh sách đấu giá mỗi 3 giây (Fake polling)
-        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(3), event -> {
+        Timeline timeline = new Timeline(new KeyFrame(javafx.util.Duration.seconds(3), event -> {
             // System.out.println("Đang giả lập gọi Server lấy data...");
             // TODO: Sau này học bài mạng xong sẽ gọi SocketClient.listAuctions() ở đây
         }));
@@ -87,7 +145,6 @@ public class AuctionListController {
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
-                //
                 String name = rs.getString("name");
                 String price = rs.getString("current_price");
                 String status = rs.getString("status");
@@ -101,8 +158,8 @@ public class AuctionListController {
             System.out.println(">>> Đã tải thành công dữ liệu từ Cloud Database!");
 
         } catch (SQLException e) {
-            System.out.println("❌ Lỗi: Không lấy được dữ liệu từ Database.Check lại mạng xem!");
-            e.printStackTrace(); // In ra lỗi chữ đỏ để biết sai ở đâu
+            System.out.println("❌ Lỗi: Không lấy được dữ liệu từ Database. Check lại mạng xem!");
+            e.printStackTrace();
         }
     }
 
@@ -110,9 +167,7 @@ public class AuctionListController {
     private void logout() {
         try {
             System.out.println("Đang đăng xuất...");
-            // Lấy Stage hiện tại từ nút bấm
             Stage stage = (Stage) btnLogout.getScene().getWindow();
-            // Load lại màn hình Login
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Login.fxml"));
             Parent root = loader.load();
             stage.setScene(new Scene(root));
@@ -126,7 +181,6 @@ public class AuctionListController {
 
     @FXML
     void onEnterAuctionClick(ActionEvent event) {
-        // Lấy object mà người dùng đang click chọn trong bảng
         AuctionItem selectedItem = auctionTable.getSelectionModel().getSelectedItem();
 
         if (selectedItem == null) {
@@ -136,9 +190,7 @@ public class AuctionListController {
 
         String status = selectedItem.getStatus();
 
-        //Trạng thái OPEN -> RUNNING -> FINISHED -> PAID / CANCELED
-        // Chỉ cho vào xem/đấu giá nếu đang OPEN hoặc RUNNING
-        if (status.equals("OPEN") || status.equals("RUNNING")) {
+        if ("OPEN".equals(status) || "RUNNING".equals(status)) {
             System.out.println("Chuyển sang giao diện đấu giá của: " + selectedItem.getName());
             showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đang vào phiên đấu giá: " + selectedItem.getName() + " ...");
             // TODO: Chuyển Scene sang RealtimeBidding.fxml
@@ -156,7 +208,6 @@ public class AuctionListController {
     }
 
     // Class Model nội bộ
-    // (TODO: Nhớ tách class này ra thư mục model lúc rảnh)
     public static class AuctionItem {
         private String name;
         private String price;

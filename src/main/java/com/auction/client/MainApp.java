@@ -11,12 +11,12 @@ import javafx.stage.Stage;
 public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        // Kiểm tra xem nó có tìm thấy file không
-        URL fxmllocation = getClass().getResource("/fxml/Login.fxml");
-        System.out.println(fxmllocation);
+        // Đổi thành Home.fxml để check đường dẫn
+        URL fxmllocation = getClass().getResource("/fxml/Home.fxml");
+        System.out.println("Đường dẫn file: " + fxmllocation);
 
-        // Nạp file FXML
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/Login.fxml"));
+        // Nạp file giao diện Trang chủ (Home.fxml)
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/Home.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
 
         stage.setTitle("HỆ THỐNG ĐẤU GIÁ");
