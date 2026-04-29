@@ -56,33 +56,39 @@ public class LoginController implements Initializable {
             showError("Lỗi: Vui lòng chọn vai trò của bạn!");
         } else {
             try {
-                // Gọi AuctionManager để xác thực trực tiếp với Database [cite: 28, 37]
+                // 1. Gọi AuctionManager để xác thực thông tin người dùng
                 User user = AuctionManager.getInstance().authenticate(username, password, selectedRole);
 
                 statusLabel.setText("✅ Đăng nhập thành công! Chào " + user.getFullName());
                 statusLabel.setStyle("-fx-text-fill: green;");
 
-                try {
-                    // 1. Tải file giao diện đấu giá
-                    javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/AuctionListScreen.fxml"));
-                    javafx.scene.Parent auctionView = loader.load();
+                // 2. Lấy Stage hiện tại để chuẩn bị chuyển cảnh
+                Stage stage = (Stage) statusLabel.getScene().getWindow();
+                FXMLLoader loader;
 
-                    // 2. Lấy Stage hiện tại
-                    javafx.stage.Stage stage = (javafx.stage.Stage) statusLabel.getScene().getWindow();
-
-                    // 3. Tạo Scene mới và đổi màn hình
-                    javafx.scene.Scene scene = new javafx.scene.Scene(auctionView);
-                    stage.setScene(scene);
-                    stage.centerOnScreen();
-                    stage.show();
-
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    System.out.println("Lỗi khi chuyển sang màn hình Đấu giá: " + ex.getMessage());
+                // 3. Logic điều hướng dựa trên vai trò (Role) [cite: 32, 166]
+                if ("Bidder".equals(selectedRole)) {
+                    // Chuyển sang màn hình danh sách đấu giá cho Bidder [cite: 377, 378]
+                    loader = new FXMLLoader(getClass().getResource("/fxml/AuctionListScreen.fxml"));
+                    stage.getScene().setRoot(loader.load());
+                    stage.setTitle("HỆ THỐNG ĐẤU GIÁ - DANH SÁCH PHIÊN");
                 }
+                else if ("Seller".equals(selectedRole)) {
+                    // Placeholder cho Seller (Sẽ cập nhật file FXML sau) [cite: 68]
+                    showError("Chức năng cho Seller đang được phát triển!");
+                }
+                else if ("Admin".equals(selectedRole)) {
+                    // Placeholder cho Admin (Sẽ cập nhật file FXML sau) [cite: 37]
+                    showError("Chức năng cho Admin đang được phát triển!");
+                }
+
             } catch (AuthenticationException e) {
-                // Hiển thị lỗi theo yêu cầu của bạn [cite: 31, 37]
+                // Hiển thị thông báo lỗi nếu sai tài khoản/mật khẩu
                 showError(e.getMessage());
+            } catch (IOException e) {
+                // Xử lý lỗi khi không tìm thấy hoặc không load được file FXML
+                e.printStackTrace();
+                showError("Lỗi hệ thống: Không thể mở giao diện tiếp theo!");
             }
         }
     }
@@ -93,7 +99,7 @@ public class LoginController implements Initializable {
             Stage stage = (Stage) registerLink.getScene().getWindow();
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Register.fxml"));
             stage.getScene().setRoot(loader.load());
-            stage.setTitle("HỆ THỐNG ĐẤU GIÁ");
+            stage.setTitle("HỆ THỐNG ĐẤU GIÁ - ĐĂNG KÝ");
         } catch (IOException e) {
             e.printStackTrace();
             showError("Không thể mở màn hình đăng ký!");
@@ -107,6 +113,7 @@ public class LoginController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // Thiết lập ban đầu cho các ComboBox và trường mật khẩu
         roleComboBox.getItems().addAll("Bidder", "Seller", "Admin");
         passwordField.setVisible(true);
         passwordTextField.setVisible(false);

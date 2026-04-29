@@ -40,15 +40,9 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.10.0</version>
-<<<<<<< HEAD
-            <scope>compile</scope>
-        </dependency>
-         </dependencies>
-=======
             <scope>test</scope>
         </dependency>
     </dependencies>
->>>>>>> d4342beee1a90ba82436000fd5a2ba885d7448cb
 
     <build>
         <plugins>

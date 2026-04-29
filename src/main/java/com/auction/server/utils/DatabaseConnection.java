@@ -5,10 +5,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConnection {
-    // Sửa cái dòng URL này trong file DatabaseConnection.java nhé
-    private static final String URL = "jdbc:mysql://mysql-24dbe87d-team09-uet.c.aivencloud.com:12014/defaultdb?sslMode=DISABLED&allowPublicKeyRetrieval=true&useSSL=false";
+    private static final String URL = "jdbc:mysql://mysql-24dbe87d-team09-uet.c.aivencloud.com:12014/defaultdb?ssl-mode=REQUIRED";
     private static final String USER = "avnadmin";
-    private static final String PASSWORD = "uetteam09ltnc@@"; // Token của nhóm
+    private static final String PASSWORD = "AVNS_DxKGxvHASiK6mmOKQbm"; // Token của nhóm
 
     private static Connection connection = null;
 
