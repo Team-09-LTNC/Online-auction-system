@@ -17,6 +17,11 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import com.auction.server.utils.DatabaseConnection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class AuctionListController {
 
@@ -54,18 +59,11 @@ public class AuctionListController {
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
         colTime.setCellValueFactory(new PropertyValueFactory<>("timeLeft"));
 
-        // Dữ liệu mock để test giao diện trước khi làm Database/Socket
-        auctionList = FXCollections.observableArrayList(
-                new AuctionItem("iPhone 15 Pro Max", "25,000,000 VNĐ", "RUNNING", "00:15:30"),
-                new AuctionItem("Laptop ThinkPad X1", "30,000,000 VNĐ", "OPEN", "Chưa bắt đầu"),
-                new AuctionItem("Tranh Cửu Ngư Quần Hội", "5,500,000 VNĐ", "FINISHED", "Đã kết thúc"),
-                new AuctionItem("Đồng hồ Rolex", "150,000,000 VNĐ", "PAID", "Đã thanh toán"),
-                new AuctionItem("Mô hình Gundam", "2,000,000 VNĐ", "CANCELED", "Đã hủy")
-        );
+        // Khởi tạo list trống
+        auctionList = FXCollections.observableArrayList();
 
-        // Đổ dữ liệu vào bảng
-        auctionTable.setItems(auctionList);
-
+        // GỌI HÀM LẤY DỮ LIỆU TỪ DATABASE Ở ĐÂY
+        loadDataFromDatabase();
         // Gán sự kiện cho nút Đăng xuất
         btnLogout.setOnAction(event -> logout());
 
@@ -76,6 +74,36 @@ public class AuctionListController {
         }));
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
+    }
+
+    // Hàm lôi dữ liệu THẬT từ MySQL Cloud
+    private void loadDataFromDatabase() {
+        auctionList.clear(); // Dọn sạch bảng trước khi tải
+
+        String sql = "SELECT * FROM items";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                //
+                String name = rs.getString("name");
+                String price = rs.getString("current_price");
+                String status = rs.getString("status");
+                String timeLeft = rs.getString("end_time");
+
+                auctionList.add(new AuctionItem(name, price, status, timeLeft));
+            }
+
+            // Đổ list lên bảng giao diện
+            auctionTable.setItems(auctionList);
+            System.out.println(">>> Đã tải thành công dữ liệu từ Cloud Database!");
+
+        } catch (SQLException e) {
+            System.out.println("❌ Lỗi: Không lấy được dữ liệu từ Database.Check lại mạng xem!");
+            e.printStackTrace(); // In ra lỗi chữ đỏ để biết sai ở đâu
+        }
     }
 
     // Hàm xử lý đăng xuất
