@@ -72,8 +72,7 @@
 
                         <Label fx:id="statusLabel" text="" wrapText="true" maxWidth="1.7976931348623157E308" />
 
-                        <Button maxWidth="1.7976931348623157E308" onAction="#onLogInButtonClick" styleClass="login-btn" text="Đăng nhập" />
-
+                        <Button fx:id="loginButton" maxWidth="1.7976931348623157E308" onAction="#onLogInButtonClick" styleClass="login-btn" text="Đăng nhập" />
                         <HBox alignment="BASELINE_CENTER" spacing="5.0">
                             <children>
                                 <Label styleClass="sub-title-text" text="Chưa có tài khoản?" />

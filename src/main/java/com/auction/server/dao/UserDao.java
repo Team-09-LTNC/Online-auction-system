@@ -7,11 +7,10 @@ import java.sql.*;
 
 public class UserDao {
 
-    // LƯU NGƯỜI DÙNG KHI ĐĂNG KÝ
+    // Lưu người dùng khi đăng ký
     public boolean saveUser(User user) {
         String sql = "INSERT INTO users (id, username, password, full_name, role) VALUES (?, ?, ?, ?, ?)";
 
-        // THÊM Connection VÀO ĐÂY ĐỂ TRÁNH LỖI CONNECTION CLOSED
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -28,7 +27,7 @@ public class UserDao {
         }
     }
 
-    // TÌM NGƯỜI DÙNG ĐỂ ĐĂNG NHẬP
+    // Tìm người dùng để đăng nhập
     public User findByUsername(String username) {
         String sql = "SELECT * FROM users WHERE username = ?";
 
@@ -37,25 +36,24 @@ public class UserDao {
 
             pstmt.setString(1, username);
 
-            // ResultSet tự đóng luôn cho sạch sẽ
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     String role = rs.getString("role");
                     String pass = rs.getString("password");
                     String name = rs.getString("full_name");
-                    String id = rs.getString("id");
+                    String id   = rs.getString("id");
 
                     User user;
-                    if ("ADMIN".equals(role)) user = new Admin(username, pass, name);
+                    if ("ADMIN".equals(role))       user = new Admin(username, pass, name);
                     else if ("SELLER".equals(role)) user = new Seller(username, pass, name);
-                    else user = new Bidder(username, pass, name);
+                    else                            user = new Bidder(username, pass, name);
 
                     user.setId(id);
                     return user;
                 }
             }
         } catch (SQLException e) {
-            System.out.println("❌ Lỗi DB ở findByUsername rồi m ơi!");
+            System.err.println("❌ Lỗi khi tìm user: " + e.getMessage());
             e.printStackTrace();
         }
         return null;

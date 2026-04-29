@@ -34,8 +34,6 @@ public class ItemDao {
         }
     }
 
-    // ---------------------------------------------------------------------------
-
     private final Connection conn;
 
     public ItemDao(Connection conn) {
@@ -46,18 +44,18 @@ public class ItemDao {
     // LƯU ITEM MỚI
     // Trả về dbId (INT) được DB gán, hoặc -1 nếu thất bại.
     // -------------------------------------------------------------------------
-    public int saveItem(Item item) {
-        // BUG FIX: thêm cột description (bảng cũ thiếu cột này)
-        String sql = "INSERT INTO items (name, description, category, starting_price, current_price, status) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
+    public int saveItem(Item item, String sellerId) {
+        String sql = "INSERT INTO items (name, description, category, starting_price, current_price, status, seller_id) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, item.getName());
             pstmt.setString(2, item.getDescription());
-            pstmt.setString(3, item.getItemCategory());   // "ART" / "ELECTRONICS" / "VEHICLE"
+            pstmt.setString(3, item.getItemCategory());
             pstmt.setDouble(4, item.getStartingPrice());
-            pstmt.setDouble(5, item.getStartingPrice());  // current_price ban đầu = starting_price
+            pstmt.setDouble(5, item.getStartingPrice()); // Giá hiện tại ban đầu = giá khởi điểm
             pstmt.setString(6, AuctionStatus.OPEN.name());
+            pstmt.setString(7, sellerId);
 
             int rows = pstmt.executeUpdate();
             if (rows > 0) {
@@ -66,7 +64,7 @@ public class ItemDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi khi lưu item: " + e.getMessage());
+            System.err.println("❌ Lỗi SQL tại ItemDao: " + e.getMessage());
         }
         return -1;
     }
@@ -176,11 +174,20 @@ public class ItemDao {
         }
     }
 
+    public void closeConnection() {
+        try {
+            if (conn != null && !conn.isClosed()) {
+                conn.close();
+                System.out.println(">>> [INFO] Database connection đã được đóng.");
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi khi đóng connection: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     // =========================================================================
     // PRIVATE HELPER — map ResultSet → ItemRecord
-    // BUG FIX: Factory.createItem() trước là package-private → không gọi được
-    // từ package dao. Đã tạo public wrapper createPublicItem() hoặc dùng
-    // constructor trực tiếp ở đây thay vì qua Factory để tránh coupling.
     // =========================================================================
     private ItemRecord mapRow(ResultSet rs) throws SQLException {
         int dbId            = rs.getInt("id");

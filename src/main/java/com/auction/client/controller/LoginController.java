@@ -7,9 +7,12 @@ import java.util.ResourceBundle;
 import com.auction.common.exception.AuthenticationException;
 import com.auction.common.model.user.User;
 import com.auction.server.manager.AuctionManager;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Hyperlink;
@@ -28,6 +31,7 @@ public class LoginController implements Initializable {
     @FXML private TextField passwordTextField;
     @FXML private Button showPasswordButton;
     @FXML private Hyperlink registerLink;
+    @FXML private Button loginButton;
 
     @FXML
     protected void onShowPasswordButtonClick() {
@@ -50,47 +54,82 @@ public class LoginController implements Initializable {
 
         if (username.isBlank()) {
             showError("Lỗi: Hãy nhập tên đăng nhập của bạn!");
-        } else if (password.isBlank()) {
-            showError("Lỗi: Vui lòng nhập mật khẩu!");
-        } else if (selectedRole == null) {
-            showError("Lỗi: Vui lòng chọn vai trò của bạn!");
-        } else {
-            try {
-                // 1. Gọi AuctionManager để xác thực thông tin người dùng
-                User user = AuctionManager.getInstance().authenticate(username, password, selectedRole);
-
-                statusLabel.setText("✅ Đăng nhập thành công! Chào " + user.getFullName());
-                statusLabel.setStyle("-fx-text-fill: green;");
-
-                // 2. Lấy Stage hiện tại để chuẩn bị chuyển cảnh
-                Stage stage = (Stage) statusLabel.getScene().getWindow();
-                FXMLLoader loader;
-
-                // 3. Logic điều hướng dựa trên vai trò (Role) [cite: 32, 166]
-                if ("Bidder".equals(selectedRole)) {
-                    // Chuyển sang màn hình danh sách đấu giá cho Bidder [cite: 377, 378]
-                    loader = new FXMLLoader(getClass().getResource("/fxml/AuctionListScreen.fxml"));
-                    stage.getScene().setRoot(loader.load());
-                    stage.setTitle("HỆ THỐNG ĐẤU GIÁ - DANH SÁCH PHIÊN");
-                }
-                else if ("Seller".equals(selectedRole)) {
-                    // Placeholder cho Seller (Sẽ cập nhật file FXML sau) [cite: 68]
-                    showError("Chức năng cho Seller đang được phát triển!");
-                }
-                else if ("Admin".equals(selectedRole)) {
-                    // Placeholder cho Admin (Sẽ cập nhật file FXML sau) [cite: 37]
-                    showError("Chức năng cho Admin đang được phát triển!");
-                }
-
-            } catch (AuthenticationException e) {
-                // Hiển thị thông báo lỗi nếu sai tài khoản/mật khẩu
-                showError(e.getMessage());
-            } catch (IOException e) {
-                // Xử lý lỗi khi không tìm thấy hoặc không load được file FXML
-                e.printStackTrace();
-                showError("Lỗi hệ thống: Không thể mở giao diện tiếp theo!");
-            }
+            return;
         }
+        if (password.isBlank()) {
+            showError("Lỗi: Vui lòng nhập mật khẩu!");
+            return;
+        }
+        if (selectedRole == null) {
+            showError("Lỗi: Vui lòng chọn vai trò của bạn!");
+            return;
+        }
+
+        showInfo("⏳ Đang đăng nhập...");
+        setFormDisabled(true);
+
+        Task<User> loginTask = new Task<>() {
+            @Override
+            protected User call() throws Exception {
+                return AuctionManager.getInstance().authenticate(username, password, selectedRole);
+            }
+        };
+
+        loginTask.setOnSucceeded(event -> {
+            User user = loginTask.getValue();
+            showSuccess("✅ Đăng nhập thành công! Chào " + user.getFullName());
+
+            Task<Void> delayTask = new Task<>() {
+                @Override
+                protected Void call() throws Exception {
+                    Thread.sleep(800);
+                    return null;
+                }
+            };
+
+            delayTask.setOnSucceeded(e -> {
+                try {
+                    Stage stage = (Stage) statusLabel.getScene().getWindow();
+
+                    if ("Bidder".equals(selectedRole)) {
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/AuctionListScreen.fxml"));
+                        Parent root = loader.load();
+                        AuctionListController controller = loader.getController();
+                        controller.loadDataFromDatabase();
+                        stage.getScene().setRoot(root);
+                        stage.setTitle("HỆ THỐNG ĐẤU GIÁ - DANH SÁCH SẢN PHẨM");
+                    } else if ("Seller".equals(selectedRole)) {
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/SellerDashboard.fxml"));
+                        Parent root = loader.load();
+                        SellerDashboardController dashboardController = loader.getController();
+                        dashboardController.initSeller(user);
+                        stage.getScene().setRoot(root);
+                        stage.setTitle("HỆ THỐNG ĐẤU GIÁ - QUẢN LÝ SẢN PHẨM (SELLER)");
+                    } else if ("Admin".equals(selectedRole)) {
+                        setFormDisabled(false);
+                        showError("Chức năng cho Admin đang được phát triển!");
+                    }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    setFormDisabled(false);
+                    showError("Lỗi hệ thống: Không thể mở giao diện tiếp theo!");
+                }
+            });
+
+            new Thread(delayTask).start();
+        });
+
+        loginTask.setOnFailed(event -> {
+            Throwable ex = loginTask.getException();
+            setFormDisabled(false);
+            if (ex instanceof AuthenticationException) {
+                showError(ex.getMessage());
+            } else {
+                showError("Lỗi hệ thống: Không thể kết nối. Vui lòng thử lại!");
+            }
+        });
+
+        new Thread(loginTask).start();
     }
 
     @FXML
@@ -106,14 +145,31 @@ public class LoginController implements Initializable {
         }
     }
 
+    private void setFormDisabled(boolean disabled) {
+        usernameField.setDisable(disabled);
+        passwordField.setDisable(disabled);
+        passwordTextField.setDisable(disabled);
+        roleComboBox.setDisable(disabled);
+        if (loginButton != null) loginButton.setDisable(disabled);
+    }
+
     private void showError(String message) {
         statusLabel.setText(message);
         statusLabel.setStyle("-fx-text-fill: red;");
     }
 
+    private void showSuccess(String message) {
+        statusLabel.setText(message);
+        statusLabel.setStyle("-fx-text-fill: green;");
+    }
+
+    private void showInfo(String message) {
+        statusLabel.setText(message);
+        statusLabel.setStyle("-fx-text-fill: #6E1C1C; -fx-font-style: italic;");
+    }
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Thiết lập ban đầu cho các ComboBox và trường mật khẩu
         roleComboBox.getItems().addAll("Bidder", "Seller", "Admin");
         passwordField.setVisible(true);
         passwordTextField.setVisible(false);

@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -17,7 +16,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
@@ -31,129 +29,115 @@ public class AuctionListController {
 
     @FXML
     private TableView<AuctionItem> auctionTable;
-
     @FXML
     private TableColumn<AuctionItem, String> colName;
-
     @FXML
     private TableColumn<AuctionItem, String> colPrice;
-
     @FXML
     private TableColumn<AuctionItem, String> colStatus;
-
     @FXML
     private TableColumn<AuctionItem, String> colTime;
-
     @FXML
     private Button btnLogout;
-
     @FXML
     private Button btnEnterAuction;
 
-    // List chứa dữ liệu để đưa lên bảng
     private ObservableList<AuctionItem> auctionList;
 
     @FXML
     public void initialize() {
         System.out.println("Vào màn hình danh sách đấu giá...");
 
-        // Set up các cột trong TableView
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
         colTime.setCellValueFactory(new PropertyValueFactory<>("timeLeft"));
 
-        // CẤU HÌNH CỘT THỜI GIAN ĐỂ ĐẾM NGƯỢC
-        colTime.setCellFactory(column -> {
-            return new TableCell<AuctionItem, String>() {
-                @Override
-                protected void updateItem(String endTimeStr, boolean empty) {
-                    super.updateItem(endTimeStr, empty);
+        // Cấu hình cột thời gian để đếm ngược
+        colTime.setCellFactory(column -> new TableCell<AuctionItem, String>() {
+            @Override
+            protected void updateItem(String endTimeStr, boolean empty) {
+                super.updateItem(endTimeStr, empty);
 
-                    if (empty || endTimeStr == null || endTimeStr.isEmpty()) {
-                        setText(null);
-                        setStyle("");
-                    } else {
-                        try {
-                            // Cắt phần đuôi .0 nếu MySQL tự thêm vào
-                            String cleanTimeStr = endTimeStr;
-                            if (endTimeStr.endsWith(".0")) {
-                                cleanTimeStr = endTimeStr.substring(0, endTimeStr.length() - 2);
-                            }
+                if (empty || endTimeStr == null || endTimeStr.isEmpty()) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    try {
+                        // Cắt phần đuôi .0 nếu MySQL tự thêm vào
+                        String cleanTimeStr = endTimeStr.endsWith(".0")
+                                ? endTimeStr.substring(0, endTimeStr.length() - 2)
+                                : endTimeStr;
 
-                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                            LocalDateTime endTime = LocalDateTime.parse(cleanTimeStr, formatter);
-                            LocalDateTime now = LocalDateTime.now();
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                        LocalDateTime endTime = LocalDateTime.parse(cleanTimeStr, formatter);
+                        LocalDateTime now = LocalDateTime.now();
 
-                            if (now.isAfter(endTime)) {
-                                setText("Đã kết thúc");
-                                setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                        if (now.isAfter(endTime)) {
+                            setText("Đã kết thúc");
+                            setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                        } else {
+                            java.time.Duration duration = java.time.Duration.between(now, endTime);
+                            long days    = duration.toDays();
+                            long hours   = duration.toHoursPart();
+                            long minutes = duration.toMinutesPart();
+                            long seconds = duration.toSecondsPart();
+
+                            String timeRemaining;
+                            if (days > 0) {
+                                timeRemaining = days + " ngày " + hours + " giờ";
+                            } else if (hours > 0) {
+                                timeRemaining = hours + " giờ " + minutes + " phút";
                             } else {
-                                java.time.Duration duration = java.time.Duration.between(now, endTime);
-                                long days = duration.toDays();
-                                long hours = duration.toHoursPart();
-                                long minutes = duration.toMinutesPart();
-                                long seconds = duration.toSecondsPart();
-
-                                String timeRemaining = "";
-                                if (days > 0) {
-                                    timeRemaining = days + " ngày " + hours + " giờ";
-                                } else if (hours > 0) {
-                                    timeRemaining = hours + " giờ " + minutes + " phút";
-                                } else {
-                                    timeRemaining = minutes + " phút " + seconds + " giây";
-                                }
-
-                                setText("Còn " + timeRemaining);
-                                setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+                                timeRemaining = minutes + " phút " + seconds + " giây";
                             }
-                        } catch (Exception e) {
-                            setText(endTimeStr); // Nếu lỗi format thì in ra chuỗi gốc
-                            setStyle("");
+
+                            setText("Còn " + timeRemaining);
+                            setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
                         }
+                    } catch (Exception e) {
+                        setText(endTimeStr); // Nếu lỗi format thì hiển thị chuỗi gốc
+                        setStyle("");
                     }
                 }
-            };
+            }
         });
 
-        // Khởi tạo list trống
         auctionList = FXCollections.observableArrayList();
+        auctionTable.setItems(auctionList);
 
-        // GỌI HÀM LẤY DỮ LIỆU TỪ DATABASE Ở ĐÂY
         loadDataFromDatabase();
 
-        // Gán sự kiện cho nút Đăng xuất
         btnLogout.setOnAction(event -> logout());
 
-        // Thread cập nhật danh sách đấu giá mỗi 3 giây (Fake polling)
+        // Thread cập nhật danh sách đấu giá mỗi 3 giây
+        // TODO: Sau này học bài mạng xong sẽ gọi SocketClient.listAuctions() ở đây
         Timeline timeline = new Timeline(new KeyFrame(javafx.util.Duration.seconds(3), event -> {
-            // System.out.println("Đang giả lập gọi Server lấy data...");
-            // TODO: Sau này học bài mạng xong sẽ gọi SocketClient.listAuctions() ở đây
         }));
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
     }
 
-    // Hàm lôi dữ liệu THẬT từ MySQL Cloud
-    private void loadDataFromDatabase() {
-        auctionList.clear(); // Dọn sạch bảng trước khi tải
+    public void loadDataFromDatabase() {
+        auctionList.clear();
 
-        String sql = "SELECT * FROM items";
+        String sql = "SELECT i.name, i.current_price, i.status, a.end_time " +
+                "FROM items i " +
+                "LEFT JOIN auctions a ON i.id = a.item_id";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
-                String name = rs.getString("name");
-                String price = rs.getString("current_price");
-                String status = rs.getString("status");
+                String name     = rs.getString("name");
+                String price    = rs.getString("current_price");
+                String status   = rs.getString("status");
                 String timeLeft = rs.getString("end_time");
 
                 auctionList.add(new AuctionItem(name, price, status, timeLeft));
             }
 
-            // Đổ list lên bảng giao diện
             auctionTable.setItems(auctionList);
             System.out.println(">>> Đã tải thành công dữ liệu từ Cloud Database!");
 
@@ -163,16 +147,14 @@ public class AuctionListController {
         }
     }
 
-    // Hàm xử lý đăng xuất
     private void logout() {
         try {
             System.out.println("Đang đăng xuất...");
             Stage stage = (Stage) btnLogout.getScene().getWindow();
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Login.fxml"));
             Parent root = loader.load();
-            stage.setScene(new Scene(root));
+            stage.getScene().setRoot(root);
             stage.setTitle("HỆ THỐNG ĐẤU GIÁ");
-            stage.show();
         } catch (IOException e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi", "Không thể quay lại màn hình đăng nhập!");
@@ -207,7 +189,7 @@ public class AuctionListController {
         alert.showAndWait();
     }
 
-    // Class Model nội bộ
+    // TODO: Tách class này ra thư mục model lúc rảnh
     public static class AuctionItem {
         private String name;
         private String price;
@@ -221,36 +203,13 @@ public class AuctionListController {
             this.timeLeft = timeLeft;
         }
 
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getPrice() {
-            return price;
-        }
-
-        public void setPrice(String price) {
-            this.price = price;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setStatus(String status) {
-            this.status = status;
-        }
-
-        public String getTimeLeft() {
-            return timeLeft;
-        }
-
-        public void setTimeLeft(String timeLeft) {
-            this.timeLeft = timeLeft;
-        }
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getPrice() { return price; }
+        public void setPrice(String price) { this.price = price; }
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+        public String getTimeLeft() { return timeLeft; }
+        public void setTimeLeft(String timeLeft) { this.timeLeft = timeLeft; }
     }
 }

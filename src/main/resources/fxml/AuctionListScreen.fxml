@@ -18,7 +18,8 @@
                         <Insets right="220.0" />
                     </HBox.margin>
                 </Label>
-                <Button fx:id="btnLogout" mnemonicParsing="false" style="-fx-background-color: #f4f1ee; -fx-text-fill: #631b1b;" text="Đăng xuất">
+
+                <Button fx:id="btnLogout" mnemonicParsing="false" style="-fx-background-color: #f4f1ee; -fx-text-fill: #631b1b; -fx-cursor: hand;" text="Đăng xuất">
                     <font>
                         <Font name="System Bold" size="13.0" />
                     </font>
@@ -52,7 +53,8 @@
                                 <Font name="System Italic" size="14.0" />
                             </font>
                         </Label>
-                        <Button fx:id="btnEnterAuction" mnemonicParsing="false" onAction="#onEnterAuctionClick" prefHeight="40.0" prefWidth="150.0" style="-fx-background-color: #631b1b; -fx-text-fill: white; -fx-background-radius: 20;" text="VÀO ĐẤU GIÁ">
+
+                        <Button fx:id="btnEnterAuction" mnemonicParsing="false" onAction="#onEnterAuctionClick" prefHeight="40.0" prefWidth="150.0" style="-fx-background-color: #631b1b; -fx-text-fill: white; -fx-background-radius: 20; -fx-cursor: hand;" text="VÀO ĐẤU GIÁ">
                             <font>
                                 <Font name="System Bold" size="14.0" />
                             </font>
