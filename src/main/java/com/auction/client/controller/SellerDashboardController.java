@@ -1,9 +1,10 @@
 package com.auction.client.controller;
 
-import com.auction.auction.AuctionStatus;
-import com.auction.common.model.item.*;
 import com.auction.common.model.user.User;
 import com.auction.server.dao.ItemDao;
+import com.auction.server.manager.ItemFormManager;
+import com.auction.server.manager.ItemListManager;
+import com.auction.server.manager.ItemRow;
 import com.auction.server.utils.DatabaseConnection;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -16,8 +17,6 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.List;
 
 public class SellerDashboardController {
 
@@ -64,7 +63,9 @@ public class SellerDashboardController {
     private User currentSeller;
     private ItemDao itemDao;
     private ObservableList<ItemRow> danhSachSanPham;
-    private int dangSuaId = -1;
+
+    private ItemListManager itemListManager;
+    private ItemFormManager itemFormManager;
 
     @FXML
     public void initialize() {
@@ -73,7 +74,7 @@ public class SellerDashboardController {
             this.itemDao = new ItemDao(conn);
             System.out.println(">>> [SUCCESS] SellerDashboard đã kết nối với Database Cloud.");
         } else {
-            hienThiLoi("Lỗi: Không thể kết nối tới Database. Vui lòng kiểm tra Internet hoặc IP Whitelist!");
+            showError("Lỗi: Không thể kết nối tới Database. Vui lòng kiểm tra Internet hoặc IP Whitelist!");
         }
 
         cbCategory.getItems().addAll("ART", "ELECTRONICS", "VEHICLE");
@@ -94,24 +95,40 @@ public class SellerDashboardController {
     public void initSeller(User seller) {
         this.currentSeller = seller;
         lblWelcome.setText("Xin chào, " + seller.getFullName() + "!");
+
+        // Initialize managers
+        this.itemListManager = new ItemListManager(itemDao, currentSeller, danhSachSanPham);
+        this.itemFormManager = new ItemFormManager(itemDao, currentSeller);
+
+        // Setup form controls
+        itemFormManager.setFormControls(cbCategory, tfName, taDescription, tfPrice, tfDuration,
+                tfArtist, tfYear, tfMedium, tfBrand, tfWarranty, tfMake, tfModel, tfVehicleYear,
+                btnDang, paneArtFields, paneElecFields, paneVehicleFields, lblStatus);
+
+        // Setup callbacks
+        itemFormManager.setOnItemSaved(() -> itemListManager.loadDanhSach());
+        itemFormManager.setOnEditMode(() -> hienPaneAddNew());
+
         if (itemDao != null) {
-            loadDanhSach();
+            itemListManager.loadDanhSach();
         }
     }
 
     @FXML
     private void onMenuMyItemsClick() {
         hienPaneMyItems();
-        if (itemDao != null) {
-            loadDanhSach();
+        if (itemListManager != null) {
+            itemListManager.loadDanhSach();
         }
     }
 
     @FXML
     private void onMenuAddNewClick() {
         hienPaneAddNew();
-        xoaForm();
-        dangSuaId = -1;
+        if (itemFormManager != null) {
+            itemFormManager.clearForm();
+            itemFormManager.setDangSuaId(-1);
+        }
     }
 
     private void hienPaneMyItems() {
@@ -132,31 +149,6 @@ public class SellerDashboardController {
         btnMenuMyItems.setStyle("-fx-background-color: transparent; -fx-text-fill: #1A0F0A; -fx-font-size: 13px; -fx-padding: 12 15 12 15; -fx-background-radius: 0; -fx-cursor: hand; -fx-alignment: CENTER_LEFT;");
     }
 
-    private void loadDanhSach() {
-        if (itemDao == null) {
-            hienThiLoi("Lỗi: Không có kết nối Database!");
-            return;
-        }
-        if (currentSeller == null) {
-            hienThiLoi("Lỗi: Chưa xác định người bán!");
-            return;
-        }
-
-        danhSachSanPham.clear();
-        List<ItemDao.ItemRecord> records = itemDao.findBySellerId(currentSeller.getId());
-
-        for (ItemDao.ItemRecord record : records) {
-            danhSachSanPham.add(new ItemRow(
-                    record.dbId,
-                    record.item.getName(),
-                    record.item.getItemCategory(),
-                    String.valueOf(record.item.getStartingPrice()),
-                    record.status.name()
-            ));
-        }
-        System.out.println("Da load " + danhSachSanPham.size() + " san pham");
-    }
-
     private void setupCotHanhDong() {
         colAction.setCellFactory(col -> new TableCell<>() {
             Button btnSua = new Button("Sửa");
@@ -169,12 +161,16 @@ public class SellerDashboardController {
 
                 btnSua.setOnAction(e -> {
                     ItemRow row = getTableView().getItems().get(getIndex());
-                    chuyenSangSuaSanPham(row);
+                    if (itemFormManager != null) {
+                        itemFormManager.chuyenSangSuaSanPham(row);
+                    }
                 });
 
                 btnXoa.setOnAction(e -> {
                     ItemRow row = getTableView().getItems().get(getIndex());
-                    xoaSanPham(row);
+                    if (itemListManager != null) {
+                        itemListManager.xoaSanPham(row);
+                    }
                 });
             }
 
@@ -195,190 +191,37 @@ public class SellerDashboardController {
         });
     }
 
-    private void chuyenSangSuaSanPham(ItemRow row) {
-        dangSuaId = row.getDbId();
-        ItemDao.ItemRecord record = itemDao.findByDbId(dangSuaId);
-        if (record == null) {
-            System.out.println("Khong tim thay san pham id = " + dangSuaId);
-            return;
-        }
-
-        cbCategory.setValue(record.item.getItemCategory());
-        tfName.setText(record.item.getName());
-        taDescription.setText(record.item.getDescription());
-        tfPrice.setText(String.valueOf(record.item.getStartingPrice()));
-
-        if (record.item instanceof Art art) {
-            tfArtist.setText(art.getArtist());
-            tfYear.setText(String.valueOf(art.getYearCreated()));
-            tfMedium.setText(art.getMedium());
-        } else if (record.item instanceof Electronics elec) {
-            tfBrand.setText(elec.getBrand());
-            tfWarranty.setText(String.valueOf(elec.getWarrantyMonths()));
-        } else if (record.item instanceof Vehicle vehicle) {
-            tfMake.setText(vehicle.getMake());
-            tfModel.setText(vehicle.getModel());
-            tfVehicleYear.setText(String.valueOf(vehicle.getYear()));
-        }
-
-        hienPaneAddNew();
-        btnDang.setText("Cập nhật sản phẩm");
-        hienThiThongBao("Đang sửa sản phẩm: " + record.item.getName());
-    }
-
-    private void xoaSanPham(ItemRow row) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Xác nhận xóa");
-        alert.setHeaderText(null);
-        alert.setContentText("Bạn có chắc muốn xóa sản phẩm \"" + row.getName() + "\" không?");
-
-        if (alert.showAndWait().get() == ButtonType.OK) {
-            boolean ketQua = itemDao.deleteById(row.getDbId());
-            if (ketQua) {
-                loadDanhSach();
-                System.out.println("Da xoa san pham id = " + row.getDbId());
-            } else {
-                Alert err = new Alert(Alert.AlertType.ERROR);
-                err.setTitle("Lỗi");
-                err.setHeaderText(null);
-                err.setContentText("Không thể xóa sản phẩm này!");
-                err.showAndWait();
-            }
-        }
-    }
-
     @FXML
     private void onCategoryChanged() {
-        String loai = cbCategory.getValue();
-
-        paneArtFields.setVisible(false);
-        paneArtFields.setManaged(false);
-        paneElecFields.setVisible(false);
-        paneElecFields.setManaged(false);
-        paneVehicleFields.setVisible(false);
-        paneVehicleFields.setManaged(false);
-
-        if (loai == null) return;
-
-        switch (loai) {
-            case "ART" -> {
-                paneArtFields.setVisible(true);
-                paneArtFields.setManaged(true);
-            }
-            case "ELECTRONICS" -> {
-                paneElecFields.setVisible(true);
-                paneElecFields.setManaged(true);
-            }
-            case "VEHICLE" -> {
-                paneVehicleFields.setVisible(true);
-                paneVehicleFields.setManaged(true);
-            }
+        if (itemFormManager != null) {
+            itemFormManager.onCategoryChanged();
         }
     }
 
     @FXML
     private void onDangClick() {
-        String loai = cbCategory.getValue();
-        String ten = tfName.getText().trim();
-        String moTa = taDescription.getText().trim();
-        String giaText = tfPrice.getText().trim();
-
-        if (loai == null) { hienThiLoi("Lỗi: Chưa chọn loại sản phẩm!"); return; }
-        if (ten.isEmpty()) { hienThiLoi("Lỗi: Chưa nhập tên sản phẩm!"); return; }
-        if (giaText.isEmpty()) { hienThiLoi("Lỗi: Chưa nhập giá khởi điểm!"); return; }
-
-        double gia;
-        try {
-            gia = Double.parseDouble(giaText);
-            if (gia <= 0) throw new NumberFormatException();
-        } catch (NumberFormatException e) {
-            hienThiLoi("Lỗi: Giá khởi điểm không hợp lệ!");
-            return;
-        }
-
-        if (dangSuaId == -1) {
-            themSanPhamMoi(loai, ten, moTa, gia);
-        } else {
-            capNhatSanPham(ten, moTa, gia);
-        }
-    }
-
-    private void themSanPhamMoi(String loai, String ten, String moTa, double gia) {
-        if (currentSeller == null) {
-            hienThiLoi("❌ Lỗi: Không tìm thấy thông tin người bán. Vui lòng đăng nhập lại!");
-            return;
-        }
-
-        Item sanPham;
-        switch (loai) {
-            case "ART" -> {
-                String artist = tfArtist.getText().trim();
-                int year = 0;
-                try { year = Integer.parseInt(tfYear.getText().trim()); } catch (Exception ignored) {}
-                String medium = tfMedium.getText().trim();
-                sanPham = new Art(ten, moTa, gia, artist, year, medium);
-            }
-            case "ELECTRONICS" -> {
-                String brand = tfBrand.getText().trim();
-                int warranty = 0;
-                try { warranty = Integer.parseInt(tfWarranty.getText().trim()); } catch (Exception ignored) {}
-                sanPham = new Electronics(ten, moTa, gia, brand, warranty);
-            }
-            case "VEHICLE" -> {
-                String make = tfMake.getText().trim();
-                String model = tfModel.getText().trim();
-                int vehicleYear = 0;
-                try { vehicleYear = Integer.parseInt(tfVehicleYear.getText().trim()); } catch (Exception ignored) {}
-                sanPham = new Vehicle(ten, moTa, gia, make, model, vehicleYear);
-            }
-            default -> {
-                hienThiLoi("Loại sản phẩm không hợp lệ!");
-                return;
-            }
-        }
-
-        int dbId = itemDao.saveItem(sanPham, currentSeller.getId());
-        if (dbId > 0) {
-            hienThiThanhCong("✅ Đăng sản phẩm thành công!");
-            xoaForm();
-            loadDanhSach();
-        } else {
-            hienThiLoi("❌ Lỗi: Không lưu được sản phẩm vào Database.");
-        }
-    }
-
-    private void capNhatSanPham(String ten, String moTa, double gia) {
-        boolean ketQua = itemDao.updateItemInfo(dangSuaId, ten, moTa, gia);
-        if (ketQua) {
-            hienThiThanhCong("✅ Cập nhật sản phẩm thành công!");
-            xoaForm();
-            dangSuaId = -1;
-            btnDang.setText("Đăng sản phẩm");
-        } else {
-            hienThiLoi("❌ Không thể cập nhật! Có thể sản phẩm đang RUNNING.");
+        if (itemFormManager != null) {
+            itemFormManager.onDangClick();
         }
     }
 
     @FXML
     private void onClearFormClick() {
-        xoaForm();
-        dangSuaId = -1;
-        btnDang.setText("Đăng sản phẩm");
-        lblStatus.setText("");
+        if (itemFormManager != null) {
+            itemFormManager.resetForm();
+        }
     }
 
     @FXML
     private void onRefreshClick() {
-        if (itemDao != null) {
-            loadDanhSach();
+        if (itemListManager != null) {
+            itemListManager.loadDanhSach();
         }
         System.out.println("Da tai lai danh sach");
     }
 
-    //  Đóng Connection trước khi thoát để tránh connection leak
     @FXML
     private void onLogoutClick() {
-        // Đóng kết nối DB trước khi rời màn hình
         if (itemDao != null) {
             itemDao.closeConnection();
             itemDao = null;
@@ -394,62 +237,8 @@ public class SellerDashboardController {
         }
     }
 
-    private void xoaForm() {
-        cbCategory.setValue(null);
-        tfName.clear();
-        taDescription.clear();
-        tfPrice.clear();
-        tfDuration.clear();
-        tfArtist.clear();
-        tfYear.clear();
-        tfMedium.clear();
-        tfBrand.clear();
-        tfWarranty.clear();
-        tfMake.clear();
-        tfModel.clear();
-        tfVehicleYear.clear();
-        paneArtFields.setVisible(false);
-        paneArtFields.setManaged(false);
-        paneElecFields.setVisible(false);
-        paneElecFields.setManaged(false);
-        paneVehicleFields.setVisible(false);
-        paneVehicleFields.setManaged(false);
-    }
-
-    private void hienThiLoi(String msg) {
+    private void showError(String msg) {
         lblStatus.setText(msg);
         lblStatus.setStyle("-fx-text-fill: red; -fx-font-size: 12px;");
-    }
-
-    private void hienThiThanhCong(String msg) {
-        lblStatus.setText(msg);
-        lblStatus.setStyle("-fx-text-fill: green; -fx-font-size: 12px;");
-    }
-
-    private void hienThiThongBao(String msg) {
-        lblStatus.setText(msg);
-        lblStatus.setStyle("-fx-text-fill: #6E1C1C; -fx-font-size: 12px;");
-    }
-
-    public static class ItemRow {
-        private int dbId;
-        private String name;
-        private String category;
-        private String startingPrice;
-        private String status;
-
-        public ItemRow(int dbId, String name, String category, String startingPrice, String status) {
-            this.dbId = dbId;
-            this.name = name;
-            this.category = category;
-            this.startingPrice = startingPrice;
-            this.status = status;
-        }
-
-        public int getDbId() { return dbId; }
-        public String getName() { return name; }
-        public String getCategory() { return category; }
-        public String getStartingPrice() { return startingPrice; }
-        public String getStatus() { return status; }
     }
 }
