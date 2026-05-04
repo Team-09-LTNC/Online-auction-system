@@ -11,7 +11,7 @@ public class ItemFormManager {
     private User currentSeller;
     private int dangSuaId = -1;
 
-    // Form controls
+    // Form sản phẩm
     private ComboBox<String> cbCategory;
     private TextField tfName;
     private TextArea taDescription;
@@ -31,7 +31,6 @@ public class ItemFormManager {
     private VBox paneVehicleFields;
     private Label lblStatus;
 
-    // Callback
     private Runnable onItemSaved;
     private Runnable onEditMode;
 

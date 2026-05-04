@@ -5,139 +5,109 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="700.0" prefWidth="1000.0" style="-fx-background-color: #f4f1ee;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.HomeController">
+<BorderPane prefHeight="700.0" prefWidth="1000.0" style="-fx-background-color: #f4f1ee;"
+            xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.auction.client.controller.HomeController">
 
     <top>
         <VBox BorderPane.alignment="CENTER" style="-fx-background-color: #f4f1ee;">
+
             <!-- Dòng 1: Thanh điều hướng nhỏ trên cùng -->
-            <HBox alignment="CENTER_LEFT" prefHeight="35.0" spacing="5.0" style="-fx-border-color: transparent transparent #d7d0c8 transparent; -fx-border-width: 1;">
-                <padding>
-                    <Insets left="20.0" right="20.0" />
-                </padding>
-                <Label text="Xin chào!" textFill="#4a3b32"/>
-                <!-- Đã chèn focusTraversable và style xóa viền vào đây -->
-                <Hyperlink fx:id="linkSignIn" onAction="#onSignInClick" text="Đăng nhập" textFill="#8b6354" focusTraversable="false" style="-fx-border-color: transparent; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;">
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
+            <HBox alignment="CENTER_LEFT" prefHeight="40.0" spacing="5.0"
+                  style="-fx-border-color: transparent transparent #d7d0c8 transparent; -fx-border-width: 1; -fx-padding: 0 20 0 20;">
+
+                <!-- Lời chào (thay đổi sau khi đăng nhập) -->
+                <Label fx:id="lblGreeting" text="Xin chào!" textFill="#4a3b32">
+                    <font><Font size="12.0"/></font>
+                </Label>
+
+                <!-- Nút Đăng nhập (ẩn sau khi login) -->
+                <Hyperlink fx:id="linkSignIn" onAction="#onSignInClick" text="Đăng nhập"
+                           textFill="#8b6354" focusTraversable="false"
+                           style="-fx-border-color: transparent; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;">
+                    <font><Font name="System Bold" size="12.0"/></font>
                 </Hyperlink>
-                <Region HBox.hgrow="ALWAYS" />
-                <Hyperlink text="Trợ giúp &amp; Liên hệ" textFill="#4a3b32" />
-                <Hyperlink text="Đăng tài sản" textFill="#4a3b32" />
+
+                <!-- Nút Đăng xuất (hiện sau khi login) -->
+                <Button fx:id="btnLogout" text="Đăng xuất" onAction="#onLogoutClick"
+                        visible="false" managed="false"
+                        style="-fx-background-color: #8b6354; -fx-text-fill: white; -fx-background-radius: 10; -fx-cursor: hand; -fx-font-size: 11px; -fx-padding: 3 10 3 10;" />
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <Hyperlink text="Trợ giúp &amp; Liên hệ" textFill="#4a3b32"/>
+
+                <!-- Đăng tài sản -->
+                <Hyperlink fx:id="linkPostAsset" text="Đăng tài sản"
+                           onAction="#onPostAssetClick"
+                           textFill="#6E1C1C" focusTraversable="false"
+                           style="-fx-border-color: transparent; -fx-focus-color: transparent; -fx-font-weight: bold;">
+                </Hyperlink>
             </HBox>
 
             <!-- Dòng 2: Logo và Thanh tìm kiếm -->
-            <HBox alignment="CENTER_LEFT" prefHeight="75.0" spacing="20.0">
-                <padding>
-                    <Insets left="20.0" right="20.0" />
-                </padding>
+            <HBox alignment="CENTER_LEFT" prefHeight="75.0" spacing="15.0"
+                  style="-fx-padding: 0 20 0 20;">
                 <Label text="AuctionHub" textFill="#8b6354">
-                    <font>
-                        <Font name="System Bold" size="32.0" />
-                    </font>
+                    <font><Font name="System Bold" size="32.0"/></font>
                 </Label>
-                <TextField prefHeight="42.0" prefWidth="500.0" promptText="Tìm kiếm tài sản đấu giá..." style="-fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #8b6354; -fx-border-width: 1.5;" HBox.hgrow="ALWAYS">
-                    <font>
-                        <Font size="14.0" />
-                    </font>
+
+                <TextField fx:id="searchField" prefHeight="42.0" prefWidth="450.0"
+                           promptText="Tìm kiếm tài sản đấu giá..."
+                           style="-fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #8b6354; -fx-border-width: 1.5;"
+                           onAction="#onSearchClick"
+                           HBox.hgrow="ALWAYS">
+                    <font><Font size="14.0"/></font>
                 </TextField>
-                <Button prefHeight="42.0" prefWidth="130.0" style="-fx-background-color: #8b6354; -fx-text-fill: white; -fx-background-radius: 20;" text="Tìm kiếm">
-                    <font>
-                        <Font name="System Bold" size="14.0" />
-                    </font>
+
+                <Button prefHeight="42.0" prefWidth="120.0"
+                        style="-fx-background-color: #8b6354; -fx-text-fill: white; -fx-background-radius: 20; -fx-cursor: hand;"
+                        text="Tìm kiếm" onAction="#onSearchClick">
+                    <font><Font name="System Bold" size="14.0"/></font>
                 </Button>
             </HBox>
         </VBox>
     </top>
 
     <center>
-        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: #f4f1ee;" BorderPane.alignment="CENTER">
+        <ScrollPane fitToWidth="true"
+                    style="-fx-background-color: transparent; -fx-background: #f4f1ee;"
+                    BorderPane.alignment="CENTER">
             <content>
-                <VBox spacing="30.0" style="-fx-background-color: #f4f1ee;">
+                <VBox spacing="25.0" style="-fx-background-color: #f4f1ee;">
                     <padding>
-                        <Insets bottom="30.0" left="20.0" right="20.0" top="20.0" />
+                        <Insets bottom="30.0" left="20.0" right="20.0" top="20.0"/>
                     </padding>
 
-                    <!-- BANNER (Đã đồng bộ màu nâu #8b6354) -->
-                    <HBox prefHeight="250.0" style="-fx-background-color: #8b6354; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5);">
-                        <children>
-                            <VBox alignment="CENTER_LEFT" prefWidth="550.0" spacing="15.0">
-                                <padding>
-                                    <Insets left="40.0" />
-                                </padding>
-                                <Label text="Tuần Lễ Vàng - Đấu Giá Sang" textFill="WHITE" wrapText="true">
-                                    <font>
-                                        <Font name="System Bold" size="36.0" />
-                                    </font>
-                                </Label>
-                                <Label text="Khám phá các bộ sưu tập giới hạn và tài sản giá trị cao với mức khởi điểm hấp dẫn." textFill="#f4f1ee" wrapText="true">
-                                    <font>
-                                        <Font size="16.0" />
-                                    </font>
-                                </Label>
-                                <Button style="-fx-background-color: #f4f1ee; -fx-text-fill: #8b6354; -fx-background-radius: 20;" text="Xem ngay" prefHeight="40.0" prefWidth="150.0">
-                                    <font>
-                                        <Font name="System Bold" size="14.0" />
-                                    </font>
-                                </Button>
-                            </VBox>
-                        </children>
+                    <!-- BANNER -->
+                    <HBox prefHeight="220.0"
+                          style="-fx-background-color: #8b6354; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5);">
+                        <VBox alignment="CENTER_LEFT" prefWidth="600.0" spacing="15.0">
+                            <padding><Insets left="40.0"/></padding>
+                            <Label text="Tuần Lễ Vàng - Đấu Giá Sang" textFill="WHITE" wrapText="true">
+                                <font><Font name="System Bold" size="32.0"/></font>
+                            </Label>
+                            <Label text="Khám phá các bộ sưu tập giới hạn và tài sản giá trị cao với mức khởi điểm hấp dẫn."
+                                   textFill="#f4f1ee" wrapText="true">
+                                <font><Font size="15.0"/></font>
+                            </Label>
+                            <Button style="-fx-background-color: #f4f1ee; -fx-text-fill: #8b6354; -fx-background-radius: 20; -fx-cursor: hand;"
+                                    text="Xem ngay" prefHeight="40.0" prefWidth="140.0"
+                                    onAction="#onXemNgayClick">
+                                <font><Font name="System Bold" size="14.0"/></font>
+                            </Button>
+                        </VBox>
                     </HBox>
 
                     <!-- TIÊU ĐỀ DANH SÁCH -->
-                    <Label text="Tài sản nổi bật" textFill="#8b6354">
-                        <font>
-                            <Font name="System Bold" size="24.0" />
-                        </font>
+                    <Label fx:id="lblSectionTitle" text="Tài sản nổi bật" textFill="#8b6354">
+                        <font><Font name="System Bold" size="22.0"/></font>
                     </Label>
 
-                    <!-- DANH SÁCH SẢN PHẨM -->
-                    <FlowPane hgap="25.0" vgap="25.0">
-                        <!-- Sản phẩm 1 -->
-                        <VBox prefHeight="220.0" prefWidth="200.0" style="-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);" alignment="CENTER" spacing="15.0">
-                            <Label text="Tranh Mona Lisa (Bản sao)">
-                                <font>
-                                    <Font name="System Bold" size="14.0"/>
-                                </font>
-                            </Label>
-                            <Label text="Giá hiện tại: 5.000$" textFill="#8b6354">
-                                <font>
-                                    <Font size="13.0"/>
-                                </font>
-                            </Label>
-                            <Button text="Đấu giá ngay" style="-fx-background-color: #8b6354; -fx-text-fill: white; -fx-background-radius: 15;" prefWidth="120.0" prefHeight="35.0" />
-                        </VBox>
+                    <!-- DANH SÁCH SẢN PHẨM (được load từ DB) -->
+                    <FlowPane fx:id="productFlow" hgap="20.0" vgap="20.0"/>
 
-                        <!-- Sản phẩm 2 -->
-                        <VBox prefHeight="220.0" prefWidth="200.0" style="-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);" alignment="CENTER" spacing="15.0">
-                            <Label text="Đồng hồ Rolex cổ">
-                                <font>
-                                    <Font name="System Bold" size="14.0"/>
-                                </font>
-                            </Label>
-                            <Label text="Giá hiện tại: 12.500$" textFill="#8b6354">
-                                <font>
-                                    <Font size="13.0"/>
-                                </font>
-                            </Label>
-                            <Button text="Đấu giá ngay" style="-fx-background-color: #8b6354; -fx-text-fill: white; -fx-background-radius: 15;" prefWidth="120.0" prefHeight="35.0" />
-                        </VBox>
-
-                        <!-- Sản phẩm 3 -->
-                        <VBox prefHeight="220.0" prefWidth="200.0" style="-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);" alignment="CENTER" spacing="15.0">
-                            <Label text="Bình gốm thời Minh">
-                                <font>
-                                    <Font name="System Bold" size="14.0"/>
-                                </font>
-                            </Label>
-                            <Label text="Giá hiện tại: 8.200$" textFill="#8b6354">
-                                <font>
-                                    <Font size="13.0"/>
-                                </font>
-                            </Label>
-                            <Button text="Đấu giá ngay" style="-fx-background-color: #8b6354; -fx-text-fill: white; -fx-background-radius: 15;" prefWidth="120.0" prefHeight="35.0" />
-                        </VBox>
-                    </FlowPane>
                 </VBox>
             </content>
         </ScrollPane>

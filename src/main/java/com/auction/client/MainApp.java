@@ -11,17 +11,19 @@ import javafx.stage.Stage;
 public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        // Đổi thành Home.fxml để check đường dẫn
         URL fxmllocation = getClass().getResource("/fxml/Home.fxml");
         System.out.println("Đường dẫn file: " + fxmllocation);
 
-        // Nạp file giao diện Trang chủ (Home.fxml)
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/Home.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
 
         stage.setTitle("HỆ THỐNG ĐẤU GIÁ");
+
+        stage.setOpacity(0);
         stage.setScene(scene);
+        stage.setMaximized(true);
         stage.show();
+        stage.setOpacity(1);
     }
 
     public static void main(String[] args) {

@@ -5,69 +5,99 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #f4f1ee;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.AuctionListController">
+<BorderPane prefHeight="600.0" prefWidth="920.0"
+            style="-fx-background-color: #f4f1ee;"
+            xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.auction.client.controller.AuctionListController">
 
+    <!-- ===== HEADER ===== -->
     <top>
-        <HBox alignment="CENTER_RIGHT" prefHeight="70.0" prefWidth="900.0" style="-fx-background-color: #631b1b;" BorderPane.alignment="CENTER">
-            <children>
-                <Label text="DANH SÁCH PHIÊN ĐẤU GIÁ" textFill="WHITE">
-                    <font>
-                        <Font name="System Bold" size="24.0" />
-                    </font>
-                    <HBox.margin>
-                        <Insets right="220.0" />
-                    </HBox.margin>
-                </Label>
+        <HBox alignment="CENTER_LEFT" prefHeight="65.0"
+              style="-fx-background-color: #631b1b; -fx-padding: 0 25 0 15;"
+              BorderPane.alignment="CENTER">
 
-                <Button fx:id="btnLogout" mnemonicParsing="false" style="-fx-background-color: #f4f1ee; -fx-text-fill: #631b1b; -fx-cursor: hand;" text="Đăng xuất">
-                    <font>
-                        <Font name="System Bold" size="13.0" />
-                    </font>
-                    <HBox.margin>
-                        <Insets right="20.0" />
-                    </HBox.margin>
-                </Button>
-            </children>
+            <!-- Nút mũi tên quay về — có khung viền trắng nổi bật -->
+            <Button fx:id="btnBack"
+                    text="← Quay về"
+                    onAction="#onBackClick"
+                    mnemonicParsing="false"
+                    style="-fx-background-color: rgba(255,255,255,0.15);
+                           -fx-text-fill: white;
+                           -fx-font-size: 13px;
+                           -fx-font-weight: bold;
+                           -fx-cursor: hand;
+                           -fx-padding: 8 16 8 16;
+                           -fx-background-radius: 8;
+                           -fx-border-color: rgba(255,255,255,0.5);
+                           -fx-border-radius: 8;
+                           -fx-border-width: 1.5;">
+                <tooltip>
+                    <Tooltip text="Quay về trang chủ"/>
+                </tooltip>
+            </Button>
+
+            <!-- Tiêu đề căn giữa -->
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="DANH SÁCH PHIÊN ĐẤU GIÁ" textFill="WHITE">
+                <font><Font name="System Bold" size="22.0"/></font>
+            </Label>
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- Cân bằng layout bên phải (bằng chiều rộng nút bên trái) -->
+            <Region prefWidth="105.0"/>
+
         </HBox>
     </top>
 
+    <!-- ===== NỘI DUNG CHÍNH ===== -->
     <center>
-        <VBox prefHeight="200.0" prefWidth="100.0" spacing="15.0" BorderPane.alignment="CENTER">
-            <children>
-                <TableView fx:id="auctionTable" prefHeight="450.0" prefWidth="860.0" VBox.vgrow="ALWAYS">
-                    <columns>
-                        <TableColumn fx:id="colName" prefWidth="300.0" text="Sản phẩm" />
-                        <TableColumn fx:id="colPrice" prefWidth="180.0" text="Giá hiện tại" />
-                        <TableColumn fx:id="colStatus" prefWidth="150.0" text="Trạng thái" />
-                        <TableColumn fx:id="colTime" prefWidth="200.0" text="Thời gian còn lại" />
-                    </columns>
-                    <columnResizePolicy>
-                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                    </columnResizePolicy>
-                </TableView>
-
-                <HBox alignment="CENTER_RIGHT" prefHeight="60.0" prefWidth="200.0" spacing="20.0">
-                    <children>
-                        <Label text="Chọn một phiên để tham gia:" textFill="#631b1b">
-                            <font>
-                                <Font name="System Italic" size="14.0" />
-                            </font>
-                        </Label>
-
-                        <Button fx:id="btnEnterAuction" mnemonicParsing="false" onAction="#onEnterAuctionClick" prefHeight="40.0" prefWidth="150.0" style="-fx-background-color: #631b1b; -fx-text-fill: white; -fx-background-radius: 20; -fx-cursor: hand;" text="VÀO ĐẤU GIÁ">
-                            <font>
-                                <Font name="System Bold" size="14.0" />
-                            </font>
-                        </Button>
-                    </children>
-                    <padding>
-                        <Insets bottom="10.0" right="10.0" />
-                    </padding>
-                </HBox>
-            </children>
+        <VBox spacing="15.0" BorderPane.alignment="CENTER">
             <BorderPane.margin>
-                <Insets bottom="10.0" left="20.0" right="20.0" top="20.0" />
+                <Insets bottom="15.0" left="25.0" right="25.0" top="20.0"/>
             </BorderPane.margin>
+
+            <!-- Bảng danh sách đấu giá -->
+            <TableView fx:id="auctionTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colName"   text="Sản phẩm"          prefWidth="300.0"/>
+                    <TableColumn fx:id="colPrice"  text="Giá hiện tại"      prefWidth="160.0"/>
+                    <TableColumn fx:id="colStatus" text="Trạng thái"        prefWidth="130.0"/>
+                    <TableColumn fx:id="colTime"   text="Thời gian còn lại" prefWidth="210.0"/>
+                </columns>
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                </columnResizePolicy>
+                <placeholder>
+                    <Label text="Chưa có phiên đấu giá nào."
+                           style="-fx-text-fill: #8b6354; -fx-font-style: italic;"/>
+                </placeholder>
+            </TableView>
+
+            <!-- Thanh hành động dưới bảng -->
+            <HBox alignment="CENTER_RIGHT" spacing="20.0" prefHeight="55.0">
+                <Label text="Chọn một phiên để tham gia:" textFill="#631b1b">
+                    <font><Font name="System Italic" size="14.0"/></font>
+                </Label>
+
+                <Button fx:id="btnEnterAuction"
+                        text="▶  VÀO ĐẤU GIÁ"
+                        onAction="#onEnterAuctionClick"
+                        prefHeight="42.0" prefWidth="160.0"
+                        mnemonicParsing="false"
+                        style="-fx-background-color: #631b1b;
+                               -fx-text-fill: white;
+                               -fx-background-radius: 22;
+                               -fx-cursor: hand;">
+                    <font><Font name="System Bold" size="13.0"/></font>
+                </Button>
+
+                <padding>
+                    <Insets bottom="5.0" right="5.0"/>
+                </padding>
+            </HBox>
+
         </VBox>
     </center>
+
 </BorderPane>

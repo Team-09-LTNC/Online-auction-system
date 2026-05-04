@@ -70,7 +70,7 @@ public class RegisterController implements Initializable {
         if (!password.equals(confirmPassword)) { showError("Lỗi: Mật khẩu xác nhận không khớp!"); return; }
         if (role == null) { showError("Lỗi: Vui lòng chọn vai trò!"); return; }
 
-        // Tạo đối tượng User phù hợp [cite: 34-36]
+        // Tạo đối tượng User phù hợp
         User newUser;
         if ("Seller".equalsIgnoreCase(role)) {
             newUser = new Seller(username, password, fullName);
@@ -78,7 +78,7 @@ public class RegisterController implements Initializable {
             newUser = new Bidder(username, password, fullName);
         }
 
-        // Gọi AuctionManager để lưu vào Cloud [cite: 40]
+        // Gọi AuctionManager để lưu vào Cloud
         if (AuctionManager.getInstance().register(newUser)) {
             statusLabel.setText("✅ Đăng ký thành công! Mời bạn quay lại đăng nhập.");
             statusLabel.setStyle("-fx-text-fill: green;");
