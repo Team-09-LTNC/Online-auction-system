@@ -21,12 +21,12 @@ public class AuctionManager {
     public User authenticate(String username, String password, String role) throws AuthenticationException {
         User user = userDao.findByUsername(username);
 
-        // 1. Kiểm tra tài khoản không tồn tại [cite: 28-31]
+        // 1. Kiểm tra tài khoản không tồn tại
         if (user == null) {
             throw new AuthenticationException("Tài khoản không tồn tại!");
         }
 
-        // 2. Kiểm tra đúng tên/mật khẩu/vai trò [cite: 33-37]
+        // 2. Kiểm tra đúng tên/mật khẩu/vai trò
         if (!user.getPassword().equals(password) || !user.getRoleName().equalsIgnoreCase(role)) {
             throw new AuthenticationException("Tên đăng nhập hoặc mật khẩu chưa chính xác!");
         }

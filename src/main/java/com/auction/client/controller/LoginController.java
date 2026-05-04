@@ -7,18 +7,12 @@ import java.util.ResourceBundle;
 import com.auction.common.exception.AuthenticationException;
 import com.auction.common.model.user.User;
 import com.auction.server.manager.AuctionManager;
-import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 public class LoginController implements Initializable {
@@ -32,6 +26,9 @@ public class LoginController implements Initializable {
     @FXML private Button showPasswordButton;
     @FXML private Hyperlink registerLink;
     @FXML private Button loginButton;
+
+    // ===== THÊM FIELD CHO NÚT QUAY VỀ =====
+    @FXML private Button btnBack;
 
     @FXML
     protected void onShowPasswordButtonClick() {
@@ -52,18 +49,9 @@ public class LoginController implements Initializable {
         String password = passwordField.isVisible() ? passwordField.getText() : passwordTextField.getText();
         String selectedRole = roleComboBox.getValue();
 
-        if (username.isBlank()) {
-            showError("Lỗi: Hãy nhập tên đăng nhập của bạn!");
-            return;
-        }
-        if (password.isBlank()) {
-            showError("Lỗi: Vui lòng nhập mật khẩu!");
-            return;
-        }
-        if (selectedRole == null) {
-            showError("Lỗi: Vui lòng chọn vai trò của bạn!");
-            return;
-        }
+        if (username.isBlank()) { showError("Lỗi: Hãy nhập tên đăng nhập của bạn!"); return; }
+        if (password.isBlank()) { showError("Lỗi: Vui lòng nhập mật khẩu!"); return; }
+        if (selectedRole == null) { showError("Lỗi: Vui lòng chọn vai trò của bạn!"); return; }
 
         showInfo("⏳ Đang đăng nhập...");
         setFormDisabled(true);
@@ -77,46 +65,29 @@ public class LoginController implements Initializable {
 
         loginTask.setOnSucceeded(event -> {
             User user = loginTask.getValue();
+
+            // Lưu user vào session
+            HomeController.Session.login(user);
+
             showSuccess("✅ Đăng nhập thành công! Chào " + user.getFullName());
 
-            Task<Void> delayTask = new Task<>() {
-                @Override
-                protected Void call() throws Exception {
-                    Thread.sleep(800);
+            // Admin: thông báo chưa có giao diện
+            if ("Admin".equals(selectedRole)) {
+                setFormDisabled(false);
+                showError("Chức năng cho Admin đang được phát triển!");
+                HomeController.Session.logout();
+                return;
+            }
+
+            // Tất cả vai trò khác (Bidder, Seller) đều quay về Home
+            Task<Void> delay = new Task<>() {
+                @Override protected Void call() throws Exception {
+                    Thread.sleep(600);
                     return null;
                 }
             };
-
-            delayTask.setOnSucceeded(e -> {
-                try {
-                    Stage stage = (Stage) statusLabel.getScene().getWindow();
-
-                    if ("Bidder".equals(selectedRole)) {
-                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/AuctionListScreen.fxml"));
-                        Parent root = loader.load();
-                        AuctionListController controller = loader.getController();
-                        controller.loadDataFromDatabase();
-                        stage.getScene().setRoot(root);
-                        stage.setTitle("HỆ THỐNG ĐẤU GIÁ - DANH SÁCH SẢN PHẨM");
-                    } else if ("Seller".equals(selectedRole)) {
-                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/SellerDashboard.fxml"));
-                        Parent root = loader.load();
-                        SellerDashboardController dashboardController = loader.getController();
-                        dashboardController.initSeller(user);
-                        stage.getScene().setRoot(root);
-                        stage.setTitle("HỆ THỐNG ĐẤU GIÁ - QUẢN LÝ SẢN PHẨM (SELLER)");
-                    } else if ("Admin".equals(selectedRole)) {
-                        setFormDisabled(false);
-                        showError("Chức năng cho Admin đang được phát triển!");
-                    }
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                    setFormDisabled(false);
-                    showError("Lỗi hệ thống: Không thể mở giao diện tiếp theo!");
-                }
-            });
-
-            new Thread(delayTask).start();
+            delay.setOnSucceeded(e -> navigateToHome());
+            new Thread(delay).start();
         });
 
         loginTask.setOnFailed(event -> {
@@ -130,6 +101,45 @@ public class LoginController implements Initializable {
         });
 
         new Thread(loginTask).start();
+    }
+
+    // ===== XỬ LÝ NÚT QUAY VỀ HOME  =====
+    @FXML
+    private void onBackToHomeClick() {
+        try {
+            Stage stage = (Stage) btnBack.getScene().getWindow();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Home.fxml"));
+            Parent root = loader.load();
+
+            // Cập nhật giao diện Home
+            HomeController homeCtrl = loader.getController();
+            homeCtrl.refreshAuthBar();
+
+            stage.getScene().setRoot(root);
+            stage.setTitle("HỆ THỐNG ĐẤU GIÁ");
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError("Lỗi: Không thể quay về trang chủ!");
+        }
+    }
+
+    private void navigateToHome() {
+        try {
+            Stage stage = (Stage) statusLabel.getScene().getWindow();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Home.fxml"));
+            Parent root = loader.load();
+
+            // Gọi refreshAuthBar() để cập nhật lời chào
+            HomeController homeCtrl = loader.getController();
+            homeCtrl.refreshAuthBar();
+
+            stage.getScene().setRoot(root);
+            stage.setTitle("HỆ THỐNG ĐẤU GIÁ");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            setFormDisabled(false);
+            showError("Lỗi hệ thống: Không thể mở giao diện Home!");
+        }
     }
 
     @FXML
