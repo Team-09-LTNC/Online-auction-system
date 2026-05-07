@@ -1,6 +1,9 @@
 # 🏷️ Hệ Thống Đấu Giá Trực Tuyến (Online Auction System)
 ## 📂 Cấu Trúc Thư Mục 
+ `dev_client` và `dev_server` phải giữ cùng cấu trúc thư mục với branch `dev`, test ở `dev` oke rồi thì mới merge vào `main`
 
+- `dev_client`: chỉ sửa folder `client` và `resources` làm giao diện
+- `dev_server`: chỉ sửa folder `server`
 ```text
 Online-auction-system/
 ├── pom.xml                                 # Cấu hình Maven (Gson, JavaFX, MySQL Driver, JUnit)
