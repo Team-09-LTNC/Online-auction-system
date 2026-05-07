@@ -1,12 +1,22 @@
 package com.auction.common.model.item;
 
 public class VehicleFactory extends ItemFactory {
-    // Override method của lớp cha cho phù hợp với VehicleFactory
+
     @Override
     public Item createItem(ItemAttributes item) {
-        return new Vehicle(item.getName(), item.getDescription(), item.getStartingPrice(),
-                item.getMake(), item.getModel(), item.getYear());
+        // Check lỗi nếu null
+        if (item == null) {
+            return null;
+        }
 
+        // Khởi tạo và trả về đối tượng Vehicle cụ thể
+        return new Vehicle(
+                item.getName(),
+                item.getDescription(),
+                item.getStartingPrice(),
+                item.getMake(),
+                item.getModel(),
+                item.getYear()
+        );
     }
-
 }

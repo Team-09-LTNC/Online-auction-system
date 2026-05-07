@@ -1,32 +1,30 @@
 package com.auction.common.model.bid;
 
 import java.time.LocalDateTime;
-
 import com.auction.common.model.entity.Entity;
 import com.auction.common.model.user.Bidder;
 
-// lưu lại lịch sử đặt giá
+/**
+ * Đại diện cho một bản ghi đặt giá trong hệ thống.
+ * Tương ứng với bảng 'bid_history' trong Database.
+ */
 public class BidTransaction extends Entity {
-    private Bidder bidder; // người đặt đấu giá
-    private double bidAmount; // số tiền đặt giá
-    private LocalDateTime timestamp; // thời gian
+    private int auctionId;   // xác định bid này của phiên nào
+    private Bidder bidder;   // người đặt giá
+    private long bidAmount;   //
+    private LocalDateTime timestamp;
 
-    public BidTransaction(Bidder bidder, double bidAmount) {
+    public BidTransaction(int auctionId, Bidder bidder, long bidAmount) {
+        super(); // id sẽ được set sau khi lấy từ DB hoặc tự tăng
+        this.auctionId = auctionId;
         this.bidder = bidder;
         this.bidAmount = bidAmount;
         this.timestamp = LocalDateTime.now();
     }
 
-    public Bidder getBidder() {
-        return bidder;
-    }
-
-    public double getBidAmount() {
-        return bidAmount;
-    }
-
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-
+    // Getters
+    public int getAuctionId() { return auctionId; }
+    public Bidder getBidder() { return bidder; }
+    public long getBidAmount() { return bidAmount; }
+    public LocalDateTime getTimestamp() { return timestamp; }
 }

@@ -1,61 +1,101 @@
 package com.auction.server.dao;
 
+// Các cột cần trong bảng users:
+// id	(INT	PRIMARY KEY, AUTO_INCREMENT	ID) : duy nhất định danh người dùng
+//username	(VARCHAR(50)	NOT NULL, UNIQUE) : Tên đăng nhập
+//password	(VARCHAR(255)	NOT NULL) : Mật khẩu .
+//full_name	(VARCHAR(100)	NOT NULL) : Họ và tên .
+//role	(ENUM	'ADMIN', 'SELLER', 'BIDDER') : Vai trò người dùng
+//balance	(BIGINT	DEFAULT 0) : Số dư tài khoản
+
 import com.auction.common.model.user.*;
 import com.auction.server.utils.DatabaseConnection;
-
 import java.sql.*;
+import java.util.Optional;
 
+/**
+ * Lớp này được thiết kế cho cả 3 vai trò (riêng admin thì k xử lý phần số dư, k hiển thị số dư)
+ * Phần BidderSellerMoney mới thực hiện giao dịch tiền bạc giưa bidder vs seller
+ */
 public class UserDao {
 
-    // Lưu người dùng khi đăng ký
-    public boolean saveUser(User user) {
-        String sql = "INSERT INTO users (id, username, password, full_name, role) VALUES (?, ?, ?, ?, ?)";
-
+    /**
+     * Lấy thông tin User để phục vụ Đăng nhập.
+     */
+    public Optional<User> timTheoTenDangNhap(String tenDangNhap) {
+        String sql = "SELECT id, username, password, full_name, role, balance FROM users WHERE username = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, user.getId());
-            pstmt.setString(2, user.getUsername());
-            pstmt.setString(3, user.getPassword());
-            pstmt.setString(4, user.getFullName());
-            pstmt.setString(5, user.getRoleName().toUpperCase());
-            return pstmt.executeUpdate() > 0;
+            pstmt.setString(1, tenDangNhap);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    int id = rs.getInt("id");
+                    String vaiTro = rs.getString("role").toUpperCase();
+                    String matKhau = rs.getString("password");
+                    String hoTen = rs.getString("full_name");
+                    long soDu = rs.getLong("balance");
 
+                    User user;
+                    switch (vaiTro) {
+                        case "ADMIN":
+                            user = new Admin(tenDangNhap, matKhau, hoTen);
+                            break;
+                        case "SELLER":
+                            user = new Seller(tenDangNhap, matKhau, hoTen);
+                            user.setBalance(soDu);
+                            break;
+                        case "BIDDER":
+                            user = new Bidder(tenDangNhap, matKhau, hoTen);
+                            user.setBalance(soDu);
+                            break;
+                        default:
+                            throw new IllegalStateException("Unknown role: " + vaiTro);
+                    }
+                    user.setId(rs.getInt("id"));
+                    return Optional.of(user);
+                }
+            }
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi khi lưu vào Database: " + e.getMessage());
+            System.err.println("Lỗi timTheoTenDangNhap: " + e.getMessage());
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Lưu người dùng mới (Đăng ký) với số dư mặc định là 0.
+     */
+    public boolean luuNguoiDung(User user) {
+        String sql = "INSERT INTO users (username, password, full_name, role, balance) VALUES (?, ?, ?, ?, 0)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, user.getUsername());
+            pstmt.setString(2, user.getPassword());
+            pstmt.setString(3, user.getFullName());
+            pstmt.setString(4, user.getRoleName());
+
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Lỗi luuNguoiDung: " + e.getMessage());
             return false;
         }
     }
 
-    // Tìm người dùng để đăng nhập
-    public User findByUsername(String username) {
-        String sql = "SELECT * FROM users WHERE username = ?";
-
+    /**
+     * Cập nhật số dư cho 1 người dùng cụ thể (Dùng khi nạp tiền / rút tiền).
+     */
+    public boolean capNhatSoDu(int idUser, long soDuMoi) {
+        String sql = "UPDATE users SET balance = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, username);
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    String role = rs.getString("role");
-                    String pass = rs.getString("password");
-                    String name = rs.getString("full_name");
-                    String id   = rs.getString("id");
-
-                    User user;
-                    if ("ADMIN".equals(role))       user = new Admin(username, pass, name);
-                    else if ("SELLER".equals(role)) user = new Seller(username, pass, name);
-                    else                            user = new Bidder(username, pass, name);
-
-                    user.setId(id);
-                    return user;
-                }
-            }
+            pstmt.setLong(1, soDuMoi);
+            pstmt.setInt(2, idUser);
+            return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi khi tìm user: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Lỗi capNhatSoDu: " + e.getMessage());
+            return false;
         }
-        return null;
     }
 }

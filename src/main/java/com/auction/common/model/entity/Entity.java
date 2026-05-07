@@ -1,22 +1,14 @@
 package com.auction.common.model.entity;
-
-import java.io.Serializable;
-import java.util.UUID;
-
-// Lớp gốc cho mọi đối tượng. Dùng để tự động tạo ID và cho phép truyền qua mạng.
-public abstract class Entity implements Serializable {
-    protected String id;
+//  sử dụng Gson để chuyển đổi đối tượng Java sang JSON và ngược lại
+//  nên cũng không cần dùng serializable
+public abstract class Entity {
+    protected int id;
 
     public Entity() {
-        this.id = UUID.randomUUID().toString(); // Tự động tạo ID duy nhất
+        // Khi INSERT đối tượng này xuống Database,
+        // MySQL sẽ tự động sinh ID thật
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 }

@@ -1,68 +1,44 @@
-# 🔨 Hệ thống đấu giá trực tuyến - Team 09 (UET)
+# 🏷️ Hệ Thống Đấu Giá Trực Tuyến (Online Auction System)
+## 📂 Cấu Trúc Thư Mục 
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Java-17%2B-orange?style=for-the-badge&logo=java" />
-  <img src="https://img.shields.io/badge/JavaFX-17-blue?style=for-the-badge&logo=javafx" />
-  <img src="https://img.shields.io/badge/Architecture-Client--Server-green?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Build-Maven-red?style=for-the-badge&logo=apache-maven" />
-</p>
-
----
-
-## 📖 Giới thiệu dự án
-Dự án được phát triển cho môn **Lập trình nâng cao** tại Đại học Công nghệ. Hệ thống cho phép nhiều người dùng tham gia đấu giá sản phẩm theo thời gian thực, áp dụng các nguyên lý **OOP** và mô hình **MVC**.
-
-## 👥 Thành viên nhóm
-| STT | Họ và tên |
-| :--- | :--- |
-| 1 | **Nguyễn Trung Hiếu**  |
-| 2 | **Phạm Việt Hoàng** |
-| 3 | **Vũ Gia Khánh** |
-| 4 | **Trương Bảo Kiên** |
-
----
-
-## 🏗 Kiến trúc Hệ thống
-Hệ thống tuân thủ mô hình phân tầng để tách biệt giao diện, nghiệp vụ và dữ liệu:
-* **Kiến trúc:** Client-Server kết nối qua Socket (JSON data).
-* **Client-side:** JavaFX + FXML áp dụng mô hình MVC.
-* **Server-side:** Controller - Model - DAO (Chỉ Server có quyền truy cập Database).
-
----
-
-## 🛠 Chức năng chính (Roadmap 10 Tuần)
-
-### 🟢 Chức năng bắt buộc
-- [ ] **Quản lý người dùng:** Đăng ký/Đăng nhập (Bidder, Seller, Admin).
-- [ ] **Quản lý sản phẩm:** Seller đăng tải, chỉnh sửa thông tin sản phẩm đấu giá.
-- [ ] **Tham gia đấu giá:** Đặt giá Real-time, cập nhật người dẫn đầu tức thì.
-- [ ] **Kết thúc phiên:** Tự động xác định người thắng và đóng phiên khi hết giờ.
-- [ ] **Xử lý ngoại lệ:** Chống đặt giá sai logic hoặc thao tác khi phiên đã đóng.
-
-### 🟡 Chức năng nâng cao 
-- [ ] **Concurrent Bidding:** Xử lý đấu giá đồng thời an toàn (tránh Race Condition).
-- [ ] **Realtime Update:** Sử dụng Observer Pattern để đồng bộ giá cho tất cả Client.
-- [ ] **Auto-Bidding:** Hệ thống tự động trả giá thay người dùng dựa trên mức tối đa.
-- [ ] **Anti-sniping:** Tự động gia hạn phiên nếu có bid mới ở những giây cuối.
-
----
-
-## 📐 Áp dụng Design Patterns
-Dự án dự kiến áp dụng các mẫu thiết kế chuẩn để tối ưu mã nguồn:
-* **Singleton:** Quản lý kết nối Database tập trung.
-* **Factory Method:** Khởi tạo linh hoạt các loại sản phẩm khác nhau.
-* **Observer:** Cập nhật biến động giá thầu đến toàn bộ Client ngay lập tức.
-
----
-
-## 📜 Quy định làm việc (Git Flow)
-* **Commit thường xuyên:** Minh chứng tiến độ làm bài cá nhân (bắt buộc).
-* **Conventional Commits:** Sử dụng tiền tố `feat:`, `fix:`, `docs:`, `test:`.
-* **Chất lượng mã:** Tuân thủ Google Java Style Guide và viết Unit Test (JUnit).
-
----
-
-## 💻 Hướng dẫn khởi chạy
-1. **Yêu cầu:** Java 17+, Maven.
-2. **Clone:** `git clone [URL_DỰ_ÁN]`
-3. **Chạy:** Khởi động `ServerApp` trước, sau đó mở các phiên `ClientApp`.
+```text
+Online-auction-system/
+├── pom.xml                                 # Cấu hình Maven (Gson, JavaFX, MySQL Driver, JUnit)
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/auction/
+│   │   │       │
+│   │   │       ├── common/                 # 1. TẦNG DÙNG CHUNG (Giao thức & Dữ liệu)
+│   │   │       │   ├── dto/                # Data Transfer Object (Đóng gói dữ liệu mạng)
+│   │   │       │   ├── exception/          # Custom Exceptions (VD: InvalidBidException)
+│   │   │       │   ├── model/              # Các Entity cốt lõi (Mô hình hóa OOP)
+│   │   │       │   │   ├── bid/            # Lớp xử lý giao dịch (BidTransaction)
+│   │   │       │   │   ├── entity/         # Lớp cơ sở (BaseEntity abstract class)
+│   │   │       │   │   ├── item/           # Sản phẩm (Item, Electronics, Art...)
+│   │   │       │   │   ├── user/           # Người dùng (User, Bidder, Seller, Admin)
+│   │   │       │   │   └── AuctionStatus.java # Enum trạng thái phiên đấu giá
+│   │   │       │   └── observer/           # Interface cho Observer Pattern
+│   │   │       │
+│   │   │       ├── server/                 # 2. TẦNG SERVER (Xử lý đa luồng & CSDL)
+│   │   │       │   ├── dao/                # Data Access Object (Truy vấn CSDL an toàn)
+│   │   │       │   ├── manager/            # Business Logic (AuctionManager)
+│   │   │       │   ├── network/            # Quản lý mạng (NetworkManager, ClientHandler)
+│   │   │       │   ├── utils/              # Tiện ích (DatabaseConnection Singleton)
+│   │   │       │   └── ServerApplication.java # Điểm khởi chạy Server
+│   │   │       │
+│   │   │       └── client/                 # 3. TẦNG CLIENT (Giao diện JavaFX)
+│   │   │           ├── controller/         # Điều khiển UI (Gọi Platform.runLater)
+│   │   │           ├── network/            # SocketClient (Giao tiếp với Server)
+│   │   │           ├── util/               # Tiện ích UI (AlertBox, Formatter)
+│   │   │           └── ClientApplication.java # Điểm khởi chạy Client
+│   │   │
+│   │   └── resources/                      # 4. TÀI NGUYÊN TĨNH
+│   │       ├── css/                        # Style giao diện
+│   │       ├── fxml/                       # Giao diện SceneBuilder
+│   │       └── images/                     # Hình ảnh, icon
+│   │
+│   └── test/                               # 5. TẦNG KIỂM THỬ (JUnit 5)
+│       └── java/
+│           └── com/auction/server/manager/AuctionManagerTest.java 
+└── README.md
