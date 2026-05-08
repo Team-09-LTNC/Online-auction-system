@@ -9,7 +9,7 @@ package com.auction.server.dao;
 //balance	(BIGINT	DEFAULT 0) : Số dư tài khoản
 
 import com.auction.common.model.user.*;
-import com.auction.server.utils.DatabaseConnection;
+import com.auction.server.db.DatabaseConnection;
 import java.sql.*;
 import java.util.Optional;
 
@@ -24,7 +24,7 @@ public class UserDao {
      */
     public Optional<User> timTheoTenDangNhap(String tenDangNhap) {
         String sql = "SELECT id, username, password, full_name, role, balance FROM users WHERE username = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, tenDangNhap);
@@ -67,7 +67,7 @@ public class UserDao {
      */
     public boolean luuNguoiDung(User user) {
         String sql = "INSERT INTO users (username, password, full_name, role, balance) VALUES (?, ?, ?, ?, 0)";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, user.getUsername());
@@ -87,7 +87,7 @@ public class UserDao {
      */
     public boolean capNhatSoDu(int idUser, long soDuMoi) {
         String sql = "UPDATE users SET balance = ? WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, soDuMoi);

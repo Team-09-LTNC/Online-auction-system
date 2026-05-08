@@ -1,7 +1,7 @@
 package com.auction.server.dao;
 
 import com.auction.common.model.bid.BidLine;
-import com.auction.server.utils.DatabaseConnection;
+import com.auction.server.db.DatabaseConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ public class BidTransactionDao {
     public boolean luuLichSuDatGia(int idPhien, int idNguoiBid, long soTien) {
         String sql = "INSERT INTO bid_history (auction_id, bidder_id, bid_amount, bid_time) VALUES (?, ?, ?, NOW())";
 
-        try (Connection ketNoi = DatabaseConnection.getConnection();
+        try (Connection ketNoi = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstm = ketNoi.prepareStatement(sql)) {
 
             // Điền dữ liệu vào
@@ -54,7 +54,7 @@ public class BidTransactionDao {
                 "WHERE b.auction_id = ? " +
                 "ORDER BY b.bid_time ASC";
 
-        try (Connection ketNoi = DatabaseConnection.getConnection();
+        try (Connection ketNoi = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstm = ketNoi.prepareStatement(sql)) {
 
             pstm.setInt(1, idPhien);

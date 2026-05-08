@@ -6,7 +6,7 @@ import java.util.List;
 
 /**
  * Điều phối các nghiệp vụ liên quan đến sản phẩm
- * Khởi tạo đối tượng linh hoạt thông qua Factory Pattern
+ * Khởi tạo đối tượng thông qua Factory Pattern
  */
 public class ProductManager {
     private static volatile ProductManager instance;
