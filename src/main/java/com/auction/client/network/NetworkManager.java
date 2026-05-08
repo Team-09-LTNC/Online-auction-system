@@ -1,6 +1,6 @@
 package com.auction.client.network;
 
-import com.auction.common.dto.Request;
+import com.auction.common.dto.BaseDTOs;
 import com.google.gson.Gson;
 
 import java.io.*;
@@ -44,7 +44,7 @@ public class NetworkManager {
     /**
      * Chuyển Object thành chuỗi JSON và đẩy qua Socket
      */
-    public static void sendRequest(Request request) {
+    public static void sendRequest(BaseDTOs.Request request) {
         if (out != null) {
             String jsonPayload = gson.toJson(request);
             out.println(jsonPayload); // Gửi kèm ký tự xuống dòng để Server biết kết thúc gói tin

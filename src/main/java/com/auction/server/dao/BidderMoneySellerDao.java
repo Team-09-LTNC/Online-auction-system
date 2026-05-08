@@ -1,6 +1,6 @@
 package com.auction.server.dao;
 
-import com.auction.server.utils.DatabaseConnection;
+import com.auction.server.db.DatabaseConnection;
 import java.sql.*;
 
 /**
@@ -13,7 +13,7 @@ public class BidderMoneySellerDao {
      */
     public boolean thanhToanPhienDauGia(int idBidder, int idSeller, long soTien) {
         // Sử dụng try-with-resources
-        try (Connection conn = DatabaseConnection.getConnection()) {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection()) {
 
             //Tắt AutoCommit để bắt đầu một Transaction thủ công
             conn.setAutoCommit(false);

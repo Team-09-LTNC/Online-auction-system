@@ -1,7 +1,7 @@
 package com.auction.server.dao;
 
 import com.auction.common.model.item.*;
-import com.auction.server.utils.DatabaseConnection;
+import com.auction.server.db.DatabaseConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ public class ItemDao {
      */
     public boolean luuSanPham(Item item) {
         String sql = "INSERT INTO items (seller_id, name, description, category, starting_price, image_url) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, item.getSellerId());
@@ -51,7 +51,7 @@ public class ItemDao {
         List<Item> danhSach = new ArrayList<>();
         String sql = "SELECT * FROM items";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
@@ -90,7 +90,7 @@ public class ItemDao {
      */
     public Item laySanPhamTheoId(int itemId) {
         String sql = "SELECT * FROM items WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, itemId);
@@ -129,7 +129,7 @@ public class ItemDao {
      */
     public boolean xoaSanPham(int itemId) {
         String sql = "DELETE FROM items WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, itemId);

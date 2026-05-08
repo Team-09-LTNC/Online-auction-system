@@ -1,11 +1,21 @@
 package com.auction.server.dao;
 
-import com.auction.common.model.bid.Auction;
-import com.auction.server.utils.DatabaseConnection;
+import com.auction.server.db.DatabaseConnection;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+// Nhiệm vụ: Xử lý các phiên đấu giá
+
+// Các cột cần có trong Database: ( bảng auctions )
+//  id (INT, Primary Key, Auto Increment): ID duy nhất của phiên
+//  item_id (INT): ID của sản phẩm (Khóa ngoại liên kết với bảng items)
+//  current_price (BIGINT): Giá hiện tại
+//  highest_bidder_id (INT, Nullable): ID của người đang trả giá cao nhất (Liên kết với bảng users)
+//  start_time (DATETIME): Thời gian bắt đầu
+//  end_time (DATETIME): Thời gian kết thúc
+//  status (VARCHAR): Trạng thái  (OPEN, RUNNING, FINISHED, PAID, CANCELED)
 
 /**
  * Xử lý mọi thao tác tương tác cơ sở dữ liệu liên quan đến phiên đấu giá
@@ -17,7 +27,7 @@ public class AuctionDao {
      */
     public boolean taoPhienMoi(int idSanPham, long giaKhoiDiem, Timestamp thoiGianBatDau, Timestamp thoiGianKetThuc) {
         String sql = "INSERT INTO auctions (item_id, current_price, start_time, end_time, status) VALUES (?, ?, ?, ?, 'RUNNING')";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, idSanPham);
@@ -39,7 +49,7 @@ public class AuctionDao {
         String sql = "UPDATE auctions SET current_price = ?, highest_bidder_id = ? " +
                 "WHERE id = ? AND current_price < ? AND status = 'RUNNING'";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, giaMoi);
@@ -59,7 +69,7 @@ public class AuctionDao {
      */
     public boolean capNhatThoiGianKetThuc(int idPhien, LocalDateTime thoiGianMoi) {
         String sql = "UPDATE auctions SET end_time = ? WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setTimestamp(1, Timestamp.valueOf(thoiGianMoi));
@@ -76,7 +86,7 @@ public class AuctionDao {
      */
     public boolean capNhatTrangThai(int idPhien, String trangThaiMoi) {
         String sql = "UPDATE auctions SET status = ? WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, trangThaiMoi.toUpperCase());
@@ -94,7 +104,7 @@ public class AuctionDao {
     public List<Integer> layDanhSachPhienHetHan() {
         List<Integer> list = new ArrayList<>();
         String sql = "SELECT id FROM auctions WHERE end_time <= NOW() AND status = 'RUNNING'";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
