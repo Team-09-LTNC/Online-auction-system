@@ -18,25 +18,30 @@ public class DatabaseConnection implements ConnectionProvider {
 
     // Constructor private để ngăn khởi tạo từ bên ngoài
     private DatabaseConnection() {
-        System.out.println(">>> Đang thiết lập Connection Pool (HikariCP) tới Azure...");
+        System.out.println(">>> Đang thiết lập Connection Pool (HikariCP) tới Aiven...");
         try {
             HikariConfig config = new HikariConfig();
 
-            // 1. Cấu hình Azure DB
-            String defaultUrl = "jdbc:mysql://4.194.28.97:3306/auction_db?useSSL=true&requireSSL=true";            String defaultUser = "dtbAuction";
-            String defaultPass = "dtbAuctionUET";
+            // 1. Cấu hình Aiven MySQL
+            String host = "mysql-24dbe87d-team09-uet.c.aivencloud.com";
+            String port = "12014";
+            String dbName = "defaultdb";
 
-            // 2. Đọc biến môi trường an toàn (sau này dùng cho github CI/CD)
-            String envUrl = System.getenv("DB_URL");
-            String envUser = System.getenv("DB_USER");
-            String envPass = System.getenv("DB_PASS");
+            // Chuỗi URL đã tích hợp SSL và bỏ qua kiểm tra chứng chỉ thủ công
+            String defaultUrl = "jdbc:mysql://" + host + ":" + port + "/" + dbName +
+                    "?useSSL=true" +
+                    "&requireSSL=true" +
+                    "&trustServerCertificate=true" +
+                    "&serverTimezone=UTC" +
+                    "&allowPublicKeyRetrieval=true";
 
-            // 3. NẠP CẤU HÌNH VÀO HIKARICP
-            config.setJdbcUrl((envUrl != null && !envUrl.trim().isEmpty()) ? envUrl : defaultUrl);
-            config.setUsername((envUser != null && !envUser.trim().isEmpty()) ? envUser : defaultUser);
-            config.setPassword((envPass != null && !envPass.trim().isEmpty()) ? envPass : defaultPass);
-            config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+            String defaultUser = "avnadmin";
+            String defaultPass = "AVNS_DxKGxvHASiK6mmOKQbm";
 
+            // 3. NẠP CẤU HÌNH
+            config.setJdbcUrl(defaultUrl);
+            config.setUsername(defaultUser);
+            config.setPassword(defaultPass);
             // Cấu hình tối ưu cho môi trường đa luồng (Server)
             config.setMaximumPoolSize(20);      // Tối đa 20 luồng (client) có thể truy vấn cùng lúc
             config.setMinimumIdle(5);           // Luôn giữ ít nhất 5 kết nối sẵn sàng

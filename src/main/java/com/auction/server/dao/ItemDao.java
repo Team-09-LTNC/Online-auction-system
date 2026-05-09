@@ -15,6 +15,7 @@ import java.util.List;
 //  description (TEXT): Mô tả chi tiết
 //  category (VARCHAR): Loại sản phẩm (ELECTRONICS, ART, VEHICLE)
 //  starting_price (BIGINT): Giá khởi điểm
+//  bid_increment (BIGINT): khoảng tăng giá( seller tự set)
 //  image_url (VARCHAR): Đường dẫn ảnh sản phẩm
 
 public class ItemDao {
@@ -136,6 +137,22 @@ public class ItemDao {
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Lỗi xoaSanPham: " + e.getMessage());
+            return false;
+        }
+    }
+    // Cập nhật sản phẩm
+    public boolean updateSanPham(Item item) {
+        String sql = "UPDATE items SET name = ?, description = ?, starting_price = ?, category = ?, image_url = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, item.getName());
+            pstmt.setString(2, item.getDescription());
+            pstmt.setLong(3, item.getStartingPrice());
+            pstmt.setString(4, item.getCategory());
+            pstmt.setString(5, item.getImageUrl());
+            pstmt.setInt(6, item.getId());
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
             return false;
         }
     }
