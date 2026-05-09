@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<!--
+    AuctionsView.fxml
+    Controller: com.auction.client.controller.AuctionsViewController
+    Phiên đấu giá đang &amp; sắp diễn ra — admin có thể xoá
+-->
+<StackPane fx:id="contentPane"
+           xmlns="http://javafx.com/javafx/17"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.auction.client.controller.admin.AuctionsViewController"
+           style="-fx-background-color: #EDE6DF; -fx-padding: 24;">
+
+    <VBox spacing="16">
+
+        <!-- Header row -->
+        <HBox alignment="CENTER_LEFT" spacing="12">
+            <Region style="-fx-background-color: #8B2C2C;
+                           -fx-pref-width: 4px; -fx-pref-height: 22px;"/>
+            <Label text="Phiên đấu giá đang &amp; sắp diễn ra"
+                   style="-fx-text-fill: #1A0F0A; -fx-font-size: 18px;
+                          -fx-font-weight: bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblAuctionCount" text="0 phiên"
+                   style="-fx-text-fill: #5C3D30; -fx-font-size: 12px;
+                          "/>
+        </HBox>
+
+        <!-- Toolbar -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <TextField fx:id="tfSearch"
+                       promptText="🔍  Tìm theo ID sản phẩm hoặc trạng thái..."
+                       onKeyReleased="#handleSearch"
+                       style="-fx-background-color: #F0EAE4;
+                              -fx-border-color: #C8AFA0; -fx-border-width: 1px;
+                              -fx-border-radius: 6px; -fx-background-radius: 6px;
+                              -fx-padding: 8 14 8 14;;
+                              -fx-font-size: 13px; -fx-pref-width: 300px;
+                              -fx-prompt-text-fill: #C8AFA0;"/>
+            <ComboBox fx:id="cbStatusFilter"
+                      promptText="Lọc trạng thái"
+                      onAction="#handleFilter"
+                      style="-fx-background-color: #F0EAE4;
+                             -fx-border-color: #C8AFA0; -fx-border-width: 1px;
+                             -fx-border-radius: 6px; -fx-background-radius: 6px;
+                            -fx-font-size: 13px;
+                             -fx-pref-width: 160px;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="btnDelete" text="🗑  Xoá phiên"
+                    onAction="#handleDelete" disable="true"
+                    style="-fx-background-color: #C0392B; -fx-text-fill: white;
+                           -fx-font-size: 13px; 
+                           -fx-font-weight: bold;
+                           -fx-padding: 8 18 8 18; -fx-border-radius: 6px;
+                           -fx-background-radius: 6px; -fx-cursor: hand;"/>
+        </HBox>
+
+        <!-- Table -->
+        <TableView fx:id="auctionTable"
+                   VBox.vgrow="ALWAYS"
+                   onMouseClicked="#handleTableClick"
+                   style="-fx-background-color: #F0EAE4;
+                          -fx-border-color: #C8AFA0; -fx-border-width: 1px;
+                          -fx-border-radius: 10px; -fx-background-radius: 10px;">
+            <columns>
+                <TableColumn fx:id="colProductId" text="ID Sản phẩm" prefWidth="140"/>
+                <TableColumn fx:id="colStartTime" text="Thời gian bắt đầu" prefWidth="180"/>
+                <TableColumn fx:id="colEndTime"   text="Thời gian kết thúc" prefWidth="180"/>
+                <TableColumn fx:id="colStatus"    text="Trạng thái"   prefWidth="140"/>
+            </columns>
+            <placeholder>
+                <Label text="Không có phiên đấu giá nào"
+                       style="-fx-text-fill: #C8AFA0; -fx-font-size: 13px;
+                              "/>
+            </placeholder>
+        </TableView>
+
+    </VBox>
+
+</StackPane>
