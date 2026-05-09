@@ -157,7 +157,10 @@ public class BiddersViewController implements Initializable {
         if (result.isPresent() && result.get() == ButtonType.OK) {
             // Đảo trạng thái
             String newStatus = isCurrentlyLocked ? STATUS_ACTIVE : STATUS_LOCKED;
-            selected.setStatus(newStatus);         // TODO: gọi service cập nhật server
+            selected.setStatus(newStatus); 
+                
+                // TODO: gọi service cập nhật server
+
             bidderTable.refresh();                 // Cập nhật lại ô trạng thái
 
             refreshLockButtonText(selected);
