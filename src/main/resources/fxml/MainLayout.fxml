@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.HBox?>
+
+<HBox prefHeight="800.0" prefWidth="1300.0"
+      style="-fx-background-color: #FCF9F5;"
+      stylesheets="@../css/style.css"
+      xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1">
+
+    <!-- Sidebar bên trái -->
+    <fx:include source="Sidebar.fxml" />
+
+    <!-- Nội dung chính bên phải -->
+    <fx:include source="MainDashboard.fxml" HBox.hgrow="ALWAYS" />
+
+</HBox>

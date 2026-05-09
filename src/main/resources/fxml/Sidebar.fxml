@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+<?import javafx.scene.text.Font?>
+
+<!-- Cột bên trái: Nền kem đậm #F2ECE4 -->
+<VBox prefWidth="280.0" style="-fx-background-color: #F2ECE4; -fx-padding: 20;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+
+    <!-- Card trắng bo góc chứa toàn bộ Menu -->
+    <VBox spacing="10.0" style="-fx-background-color: #FFFFFF; -fx-background-radius: 20; -fx-padding: 25 15 25 15;" VBox.vgrow="ALWAYS">
+
+        <!-- 1. LOGO AREA -->
+        <HBox alignment="CENTER_LEFT" spacing="15.0">
+            <padding>
+                <Insets bottom="25.0" left="5.0" />
+            </padding>
+
+            <!-- Bọc SVGPath vào StackPane để cố định diện tích và dễ căn chỉnh tâm -->
+            <StackPane prefHeight="40.0" prefWidth="40.0">
+                <!-- SVGPath được phóng to (scale) và dùng styleClass="shield-logo" để CSS xử lý outline -->
+                <SVGPath content="M 12 2 L 4 5 V 11 C 4 16.5 7.4 21.7 12 23 C 16.6 21.7 20 16.5 20 11 V 5 L 12 2 Z"
+                         fill="TRANSPARENT" stroke="#7A1B28" strokeWidth="2.2"
+                         scaleX="1.6" scaleY="1.6" styleClass="shield-logo" />
+            </StackPane>
+
+            <VBox alignment="CENTER_LEFT">
+                <Label text="AuctionHub" textFill="#7A1B28">
+                    <font>
+                        <Font name="System Bold" size="22.0" />
+                    </font>
+                </Label>
+                <Label text="Đấu giá thông minh" textFill="#888888">
+                    <font>
+                        <Font name="System" size="11.0" />
+                    </font>
+                    <VBox.margin>
+                        <Insets top="-2.0" />
+                    </VBox.margin>
+                </Label>
+            </VBox>
+        </HBox>
+
+        <!-- 2. TOP MENU SECTION:  căn lề thẳng tắp bằng graphic -->
+        <VBox spacing="2.0">
+            <Button alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="230.0" style="-fx-background-color: #7A1B28; -fx-text-fill: white; -fx-background-radius: 10; -fx-cursor: hand;" text="Trang chủ">
+                <font><Font name="System Bold" size="14.0" /></font>
+                <graphic>
+                    <Label alignment="CENTER" prefWidth="30.0" text="🏠" textFill="WHITE" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" />
+                </graphic>
+            </Button>
+
+            <Button alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="230.0" style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-cursor: hand;" text="Phiên đấu giá">
+                <font><Font name="System" size="14.0" /></font>
+                <graphic>
+                    <Label alignment="CENTER" prefWidth="30.0" text="🔨" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" />
+                </graphic>
+            </Button>
+
+            <Button alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="230.0" style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-cursor: hand;" text="Đấu giá của tôi">
+                <font><Font name="System" size="14.0" /></font>
+                <graphic>
+                    <Label alignment="CENTER" prefWidth="30.0" text="⏱" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" />
+                </graphic>
+            </Button>
+
+            <Button alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="230.0" style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-cursor: hand;" text="Sản phẩm của tôi">
+                <font><Font name="System" size="14.0" /></font>
+                <graphic>
+                    <Label alignment="CENTER" prefWidth="30.0" text="📦" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" />
+                </graphic>
+            </Button>
+
+            <Button alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="230.0" style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-cursor: hand;" text="Theo dõi">
+                <font><Font name="System" size="14.0" /></font>
+                <graphic>
+                    <Label alignment="CENTER" prefWidth="30.0" text="♡" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 20;" />
+                </graphic>
+            </Button>
+
+            <HBox alignment="CENTER_LEFT" spacing="5.0">
+                <Button alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="180.0" style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-cursor: hand;" text="Tin nhắn">
+                    <font><Font name="System" size="14.0" /></font>
+                    <graphic>
+                        <Label alignment="CENTER" prefWidth="30.0" text="✉" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" />
+                    </graphic>
+                </Button>
+                <Label alignment="CENTER" prefHeight="20.0" prefWidth="20.0" style="-fx-background-color: #F2ECE4; -fx-background-radius: 10; -fx-text-fill: #7A1B28;" text="2">
+                    <font><Font name="System Bold" size="11.0" /></font>
+                </Label>
+            </HBox>
+        </VBox>
+
+        <!-- ĐÂY RỒI: Đường kẻ mờ ngăn cách -->
+        <Region minHeight="1.0" prefHeight="1.0" style="-fx-background-color: #E5E5E5;">
+            <VBox.margin>
+                <Insets bottom="10.0" top="10.0" />
+            </VBox.margin>
+        </Region>
+
+        <!-- 3. DANH MỤC SECTION  -->
+        <VBox spacing="2.0">
+            <Label text="Danh mục" textFill="#888888">
+                <padding><Insets bottom="10.0" left="15.0" /></padding>
+                <font><Font name="System Bold" size="13.0" /></font>
+            </Label>
+            <Button alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="230.0" style="-fx-background-color: #FCF9F5; -fx-text-fill: #333333; -fx-background-radius: 10; -fx-cursor: hand;" text="Tất cả">
+                <graphic>
+                    <Label alignment="CENTER" prefWidth="30.0" text="🔍" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 14;" />
+                </graphic>
+            </Button>
+            <Button alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="230.0" style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-cursor: hand;" text="Điện tử">
+                <graphic>
+                    <Label alignment="CENTER" prefWidth="30.0" text="💻" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 14;" />
+                </graphic>
+            </Button>
+            <Button alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="230.0" style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-cursor: hand;" text="Nghệ thuật">
+                <graphic>
+                    <Label alignment="CENTER" prefWidth="30.0" text="🎨" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 14;" />
+                </graphic>
+            </Button>
+            <Button alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="230.0" style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-cursor: hand;" text="Xe cộ">
+                <graphic>
+                    <Label alignment="CENTER" prefWidth="30.0" text="🚗" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 14;" />
+                </graphic>
+            </Button>
+            <Button alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="230.0" style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-cursor: hand;" text="Đồ sưu tầm">
+                <graphic>
+                    <Label alignment="CENTER" prefWidth="30.0" text="🏺" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 14;" />
+                </graphic>
+            </Button>
+            <Button alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="230.0" style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-cursor: hand;" text="Trang sức">
+                <graphic>
+                    <Label alignment="CENTER" prefWidth="30.0" text="💍" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 14;" />
+                </graphic>
+            </Button>
+            <Button alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="230.0" style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-padding: 0 0 0 45; -fx-cursor: hand;" text="Xem thêm ▾" />
+        </VBox>
+
+        <Region VBox.vgrow="ALWAYS" />
+
+        <!-- 4. NÚT ĐĂNG SẢN PHẨM -->
+        <!-- Gán styleClass="post-product-button" để CSS ép màu chữ kem trắng -->
+        <Button styleClass="post-product-button" prefHeight="65.0" prefWidth="230.0" style="-fx-background-color: #7A1B28; -fx-background-radius: 15; -fx-cursor: hand;">
+            <graphic>
+                <VBox alignment="CENTER">
+                    <Label text="+ Đăng sản phẩm" textFill="#FDFBF9">
+                        <font><Font name="System Bold" size="15.0" /></font>
+                    </Label>
+                    <Label text="Dành cho người bán" textFill="#F4EFE6">
+                        <font><Font name="System" size="10.0" /></font>
+                    </Label>
+                </VBox>
+            </graphic>
+        </Button>
+    </VBox>
+</VBox>

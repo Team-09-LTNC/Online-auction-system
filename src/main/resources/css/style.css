@@ -1,127 +1,149 @@
-/* =====================================================
-   AUCTIONHUB — Palette nâu đỏ, đậm hơn một chút
-   Primary  : #6E1C1C
-   Accent   : #8B2C2C
-   BG nền   : #EDE6DF  (kem đậm hơn)
-   Panel    : #F0EAE4
-   Text đậm : #1A0F0A
-   Text nhạt: #5C3D30
-   Border   : #C8AFA0
-   ===================================================== */
+/* --- Thiết lập tổng thể --- */
+.root {
+    /* Font chữ chủ đạo và màu nền kem nhạt cho toàn bộ ứng dụng */
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-background-color: #FDFBF7; /* Đã chỉnh sang màu kem trắng dịu hơn */
+}
 
-.main-background { -fx-background-color: #EDE6DF; }
-.root-pane       { -fx-background-color: #EDE6DF; }
+/* Ép tất cả các nhãn chữ mặc định hiện màu nâu đen đậm */
+.label {
+    -fx-text-fill: #3E2723;
+}
 
-.white-card {
+/* --- Sidebar (Thanh điều hướng bên trái) --- */
+.sidebar {
+    /* Màu kem đậm hơn nền một chút để tạo chiều sâu khối */
+    -fx-background-color: #F8F4ED;
+    -fx-border-color: #EAE3D3;
+    -fx-border-width: 0 1 0 0; /* Kẻ vạch ngăn cách bên phải thanh Sidebar */
+}
+
+/* Các nút bấm điều hướng trên Sidebar */
+.nav-button {
+    -fx-background-color: transparent;
+    /* Màu chữ nâu trầm khi ở trạng thái bình thường */
+    -fx-text-fill: #5D4037;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 12 15;
+    -fx-font-size: 14px;
+    -fx-background-radius: 10;
+}
+
+/* Hiệu ứng khi di chuột qua hoặc khi nút đó đang được chọn (Active) */
+.nav-button:hover, .nav-button-active {
+    -fx-background-color: #7A1B28; /* Màu đỏ đô đặc trưng của dự án */
+    -fx-text-fill: white !important; /* Dùng !important để đảm bảo chữ biến thành trắng */
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+/* --- Thẻ sản phẩm (Product Card) --- */
+.product-card {
+    /* Thẻ màu trắng tinh khôi để nổi bật trên nền kem tổng thể */
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 15;
+    -fx-border-color: #F0F0F0;
+    -fx-border-radius: 15;
+    /* Đổ bóng nhẹ giúp các thẻ trông như đang nổi lên khỏi mặt bàn */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5);
+}
+
+/* Tiêu đề/Tên sản phẩm trong thẻ */
+.product-title {
+    -fx-text-fill: #3E2723;
+    -fx-font-weight: bold;
+    -fx-font-size: 15px;
+}
+
+/* Giá tiền - Phần quan trọng nhất nên giữ màu đỏ đô rực rỡ */
+.product-price {
+    -fx-text-fill: #7A1B28;
+    -fx-font-weight: bold;
+    -fx-font-size: 18px;
+}
+
+/* Nút "Ra giá" nằm trong mỗi thẻ sản phẩm */
+.bid-button {
+    -fx-background-color: #7A1B28;
+    -fx-text-fill: white !important;
+    -fx-background-radius: 8;
+    -fx-padding: 8 15;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.bid-button:hover {
+    -fx-background-color: #a02334;
+}
+
+/* Nhãn trạng thái nhỏ (Ví dụ: Đang diễn ra, Đã kết thúc) */
+.status-label {
+    -fx-background-color: #E8F5E9; /* Nền xanh lá cực nhạt */
+    -fx-text-fill: #2E7D32;         /* Chữ xanh lá đậm để phân biệt */
+    -fx-background-radius: 5;
+    -fx-padding: 3 8;
+    -fx-font-size: 11px;
+}
+
+/* --- Các thành phần bổ trợ khác --- */
+.search-field {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 25;
+    -fx-border-color: #EEEEEE;
+    -fx-border-radius: 25;
+    -fx-padding: 0 15 0 15;
+}
+
+.scroll-pane {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+}
+
+/* --- 2. NGOẠI LỆ CHO Ô ĐĂNG SẢN PHẨM --- */
+.post-product-button .label {
+    -fx-text-fill: #FFFDF5 !important; /* Ép màu kem trắng */
+}
+
+.post-product-button .label:last-child {
+    -fx-text-fill: #F4EFE6 !important;
+    -fx-font-size: 10px;
+}
+
+/* --- 3. LOGO HÌNH CÁI KHIÊN (CHỈ LẤY KHUNG) --- */
+.shield-logo {
+    -fx-fill: transparent !important;
+    -fx-stroke: #7A1B28;
+    -fx-stroke-width: 2;
+}
+
+/* --- 4. STYLE CHO THANH BANNER GỘP MỚI (BỔ SUNG) --- */
+.combined-banner {
     -fx-background-color: #FFFFFF;
     -fx-background-radius: 20;
-    -fx-effect: dropshadow(three-pass-box, rgba(70,30,15,0.20), 30, 0, 0, 6);
+    -fx-border-color: #F0F0F0;
+    -fx-border-radius: 20;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.03), 10, 0, 0, 5);
 }
 
-.right-panel {
-    -fx-background-color: #F0EAE4;
-    -fx-background-radius: 0 20 20 0;
+/* Chỉnh size chữ lời chào cho gọn */
+.combined-banner .label {
+    -fx-text-fill: #3E2723;
 }
 
-.left-panel {
-    -fx-background-color: #F0EAE4;
-    -fx-background-radius: 20 0 0 20;
-}
-
-.title-text {
-    -fx-text-fill: #1A0F0A;
-    -fx-font-size: 26px;
+/* Các chỉ số thống kê trong thanh gộp */
+.stat-value {
+    -fx-font-size: 16px;
     -fx-font-weight: bold;
+    -fx-text-fill: #3E2723;
 }
 
-.sub-title-text {
-    -fx-text-fill: #5C3D30;
-    -fx-font-size: 13px;
+.stat-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #888888;
 }
 
-.forgot-password-link {
-    -fx-text-fill: #6E1C1C;
-    -fx-underline: false;
-    -fx-padding: 0;
-    -fx-font-size: 13px;
+/* Màu cho các icon emoji trong phần thống kê */
+.stat-icon {
+    -fx-font-size: 16px;
+    -fx-text-fill: #7A1B28;
 }
-.forgot-password-link:hover {
-    -fx-text-fill: #4A1010;
-    -fx-underline: true;
-}
-
-.field-label-text {
-    -fx-font-weight: bold;
-    -fx-text-fill: #1A0F0A;
-    -fx-font-size: 13px;
-    -fx-padding: 0 0 2 0;
-}
-
-.input-field {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #C8AFA0;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
-    -fx-padding: 8;
-}
-.input-field:focused-within { -fx-border-color: #6E1C1C; }
-
-.password-field-inner {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
-    -fx-padding: 0 0 0 5;
-    -fx-text-fill: #1A0F0A;
-}
-
-.icon-label  { -fx-text-fill: #6E1C1C; }
-.title-icon  { -fx-font-size: 40px; -fx-padding: 0 0 10 0; }
-.field-icon  { -fx-font-size: 16px; }
-
-.logo-text-large {
-    -fx-font-weight: bold;
-    -fx-font-size: 28px;
-    -fx-text-fill: #6E1C1C;
-    -fx-padding: 0 0 5 0;
-}
-
-.illustration-text {
-    -fx-text-fill: #5C3D30;
-    -fx-font-size: 13px;
-}
-
-.login-btn {
-    -fx-background-color: #6E1C1C;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-    -fx-background-radius: 8;
-    -fx-padding: 12;
-    -fx-cursor: hand;
-}
-.login-btn:hover { -fx-background-color: #4A1010; }
-
-.gmail-btn {
-    -fx-background-color: #FFFFFF;
-    -fx-text-fill: #6E1C1C;
-    -fx-border-color: #6E1C1C;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
-    -fx-padding: 10;
-    -fx-font-weight: bold;
-    -fx-cursor: hand;
-}
-.gmail-btn:hover { -fx-background-color: #FAF0F0; }
-
-.glowing-orb { -fx-background-radius: 50%; }
-.orb-1 {
-    -fx-pref-width: 350px; -fx-pref-height: 350px;
-    -fx-background-color: rgba(160,100,80,0.10);
-}
-.orb-2 {
-    -fx-pref-width: 250px; -fx-pref-height: 250px;
-    -fx-background-color: rgba(110,28,28,0.10);
-}
-
-.floating-polygon { -fx-fill: #B07060; -fx-opacity: 0.18; }
-
-.icon-button-custom { -fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: #A07060; }
-.icon-button-custom:hover { -fx-text-fill: #6E1C1C; }
