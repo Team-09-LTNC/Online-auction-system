@@ -117,7 +117,6 @@
                             <Label text="Xem tất cả →" textFill="#7A1B28" style="-fx-cursor: hand;" />
                         </HBox>
 
-                        <!-- Đây là phần lấy từ MainContent cũ sang m nhé -->
                         <FlowPane hgap="15.0" vgap="15.0">
                             <fx:include source="/fxml/ProductCard.fxml" />
                             <fx:include source="/fxml/ProductCard.fxml" />
