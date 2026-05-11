@@ -7,10 +7,10 @@
 <?import java.lang.Double?>
 
 <StackPane prefHeight="650.0" prefWidth="1000.0" styleClass="main-background"
-           stylesheets="@../css/style.css"
+           stylesheets="@../../css/style.css"
            xmlns="http://javafx.com/javafx/17.0.2"
            xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="com.auction.client.controller.LoginController">
+           fx:controller="com.auction.client.controller.auth.LoginController">
     <children>
         <Pane prefHeight="650.0" prefWidth="1000.0">
             <children>
@@ -125,7 +125,7 @@
                                 <ImageView fitHeight="320.0" fitWidth="320.0"
                                            pickOnBounds="true" preserveRatio="true">
                                     <image>
-                                        <Image url="@../images/bua_dau_gia.png" />
+                                        <Image url="@../../images/bua_dau_gia.png" />
                                     </image>
                                 </ImageView>
                             </children>

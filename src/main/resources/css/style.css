@@ -1,16 +1,20 @@
-/* --- Thiết lập tổng thể --- */
+/* ==========================================================
+   PHẦN 1: THIẾT LẬP TỔNG THỂ (DÙNG CHUNG TOÀN APP)
+   ========================================================== */
 .root {
     /* Font chữ chủ đạo và màu nền kem nhạt cho toàn bộ ứng dụng */
     -fx-font-family: "Segoe UI", Arial, sans-serif;
-    -fx-background-color: #FDFBF7; /* Đã chỉnh sang màu kem trắng dịu hơn */
+    -fx-background-color: #EDE6DF; /* Chuyển sang kem đậm  */
 }
 
 /* Ép tất cả các nhãn chữ mặc định hiện màu nâu đen đậm */
 .label {
-    -fx-text-fill: #3E2723;
+    -fx-text-fill: #1A0F0A; /* Chữ nâu đen đậm */
 }
 
-/* --- Sidebar (Thanh điều hướng bên trái) --- */
+/* ==========================================================
+   PHẦN 2: SIDEBAR (THANH ĐIỀU HƯỚNG BÊN TRÁI - TRANG HOME)
+   ========================================================== */
 .sidebar {
     /* Màu kem đậm hơn nền một chút để tạo chiều sâu khối */
     -fx-background-color: #F8F4ED;
@@ -31,13 +35,15 @@
 
 /* Hiệu ứng khi di chuột qua hoặc khi nút đó đang được chọn (Active) */
 .nav-button:hover, .nav-button-active {
-    -fx-background-color: #7A1B28; /* Màu đỏ đô đặc trưng của dự án */
+    -fx-background-color: #6E1C1C; /* Đổi sang đỏ gạch cho đồng bộ login */
     -fx-text-fill: white !important; /* Dùng !important để đảm bảo chữ biến thành trắng */
     -fx-font-weight: bold;
     -fx-cursor: hand;
 }
 
-/* --- Thẻ sản phẩm (Product Card) --- */
+/* ==========================================================
+   PHẦN 3: THẺ SẢN PHẨM (PRODUCT CARD - TRANG HOME)
+   ========================================================== */
 .product-card {
     /* Thẻ màu trắng tinh khôi để nổi bật trên nền kem tổng thể */
     -fx-background-color: #FFFFFF;
@@ -57,14 +63,14 @@
 
 /* Giá tiền - Phần quan trọng nhất nên giữ màu đỏ đô rực rỡ */
 .product-price {
-    -fx-text-fill: #7A1B28;
+    -fx-text-fill: #6E1C1C; /* Đổi sang đỏ gạch */
     -fx-font-weight: bold;
     -fx-font-size: 18px;
 }
 
 /* Nút "Ra giá" nằm trong mỗi thẻ sản phẩm */
 .bid-button {
-    -fx-background-color: #7A1B28;
+    -fx-background-color: #6E1C1C;
     -fx-text-fill: white !important;
     -fx-background-radius: 8;
     -fx-padding: 8 15;
@@ -85,7 +91,9 @@
     -fx-font-size: 11px;
 }
 
-/* --- Các thành phần bổ trợ khác --- */
+/* ==========================================================
+   PHẦN 4: CÁC THÀNH PHẦN BỔ TRỢ (SEARCH, BANNER, LOGO)
+   ========================================================== */
 .search-field {
     -fx-background-color: #FFFFFF;
     -fx-background-radius: 25;
@@ -99,7 +107,7 @@
     -fx-background-color: transparent;
 }
 
-/* --- 2. NGOẠI LỆ CHO Ô ĐĂNG SẢN PHẨM --- */
+/* Ngoại lệ cho ô đăng sản phẩm */
 .post-product-button .label {
     -fx-text-fill: #FFFDF5 !important; /* Ép màu kem trắng */
 }
@@ -109,14 +117,14 @@
     -fx-font-size: 10px;
 }
 
-/* --- 3. LOGO HÌNH CÁI KHIÊN (CHỈ LẤY KHUNG) --- */
+/* Logo hình cái khiên (Chỉ lấy khung) */
 .shield-logo {
     -fx-fill: transparent !important;
-    -fx-stroke: #7A1B28;
+    -fx-stroke: #6E1C1C;
     -fx-stroke-width: 2;
 }
 
-/* --- 4. STYLE CHO THANH BANNER GỘP MỚI (BỔ SUNG) --- */
+/* Style cho thanh Banner gộp mới */
 .combined-banner {
     -fx-background-color: #FFFFFF;
     -fx-background-radius: 20;
@@ -125,12 +133,10 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.03), 10, 0, 0, 5);
 }
 
-/* Chỉnh size chữ lời chào cho gọn */
 .combined-banner .label {
     -fx-text-fill: #3E2723;
 }
 
-/* Các chỉ số thống kê trong thanh gộp */
 .stat-value {
     -fx-font-size: 16px;
     -fx-font-weight: bold;
@@ -142,8 +148,144 @@
     -fx-text-fill: #888888;
 }
 
-/* Màu cho các icon emoji trong phần thống kê */
 .stat-icon {
     -fx-font-size: 16px;
-    -fx-text-fill: #7A1B28;
+    -fx-text-fill: #6E1C1C;
 }
+
+/* ==========================================================
+   PHẦN 5: GIAO DIỆN LOGIN
+   ========================================================== */
+
+/* Nền chuyển màu Gradient cho trang Login */
+.main-background {
+    -fx-background-color: #EDE6DF;
+}
+
+/* Thẻ trắng bọc toàn bộ Form đăng nhập */
+.white-card {
+    -fx-background-color: white;
+
+    -fx-background-radius: 20;
+    -fx-effect: dropshadow(three-pass-box, rgba(70,30,15,0.20), 30, 0, 0, 6);
+}
+
+/* Panel bên phải - Màu xám kem  */
+.right-panel {
+    -fx-background-color: #F0EAE4;
+    -fx-background-radius: 0 20 20 0;
+}
+
+/* Chỉnh chữ AuctionHub  */
+.logo-text-large {
+    -fx-font-weight: bold;
+    /* Tăng font-size lên 48px cho nó to nạc hẳn ra */
+    -fx-font-size: 45px;
+    -fx-text-fill: #6E1C1C;
+    -fx-padding: 0 0 5 0;
+}
+
+/* Dòng slogan đi kèm */
+.illustration-text {
+    -fx-text-fill: #5C3D30;
+    -fx-font-size: 14px;
+    -fx-font-style: italic;
+}
+
+/* Tiêu đề "ĐĂNG NHẬP" */
+.title-text {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1A0F0A;
+}
+
+.sub-title-text {
+    -fx-font-size: 13px;
+    -fx-text-fill: #5C3D30;
+}
+
+.field-label-text {
+    -fx-font-weight: bold;
+    -fx-text-fill: #1A0F0A;
+    -fx-font-size: 13px;
+}
+
+/* --- LOGIC CHO Ô NHẬP LIỆU  --- */
+
+/* 1. Khung bao bên ngoài (HBox bọc ngoài ô nhập) */
+.input-field {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #C8AFA0;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8;
+    -fx-alignment: CENTER_LEFT;
+}
+
+/* Hiệu ứng khi nhấn vào ô nhập */
+.input-field:focused-within {
+    -fx-border-color: #6E1C1C;
+}
+
+/* 2. Ô nhập chữ bên trong */
+.password-field-inner,
+.password-field-inner:focused {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+    -fx-text-fill: #1A0F0A;
+    -fx-font-size: 14px;
+    -fx-padding: 0 0 0 5;
+}
+
+/* Icon emoji 👤 🔒 bên trái ô nhập */
+.field-icon {
+    -fx-font-size: 16px;
+    -fx-text-fill: #6E1C1C;
+}
+
+.title-icon  {
+    -fx-font-size: 40px;
+    -fx-padding: 0 0 10 0;
+    -fx-text-fill: #6E1C1C;
+}
+
+/* Nút Đăng nhập chính */
+.login-btn {
+    -fx-background-color: #6E1C1C;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-padding: 12;
+    -fx-cursor: hand;
+}
+
+.login-btn:hover {
+    -fx-background-color: #4A1010;
+}
+
+/* Link quên mật khẩu/đăng ký */
+.forgot-password-link {
+    -fx-text-fill: #6E1C1C;
+    -fx-font-size: 13px;
+    -fx-underline: false;
+}
+.forgot-password-link:hover {
+    -fx-text-fill: #4A1010;
+    -fx-underline: true;
+}
+
+/* Hiệu ứng bóng trang trí */
+.glowing-orb { -fx-background-radius: 50%; }
+.orb-1 {
+    -fx-pref-width: 350px; -fx-pref-height: 350px;
+    -fx-background-color: rgba(160,100,80,0.10);
+}
+.orb-2 {
+    -fx-pref-width: 250px; -fx-pref-height: 250px;
+    -fx-background-color: rgba(110,28,28,0.10);
+}
+
+.floating-polygon { -fx-fill: #B07060; -fx-opacity: 0.18; }
+
+.icon-button-custom { -fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: #A07060; }
+.icon-button-custom:hover { -fx-text-fill: #6E1C1C; }

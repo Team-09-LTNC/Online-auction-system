@@ -18,7 +18,7 @@
   ════════════════════════════════════════════════════
 -->
 
-<BorderPane prefHeight="860" prefWidth="1400" style="-fx-background-color: #EDE6DF;" stylesheets="@/css/admin.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.AdminLayoutController">
+<BorderPane prefHeight="860" prefWidth="1400" style="-fx-background-color: #EDE6DF;" stylesheets="@/css/admin.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.admin.AdminLayoutController">
 
     <!-- ══════════════════════════════════
          SIDEBAR

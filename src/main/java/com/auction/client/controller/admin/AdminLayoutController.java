@@ -1,16 +1,12 @@
-package com.auction.client.controller;
+package com.auction.client.controller.admin;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -156,7 +152,7 @@ public class AdminLayoutController implements Initializable {
             System.out.println("Đang đăng xuất...");
             try {
             Stage stage = (Stage) logOut.getScene().getWindow();
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/auth/Login.fxml"));
             Parent root = loader.load();
             stage.getScene().setRoot(root);
             stage.setTitle("Đăng nhập hệ thống");

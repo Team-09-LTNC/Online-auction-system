@@ -13,7 +13,7 @@
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
-<VBox fx:controller="com.auction.client.controller.MainDashboardController"
+<VBox fx:controller="com.auction.client.controller.bidder.MainDashboardController"
       prefWidth="1000.0"
       prefHeight="800.0"
       style="-fx-background-color: #FDFBF9;"
@@ -118,10 +118,10 @@
                         </HBox>
 
                         <FlowPane hgap="15.0" vgap="15.0">
-                            <fx:include source="/fxml/ProductCard.fxml" />
-                            <fx:include source="/fxml/ProductCard.fxml" />
-                            <fx:include source="/fxml/ProductCard.fxml" />
-                            <fx:include source="/fxml/ProductCard.fxml" />
+                            <fx:include source="/fxml/components/ProductCard.fxml" />
+                            <fx:include source="/fxml/components/ProductCard.fxml" />
+                            <fx:include source="/fxml/components/ProductCard.fxml" />
+                            <fx:include source="/fxml/components/ProductCard.fxml" />
                         </FlowPane>
                     </VBox>
 
