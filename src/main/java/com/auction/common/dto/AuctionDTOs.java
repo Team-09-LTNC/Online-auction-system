@@ -1,4 +1,5 @@
 package com.auction.common.dto;
+import com.auction.common.enums.StatusCode;
 
 import java.util.List;
 
@@ -34,7 +35,7 @@ public class AuctionDTOs {
         private final List<AuctionSummaryDTO> auctions;
 
         public AuctionListResponse(boolean success, String message, List<AuctionSummaryDTO> auctions) {
-            super(success, message);
+            super("AUCTION_LIST_RESPONSE", StatusCode.OK, success, message);
             this.auctions = auctions;
         }
 
@@ -67,8 +68,7 @@ public class AuctionDTOs {
         private final String highestBidderName;
 
         public AuctionUpdateDTO(int auctionId, long currentPrice, String highestBidderName) {
-            super(true, "NEW_BID_UPDATE");
-            this.auctionId = auctionId;
+            super("NEW_BID_UPDATE", StatusCode.OK, true, "Có người đặt giá mới");            this.auctionId = auctionId;
             this.currentPrice = currentPrice;
             this.highestBidderName = highestBidderName;
         }
@@ -97,7 +97,7 @@ public class AuctionDTOs {
         private final List<BidPointDTO> historyLines;
 
         public BidHistoryResponse(boolean success, String message, int auctionId, List<BidPointDTO> historyLines) {
-            super(success, message);
+            super("BID_HISTORY_RESPONSE", StatusCode.OK, success, message);
             this.auctionId = auctionId;
             this.historyLines = historyLines;
         }

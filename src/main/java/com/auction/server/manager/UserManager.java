@@ -2,6 +2,7 @@ package com.auction.server.manager;
 
 import com.auction.common.model.user.User;
 import com.auction.server.dao.UserDao;
+import com.auction.common.exception.AuthenticationException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,17 +34,21 @@ public class UserManager {
     /**
      * Xác thực thông tin và đưa người dùng vào danh sách Online
      */
-    public Optional<User> dangNhap(String tenDangNhap, String matKhau) {
+    public User dangNhap(String tenDangNhap, String matKhau) throws AuthenticationException {
+        // 1. Truy vấn Database tìm người dùng
         Optional<User> userOpt = userDao.timTheoTenDangNhap(tenDangNhap);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            // Tạm thời so sánh chuỗi thô, sau này có thể nâng cấp lên Hashing
-            if (user.getPassword().equals(matKhau)) {
-                onlineUsers.put(user.getId(), user);
-                return Optional.of(user);
-            }
+        // 2. Nếu không tìm thấy -> Ném lỗi chi tiết
+        if (userOpt.isEmpty()) {
+            throw new AuthenticationException("Tài khoản không tồn tại trong hệ thống!");
         }
-        return Optional.empty();
+        User user = userOpt.get();
+        // 3. Kiểm tra mật khẩu (Tạm thời so sánh chuỗi thô, sau này áp dụng mã hóa nếu đủ thời gian)
+        if (!user.getPassword().equals(matKhau)) {
+            throw new AuthenticationException("Sai mật khẩu, vui lòng thử lại!");
+        }
+        // 4. Đăng nhập thành công -> Cập nhật trạng thái Online và trả về dữ liệu
+        onlineUsers.put(user.getId(), user);
+        return user;
     }
 
     /**

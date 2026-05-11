@@ -43,8 +43,8 @@ public class DatabaseConnection implements ConnectionProvider {
             config.setUsername(defaultUser);
             config.setPassword(defaultPass);
             // Cấu hình tối ưu cho môi trường đa luồng (Server)
-            config.setMaximumPoolSize(20);      // Tối đa 20 luồng (client) có thể truy vấn cùng lúc
-            config.setMinimumIdle(5);           // Luôn giữ ít nhất 5 kết nối sẵn sàng
+            config.setMaximumPoolSize(50);      // Tối đa 50 luồng (client) có thể truy vấn cùng lúc
+            config.setMinimumIdle(10);           // Luôn giữ ít nhất 10 kết nối sẵn sàng
             config.setIdleTimeout(30000);       // Đóng kết nối nếu k dùng sau 30 giây
             config.setMaxLifetime(1800000);     // Đóng và tạo lại kết nối sau 30 phút để tránh lỗi mạng
             config.setConnectionTimeout(10000); // Ném lỗi nếu chờ 10 giây mà không lấy được kết nối

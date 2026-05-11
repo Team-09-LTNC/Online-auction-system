@@ -1,4 +1,5 @@
 package com.auction.common.dto;
+import com.auction.common.enums.StatusCode;
 
 public class AuthDTOs {
 
@@ -40,7 +41,7 @@ public class AuthDTOs {
         private final UserDTO userData;
 
         public LoginResponse(boolean success, String message, UserDTO userData) {
-            super(success, message);
+            super("LOGIN_RESPONSE", StatusCode.OK, success, message);
             this.userData = userData;
         }
 
@@ -70,8 +71,7 @@ public class AuthDTOs {
 
     public static class RegisterResponse extends BaseDTOs.Response {
         public RegisterResponse(boolean success, String message) {
-            super(success, message);
-        }
+            super("REGISTER_RESPONSE", StatusCode.CREATED, success, message);        }
     }
 
     // --- ĐĂNG XUẤT ---

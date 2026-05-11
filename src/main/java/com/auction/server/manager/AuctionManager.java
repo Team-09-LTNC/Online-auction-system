@@ -1,45 +1,53 @@
 package com.auction.server.manager;
 
-import com.auction.common.model.AuctionStatus;
-import com.auction.common.model.bid.Auction;
-import com.auction.common.model.bid.BidTransaction;
-import com.auction.common.observer.AuctionObserver;
+import com.auction.common.exception.AuctionClosedException;
 import com.auction.common.exception.InvalidBidException;
+import com.auction.common.enums.AuctionStatus;
+import com.auction.common.model.bid.Auction;
+import com.auction.common.model.bid.AutoBidConfig;
+import com.auction.common.model.bid.BidTransaction;
+import com.auction.common.model.user.Bidder;
+import com.auction.common.model.user.User;
+import com.auction.common.observer.AuctionObserver;
 import com.auction.server.dao.AuctionDao;
-import com.auction.server.dao.BidTransactionDao;
+
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 
-/**
- * Quản lý nghiệp vụ đấu giá bằng mô hình Singleton
- */
 public class AuctionManager {
+    // Singleton: chỉ có 1 instance duy nhất
     private static volatile AuctionManager instance;
 
-    // Lưu các phiên đang hoạt động trên RAM để truy xuất
+    // Lưu các phiên đấu giá đang chạy
     private final Map<Integer, Auction> dsPhienDangChay = new ConcurrentHashMap<>();
-
-    // Danh sách Client để gửi thông báo Real-time
+    // Lưu danh sách observer theo dõi từng phiên
     private final Map<Integer, List<AuctionObserver>> dsNguoiTheoDoi = new ConcurrentHashMap<>();
 
+    // Quản lý tác vụ đóng phiên để tránh trùng lặp khi gia hạn (Anti-sniping)
+    private final Map<Integer, ScheduledFuture<?>> tasksDongPhien = new ConcurrentHashMap<>();
+
     private final AuctionDao auctionDao = new AuctionDao();
-    private final BidTransactionDao bidTransactionDao = new BidTransactionDao();
-
-    // Luồng tự động quét và đóng phiên mỗi giây
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-
-    // Thread Pool xử lý việc gửi thông báo mà không gây nghẽn luồng chính
+    // Thread pool lên lịch đóng/mở phiên
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
+    // Thread pool gửi thông báo đến người theo dõi (không block luồng chính)
     private final ExecutorService notifierPool = Executors.newFixedThreadPool(50);
 
+    // Constructor private: tải phiên từ DB và lên lịch khi khởi động
     private AuctionManager() {
-        // Nạp dữ liệu từ DB lên RAM khi khởi tạo
+        // Khôi phục các phiên đang chạy
         for (Auction a : auctionDao.layDanhSachPhienDangChay()) {
             dsPhienDangChay.put(a.getId(), a);
+            henGioDongPhien(a);
         }
-        scheduler.scheduleAtFixedRate(this::quetVaDongPhienHetHan, 0, 1, TimeUnit.SECONDS);
+        // Lên lịch mở các phiên đang chờ
+        for (Auction a : auctionDao.layDanhSachPhienChoMo()) {
+            henGioMoPhien(a);
+        }
     }
 
+    // Double-checked locking: đảm bảo thread-safe cho Singleton
     public static AuctionManager getInstance() {
         if (instance == null) {
             synchronized (AuctionManager.class) {
@@ -49,93 +57,158 @@ public class AuctionManager {
         return instance;
     }
 
-    /**
-     * Xử lý khi một Bidder đặt giá mới.
-     * Sử dụng synchronized để tránh tranh chấp dữ liệu (Race Condition).
-     */
-    public boolean xuLyDatGia(int idPhien, BidTransaction giaoDich) throws InvalidBidException {
+    // Lên lịch mở phiên vào thời điểm startTime
+    public void henGioMoPhien(Auction phien) {
+        long delay = ChronoUnit.SECONDS.between(LocalDateTime.now(), phien.getStartTime());
+        if (delay <= 0) thucThiMoPhien(phien); // Đã đến giờ thì mở luôn
+        else scheduler.schedule(() -> thucThiMoPhien(phien), delay, TimeUnit.SECONDS);
+    }
+
+    // Cập nhật trạng thái phiên thành RUNNING và lên lịch đóng
+    private void thucThiMoPhien(Auction phien) {
+        if (auctionDao.capNhatTrangThai(phien.getId(), AuctionStatus.RUNNING.name())) {
+            phien.setStatus(AuctionStatus.RUNNING);
+            dsPhienDangChay.put(phien.getId(), phien);
+            henGioDongPhien(phien); // Bắt đầu đếm ngược đến giờ đóng
+        }
+    }
+
+    // Lên lịch đóng phiên, hủy task cũ nếu có (dùng cho Anti-sniping khi gia hạn)
+    public void henGioDongPhien(Auction phien) {
+        // Hủy tác vụ đóng phiên cũ nếu đang chạy (quan trọng khi gia hạn thời gian)
+        ScheduledFuture<?> taskCu = tasksDongPhien.get(phien.getId());
+        if (taskCu != null && !taskCu.isDone()) {
+            taskCu.cancel(false);
+        }
+
+        long delay = ChronoUnit.SECONDS.between(LocalDateTime.now(), phien.getEndTime());
+        if (delay <= 0) {
+            dongPhien(phien.getId()); // Đã quá giờ thì đóng luôn
+        } else {
+            ScheduledFuture<?> taskMoi = scheduler.schedule(() -> dongPhien(phien.getId()), delay, TimeUnit.SECONDS);
+            tasksDongPhien.put(phien.getId(), taskMoi);
+        }
+    }
+
+    // Đóng phiên: xác định trạng thái FINISHED/CANCELED, dọn dẹp tài nguyên
+    private void dongPhien(int idPhien) {
+        Auction p = dsPhienDangChay.get(idPhien);
+        if (p != null) {
+            synchronized (p) {
+                // Có người thắng -> FINISHED, không có -> CANCELED
+                AuctionStatus statusMoi = (p.getCurrentWinner() != null) ? AuctionStatus.FINISHED : AuctionStatus.CANCELED;
+                p.setStatus(statusMoi);
+                auctionDao.capNhatTrangThai(idPhien, statusMoi.name());
+
+                // Xóa phiên khỏi bộ nhớ và dọn dẹp tài nguyên liên quan
+                dsPhienDangChay.remove(idPhien);
+                dsNguoiTheoDoi.remove(idPhien);
+                tasksDongPhien.remove(idPhien);
+            }
+        }
+    }
+
+    // Xử lý đặt giá: kiểm tra điều kiện, chống sniping, lưu DB và kích hoạt auto-bid
+    public boolean xuLyDatGia(int idPhien, BidTransaction giaoDich) throws InvalidBidException, AuctionClosedException {
         Auction phien = dsPhienDangChay.get(idPhien);
-        if (phien == null) throw new InvalidBidException("Phiên này hiện không khả dụng!");
+        if (phien == null) throw new InvalidBidException("Phiên không khả dụng!");
 
-        synchronized (phien) {
-            // 1. Kiểm tra trạng thái phiên đấu giá
-            if (phien.getStatus() != AuctionStatus.RUNNING)
-                throw new InvalidBidException("Phiên đấu giá hiện không diễn ra!");
+        synchronized (phien) { // Đồng bộ trên phiên để tránh race condition
+            if (!phien.isAcceptingBids()) throw new AuctionClosedException("Phiên đã kết thúc!");
 
-            // 2. Chặn Seller tự nâng giá sản phẩm của chính mình
+            // Chặn seller tự bid sản phẩm của mình
             if (giaoDich.getBidder().getId() == phien.getItem().getSellerId())
-                throw new InvalidBidException("Bạn không được phép tự đấu giá sản phẩm của mình!");
+                throw new InvalidBidException("Không được tự bid sản phẩm của mình!");
 
-            // 3. Tính toán giá tối thiểu dựa trên Bước giá (Bid Increment)
             long giaHienTai = phien.getCurrentHighestBid();
-            long buocGia = phien.getItem().getBidIncrement();
-
-            // Nếu chưa có ai bid, giá tối thiểu là giá khởi điểm. Nếu có rồi, phải cộng thêm bước giá
-            long giaToiThieu = phien.getBidHistory().isEmpty()
+            // Giá tối thiểu: giá khởi điểm (nếu chưa có ai bid) hoặc giá cao nhất + bước giá
+            long giaToiThieu = (phien.getCurrentWinner() == null)
                     ? phien.getItem().getStartingPrice()
-                    : (giaHienTai + buocGia);
+                    : (giaHienTai + phien.getItem().getBidIncrement());
 
-            if (giaoDich.getBidAmount() < giaToiThieu) {
-                throw new InvalidBidException("Giá đặt tối thiểu (bước giá " + buocGia + ") là: " + giaToiThieu);
-            }
+            if (giaoDich.getBidAmount() < giaToiThieu)
+                throw new InvalidBidException("Giá đặt tối thiểu: " + giaToiThieu);
 
-            // 4. Kiểm tra điều kiện tiền cọc (10% giá khởi điểm)
-            long tienCocYeuCau = (long) (phien.getItem().getStartingPrice() * 0.1);
-            if (giaoDich.getBidder().getBalance() < tienCocYeuCau) {
-                throw new InvalidBidException("Bạn cần số dư tối thiểu " + tienCocYeuCau + " làm tiền cọc!");
-            }
-
-            // 5. Cập nhật RAM & Thuật toán Anti-sniping (Gia hạn nếu bid ở 30s cuối)
-            phien.updateWinner(giaoDich);
+            // Anti-sniping: nếu bid trong 30 giây cuối, gia hạn thêm 60 giây
             if (phien.getEndTime().minusSeconds(30).isBefore(LocalDateTime.now())) {
-                phien.setEndTime(phien.getEndTime().plusMinutes(1));
+                phien.extendEndTime(60);
                 auctionDao.capNhatThoiGianKetThuc(phien.getId(), phien.getEndTime());
-                System.out.println(">>> Gia hạn phiên #" + phien.getId() + " thêm 1 phút.");
+                henGioDongPhien(phien); // Cập nhật lại lịch đóng với thời gian mới
             }
 
-            // 6. Lưu vào DB và thông báo Real-time cho các Client khác
-            if (auctionDao.capNhatGiaVaNguoiDanDau(idPhien, giaoDich.getBidAmount(), giaoDich.getBidder().getId())) {
-                bidTransactionDao.luuLichSuDatGia(idPhien, giaoDich.getBidder().getId(), giaoDich.getBidAmount());
-                notifierPool.execute(() -> thongBaoGiaMoi(idPhien, giaoDich));
+            // Lưu giao dịch vào DB và cập nhật người thắng hiện tại
+            if (auctionDao.thucHienGiaoDichDatGia(idPhien, giaoDich)) {
+                phien.updateWinner(giaoDich);
+                notifierPool.execute(() -> thongBaoGiaMoi(idPhien, giaoDich)); // Gửi thông báo bất đồng bộ
+                kichHoatAutoBid(phien); // Kích hoạt auto-bid để đáp trả nếu cần
                 return true;
             }
             return false;
         }
     }
 
-    /**
-     * Kết thúc phiên đấu giá và giải phóng bộ nhớ RAM
-     */
-    public void dongPhien(int id) {
-        Auction p = dsPhienDangChay.get(id);
-        if (p != null) {
-            synchronized (p) {
-                // Xác định trạng thái cuối cùng dựa trên việc có người thắng hay không
-                AuctionStatus statusMoi = (p.getCurrentWinner() != null) ? AuctionStatus.FINISHED : AuctionStatus.CANCELED;
-                p.setStatus(statusMoi);
-                auctionDao.capNhatTrangThai(id, statusMoi.name());
-                dsPhienDangChay.remove(id); // Gỡ khỏi RAM để tối ưu hiệu năng
-                dsNguoiTheoDoi.remove(id);
+    // Đăng ký auto-bid: đặt giá tự động đến mức tối đa cho phép
+    public void dangKyAutoBid(int idPhien, User bidder, long maxBid) throws Exception {
+        Auction phien = dsPhienDangChay.get(idPhien);
+        if (phien == null) throw new Exception("Phiên không khả dụng!");
+
+        synchronized (phien) {
+            // Chặn seller cài auto-bid cho sản phẩm của mình
+            if (bidder.getId() == phien.getItem().getSellerId()) {
+                throw new Exception("Seller không thể đăng ký Auto-bid cho sản phẩm của mình!");
+            }
+            phien.addAutoBidConfig(new AutoBidConfig(bidder, maxBid));
+            kichHoatAutoBid(phien); // Kích hoạt ngay để cạnh tranh với giá hiện tại
+        }
+    }
+
+    // Xử lý auto-bid: bot đại diện người dùng tự động trả giá theo bước giá
+    private void kichHoatAutoBid(Auction phien) {
+        Queue<AutoBidConfig> queue = phien.getAutoBidders();
+        while (!queue.isEmpty()) {
+            AutoBidConfig topBot = queue.peek();
+            // Nếu bot đang dẫn đầu, dừng lại (không tự đấu với chính mình)
+            if (phien.getCurrentWinner() != null &&
+                    topBot.getBidder().getId() == phien.getCurrentWinner().getId()) {
+                break;
+            }
+
+            long giaTiepTheo = phien.getCurrentHighestBid() + phien.getItem().getBidIncrement();
+
+            // Bot không đủ tiền theo bước giá tiếp theo -> loại bỏ
+            if (giaTiepTheo > topBot.getMaxBid()) {
+                queue.poll();
+                continue;
+            }
+
+            // Tạo giao dịch tự động và thực hiện
+            BidTransaction autoTx = new BidTransaction(
+                    phien.getId(),
+                    (Bidder) topBot.getBidder(),
+                    giaTiepTheo,
+                    LocalDateTime.now()
+            );
+
+            if (auctionDao.thucHienGiaoDichDatGia(phien.getId(), autoTx)) {
+                phien.updateWinner(autoTx);
+                notifierPool.execute(() -> thongBaoGiaMoi(phien.getId(), autoTx));
+            } else {
+                break;
             }
         }
     }
 
-    private void quetVaDongPhienHetHan() {
-        List<Integer> dsHetHan = auctionDao.layDanhSachPhienHetHan();
-        for (int id : dsHetHan) dongPhien(id);
+    // Đăng ký observer để nhận thông báo khi có bid mới
+    public void dangKyTheoDoi(int idPhien, AuctionObserver obs) {
+        // Dùng CopyOnWriteArrayList để thread-safe khi duyệt gửi thông báo
+        dsNguoiTheoDoi.computeIfAbsent(idPhien, k -> new CopyOnWriteArrayList<>()).add(obs);
     }
 
-    /**
-     * Gửi thông báo cập nhật giá tới các Client đang theo dõi phiên này[cite: 94, 95].
-     */
+    // Gửi thông báo đến tất cả observer đang theo dõi phiên
     private void thongBaoGiaMoi(int idPhien, BidTransaction tx) {
         List<AuctionObserver> observers = dsNguoiTheoDoi.get(idPhien);
         if (observers != null) {
             for (AuctionObserver obs : observers) obs.onNewBid(tx);
         }
-    }
-
-    public void dangKyTheoDoi(int idPhien, AuctionObserver nguoiTheoDoi) {
-        dsNguoiTheoDoi.computeIfAbsent(idPhien, k -> new CopyOnWriteArrayList<>()).add(nguoiTheoDoi);
     }
 }

@@ -1,9 +1,9 @@
 package com.auction.common.model.bid;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import com.auction.common.model.AuctionStatus;
+import java.util.*;
+
+import com.auction.common.enums.AuctionStatus;
 import com.auction.common.model.entity.Entity;
 import com.auction.common.model.item.Item;
 import com.auction.common.model.user.Bidder;
@@ -17,6 +17,7 @@ public class Auction extends Entity {
     private Bidder currentWinner;
 
     private final List<BidTransaction> bidHistory = new ArrayList<>();
+    private final Queue<AutoBidConfig> autoBidders = new PriorityQueue<>();
 
     public Auction(Item item) {
         this.item = item;
@@ -30,15 +31,43 @@ public class Auction extends Entity {
         this.currentWinner = transaction.getBidder();
     }
 
-    // Getters & Setters
+
+    // --- Các hàm tiện ích nghiệp vụ ---
+    public boolean isAcceptingBids() {
+        return this.status == AuctionStatus.RUNNING &&
+                (this.endTime != null && LocalDateTime.now().isBefore(this.endTime));
+    }
+    // Đấu giá tự động
+    public void addAutoBidConfig(AutoBidConfig config) {
+        autoBidders.offer(config);
+    }
+    public Queue<AutoBidConfig> getAutoBidders() {
+        return autoBidders;
+    }
+
+    public void extendEndTime(int extraSeconds) {
+        if (this.endTime != null) {
+            this.endTime = this.endTime.plusSeconds(extraSeconds);
+        }
+    }
+
+    // --- Getters & Setters ---
     public Item getItem() { return item; }
+
     public long getCurrentHighestBid() { return currentHighestBid; }
+    public void setCurrentPrice(long price) { this.currentHighestBid = price; } // Thêm cho DAO
+
     public Bidder getCurrentWinner() { return currentWinner; }
     public void setCurrentWinner(Bidder winner) { this.currentWinner = winner; }
+
     public AuctionStatus getStatus() { return status; }
     public void setStatus(AuctionStatus status) { this.status = status; }
+
+    public LocalDateTime getStartTime() { return startTime; } // Thêm getter
+    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
+
     public LocalDateTime getEndTime() { return endTime; }
     public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
+
     public List<BidTransaction> getBidHistory() { return bidHistory; }
-    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
 }

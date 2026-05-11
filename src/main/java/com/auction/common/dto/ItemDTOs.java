@@ -1,4 +1,5 @@
 package com.auction.common.dto;
+import com.auction.common.enums.StatusCode;
 
 public class ItemDTOs {
 
@@ -29,7 +30,7 @@ public class ItemDTOs {
         private final int itemId;
 
         public CreateItemResponse(boolean success, String message, int itemId) {
-            super(success, message);
+            super("CREATE_ITEM_RESPONSE", StatusCode.CREATED, success, message);
             this.itemId = itemId;
         }
 
