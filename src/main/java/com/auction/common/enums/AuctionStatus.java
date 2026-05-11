@@ -1,4 +1,4 @@
-package com.auction.common.model;
+package com.auction.common.enums;
 
 // Các trạng thái của 1 phiên đấu giá
 public enum AuctionStatus {
