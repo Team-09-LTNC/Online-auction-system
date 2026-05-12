@@ -43,11 +43,11 @@ public class TransactionsViewController implements Initializable {
 
     /** Các trạng thái có thể chuyển sang khi admin chỉnh sửa. */
     private static final List<String> EDITABLE_STATUSES =
-        List.of("COMPLETED", "CANCELLED", "DISPUTED", "PENDING_PAYMENT");
+            List.of("COMPLETED", "CANCELLED", "DISPUTED", "PENDING_PAYMENT");
 
     /** Tuỳ chọn lọc trên ComboBox. */
     private static final List<String> FILTER_OPTIONS =
-        List.of("Tất cả", "COMPLETED", "CANCELLED", "DISPUTED", "PENDING_PAYMENT");
+            List.of("Tất cả", "COMPLETED", "CANCELLED", "DISPUTED", "PENDING_PAYMENT");
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -82,14 +82,14 @@ public class TransactionsViewController implements Initializable {
     private void loadData() {
         // TODO: thay bằng service call, chỉ lấy phiên đã kết thúc
         masterList.setAll(
-            new Transaction("SP-001", "2025-05-01 09:00", "2025-05-01 12:00",
-                            "COMPLETED",      "user_88",  "15.500.000"),
-            new Transaction("SP-002", "2025-05-02 14:00", "2025-05-02 18:00",
-                            "CANCELLED",      "",         "0"),
-            new Transaction("SP-003", "2025-05-03 08:00", "2025-05-03 10:00",
-                            "DISPUTED",       "user_44",  "8.200.000"),
-            new Transaction("SP-004", "2025-05-04 10:00", "2025-05-04 14:00",
-                            "PENDING_PAYMENT","user_12",  "22.000.000")
+                new Transaction("SP-001", "2025-05-01 09:00", "2025-05-01 12:00",
+                        "COMPLETED",      "user_88",  "15.500.000"),
+                new Transaction("SP-002", "2025-05-02 14:00", "2025-05-02 18:00",
+                        "CANCELLED",      "",         "0"),
+                new Transaction("SP-003", "2025-05-03 08:00", "2025-05-03 10:00",
+                        "DISPUTED",       "user_44",  "8.200.000"),
+                new Transaction("SP-004", "2025-05-04 10:00", "2025-05-04 14:00",
+                        "PENDING_PAYMENT","user_12",  "22.000.000")
         );
         updateCountLabel();
     }
@@ -134,8 +134,8 @@ public class TransactionsViewController implements Initializable {
                 txTable.refresh();                       // refresh cell
                 // TODO: gọi service cập nhật lên server
                 showInfo("Cập nhật thành công",
-                         "Trạng thái phiên " + selected.getProductId()
-                         + " đã được đổi thành: " + newStatus);
+                        "Trạng thái phiên " + selected.getProductId()
+                                + " đã được đổi thành: " + newStatus);
             }
         });
     }
@@ -148,11 +148,11 @@ public class TransactionsViewController implements Initializable {
 
         filteredList.setPredicate(tx -> {
             boolean matchKw = kw.isEmpty()
-                || tx.getProductId().toLowerCase().contains(kw)
-                || tx.getWinnerId().toLowerCase().contains(kw)
-                || tx.getStatus().toLowerCase().contains(kw);
+                    || tx.getProductId().toLowerCase().contains(kw)
+                    || tx.getWinnerId().toLowerCase().contains(kw)
+                    || tx.getStatus().toLowerCase().contains(kw);
             boolean matchStatus = (status == null || status.equals("Tất cả"))
-                || tx.getStatus().equalsIgnoreCase(status);
+                    || tx.getStatus().equalsIgnoreCase(status);
             return matchKw && matchStatus;
         });
         updateCountLabel();
@@ -162,8 +162,8 @@ public class TransactionsViewController implements Initializable {
         int shown = filteredList.size();
         int total = masterList.size();
         lblTxCount.setText(shown == total
-            ? total + " phiên"
-            : shown + " / " + total + " phiên");
+                ? total + " phiên"
+                : shown + " / " + total + " phiên");
     }
 
     private void showInfo(String title, String message) {

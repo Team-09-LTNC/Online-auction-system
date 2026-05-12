@@ -40,7 +40,7 @@ public class BiddersViewController implements Initializable {
     public static final String STATUS_LOCKED = "LOCKED";
 
     private static final List<String> FILTER_OPTIONS =
-        List.of("Tất cả", STATUS_ACTIVE, STATUS_LOCKED);
+            List.of("Tất cả", STATUS_ACTIVE, STATUS_LOCKED);
 
     // ── Data ─────────────────────────────────────────────────
     private final ObservableList<Bidder> masterList   = FXCollections.observableArrayList();
@@ -74,8 +74,8 @@ public class BiddersViewController implements Initializable {
                 boolean isLocked = STATUS_LOCKED.equals(status);
                 setText(isLocked ? "🔒  Bị khoá" : "✅  Hoạt động");
                 setStyle(isLocked
-                    ? "-fx-text-fill: #C0392B; -fx-font-weight: bold; -fx-font-size: 12px;"
-                    : "-fx-text-fill: #27AE60; -fx-font-weight: bold; -fx-font-size: 12px;");
+                        ? "-fx-text-fill: #C0392B; -fx-font-weight: bold; -fx-font-size: 12px;"
+                        : "-fx-text-fill: #27AE60; -fx-font-weight: bold; -fx-font-size: 12px;");
             }
         });
     }
@@ -94,11 +94,11 @@ public class BiddersViewController implements Initializable {
     private void loadData() {
         // TODO: thay bằng service call
         masterList.setAll(
-            new Bidder("bidder01", "Nguyễn Văn An",   STATUS_ACTIVE),
-            new Bidder("bidder02", "Trần Thị Bình",   STATUS_ACTIVE),
-            new Bidder("bidder03", "Lê Hoàng Cường",  STATUS_LOCKED),
-            new Bidder("bidder04", "Phạm Thị Dung",   STATUS_ACTIVE),
-            new Bidder("bidder05", "Hoàng Minh Đức",  STATUS_LOCKED)
+                new Bidder("bidder01", "Nguyễn Văn An",   STATUS_ACTIVE),
+                new Bidder("bidder02", "Trần Thị Bình",   STATUS_ACTIVE),
+                new Bidder("bidder03", "Lê Hoàng Cường",  STATUS_LOCKED),
+                new Bidder("bidder04", "Phạm Thị Dung",   STATUS_ACTIVE),
+                new Bidder("bidder05", "Hoàng Minh Đức",  STATUS_LOCKED)
         );
         updateCountLabel();
     }
@@ -143,10 +143,10 @@ public class BiddersViewController implements Initializable {
         // Tiêu đề & nội dung dialog tuỳ chiều toggle
         String dialogTitle   = isCurrentlyLocked ? "Mở khoá tài khoản?" : "Khoá tài khoản?";
         String dialogContent = isCurrentlyLocked
-            ? "Mở khoá tài khoản của \"" + selected.getFullname() + "\"?\n"
-              + "Người dùng sẽ có thể đăng nhập và đấu giá trở lại."
-            : "Khoá tài khoản của \"" + selected.getFullname() + "\"?\n"
-              + "Người dùng sẽ không thể đăng nhập cho đến khi được mở khoá.";
+                ? "Mở khoá tài khoản của \"" + selected.getFullname() + "\"?\n"
+                + "Người dùng sẽ có thể đăng nhập và đấu giá trở lại."
+                : "Khoá tài khoản của \"" + selected.getFullname() + "\"?\n"
+                + "Người dùng sẽ không thể đăng nhập cho đến khi được mở khoá.";
 
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle(dialogTitle);
@@ -157,9 +157,9 @@ public class BiddersViewController implements Initializable {
         if (result.isPresent() && result.get() == ButtonType.OK) {
             // Đảo trạng thái
             String newStatus = isCurrentlyLocked ? STATUS_ACTIVE : STATUS_LOCKED;
-            selected.setStatus(newStatus); 
-                
-                // TODO: gọi service cập nhật server
+            selected.setStatus(newStatus);
+
+            // TODO: gọi service cập nhật server
 
             bidderTable.refresh();                 // Cập nhật lại ô trạng thái
 
@@ -169,7 +169,7 @@ public class BiddersViewController implements Initializable {
         }
     }
 
-    
+
 
     // ── Helpers ──────────────────────────────────────────────
 
@@ -179,10 +179,10 @@ public class BiddersViewController implements Initializable {
 
         filteredList.setPredicate(b -> {
             boolean matchKw = kw.isEmpty()
-                || b.getUsername().toLowerCase().contains(kw)
-                || b.getFullname().toLowerCase().contains(kw);
+                    || b.getUsername().toLowerCase().contains(kw)
+                    || b.getFullname().toLowerCase().contains(kw);
             boolean matchStatus = (status == null || status.equals("Tất cả"))
-                || b.getStatus().equalsIgnoreCase(status);
+                    || b.getStatus().equalsIgnoreCase(status);
             return matchKw && matchStatus;
         });
         updateCountLabel();
@@ -193,17 +193,17 @@ public class BiddersViewController implements Initializable {
         if (STATUS_LOCKED.equals(bidder.getStatus())) {
             btnToggleLock.setText("🔓  Mở khoá");
             btnToggleLock.setStyle(
-                "-fx-background-color: #27AE60; -fx-text-fill: white; "
-                + "-fx-font-size: 13px; -fx-font-weight: bold; "
-                + "-fx-padding: 8 18 8 18; -fx-border-radius: 6px; "
-                + "-fx-background-radius: 6px; -fx-cursor: hand; -fx-border-width: 0;");
+                    "-fx-background-color: #27AE60; -fx-text-fill: white; "
+                            + "-fx-font-size: 13px; -fx-font-weight: bold; "
+                            + "-fx-padding: 8 18 8 18; -fx-border-radius: 6px; "
+                            + "-fx-background-radius: 6px; -fx-cursor: hand; -fx-border-width: 0;");
         } else {
             btnToggleLock.setText("🔒  Khoá tài khoản");
             btnToggleLock.setStyle(
-                "-fx-background-color: #8B2C2C; -fx-text-fill: white; "
-                + "-fx-font-size: 13px; -fx-font-weight: bold; "
-                + "-fx-padding: 8 18 8 18; -fx-border-radius: 6px; "
-                + "-fx-background-radius: 6px; -fx-cursor: hand; -fx-border-width: 0;");
+                    "-fx-background-color: #8B2C2C; -fx-text-fill: white; "
+                            + "-fx-font-size: 13px; -fx-font-weight: bold; "
+                            + "-fx-padding: 8 18 8 18; -fx-border-radius: 6px; "
+                            + "-fx-background-radius: 6px; -fx-cursor: hand; -fx-border-width: 0;");
         }
     }
 
@@ -222,8 +222,8 @@ public class BiddersViewController implements Initializable {
         int shown = filteredList.size();
         int total = masterList.size();
         lblBidderCount.setText(shown == total
-            ? total + " người dùng"
-            : shown + " / " + total + " người dùng");
+                ? total + " người dùng"
+                : shown + " / " + total + " người dùng");
     }
 
     // ── Model ────────────────────────────────────────────────

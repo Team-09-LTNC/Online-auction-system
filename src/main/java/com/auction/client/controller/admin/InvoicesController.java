@@ -65,9 +65,9 @@ public class InvoicesController implements Initializable {
     private void loadData() {
         // TODO: thay bằng service call — chỉ lấy bản ghi có status = PAID
         masterList.setAll(
-            new Invoice("SP-001", "Đồng hồ Rolex vintage",  "AUC-101", "SELLER-01", "USER-88",  "485.000.000"),
-            new Invoice("SP-002", "iPhone 15 Pro Max 256GB","AUC-102", "SELLER-02", "USER-44",  "27.500.000"),
-            new Invoice("SP-003", "Áo dài thêu tay",        "AUC-103", "SELLER-01", "USER-112", "5.100.000")
+                new Invoice("SP-001", "Đồng hồ Rolex vintage",  "AUC-101", "SELLER-01", "USER-88",  "485.000.000"),
+                new Invoice("SP-002", "iPhone 15 Pro Max 256GB","AUC-102", "SELLER-02", "USER-44",  "27.500.000"),
+                new Invoice("SP-003", "Áo dài thêu tay",        "AUC-103", "SELLER-01", "USER-112", "5.100.000")
         );
         updateSummary();
     }
@@ -78,12 +78,12 @@ public class InvoicesController implements Initializable {
     private void handleSearch() {
         String kw = tfSearch.getText().trim().toLowerCase();
         filteredList.setPredicate(inv ->
-            kw.isEmpty()
-            || inv.getProductId().toLowerCase().contains(kw)
-            || inv.getName().toLowerCase().contains(kw)
-            || inv.getAuctionId().toLowerCase().contains(kw)
-            || inv.getSellerId().toLowerCase().contains(kw)
-            || inv.getWinnerId().toLowerCase().contains(kw)
+                kw.isEmpty()
+                        || inv.getProductId().toLowerCase().contains(kw)
+                        || inv.getName().toLowerCase().contains(kw)
+                        || inv.getAuctionId().toLowerCase().contains(kw)
+                        || inv.getSellerId().toLowerCase().contains(kw)
+                        || inv.getWinnerId().toLowerCase().contains(kw)
         );
         updateSummary();
     }
@@ -95,19 +95,19 @@ public class InvoicesController implements Initializable {
         int total = masterList.size();
 
         lblInvoiceCount.setText(shown == total
-            ? total + " hoá đơn"
-            : shown + " / " + total + " hoá đơn");
+                ? total + " hoá đơn"
+                : shown + " / " + total + " hoá đơn");
 
         // Tính tổng final_price của các hàng đang hiển thị
         long sum = filteredList.stream()
-            .mapToLong(inv -> {
-                try {
-                    return Long.parseLong(inv.getFinalPrice().replaceAll("[^0-9]", ""));
-                } catch (NumberFormatException e) {
-                    return 0L;
-                }
-            })
-            .sum();
+                .mapToLong(inv -> {
+                    try {
+                        return Long.parseLong(inv.getFinalPrice().replaceAll("[^0-9]", ""));
+                    } catch (NumberFormatException e) {
+                        return 0L;
+                    }
+                })
+                .sum();
 
         lblTotalRevenue.setText("Tổng: ₫ " + String.format("%,d", sum));
     }

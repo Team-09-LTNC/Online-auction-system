@@ -41,7 +41,7 @@ public class AuctionsViewController implements Initializable {
 
     /** Trạng thái hợp lệ của phiên đấu giá đang/sắp diễn ra. */
     private static final List<String> STATUS_OPTIONS =
-        List.of("Tất cả", "UPCOMING", "ONGOING");
+            List.of("Tất cả", "UPCOMING", "ONGOING");
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -74,9 +74,9 @@ public class AuctionsViewController implements Initializable {
     private void loadData() {
         // TODO: thay bằng service call, chỉ lấy UPCOMING + ONGOING
         masterList.setAll(
-            new Auction("SP-001", "2025-05-10 09:00", "2025-05-10 12:00", "ONGOING"),
-            new Auction("SP-002", "2025-05-11 14:00", "2025-05-11 18:00", "UPCOMING"),
-            new Auction("SP-003", "2025-05-12 08:00", "2025-05-12 10:00", "UPCOMING")
+                new Auction("SP-001", "2025-05-10 09:00", "2025-05-10 12:00", "ONGOING"),
+                new Auction("SP-002", "2025-05-11 14:00", "2025-05-11 18:00", "UPCOMING"),
+                new Auction("SP-003", "2025-05-12 08:00", "2025-05-12 10:00", "UPCOMING")
         );
         updateCountLabel();
     }
@@ -125,10 +125,10 @@ public class AuctionsViewController implements Initializable {
 
         filteredList.setPredicate(a -> {
             boolean matchKw = kw.isEmpty()
-                || a.getProductId().toLowerCase().contains(kw)
-                || a.getStatus().toLowerCase().contains(kw);
+                    || a.getProductId().toLowerCase().contains(kw)
+                    || a.getStatus().toLowerCase().contains(kw);
             boolean matchStatus = (status == null || status.equals("Tất cả"))
-                || a.getStatus().equalsIgnoreCase(status);
+                    || a.getStatus().equalsIgnoreCase(status);
             return matchKw && matchStatus;
         });
         updateCountLabel();
@@ -138,8 +138,8 @@ public class AuctionsViewController implements Initializable {
         int shown = filteredList.size();
         int total = masterList.size();
         lblAuctionCount.setText(shown == total
-            ? total + " phiên"
-            : shown + " / " + total + " phiên");
+                ? total + " phiên"
+                : shown + " / " + total + " phiên");
     }
 
     // ── Model ────────────────────────────────────────────────

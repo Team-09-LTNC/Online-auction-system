@@ -2,39 +2,59 @@ package com.auction.client.network;
 
 import com.auction.common.dto.BaseDTOs;
 import com.google.gson.Gson;
+import javafx.application.Platform;
 
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
-//FILE NÀY LÀ BẢN CŨ CỦA FILE NETWORKMANAGER, GIỮ LẠI ĐỂ THAM KHẢO CÁC PHẦN ĐANG LÀM TRONG NETWORKMANAGER//
-
-// Nhiệm vụ:Quản lý danh sách các Client đang kết nối
-
+/**
+ * CLIENT SOCKET MANAGER
+ * 1. Singleton: Duy trì duy nhất một kết nối (Persistent Connection).
+ * 2. DTO + Gson: Đóng gói dữ liệu JSON an toàn, không gửi String thô.
+ * 3. Thread-safe UI: Cập nhật giao diện thông qua Platform.runLater.
+ */
 public class ClientSocket {
 
     private static final String SERVER_IP = "4.194.28.97";
     private static final int SERVER_PORT = 8080;
 
-    private static Socket socket;
-    private static PrintWriter out;
-    private static BufferedReader in;
-    private static final Gson gson = new Gson();
+    private static ClientSocket instance;
+    private Socket socket;
+    private PrintWriter out;
+    private BufferedReader in;
+    private final Gson gson = new Gson();
+
+    // Constructor private để thực hiện Singleton
+    private ClientSocket() {
+        connect();
+    }
 
     /**
-     *Khởi tạo kết nối 1 lần duy nhất khi mở app hoặc khi Login
+     * Thực thi Singleton: Đảm bảo chỉ có một luồng giao tiếp duy nhất
      */
-    public static void connect() {
+    public static synchronized ClientSocket getInstance() {
+        if (instance == null) {
+            instance = new ClientSocket();
+        }
+        return instance;
+    }
+
+    /**
+     * Thiết lập kết nối bền vững (Persistent Connection)
+     */
+    private void connect() {
         try {
             socket = new Socket(SERVER_IP, SERVER_PORT);
 
-            // Dùng luồng ký tự (Character Stream) JSON
+            // Luồng ra: Đẩy JSON lên Server
             out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
+            // Luồng vào: Đợi nhận gói tin từ Server
             in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
 
-            System.out.println("[Network] Đã kết nối thành công tới Server!");
+            System.out.println("[Network] Đã thiết lập kết nối Singleton thành công!");
 
-            //Chạy một luồng nền để liên tục lắng nghe Server
+            // Kích hoạt luồng nghe ngầm (Daemon Thread)
             startListeningThread();
 
         } catch (IOException e) {
@@ -43,38 +63,56 @@ public class ClientSocket {
     }
 
     /**
-     * Chuyển Object thành chuỗi JSON và đẩy qua Socket
+     * Thực thi gửi DTO (Data Transfer Object) thay vì chuỗi String thô
+     * Giải quyết lỗi vi phạm về bảo mật dữ liệu và parsing
      */
-    public static void sendRequest(BaseDTOs.Request request) {
+    public void sendRequest(BaseDTOs.Request request) {
         if (out != null) {
             String jsonPayload = gson.toJson(request);
-            out.println(jsonPayload); // Gửi kèm ký tự xuống dòng để Server biết kết thúc gói tin
-            System.out.println("[Client Sent] " + jsonPayload);
+            out.println(jsonPayload);
+            System.out.println("[Client Sent JSON] " + jsonPayload);
         } else {
-            System.err.println("[Network Error] Socket chưa được khởi tạo!");
+            System.err.println("[Network Error] Socket chưa sẵn sàng!");
         }
     }
 
     /**
-     * Xử lý đa luồng: Lắng nghe Server mà không làm đơ giao diện
+     * Luồng nền (Background Thread) liên tục hứng dữ liệu từ Server đẩy về
      */
-    private static void startListeningThread() {
+    private void startListeningThread() {
         Thread listenerThread = new Thread(() -> {
             try {
                 String responseLine;
-                // in.readLine() sẽ block luồng nền này để đợi data, bảo vệ luồng giao diện (UI)
                 while ((responseLine = in.readLine()) != null) {
-                    System.out.println("[Client Received] " + responseLine);
+                    final String rawData = responseLine;
+                    System.out.println("[Server Push] " + rawData);
 
-                    // TODO: Dùng Gson để chuyển responseLine thành Response Object
-                    // TODO: Gọi Platform.runLater(...) để cập nhật giao diện JavaFX
+                    // Cập nhật giao diện an toàn trên luồng JavaFX
+                    Platform.runLater(() -> {
+                        handleServerResponse(rawData);
+                    });
                 }
             } catch (IOException e) {
-                System.err.println("[Network Error] Mất kết nối tới Server: " + e.getMessage());
+                System.err.println("[Network Error] Mất kết nối luồng đọc: " + e.getMessage());
             }
         });
 
-        listenerThread.setDaemon(true); // Luồng tự tắt khi tắt ứng dụng chính
+        listenerThread.setDaemon(true); // Luồng sẽ tự hủy khi đóng App
         listenerThread.start();
+    }
+
+    /**
+     * Logic xử lý dữ liệu sau khi nhận được từ Server
+     */
+    private void handleServerResponse(String json) {
+        // sẽ parse JSON ở đây và báo cho các View update dữ liệu
+        // Ví dụ: update giá đấu mới nhất lên màn hình
+    }
+
+    /**
+     * Kiểm tra trạng thái kết nối
+     */
+    public boolean isConnected() {
+        return socket != null && socket.isConnected() && !socket.isClosed();
     }
 }

@@ -1,16 +1,12 @@
-package com.auction.client.controller;
+package com.auction.client.controller.admin;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -22,7 +18,7 @@ import java.util.ResourceBundle;
 // Đây là controller cho AdminDashboard.fxml, quản lý giao diện chính của admin sau khi đăng nhập
 // Các chức năng như quản lý phiên đấu giá, sản phẩm, người dùng sẽ được nạp vào contentPane khi nhấn vào các nút ở sidebar
 // Tạm thời để trống các hàm xử lý điều hướng và nạp view.
-public class AdminLayoutController implements Initializable { 
+public class AdminLayoutController implements Initializable {
 
     // --- Sidebar Buttons ---
     @FXML private Button btnDashboard;
@@ -39,7 +35,7 @@ public class AdminLayoutController implements Initializable {
     @FXML private Label lblPageTitle;
     @FXML private Label lblBreadcrumb;
     @FXML private Label lblAdminName;
-    
+
     // --- Layout Containers ---
     @FXML private StackPane contentPane;
 
@@ -54,11 +50,11 @@ public class AdminLayoutController implements Initializable {
      * Xử lý điều hướng khi nhấn vào các nút ở Sidebar
      */
     @FXML
-        private void navigate(ActionEvent event) {
+    private void navigate(ActionEvent event) {
         Button sourceBtn = (Button) event.getSource();
         System.out.println("đang nhấn: " + sourceBtn.getText());
         String btnId = sourceBtn.getId();
-        
+
         // Reset tất cả style các nút về bình thường
         resetNavStyles();
         // Thêm class active cho nút vừa nhấn
@@ -96,11 +92,11 @@ public class AdminLayoutController implements Initializable {
         try {
             Parent view = FXMLLoader.load(getClass().getResource(fxmlPath));
             contentPane.getChildren().setAll(view);
-            
+
             // Cập nhật tiêu đề trang và Breadcrumb
             lblPageTitle.setText(title);
             lblBreadcrumb.setText(title);
-            
+
         } catch (IOException e) {
             System.err.println("Không thể load view: " + fxmlPath);
             e.printStackTrace();
@@ -155,15 +151,15 @@ public class AdminLayoutController implements Initializable {
             // Chuyển về màn hình Login
             System.out.println("Đang đăng xuất...");
             try {
-            Stage stage = (Stage) logOut.getScene().getWindow();
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Login.fxml"));
-            Parent root = loader.load();
-            stage.getScene().setRoot(root);
-            stage.setTitle("Đăng nhập hệ thống");
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Không thể mở màn hình đăng nhập!");
-        }
+                Stage stage = (Stage) logOut.getScene().getWindow();
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/auth/Login.fxml"));
+                Parent root = loader.load();
+                stage.getScene().setRoot(root);
+                stage.setTitle("Đăng nhập hệ thống");
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("Không thể mở màn hình đăng nhập!");
+            }
         }
     }
 }

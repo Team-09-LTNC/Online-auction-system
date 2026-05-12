@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.auction.common.model.AuctionStatus;
+import com.auction.common.enums.AuctionStatus;
 import com.auction.common.exception.InvalidBidException;
 import com.auction.common.model.entity.Entity;
 import com.auction.common.model.item.Item;

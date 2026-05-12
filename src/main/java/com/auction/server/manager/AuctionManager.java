@@ -1,6 +1,6 @@
 package com.auction.server.manager;
 
-import com.auction.common.model.AuctionStatus;
+import com.auction.common.enums.AuctionStatus;
 import com.auction.common.model.bid.Auction;
 import com.auction.common.model.bid.BidTransaction;
 import com.auction.common.observer.AuctionObserver;

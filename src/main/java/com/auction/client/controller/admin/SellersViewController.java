@@ -39,7 +39,7 @@ public class SellersViewController implements Initializable {
     public static final String STATUS_LOCKED = "LOCKED";
 
     private static final List<String> FILTER_OPTIONS =
-        List.of("Tất cả", STATUS_ACTIVE, STATUS_LOCKED);
+            List.of("Tất cả", STATUS_ACTIVE, STATUS_LOCKED);
 
     // ── Data ─────────────────────────────────────────────────
     private final ObservableList<Seller> masterList   = FXCollections.observableArrayList();
@@ -73,8 +73,8 @@ public class SellersViewController implements Initializable {
                 boolean isLocked = STATUS_LOCKED.equals(status);
                 setText(isLocked ? "🔒  Bị khoá" : "✅  Hoạt động");
                 setStyle(isLocked
-                    ? "-fx-text-fill: #C0392B; -fx-font-weight: bold; -fx-font-size: 12px;"
-                    : "-fx-text-fill: #27AE60; -fx-font-weight: bold; -fx-font-size: 12px;");
+                        ? "-fx-text-fill: #C0392B; -fx-font-weight: bold; -fx-font-size: 12px;"
+                        : "-fx-text-fill: #27AE60; -fx-font-weight: bold; -fx-font-size: 12px;");
             }
         });
     }
@@ -93,11 +93,11 @@ public class SellersViewController implements Initializable {
     private void loadData() {
         // TODO: thay bằng service call
         masterList.setAll(
-            new Seller("seller01", "Phạm Minh Đức",   STATUS_ACTIVE),
-            new Seller("seller02", "Hoàng Thị Lan",   STATUS_ACTIVE),
-            new Seller("seller03", "Vũ Thanh Tùng",   STATUS_LOCKED),
-            new Seller("seller04", "Nguyễn Hải Yến",  STATUS_ACTIVE),
-            new Seller("seller05", "Trần Quốc Bảo",   STATUS_LOCKED)
+                new Seller("seller01", "Phạm Minh Đức",   STATUS_ACTIVE),
+                new Seller("seller02", "Hoàng Thị Lan",   STATUS_ACTIVE),
+                new Seller("seller03", "Vũ Thanh Tùng",   STATUS_LOCKED),
+                new Seller("seller04", "Nguyễn Hải Yến",  STATUS_ACTIVE),
+                new Seller("seller05", "Trần Quốc Bảo",   STATUS_LOCKED)
         );
         updateCountLabel();
     }
@@ -138,10 +138,10 @@ public class SellersViewController implements Initializable {
 
         String dialogTitle   = isCurrentlyLocked ? "Mở khoá tài khoản?" : "Khoá tài khoản?";
         String dialogContent = isCurrentlyLocked
-            ? "Mở khoá tài khoản của \"" + selected.getFullname() + "\"?\n"
-              + "Người bán sẽ có thể đăng nhập và đăng sản phẩm trở lại."
-            : "Khoá tài khoản của \"" + selected.getFullname() + "\"?\n"
-              + "Người bán sẽ không thể đăng nhập hoặc đăng sản phẩm mới.";
+                ? "Mở khoá tài khoản của \"" + selected.getFullname() + "\"?\n"
+                + "Người bán sẽ có thể đăng nhập và đăng sản phẩm trở lại."
+                : "Khoá tài khoản của \"" + selected.getFullname() + "\"?\n"
+                + "Người bán sẽ không thể đăng nhập hoặc đăng sản phẩm mới.";
 
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle(dialogTitle);
@@ -169,10 +169,10 @@ public class SellersViewController implements Initializable {
 
         filteredList.setPredicate(s -> {
             boolean matchKw = kw.isEmpty()
-                || s.getUsername().toLowerCase().contains(kw)
-                || s.getFullname().toLowerCase().contains(kw);
+                    || s.getUsername().toLowerCase().contains(kw)
+                    || s.getFullname().toLowerCase().contains(kw);
             boolean matchStatus = (status == null || status.equals("Tất cả"))
-                || s.getStatus().equalsIgnoreCase(status);
+                    || s.getStatus().equalsIgnoreCase(status);
             return matchKw && matchStatus;
         });
         updateCountLabel();
@@ -182,17 +182,17 @@ public class SellersViewController implements Initializable {
         if (STATUS_LOCKED.equals(seller.getStatus())) {
             btnToggleLock.setText("🔓  Mở khoá");
             btnToggleLock.setStyle(
-                "-fx-background-color: #27AE60; -fx-text-fill: white; "
-                + "-fx-font-size: 13px; -fx-font-weight: bold; "
-                + "-fx-padding: 8 18 8 18; -fx-border-radius: 6px; "
-                + "-fx-background-radius: 6px; -fx-cursor: hand; -fx-border-width: 0;");
+                    "-fx-background-color: #27AE60; -fx-text-fill: white; "
+                            + "-fx-font-size: 13px; -fx-font-weight: bold; "
+                            + "-fx-padding: 8 18 8 18; -fx-border-radius: 6px; "
+                            + "-fx-background-radius: 6px; -fx-cursor: hand; -fx-border-width: 0;");
         } else {
             btnToggleLock.setText("🔒  Khoá tài khoản");
             btnToggleLock.setStyle(
-                "-fx-background-color: #8B2C2C; -fx-text-fill: white; "
-                + "-fx-font-size: 13px; -fx-font-weight: bold; "
-                + "-fx-padding: 8 18 8 18; -fx-border-radius: 6px; "
-                + "-fx-background-radius: 6px; -fx-cursor: hand; -fx-border-width: 0;");
+                    "-fx-background-color: #8B2C2C; -fx-text-fill: white; "
+                            + "-fx-font-size: 13px; -fx-font-weight: bold; "
+                            + "-fx-padding: 8 18 8 18; -fx-border-radius: 6px; "
+                            + "-fx-background-radius: 6px; -fx-cursor: hand; -fx-border-width: 0;");
         }
     }
 
@@ -212,8 +212,8 @@ public class SellersViewController implements Initializable {
         int shown = filteredList.size();
         int total = masterList.size();
         lblSellerCount.setText(shown == total
-            ? total + " người bán"
-            : shown + " / " + total + " người bán");
+                ? total + " người bán"
+                : shown + " / " + total + " người bán");
     }
 
     // ── Model ────────────────────────────────────────────────

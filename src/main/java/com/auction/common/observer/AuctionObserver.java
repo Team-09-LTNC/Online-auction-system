@@ -1,7 +1,7 @@
 package com.auction.common.observer;
 
 import com.auction.common.model.bid.BidTransaction;
-import com.auction.common.model.AuctionStatus;
+import com.auction.common.enums.AuctionStatus;
 
 public interface AuctionObserver {
     //gọi khi có người đặt giá mới

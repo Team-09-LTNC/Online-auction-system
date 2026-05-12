@@ -11,8 +11,7 @@ public class ClientApplication extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         //lôi file Khung xương FXML ra
-        // Chú ý: Đảm bảo file MainLayout.fxml nằm đúng trong folder resources/fxml/ nhé m
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/MainLayout.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/fxml/auth/Login.fxml"));
 
         // Tạo một Scene (cái nền) kích thước 1280x800 chứa cái khung xương đó
         Scene scene = new Scene(root, 1280, 800);

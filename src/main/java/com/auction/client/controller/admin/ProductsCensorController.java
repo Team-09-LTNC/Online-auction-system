@@ -46,7 +46,7 @@ public class ProductsCensorController implements Initializable {
     private       FilteredList<Product>  filteredList;
 
     private static final List<String> CATEGORY_OPTIONS =
-        List.of("Tất cả", "Điện tử", "Thời trang", "Đồ cổ", "Trang sức", "Xe cộ", "Khác");
+            List.of("Tất cả", "Điện tử", "Thời trang", "Đồ cổ", "Trang sức", "Xe cộ", "Khác");
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -110,13 +110,13 @@ public class ProductsCensorController implements Initializable {
     private void loadData() {
         // TODO: thay bằng service call — chỉ lấy sản phẩm có status = PENDING
         masterList.setAll(
-            new Product("SP-001", "SELLER-01", "Đồng hồ Rolex vintage",
+                new Product("SP-001", "SELLER-01", "Đồng hồ Rolex vintage",
                         "Đồng hồ cơ học năm 1972, còn mới 95%",
                         "Đồ cổ", "350.000.000", ""),
-            new Product("SP-002", "SELLER-02", "iPhone 15 Pro Max 256GB",
+                new Product("SP-002", "SELLER-02", "iPhone 15 Pro Max 256GB",
                         "Máy mới 100%, còn bảo hành 11 tháng",
                         "Điện tử", "28.500.000", ""),
-            new Product("SP-003", "SELLER-01", "Áo dài thêu tay",
+                new Product("SP-003", "SELLER-01", "Áo dài thêu tay",
                         "Chất liệu lụa Hà Đông, thêu tay truyền thống",
                         "Thời trang", "4.200.000", "")
         );
@@ -189,12 +189,12 @@ public class ProductsCensorController implements Initializable {
 
         filteredList.setPredicate(p -> {
             boolean matchKw = kw.isEmpty()
-                || p.getProductId().toLowerCase().contains(kw)
-                || p.getName().toLowerCase().contains(kw)
-                || p.getSellerId().toLowerCase().contains(kw)
-                || p.getCategory().toLowerCase().contains(kw);
+                    || p.getProductId().toLowerCase().contains(kw)
+                    || p.getName().toLowerCase().contains(kw)
+                    || p.getSellerId().toLowerCase().contains(kw)
+                    || p.getCategory().toLowerCase().contains(kw);
             boolean matchCat = (cat == null || cat.equals("Tất cả"))
-                || p.getCategory().equalsIgnoreCase(cat);
+                    || p.getCategory().equalsIgnoreCase(cat);
             return matchKw && matchCat;
         });
         updateCountLabel();
@@ -210,8 +210,8 @@ public class ProductsCensorController implements Initializable {
         int shown = filteredList.size();
         int total = masterList.size();
         lblProductCount.setText(shown == total
-            ? total + " sản phẩm"
-            : shown + " / " + total + " sản phẩm");
+                ? total + " sản phẩm"
+                : shown + " / " + total + " sản phẩm");
     }
 
     private void showInfo(String title, String message) {

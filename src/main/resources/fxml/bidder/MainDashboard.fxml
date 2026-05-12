@@ -10,7 +10,12 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.layout.FlowPane?>
 
-<VBox prefHeight="898.0" prefWidth="1240.0" style="-fx-background-color: #FDFBF9;" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.MainDashboardController">
+<VBox fx:controller="com.auction.client.controller.bidder.MainDashboardController"
+      prefWidth="1000.0"
+      prefHeight="800.0"
+      style="-fx-background-color: #FDFBF9;"
+      xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1">
 
     <!-- PHẦN 1: HEADER (Tìm kiếm + User) - Đã thu hẹp chiều cao -->
     <HBox alignment="CENTER_LEFT" prefHeight="70.0" spacing="20.0" style="-fx-padding: 10 30 10 30;">
@@ -108,10 +113,10 @@
                         </HBox>
 
                         <FlowPane hgap="15.0" vgap="15.0">
-                            <fx:include source="ProductCard.fxml" />
-                            <fx:include source="ProductCard.fxml" />
-                            <fx:include source="ProductCard.fxml" />
-                            <fx:include source="ProductCard.fxml" />
+                            <fx:include source="/fxml/components/ProductCard.fxml" />
+                            <fx:include source="/fxml/components/ProductCard.fxml" />
+                            <fx:include source="/fxml/components/ProductCard.fxml" />
+                            <fx:include source="/fxml/components/ProductCard.fxml" />
                         </FlowPane>
                     </VBox>
                 </HBox>

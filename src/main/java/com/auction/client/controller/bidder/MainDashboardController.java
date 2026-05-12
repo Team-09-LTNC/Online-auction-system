@@ -1,4 +1,4 @@
-package com.auction.client.controller;
+package com.auction.client.controller.bidder;
 
 import javafx.fxml.Initializable;
 import java.net.URL;

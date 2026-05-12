@@ -18,13 +18,13 @@ public class PushHandler {
 
             case ActionType.AUCTION_BID_UPDATE -> {
                 BaseDTOs.AuctionBidUpdatePush push =
-                    gson.fromJson(rawJson, BaseDTOs.AuctionBidUpdatePush.class);
+                        gson.fromJson(rawJson, BaseDTOs.AuctionBidUpdatePush.class);
                 onBidUpdate(push);
             }
 
             case ActionType.AUCTION_RESULT -> {
                 BaseDTOs.AuctionResultPush push =
-                    gson.fromJson(rawJson, BaseDTOs.AuctionResultPush.class);
+                        gson.fromJson(rawJson, BaseDTOs.AuctionResultPush.class);
                 onAuctionResult(push);
             }
 
@@ -35,12 +35,12 @@ public class PushHandler {
     private static void onBidUpdate(BaseDTOs.AuctionBidUpdatePush push) {
         // TODO: thông báo tới AuctionController/View đang mở
         System.out.println("[Push] Giá mới: " + push.newHighestBid
-                         + " bởi " + push.latestBid.bidderName);
+                + " bởi " + push.latestBid.bidderName);
     }
 
     private static void onAuctionResult(BaseDTOs.AuctionResultPush push) {
         // TODO: thông báo kết quả tới View
         System.out.println("[Push] Phiên kết thúc! Người thắng: " + push.winnerName
-                         + " – Giá: " + push.finalPrice);
+                + " – Giá: " + push.finalPrice);
     }
 }

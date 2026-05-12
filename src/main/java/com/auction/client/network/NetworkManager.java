@@ -26,7 +26,7 @@ public class NetworkManager {
     // ✅ Map lưu callback: requestId → hàm xử lý response
     // ConcurrentHashMap vì listenerThread và UI thread cùng truy cập
     private static final ConcurrentHashMap<String, Consumer<BaseDTOs.Response>>
-        pendingCallbacks = new ConcurrentHashMap<>();
+            pendingCallbacks = new ConcurrentHashMap<>();
 
     public static void connect() {
         try {
@@ -77,14 +77,14 @@ public class NetworkManager {
                     // ✅ Có requestId → đây là response cho 1 request cụ thể
                     if (base.requestId != null) {
                         Consumer<BaseDTOs.Response> callback =
-                            pendingCallbacks.remove(base.requestId); // lấy ra và xóa
+                                pendingCallbacks.remove(base.requestId); // lấy ra và xóa
 
                         if (callback != null) {
                             // Phải chạy trên JavaFX thread để cập nhật UI
                             Platform.runLater(() -> callback.accept(base));
                         }
 
-                    // ✅ Không có requestId → đây là Server Push (bid update, kết quả...)
+                        // ✅ Không có requestId → đây là Server Push (bid update, kết quả...)
                     } else {
                         Platform.runLater(() -> handleServerPush(base, responseLine));
                     }
@@ -103,12 +103,12 @@ public class NetworkManager {
         switch (base.type) {
             case ActionType.AUCTION_BID_UPDATE -> {
                 BaseDTOs.AuctionBidUpdatePush push =
-                    gson.fromJson(raw, BaseDTOs.AuctionBidUpdatePush.class);
+                        gson.fromJson(raw, BaseDTOs.AuctionBidUpdatePush.class);
                 // TODO: thông báo tới AuctionView đang mở
             }
             case ActionType.AUCTION_RESULT -> {
                 BaseDTOs.AuctionResultPush push =
-                    gson.fromJson(raw, BaseDTOs.AuctionResultPush.class);
+                        gson.fromJson(raw, BaseDTOs.AuctionResultPush.class);
                 // TODO: thông báo kết quả đấu giá
             }
         }
