@@ -67,7 +67,7 @@ public class RegisterController {
             // Controller chỉ lo giao diện, Network lo Socket
             BaseDTOs.Request regReq = new BaseDTOs.Request();
             regReq.type = ActionType.REGISTER; // Đã dùng hằng số chuẩn từ Common
-            regReq.requestId = java.util.UUID.randomUUID().toString();
+            regReq.requestId = UUID.randomUUID().toString();
 
             //Server sẽ bóc tách các trường này từ JSON
             // Thực thi gửi qua Singleton Socket

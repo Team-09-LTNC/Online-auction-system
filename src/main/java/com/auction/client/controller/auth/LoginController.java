@@ -47,7 +47,7 @@ public class LoginController {
         // --- CHUẨN KIẾN TRÚC: Đẩy việc giao tiếp mạng cho Network Layer ---
         BaseDTOs.Request loginReq = new BaseDTOs.Request();
         loginReq.type = ActionType.LOGIN;
-        loginReq.requestId = java.util.UUID.randomUUID().toString();
+        loginReq.requestId = UUID.randomUUID().toString();
 
         // Gửi yêu cầu qua đường ống duy nhất, không mở socket mới ở đây
         ClientSocket.getInstance().sendRequest(loginReq);
