@@ -12,8 +12,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import javafx.application.Platform;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class NetworkManager {
+
+    private static final Logger logger = LoggerFactory.getLogger(NetworkManager.class);
 
     private static final String SERVER_IP = "4.194.28.97";
     private static final int    SERVER_PORT = 8080;
@@ -33,10 +38,11 @@ public class NetworkManager {
             socket = new Socket(SERVER_IP, SERVER_PORT);
             out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
             in  = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-            System.out.println("[Network] Kết nối thành công!");
+            logger.info("Đã kết nối tới Server tại {}:{}", SERVER_IP, SERVER_PORT);
             startListeningThread();
         } catch (IOException e) {
             System.err.println("[Network Error] " + e.getMessage());
+            logger.error("Không thể kết nối tới Server tại {}:{} ({})", SERVER_IP, SERVER_PORT, e.getMessage());
         }
     }
 
@@ -60,7 +66,7 @@ public class NetworkManager {
         // 3. Gửi JSON qua socket
         String json = gson.toJson(request);
         out.println(json);
-        System.out.println("[Client Sent] " + json);
+        logger.info("Đã gửi request tới Server: {}", json);
     }
 
     private static void startListeningThread() {
@@ -68,8 +74,8 @@ public class NetworkManager {
             try {
                 String line;
                 while ((line = in.readLine()) != null) {
-                    System.out.println("[Client Received] " + line);
                     final String responseLine = line;
+                    logger.info("Nhận dữ liệu từ Server: {}", responseLine);
 
                     // Parse base để lấy type và requestId
                     BaseDTOs.Response base = gson.fromJson(responseLine, BaseDTOs.Response.class);
@@ -91,6 +97,7 @@ public class NetworkManager {
                 }
             } catch (IOException e) {
                 System.err.println("[Network Error] Mất kết nối: " + e.getMessage());
+                logger.error("Mất kết nối: {}", e.getMessage());
             }
         });
 
@@ -100,6 +107,7 @@ public class NetworkManager {
 
     /** Xử lý các push từ server không kèm requestId */
     private static void handleServerPush(BaseDTOs.Response base, String raw) {
+        logger.debug("Xử lý Server Push: {}", raw);
         switch (base.type) {
             case ActionType.AUCTION_BID_UPDATE -> {
                 BaseDTOs.AuctionBidUpdatePush push =

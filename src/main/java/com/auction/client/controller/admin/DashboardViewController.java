@@ -10,6 +10,9 @@ import javafx.scene.layout.StackPane;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * DashboardViewController
  * ─────────────────────────────────────────────────────────────
@@ -24,6 +27,8 @@ public class DashboardViewController implements Initializable {
     @FXML private Label     lblAuctionCount;
     @FXML private Button    btnRefresh;
     @FXML private TextField globalSearch;
+
+    private static final Logger logger = LoggerFactory.getLogger(DashboardViewController.class);
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -66,7 +71,7 @@ public class DashboardViewController implements Initializable {
     @FXML
     private void handleGlobalSearch() {
         String query = globalSearch.getText();
-        System.out.println("Đang tìm kiếm: " + query);
+        logger.info("Admin thực hiện tìm kiếm toàn cục với từ khóa: {}", query);
         // Thực hiện logic filter dữ liệu ở đây
     }
 }

@@ -35,6 +35,20 @@
             <version>${mysql.version}</version>
         </dependency>
 
+         <!-- SLF4J API -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
+        </dependency>
+
+        <!-- Logback (implementation của SLF4J) -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.11</version>
+        </dependency>
+
         <!-- HikariCP -->
         <dependency>
             <groupId>com.zaxxer</groupId>
@@ -111,6 +125,49 @@
                         com.auction.client.ClientApplication
                     </mainClass>
                 </configuration>
+            </plugin>
+
+            <!-- ===== CHECKSTYLE PLUGIN ===== -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <!-- Dùng bộ quy tắc Google Java Style -->
+                    <configLocation>google_checks.xml</configLocation>
+
+                    <!-- Encoding file source -->
+                    <encoding>UTF-8</encoding>
+
+                    <!-- Hiện lỗi ra console -->
+                    <consoleOutput>true</consoleOutput>
+
+                    <!-- Build thất bại nếu có vi phạm -->
+                    <failsOnError>true</failsOnError>
+
+                    <!-- Bỏ qua thư mục test nếu muốn -->
+                    <excludes>**/test/**</excludes>
+                </configuration>
+
+                <!-- Gắn checkstyle vào pha validate — chạy trước khi compile -->
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+            <!-- Dependency để dùng Google Style -->
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>10.12.4</version>
+                    </dependency>
+                </dependencies>
             </plugin>
 
         </plugins>

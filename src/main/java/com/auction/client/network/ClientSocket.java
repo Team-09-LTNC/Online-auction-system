@@ -8,6 +8,9 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * CLIENT SOCKET MANAGER
  * 1. Singleton: Duy trì duy nhất một kết nối (Persistent Connection).
@@ -15,6 +18,8 @@ import java.nio.charset.StandardCharsets;
  * 3. Thread-safe UI: Cập nhật giao diện thông qua Platform.runLater.
  */
 public class ClientSocket {
+
+    private static final Logger logger = LoggerFactory.getLogger(ClientSocket.class);
 
     private static final String SERVER_IP = "4.194.28.97";
     private static final int SERVER_PORT = 8080;
@@ -52,13 +57,14 @@ public class ClientSocket {
             // Luồng vào: Đợi nhận gói tin từ Server
             in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
 
-            System.out.println("[Network] Đã thiết lập kết nối Singleton thành công!");
+            logger.info("ClientSocket đã kết nối tới Server tại {}:{}", SERVER_IP, SERVER_PORT);
 
             // Kích hoạt luồng nghe ngầm (Daemon Thread)
             startListeningThread();
 
         } catch (IOException e) {
             System.err.println("[Network Error] Không thể kết nối tới Server: " + e.getMessage());
+            logger.error("Không thể kết nối tới Server tại {}:{}", SERVER_IP, SERVER_PORT, e.getMessage());
         }
     }
 
@@ -70,9 +76,10 @@ public class ClientSocket {
         if (out != null) {
             String jsonPayload = gson.toJson(request);
             out.println(jsonPayload);
-            System.out.println("[Client Sent JSON] " + jsonPayload);
+            logger.debug("Đã gửi request tới Server: {}", jsonPayload);
         } else {
             System.err.println("[Network Error] Socket chưa sẵn sàng!");
+            logger.error("Socket chưa sẵn sàng để gửi request!");
         }
     }
 
@@ -85,7 +92,7 @@ public class ClientSocket {
                 String responseLine;
                 while ((responseLine = in.readLine()) != null) {
                     final String rawData = responseLine;
-                    System.out.println("[Server Push] " + rawData);
+                    logger.debug("Nhận dữ liệu đẩy từ Server: {}", rawData);
 
                     // Cập nhật giao diện an toàn trên luồng JavaFX
                     Platform.runLater(() -> {
@@ -94,6 +101,7 @@ public class ClientSocket {
                 }
             } catch (IOException e) {
                 System.err.println("[Network Error] Mất kết nối luồng đọc: " + e.getMessage());
+                logger.error("Mất kết nối luồng đọc: {}", e.getMessage());
             }
         });
 

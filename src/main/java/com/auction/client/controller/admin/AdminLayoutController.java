@@ -13,6 +13,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 // import com.auction.client.util.NavigationUtils;
 
 // Đây là controller cho AdminDashboard.fxml, quản lý giao diện chính của admin sau khi đăng nhập
@@ -39,6 +42,8 @@ public class AdminLayoutController implements Initializable {
     // --- Layout Containers ---
     @FXML private StackPane contentPane;
 
+    private static final Logger logger = LoggerFactory.getLogger(AdminLayoutController.class);
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // Mặc định load trang Dashboard khi vừa vào
@@ -52,7 +57,7 @@ public class AdminLayoutController implements Initializable {
     @FXML
     private void navigate(ActionEvent event) {
         Button sourceBtn = (Button) event.getSource();
-        System.out.println("đang nhấn: " + sourceBtn.getText());
+        logger.info("Admin nhấn nút: {}", sourceBtn.getText());
         String btnId = sourceBtn.getId();
 
         // Reset tất cả style các nút về bình thường
@@ -99,6 +104,7 @@ public class AdminLayoutController implements Initializable {
 
         } catch (IOException e) {
             System.err.println("Không thể load view: " + fxmlPath);
+            logger.error("Lỗi khi load view {}: {}", fxmlPath, e.getMessage());
             e.printStackTrace();
         }
     }
@@ -149,7 +155,7 @@ public class AdminLayoutController implements Initializable {
 
         if (alert.showAndWait().get() == ButtonType.OK) {
             // Chuyển về màn hình Login
-            System.out.println("Đang đăng xuất...");
+            logger.info("Admin đã đăng xuất khỏi hệ thống.");
             try {
                 Stage stage = (Stage) logOut.getScene().getWindow();
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/auth/Login.fxml"));
@@ -158,7 +164,7 @@ public class AdminLayoutController implements Initializable {
                 stage.setTitle("Đăng nhập hệ thống");
             } catch (IOException e) {
                 e.printStackTrace();
-                System.out.println("Không thể mở màn hình đăng nhập!");
+                logger.error("Lỗi khi chuyển về màn hình đăng nhập: {}", e.getMessage());
             }
         }
     }
