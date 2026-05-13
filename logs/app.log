@@ -9,9 +9,9 @@ java.net.ConnectException: Connection timed out: connect
 	at java.base/java.net.Socket.connect(Socket.java:597)
 	at java.base/java.net.Socket.<init>(Socket.java:464)
 	at java.base/java.net.Socket.<init>(Socket.java:276)
-	at com.auction.client.network.ClientSocket.connect(ClientSocket.java:53)
-	at com.auction.client.network.ClientSocket.<init>(ClientSocket.java:35)
-	at com.auction.client.network.ClientSocket.getInstance(ClientSocket.java:43)
+	at com.auction.client.network.NetworkManager.connect(ClientSocket.java:53)
+	at com.auction.client.network.NetworkManager.<init>(ClientSocket.java:35)
+	at com.auction.client.network.NetworkManager.getInstance(ClientSocket.java:43)
 	at com.auction.client.controller.auth.LoginController.onLogInButtonClick(LoginController.java:53)
 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
 	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
@@ -69,3 +69,4 @@ java.net.ConnectException: Connection timed out: connect
 	at java.base/java.lang.Thread.run(Thread.java:1474)
 2026-05-12 14:47:13 [JavaFX Application Thread] ERROR c.a.client.network.ClientSocket - Socket chưa sẵn sàng để gửi request!
 2026-05-12 14:47:13 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính.
+2026-05-12 21:07:14 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính.

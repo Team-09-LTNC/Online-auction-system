@@ -1,0 +1,97 @@
+/* Tổng thể nền */
+.main-container {
+    -fx-background-color: #f4f7f6;
+}
+
+/* SIDEBAR TRÁI */
+.sidebar {
+    -fx-background-color: #2c3e50; /* Màu tối sang trọng */
+}
+
+.logo-title {
+    -fx-text-fill: white;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.logo-subtitle {
+    -fx-text-fill: #bdc3c7;
+    -fx-font-size: 12px;
+}
+
+/* NÚT BẤM MENU */
+.menu-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ecf0f1;
+    -fx-alignment: CENTER_LEFT;
+    -fx-cursor: hand;
+}
+
+.menu-btn:hover {
+    -fx-background-color: #34495e;
+}
+
+.menu-btn-active {
+    -fx-background-color: #3498db; /* Màu xanh nổi bật */
+    -fx-text-fill: white;
+    -fx-background-radius: 5;
+}
+
+/* THẺ CARD (Khung nhập liệu) */
+.card {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);
+}
+
+.card-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+/* INPUT VÀ COMBOBOX */
+.modern-input, .modern-combo, .modern-date {
+    -fx-background-color: white;
+    -fx-border-color: #dcdde1;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-padding: 8;
+}
+
+.modern-input:focused {
+    -fx-border-color: #3498db;
+    -fx-border-width: 2;
+}
+
+/* NÚT HÀNH ĐỘNG */
+.btn-next {
+    -fx-background-color: #27ae60;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10 25;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+.btn-next:hover {
+    -fx-background-color: #219150;
+}
+
+/* SIDEBAR XEM TRƯỚC (RIGHT PREVIEW) */
+.preview-sidebar {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: transparent transparent transparent #dcdde1;
+}
+
+.preview-card {
+    -fx-background-color: white;
+    -fx-background-radius: 15;
+    -fx-padding: 15;
+}
+
+.preview-image {
+    -fx-background-color: #ecf0f1;
+    -fx-background-radius: 10;
+}

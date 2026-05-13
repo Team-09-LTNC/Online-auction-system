@@ -1,6 +1,6 @@
 package com.auction.client.controller.auth;
 
-import com.auction.client.network.ClientSocket;
+import com.auction.client.network.NetworkManager;
 import com.auction.common.dto.BaseDTOs;
 import com.auction.common.enums.ActionType;
 import javafx.event.ActionEvent;
@@ -71,7 +71,7 @@ public class RegisterController {
 
             //Server sẽ bóc tách các trường này từ JSON
             // Thực thi gửi qua Singleton Socket
-            ClientSocket.getInstance().sendRequest(regReq);
+            NetworkManager.getInstance().sendRequest(regReq);
 
             updateStatus("Đang gửi yêu cầu đăng ký...", "blue");
 

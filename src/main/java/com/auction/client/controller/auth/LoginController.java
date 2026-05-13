@@ -1,6 +1,6 @@
 package com.auction.client.controller.auth;
 
-import com.auction.client.network.ClientSocket;
+import com.auction.client.network.NetworkManager;
 import com.auction.common.dto.BaseDTOs;
 import com.auction.common.enums.ActionType;
 import javafx.collections.FXCollections;
@@ -50,7 +50,7 @@ public class LoginController {
         loginReq.requestId = UUID.randomUUID().toString();
 
         // Gửi yêu cầu qua đường ống duy nhất, không mở socket mới ở đây
-        ClientSocket.getInstance().sendRequest(loginReq);
+        NetworkManager.getInstance().sendRequest(loginReq);
 
         statusLabel.setText("Đang xác thực...");
         statusLabel.setStyle("-fx-text-fill: #3498db;");
