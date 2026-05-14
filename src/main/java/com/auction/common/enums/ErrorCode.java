@@ -13,6 +13,10 @@ public class ErrorCode {
     public static final String INVALID_CREDENTIALS = "ERR_INVALID_CREDS";     // Sai username hoặc password
     public static final String USERNAME_ALREADY_EXISTS = "ERR_USER_EXISTS";   // Đăng ký trùng tên
 
+    // --- LỖI PHÂN QUYỀN & REQUEST
+    public static final String FORBIDDEN = "ERR_FORBIDDEN";                   // Không có quyền thao tác (Ví dụ: Sửa sản phẩm của người khác)
+    public static final String BAD_REQUEST = "ERR_BAD_REQUEST";               // Lỗi định dạng dữ liệu gửi lên (Thiếu trường, sai kiểu)
+
     // --- LỖI NGHIỆP VỤ ĐẤU GIÁ (AUCTION) ---
     public static final String INVALID_BID_AMOUNT = "ERR_INVALID_BID";        // Giá đặt thấp hơn hoặc bằng giá hiện tại
     public static final String AUCTION_CLOSED = "ERR_AUCTION_CLOSED";         // Đấu giá khi phiên đã đóng

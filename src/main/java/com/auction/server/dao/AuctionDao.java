@@ -10,12 +10,14 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tầng quản lý truy cập dữ liệu (DAO) cho các phiên đấu giá.
  */
 public class AuctionDao {
-
+    private static final Logger logger = LoggerFactory.getLogger(AuctionDao.class);
     /**
      * Đa hình (Polymorphism): Khởi tạo đúng loại Item dựa vào category.
      */
@@ -65,7 +67,7 @@ public class AuctionDao {
                 Auction phien = mapResultSetToAuction(rs);
                 if (phien != null) danhSach.add(phien);
             }
-        } catch (SQLException e) { System.err.println("Lỗi truy vấn danh sách: " + e.getMessage()); }
+        } catch (SQLException e) { logger.error("Lỗi truy vấn danh sách: ", e); }
         return danhSach;
     }
 
@@ -107,11 +109,24 @@ public class AuctionDao {
             return true;
 
         } catch (SQLException e) {
-            if (conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            System.err.println("Lỗi Transaction Đặt Giá: " + e.getMessage());
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    logger.error("Lỗi khi rollback transaction đặt giá: ", ex);
+                }
+            }
+            logger.error("Lỗi Transaction Đặt Giá: ", e);
             return false;
         } finally {
-            if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    logger.error("Lỗi khi đóng kết nối hoặc trả auto-commit: ", e);
+                }
+            }
         }
     }
 

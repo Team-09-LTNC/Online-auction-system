@@ -2,47 +2,54 @@ package com.auction.server.db;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Properties;
 
 /**
- * Quản lý kết nối Database sử dụng HikariCP áp dụng Singleton Pattern
- * cấu hình kết nối tới Microsoft Azure Database
+ * DatabaseConnection: Quản lý kết nối CSDL sử dụng HikariCP (Singleton Pattern).
+ * Đã tích hợp tính năng đọc cấu hình bảo mật từ file properties.
  */
 public class DatabaseConnection implements ConnectionProvider {
 
-    // Áp dụng Singleton Pattern (Thread-safe)
+    private static final Logger logger = LoggerFactory.getLogger(DatabaseConnection.class);
     private static volatile DatabaseConnection instance;
     private HikariDataSource dataSource;
 
-    // Constructor private để ngăn khởi tạo từ bên ngoài
     private DatabaseConnection() {
-        System.out.println(">>> Đang thiết lập Connection Pool (HikariCP) tới Aiven...");
+        logger.info("Đang khởi tạo Connection Pool (HikariCP)...");
         try {
+            // 1. Tải cấu hình từ file application.properties
+            Properties props = new Properties();
+            try (InputStream input = getClass().getClassLoader().getResourceAsStream("application.properties")) {
+                if (input == null) {
+                    throw new RuntimeException("CRITICAL: Không tìm thấy file application.properties trong thư mục resources!");
+                }
+                props.load(input);
+            }
+
+            // 2. Trích xuất thông tin kết nối
+            String host = props.getProperty("db.host");
+            String port = props.getProperty("db.port");
+            String dbName = props.getProperty("db.name");
+            String user = props.getProperty("db.user");
+            String pass = props.getProperty("db.password");
+
+            // 3. Xây dựng chuỗi URL kết nối (Kèm SSL)
+            String url = "jdbc:mysql://" + host + ":" + port + "/" + dbName +
+                    "?useSSL=true&requireSSL=true&trustServerCertificate=true&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+
+            // 4. Thiết lập HikariConfig
             HikariConfig config = new HikariConfig();
+            config.setJdbcUrl(url);
+            config.setUsername(user);
+            config.setPassword(pass);
 
-            // 1. Cấu hình Aiven MySQL
-            String host = "mysql-24dbe87d-team09-uet.c.aivencloud.com";
-            String port = "12014";
-            String dbName = "defaultdb";
-
-            // Chuỗi URL đã tích hợp SSL và bỏ qua kiểm tra chứng chỉ thủ công
-            String defaultUrl = "jdbc:mysql://" + host + ":" + port + "/" + dbName +
-                    "?useSSL=true" +
-                    "&requireSSL=true" +
-                    "&trustServerCertificate=true" +
-                    "&serverTimezone=UTC" +
-                    "&allowPublicKeyRetrieval=true";
-
-            String defaultUser = "avnadmin";
-            String defaultPass = "AVNS_DxKGxvHASiK6mmOKQbm";
-
-            // 3. NẠP CẤU HÌNH
-            config.setJdbcUrl(defaultUrl);
-            config.setUsername(defaultUser);
-            config.setPassword(defaultPass);
-            // Cấu hình tối ưu cho môi trường đa luồng (Server)
+            // Cấu hình tối ưu cho môi trường đa luồng (Concurrency)
             config.setMaximumPoolSize(50);      // Tối đa 50 luồng (client) có thể truy vấn cùng lúc
             config.setMinimumIdle(10);           // Luôn giữ ít nhất 10 kết nối sẵn sàng
             config.setIdleTimeout(30000);       // Đóng kết nối nếu k dùng sau 30 giây
@@ -51,19 +58,16 @@ public class DatabaseConnection implements ConnectionProvider {
 
             this.dataSource = new HikariDataSource(config);
 
-            // JVM sẽ tự động đóng Pool an toàn khi tắt Server
-            Runtime.getRuntime().addShutdownHook(new Thread(this::closePool));
+            // JVM tự động đóng Pool an toàn khi tắt Server
+            Runtime.getRuntime().addShutdownHook(new Thread(this::dongPool));
 
-            System.out.println(">>> Thiết lập Connection Pool tới Azure thành công!");
+            logger.info("Thiết lập Connection Pool tới Database thành công!");
         } catch (Exception e) {
-            System.err.println("[DB Error] Lỗi khi khởi tạo HikariCP: " + e.getMessage());
+            logger.error("Lỗi nghiêm trọng khi khởi tạo Database Pool", e);
             throw new RuntimeException("Không thể khởi tạo Database Pool", e);
         }
     }
 
-    /**
-     * Lấy instance duy nhất của DatabaseConnection
-     */
     public static DatabaseConnection getInstance() {
         if (instance == null) {
             synchronized (DatabaseConnection.class) {
@@ -80,10 +84,10 @@ public class DatabaseConnection implements ConnectionProvider {
         return dataSource.getConnection();
     }
 
-    private void closePool() {
+    private void dongPool() {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();
-            System.out.println(">>> Đã đóng Connection Pool tự động bởi JVM");
+            logger.info("Đã đóng Connection Pool tự động bởi JVM");
         }
     }
 }

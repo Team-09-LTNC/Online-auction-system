@@ -211,4 +211,30 @@ public class AuctionManager {
             for (AuctionObserver obs : observers) obs.onNewBid(tx);
         }
     }
+    /** Lấy danh sách các phiên đang chạy (từ bộ nhớ tạm ConcurrentHashMap) */
+    public List<Auction> layDanhSachPhienDangChay() {
+        return new ArrayList<>(dsPhienDangChay.values());
+    }
+
+    /** Lấy chi tiết 1 phiên đang chạy */
+    public Auction layPhienTheoId(int idPhien) {
+        return dsPhienDangChay.get(idPhien);
+    }
+
+    /** Gỡ Client khỏi danh sách nhận thông báo Real-time (Rời phòng) */
+    public void huyTheoDoi(int idPhien, AuctionObserver obs) {
+        List<AuctionObserver> observers = dsNguoiTheoDoi.get(idPhien);
+        if (observers != null) {
+            observers.remove(obs);
+        }
+    }
+
+    /** Ép buộc đóng phiên đấu giá ngay lập tức (Dành cho Admin) */
+    public boolean buocDongPhien(int idPhien) {
+        if (dsPhienDangChay.containsKey(idPhien)) {
+            dongPhien(idPhien); // Gọi hàm private dongPhien() bạn đã viết sẵn
+            return true;
+        }
+        return false;
+    }
 }

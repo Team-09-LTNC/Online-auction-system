@@ -1,13 +1,16 @@
 package com.auction.server.dao;
 
 import com.auction.server.db.DatabaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.*;
 
 /**
  * Nhiệm vụ: Xử lý giao dịch tiền giữa Bidder và Seller một cách an toàn.
  */
 public class BidderMoneySellerDao {
-
+    private static final Logger logger = LoggerFactory.getLogger(BidderMoneySellerDao.class);
     /**
      * Chuyển tiền từ Bidder (người thắng) sang Seller.
      */
@@ -49,7 +52,7 @@ public class BidderMoneySellerDao {
             } catch (SQLException e) {
                 // Nếu có bất kỳ lỗi SQL nào, hoàn tác (rollback) để tránh mất tiền oan
                 conn.rollback();
-                System.err.println("[Transaction Error] Lỗi thanh toán: " + e.getMessage());
+                logger.error("[Transaction Error] Lỗi thanh toán: ", e);
                 return false;
             } finally {
                 // Trả trạng thái AutoCommit về mặc định trước khi trả kết nối về Pool
@@ -57,7 +60,7 @@ public class BidderMoneySellerDao {
             }
 
         } catch (SQLException e) {
-            System.err.println("[Pool Error] Không thể lấy kết nối: " + e.getMessage());
+            logger.error("[Pool Error] Không thể lấy kết nối: ", e);
             return false;
         }
     }

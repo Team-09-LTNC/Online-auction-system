@@ -5,13 +5,14 @@ import com.auction.server.db.DatabaseConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * ItemDao: Chịu trách nhiệm tương tác với bảng 'items' trong Database.
  * Lớp này thực hiện các thao tác CRUD (Thêm, Đọc, Sửa, Xóa) và tìm kiếm sản phẩm.
  */
 public class ItemDao {
-
+    private static final Logger logger = LoggerFactory.getLogger(ItemDao.class);
     /**
      * PHƯƠNG THỨC HỖ TRỢ (Helper Method):
      * Chuyển đổi một dòng dữ liệu từ ResultSet (DB) thành đối tượng Item (Java).
@@ -60,7 +61,7 @@ public class ItemDao {
 
             return pstmt.executeUpdate() > 0; // Trả về true nếu thêm thành công ít nhất 1 dòng
         } catch (SQLException e) {
-            System.err.println("Lỗi luuSanPham: " + e.getMessage());
+            logger.error("Lỗi luuSanPham: ", e);
             return false;
         }
     }
@@ -84,7 +85,7 @@ public class ItemDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi layTatCaSanPham: " + e.getMessage());
+            logger.error("Lỗi layTatCaSanPham: ", e);
         }
         return danhSach;
     }
@@ -104,7 +105,7 @@ public class ItemDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi laySanPhamTheoId: " + e.getMessage());
+            logger.error("Lỗi laySanPhamTheoId: ", e);
         }
         return null;
     }
@@ -113,7 +114,7 @@ public class ItemDao {
      * Tìm kiếm sản phẩm theo từ khóa (trong tên hoặc mô tả).
      * Tương ứng với hành động PRODUCT_SEARCH trong ActionType.
      */
-    public List<Item> searchItem(String keyword) {
+    public List<Item> timSanPhamTheoTukhoa(String keyword) {
         List<Item> danhSach = new ArrayList<>();
         // Sử dụng toán tử LIKE với ký tự % để tìm kiếm chuỗi con
         String sql = "SELECT * FROM items WHERE name LIKE ? OR description LIKE ?";
@@ -135,7 +136,7 @@ public class ItemDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi searchItem: " + e.getMessage());
+            logger.error("Lỗi timKiemSanPham: ", e);
         }
         return danhSach;
     }
@@ -150,7 +151,7 @@ public class ItemDao {
             pstmt.setInt(1, itemId);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Lỗi xoaSanPham: " + e.getMessage());
+            logger.error("Lỗi xoaSanPham: ", e);
             return false;
         }
     }
@@ -172,7 +173,7 @@ public class ItemDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Lỗi updateSanPham: " + e.getMessage());
+            logger.error("Lỗi updateSanPham: ", e);
             return false;
         }
     }
