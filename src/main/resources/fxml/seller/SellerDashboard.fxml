@@ -2,469 +2,126 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.text.Font?>
 
-<BorderPane xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            prefWidth="1536"
-            prefHeight="960"
-            stylesheets="@../../css/seller.css"
-            fx:controller="com.auction.client.controller.seller.PostAuctionController">
+<HBox prefHeight="850.0" prefWidth="1200.0" spacing="0" style="-fx-background-color: #FDFBF9;" stylesheets="@../../css/seller.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.seller.PostAuctionController">
 
-    <!-- ================= LEFT SIDEBAR ================= -->
-    <left>
-        <VBox prefWidth="260"
-              spacing="18"
-              styleClass="sidebar">
+    <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" HBox.hgrow="ALWAYS">
+        <content>
+            <VBox spacing="25.0" style="-fx-padding: 30 50 50 50;">
 
-            <padding>
-                <Insets top="25" right="20" bottom="25" left="20"/>
-            </padding>
+                <VBox spacing="5.0">
+                    <Label styleClass="page-title" text="ĐĂNG SẢN PHẨM ĐẤU GIÁ" textFill="#3E2723">
+                        <font><Font name="System Bold" size="24.0" /></font>
+                    </Label>
+                    <Label styleClass="page-subtitle" text="Vui lòng hoàn thành 5 bước dưới đây để niêm yết sản phẩm." textFill="#888888" />
+                </VBox>
 
-            <!-- Logo -->
-            <VBox spacing="2">
-                <Label text="AuctionHub" styleClass="logo-title"/>
-                <Label text="Đấu giá thông minh" styleClass="logo-subtitle"/>
+                <HBox alignment="CENTER" spacing="0.0" style="-fx-padding: 10 0 20 0;">
+                    <VBox alignment="CENTER" spacing="5.0">
+                        <StackPane styleClass="step-active"><Label styleClass="step-number-active" text="1" /></StackPane>
+                        <Label style="-fx-font-size: 11;" text="Thông tin cơ bản" />
+                    </VBox>
+                    <Region prefWidth="50.0" style="-fx-border-color: #E8DFD8; -fx-border-width: 2 0 0 0; -fx-translate-y: -12;" />
+                    <VBox alignment="CENTER" spacing="5.0">
+                        <StackPane styleClass="step-inactive"><Label text="2" /></StackPane>
+                        <Label style="-fx-font-size: 11; -fx-text-fill: #888888;" text="Hình ảnh" />
+                    </VBox>
+                    <Region prefWidth="50.0" style="-fx-border-color: #E8DFD8; -fx-border-width: 2 0 0 0; -fx-translate-y: -12;" />
+                    <VBox alignment="CENTER" spacing="5.0">
+                        <StackPane styleClass="step-inactive"><Label text="3" /></StackPane>
+                        <Label style="-fx-font-size: 11; -fx-text-fill: #888888;" text="Chi tiết đấu giá" />
+                    </VBox>
+                    <Region prefWidth="50.0" style="-fx-border-color: #E8DFD8; -fx-border-width: 2 0 0 0; -fx-translate-y: -12;" />
+                    <VBox alignment="CENTER" spacing="5.0">
+                        <StackPane styleClass="step-inactive"><Label text="4" /></StackPane>
+                        <Label style="-fx-font-size: 11; -fx-text-fill: #888888;" text="Vận chuyển" />
+                    </VBox>
+                    <Region prefWidth="50.0" style="-fx-border-color: #E8DFD8; -fx-border-width: 2 0 0 0; -fx-translate-y: -12;" />
+                    <VBox alignment="CENTER" spacing="5.0">
+                        <StackPane styleClass="step-inactive"><Label text="5" /></StackPane>
+                        <Label style="-fx-font-size: 11; -fx-text-fill: #888888;" text="Xác nhận" />
+                    </VBox>
+                </HBox>
+
+                <VBox spacing="15.0" styleClass="card">
+                    <Label styleClass="card-title" text="📄 Bước 1 &amp; 2: Thông tin &amp; Hình ảnh" />
+                    <TextField fx:id="txtProductName" promptText="Tên sản phẩm *" styleClass="modern-input" />
+                    <ComboBox fx:id="cbCategory" maxWidth="Infinity" promptText="-- Chọn danh mục --" styleClass="modern-combo" />
+                    <TextArea fx:id="txtDescription" prefHeight="100.0" promptText="Mô tả chi tiết sản phẩm..." styleClass="editor-area" wrapText="true" />
+                    <Button prefHeight="40.0" style="-fx-background-color: #F8F9FA; -fx-border-color: #DDD; -fx-border-radius: 8;" text="📸 Tải lên ảnh sản phẩm" maxWidth="Infinity" />
+                </VBox>
+
+                <VBox spacing="15.0" styleClass="card">
+                    <Label styleClass="card-title" text="🔨 Bước 3: Chi tiết đấu giá" />
+                    <HBox spacing="20.0">
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                            <Label style="-fx-font-weight: bold;" text="Giá khởi điểm *" />
+                            <TextField fx:id="txtStartingPrice" promptText="đ" styleClass="modern-input" />
+                        </VBox>
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                            <Label style="-fx-font-weight: bold;" text="Bước giá (Increment) *" />
+                            <TextField fx:id="txtIncrement" promptText="đ" styleClass="modern-input" />
+                        </VBox>
+                    </HBox>
+                    <HBox spacing="20.0">
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                            <Label style="-fx-font-weight: bold;" text="Ngày bắt đầu" />
+                            <DatePicker fx:id="dpStartDate" maxWidth="Infinity" styleClass="modern-date" />
+                        </VBox>
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                            <Label style="-fx-font-weight: bold;" text="Ngày kết thúc" />
+                            <DatePicker fx:id="dpEndDate" maxWidth="Infinity" styleClass="modern-date" />
+                        </VBox>
+                    </HBox>
+                    <CheckBox fx:id="chkAntiSniping" text="Áp dụng Anti-sniping (Tự động gia hạn 30s khi có bid cuối)" />
+                </VBox>
+
+                <VBox spacing="15.0" styleClass="card">
+                    <Label styleClass="card-title" text="🚚 Bước 4: Vận chuyển" />
+                    <HBox spacing="20.0">
+                        <ComboBox fx:id="cbShippingMethod" HBox.hgrow="ALWAYS" maxWidth="Infinity" promptText="Hình thức giao hàng" styleClass="modern-combo" />
+                        <TextField fx:id="txtShippingFee" promptText="Phí vận chuyển dự kiến (đ)" styleClass="modern-input" HBox.hgrow="ALWAYS" />
+                    </HBox>
+                    <TextArea fx:id="txtShippingNote" prefHeight="60.0" promptText="Ghi chú vận chuyển (VD: Chỉ ship trong giờ hành chính...)" styleClass="editor-area" />
+                </VBox>
+
+                <VBox spacing="15.0" styleClass="card" style="-fx-background-color: #FFF9F9; -fx-border-color: #7A1B28;">
+                    <Label styleClass="card-title" text="✅ Bước 5: Xác nhận &amp; Đăng tải" />
+                    <CheckBox text="Tôi cam đoan thông tin sản phẩm là chính xác 100%." wrapText="true" />
+                    <CheckBox text="Tôi đồng ý với các điều khoản và phí niêm yết của AuctionHub." wrapText="true" />
+                </VBox>
+
+                <HBox alignment="CENTER_RIGHT" spacing="20.0">
+                    <Button prefWidth="100.0" styleClass="btn-cancel" text="Hủy bỏ" />
+                    <Button onAction="#handleSubmitAuction" prefHeight="45.0" prefWidth="220.0" styleClass="btn-next" text="ĐĂNG ĐẤU GIÁ NGAY" />
+                </HBox>
             </VBox>
+        </content>
+    </ScrollPane>
 
-            <VBox spacing="8">
-
-                <Button text="🏠  Trang chủ" styleClass="menu-btn"/>
-                <Button text="🔔  Phiên đấu giá" styleClass="menu-btn"/>
-                <Button text="👜  Sản phẩm của tôi" styleClass="menu-btn"/>
-
-                <!-- Active -->
-                <Button text="➕  Đăng sản phẩm"
-                        styleClass="menu-btn-active"/>
-
-                <Button text="☑  Quản lý sản phẩm" styleClass="menu-btn"/>
-                <Button text="🧾  Đơn đã bán" styleClass="menu-btn"/>
-
+    <VBox prefWidth="350.0" spacing="20.0" style="-fx-background-color: #FFFFFF; -fx-padding: 25; -fx-border-color: #EEEEEE; -fx-border-width: 0 0 0 1;">
+        <Label styleClass="preview-title" text="👁 XEM TRƯỚC SẢN PHẨM" />
+        <StackPane prefHeight="200.0" style="-fx-background-color: #F8F9FA; -fx-background-radius: 10;">
+            <Label text="[Hình ảnh sẽ hiện ở đây]" textFill="#A0968C" />
+        </StackPane>
+        <VBox spacing="15.0">
+            <VBox spacing="2.0">
+                <Label styleClass="preview-label" text="Tên sản phẩm" />
+                <Label fx:id="lblPreviewName" styleClass="preview-product-name" text="Tên sản phẩm mẫu" wrapText="true" />
             </VBox>
-
-            <Separator/>
-
-            <VBox spacing="12">
-
-                <Label text="Danh mục" styleClass="section-sidebar-title"/>
-
-                <Button text="◉  Tất cả" styleClass="category-btn"/>
-                <Button text="📱  Điện tử" styleClass="category-btn"/>
-                <Button text="🎨  Nghệ thuật" styleClass="category-btn"/>
-                <Button text="🚗  Xe cộ" styleClass="category-btn"/>
-                <Button text="💎  Đồ sưu tầm" styleClass="category-btn"/>
-                <Button text="💍  Trang sức" styleClass="category-btn"/>
-
-                <Hyperlink text="Xem thêm"/>
-
+            <VBox spacing="2.0">
+                <Label styleClass="preview-label" text="Giá khởi điểm" />
+                <Label fx:id="lblPreviewPrice" styleClass="preview-price" text="0 đ" />
             </VBox>
-
-            <Region VBox.vgrow="ALWAYS"/>
-
-            <!-- Bottom Post Button -->
-            <Button text="+  Đăng sản phẩm&#10;Đưa sản phẩm lên đấu giá"
-                    styleClass="post-big-btn"
-                    prefHeight="70"
-                    wrapText="true"/>
+            <VBox spacing="2.0">
+                <Label styleClass="preview-label" text="Trạng thái vận chuyển" />
+                <Label style="-fx-font-size: 13;" text="Sẵn sàng giao hàng" textFill="#1A0F0A" />
+            </VBox>
         </VBox>
-    </left>
-
-    <!-- ================= CENTER CONTENT ================= -->
-    <center>
-
-        <ScrollPane fitToWidth="true"
-                    styleClass="center-scroll">
-
-            <VBox spacing="20"
-                  styleClass="main-container">
-
-                <padding>
-                    <Insets top="25" right="35" bottom="25" left="35"/>
-                </padding>
-
-                <!-- Top Bar -->
-                <HBox alignment="CENTER_LEFT">
-
-                    <Button text="← Quay lại"
-                            styleClass="back-btn"/>
-
-                    <Region HBox.hgrow="ALWAYS"/>
-
-                    <HBox spacing="18" alignment="CENTER">
-
-                        <Label text="🔔"/>
-                        <Label text="💬"/>
-
-                        <HBox spacing="8" alignment="CENTER">
-                            <Region prefWidth="42"
-                                    prefHeight="42"
-                                    styleClass="avatar-placeholder"/>
-
-                            <VBox spacing="2">
-                                <Label text="Chào, Nguyễn An"
-                                       styleClass="user-name"/>
-                                <Label text="Seller"
-                                       styleClass="user-role"/>
-                            </VBox>
-                        </HBox>
-
-                    </HBox>
-
-                </HBox>
-
-                <!-- Page Header -->
-                <VBox spacing="6">
-
-                    <Label text="ĐĂNG SẢN PHẨM ĐẤU GIÁ"
-                           styleClass="page-title"/>
-
-                    <Label text="Điền đầy đủ thông tin để đưa sản phẩm của bạn lên sàn đấu giá."
-                           styleClass="page-subtitle"/>
-
-                </VBox>
-
-                <!-- STEP BAR -->
-                <HBox alignment="CENTER"
-                      spacing="45"
-                      styleClass="step-container">
-
-                    <VBox alignment="CENTER" spacing="8">
-                        <StackPane styleClass="step-active">
-                            <Label text="1" styleClass="step-number-active"/>
-                        </StackPane>
-                        <Label text="Thông tin cơ bản"/>
-                    </VBox>
-
-                    <VBox alignment="CENTER" spacing="8">
-                        <StackPane styleClass="step-inactive">
-                            <Label text="2"/>
-                        </StackPane>
-                        <Label text="Hình ảnh"/>
-                    </VBox>
-
-                    <VBox alignment="CENTER" spacing="8">
-                        <StackPane styleClass="step-inactive">
-                            <Label text="3"/>
-                        </StackPane>
-                        <Label text="Chi tiết đấu giá"/>
-                    </VBox>
-
-                    <VBox alignment="CENTER" spacing="8">
-                        <StackPane styleClass="step-inactive">
-                            <Label text="4"/>
-                        </StackPane>
-                        <Label text="Vận chuyển"/>
-                    </VBox>
-
-                    <VBox alignment="CENTER" spacing="8">
-                        <StackPane styleClass="step-inactive">
-                            <Label text="5"/>
-                        </StackPane>
-                        <Label text="Xác nhận"/>
-                    </VBox>
-
-                </HBox>
-
-                <!-- CARD 1 -->
-                <VBox spacing="18"
-                      styleClass="card">
-
-                    <Label text="📋  Thông tin cơ bản"
-                           styleClass="card-title"/>
-
-                    <HBox spacing="20">
-
-                        <VBox spacing="6" HBox.hgrow="ALWAYS">
-
-                            <Label text="Tên sản phẩm *"/>
-
-                            <TextField fx:id="txtProductName"
-                                       promptText="Nhập tên sản phẩm"
-                                       styleClass="modern-input"/>
-
-                        </VBox>
-
-                        <VBox spacing="6" HBox.hgrow="ALWAYS">
-
-                            <Label text="Danh mục *"/>
-
-                            <ComboBox fx:id="cbCategory"
-                                      promptText="-- Chọn danh mục --"
-                                      styleClass="modern-combo"
-                                      maxWidth="Infinity"/>
-
-                        </VBox>
-
-                    </HBox>
-
-                    <!-- Description -->
-                    <VBox spacing="6">
-
-                        <Label text="Mô tả sản phẩm *"/>
-
-                        <VBox styleClass="editor-box">
-
-                            <!-- Toolbar -->
-                            <HBox spacing="15"
-                                  styleClass="editor-toolbar">
-
-                                <Button text="B"/>
-                                <Button text="I"/>
-                                <Button text="U"/>
-                                <Button text="•"/>
-                                <Button text="1."/>
-                                <Button text="🔗"/>
-
-                            </HBox>
-
-                            <TextArea fx:id="txtDescription"
-                                      prefRowCount="7"
-                                      wrapText="true"
-                                      promptText="Mô tả chi tiết về sản phẩm: tình trạng, đặc điểm, xuất xứ, v.v."
-                                      styleClass="editor-area"/>
-
-                        </VBox>
-
-                    </VBox>
-
-                </VBox>
-
-                <!-- CARD 2 -->
-                <VBox spacing="18"
-                      styleClass="card">
-
-                    <Label text="📄  Thông tin nhanh"
-                           styleClass="card-title"/>
-
-                    <HBox spacing="20">
-
-                        <VBox spacing="6" HBox.hgrow="ALWAYS">
-
-                            <Label text="Giá khởi điểm *"/>
-
-                            <TextField fx:id="txtStartingPrice"
-                                       promptText="Nhập giá"
-                                       styleClass="modern-input"/>
-
-                        </VBox>
-
-                        <VBox spacing="6" HBox.hgrow="ALWAYS">
-
-                            <Label text="Bước giá (Increment) *"/>
-
-                            <TextField fx:id="txtIncrement"
-                                       promptText="Nhập bước giá"
-                                       styleClass="modern-input"/>
-
-                        </VBox>
-
-                        <VBox spacing="6" HBox.hgrow="ALWAYS">
-
-                            <Label text="Giá mua ngay (Tùy chọn)"/>
-
-                            <TextField fx:id="txtBuyNowPrice"
-                                       promptText="Nhập giá mua ngay"
-                                       styleClass="modern-input"/>
-
-                        </VBox>
-
-                    </HBox>
-
-                </VBox>
-
-                <!-- CARD 3 -->
-                <VBox spacing="18"
-                      styleClass="card">
-
-                    <Label text="🕒  Thời gian đấu giá"
-                           styleClass="card-title"/>
-
-                    <HBox spacing="20">
-
-                        <!-- Start -->
-                        <VBox spacing="6" HBox.hgrow="ALWAYS">
-
-                            <Label text="Ngày bắt đầu *"/>
-
-                            <HBox spacing="10">
-
-                                <DatePicker fx:id="dpStartDate"
-                                            HBox.hgrow="ALWAYS"
-                                            styleClass="modern-date"/>
-
-                                <TextField fx:id="txtStartTime"
-                                           promptText="14:30"
-                                           prefWidth="100"
-                                           styleClass="modern-input"/>
-
-                            </HBox>
-
-                        </VBox>
-
-                        <!-- End -->
-                        <VBox spacing="6" HBox.hgrow="ALWAYS">
-
-                            <Label text="Thời gian kết thúc *"/>
-
-                            <HBox spacing="10">
-
-                                <DatePicker fx:id="dpEndDate"
-                                            HBox.hgrow="ALWAYS"
-                                            styleClass="modern-date"/>
-
-                                <TextField fx:id="txtEndTime"
-                                           promptText="14:30"
-                                           prefWidth="100"
-                                           styleClass="modern-input"/>
-
-                            </HBox>
-
-                        </VBox>
-
-                    </HBox>
-
-                    <CheckBox fx:id="chkAntiSniping"
-                              text="Áp dụng gia hạn thời gian (Anti-sniping)"
-                              styleClass="modern-check"/>
-
-                    <Label text="Nếu có người đấu giá trong 10 giây cuối, thời gian sẽ được gia hạn thêm 30 giây."
-                           styleClass="hint-text"/>
-
-                </VBox>
-
-                <!-- ACTION BUTTONS -->
-                <HBox alignment="CENTER_RIGHT"
-                      spacing="18">
-
-                    <Button text="Hủy"
-                            styleClass="btn-cancel"/>
-
-                    <Button text="Tiếp tục  →"
-                            styleClass="btn-next"
-                            onAction="#handleSubmitAuction"/>
-
-                </HBox>
-
-            </VBox>
-
-        </ScrollPane>
-
-    </center>
-
-    <!-- ================= RIGHT PREVIEW ================= -->
-    <right>
-
-        <VBox prefWidth="360"
-              spacing="18"
-              styleClass="preview-sidebar">
-
-            <padding>
-                <Insets top="30" right="25" bottom="30" left="25"/>
-            </padding>
-
-            <Label text="👁  XEM TRƯỚC SẢN PHẨM"
-                   styleClass="preview-title"/>
-
-            <VBox spacing="18"
-                  styleClass="preview-card">
-
-                <!-- Main Image -->
-                <Region prefHeight="280"
-                        styleClass="preview-image"/>
-
-                <!-- Thumbnail List -->
-                <HBox spacing="10">
-
-                    <Region prefWidth="55"
-                            prefHeight="55"
-                            styleClass="thumb-active"/>
-
-                    <Region prefWidth="55"
-                            prefHeight="55"
-                            styleClass="thumb-empty"/>
-
-                    <Region prefWidth="55"
-                            prefHeight="55"
-                            styleClass="thumb-empty"/>
-
-                    <Region prefWidth="55"
-                            prefHeight="55"
-                            styleClass="thumb-empty"/>
-
-                </HBox>
-
-                <!-- Info -->
-                <VBox spacing="15">
-
-                    <VBox spacing="4">
-                        <Label text="Tên sản phẩm"
-                               styleClass="preview-label"/>
-
-                        <Label text="iPhone 15 Pro Max 512GB"
-                               styleClass="preview-product-name"/>
-                    </VBox>
-
-                    <Separator/>
-
-                    <VBox spacing="4">
-                        <Label text="Danh mục"
-                               styleClass="preview-label"/>
-
-                        <Label text="Điện thoại"/>
-                    </VBox>
-
-                    <Separator/>
-
-                    <VBox spacing="4">
-                        <Label text="Giá khởi điểm"
-                               styleClass="preview-label"/>
-
-                        <Label text="28.500.000 đ"
-                               styleClass="preview-price"/>
-                    </VBox>
-
-                    <Separator/>
-
-                    <VBox spacing="4">
-                        <Label text="Bước giá"
-                               styleClass="preview-label"/>
-
-                        <Label text="500.000 đ"/>
-                    </VBox>
-
-                    <Separator/>
-
-                    <VBox spacing="4">
-                        <Label text="Thời gian"
-                               styleClass="preview-label"/>
-
-                        <Label text="22/05/2024 14:30"/>
-                        <Label text="đến 25/05/2024 14:30"/>
-                    </VBox>
-
-                    <Separator/>
-
-                    <HBox alignment="CENTER_LEFT"
-                          spacing="10">
-
-                        <Label text="Gia hạn thời gian"/>
-
-                        <Label text="Có áp dụng"
-                               styleClass="tag-success"/>
-
-                    </HBox>
-
-                </VBox>
-
-                <Label text="Lưu ý: Thông tin chỉ mang tính chất minh họa.&#10;Vui lòng kiểm tra lại trước khi đăng."
-                       wrapText="true"
-                       styleClass="preview-note"/>
-
-            </VBox>
-
-        </VBox>
-
-    </right>
-
-</BorderPane>
+        <Region VBox.vgrow="ALWAYS" />
+        <Label style="-fx-text-fill: #A0968C; -fx-font-size: 11; -fx-text-alignment: center;" text="Lưu ý: Mọi thay đổi sẽ được cập nhật trực tiếp tại đây." wrapText="true" />
+    </VBox>
+</HBox>

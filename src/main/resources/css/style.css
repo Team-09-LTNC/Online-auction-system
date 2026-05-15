@@ -4,21 +4,21 @@
 .root {
     /* Font chữ chủ đạo và màu nền kem nhạt cho toàn bộ ứng dụng */
     -fx-font-family: "Segoe UI", Arial, sans-serif;
-    -fx-background-color: #EDE6DF; /* Chuyển sang kem đậm  */
+    -fx-background-color: #FDFBF9; /* Chuyển sang màu trắng kem cực nhẹ */
 }
 
 /* Ép tất cả các nhãn chữ mặc định hiện màu nâu đen đậm */
 .label {
-    -fx-text-fill: #1A0F0A; /* Chữ nâu đen đậm */
+    -fx-text-fill: #3E322D; /* Chữ nâu đất đậm nhã nhặn */
 }
 
 /* ==========================================================
    PHẦN 2: SIDEBAR (THANH ĐIỀU HƯỚNG BÊN TRÁI - TRANG HOME)
    ========================================================== */
 .sidebar {
-    /* Màu kem đậm hơn nền một chút để tạo chiều sâu khối */
-    -fx-background-color: #F8F4ED;
-    -fx-border-color: #EAE3D3;
+    /* Màu kem hồng nhạt rất dịu để tạo chiều sâu */
+    -fx-background-color: #FAF6F3;
+    -fx-border-color: #F0EAE5;
     -fx-border-width: 0 1 0 0; /* Kẻ vạch ngăn cách bên phải thanh Sidebar */
 }
 
@@ -26,19 +26,28 @@
 .nav-button {
     -fx-background-color: transparent;
     /* Màu chữ nâu trầm khi ở trạng thái bình thường */
-    -fx-text-fill: #5D4037;
+    -fx-text-fill: #7D6E6A;
     -fx-alignment: CENTER_LEFT;
     -fx-padding: 12 15;
     -fx-font-size: 14px;
-    -fx-background-radius: 10;
+    -fx-background-radius: 12;
 }
 
 /* Hiệu ứng khi di chuột qua hoặc khi nút đó đang được chọn (Active) */
-.nav-button:hover, .nav-button-active {
-    -fx-background-color: #6E1C1C; /* Đổi sang đỏ gạch cho đồng bộ login */
-    -fx-text-fill: white !important; /* Dùng !important để đảm bảo chữ biến thành trắng */
-    -fx-font-weight: bold;
+.nav-button:hover {
+    -fx-background-color: #F2E8E4; /* Hồng nhạt nhẹ nhàng */
+    -fx-text-fill: #A64452; /* Chữ màu đỏ hồng đất */
     -fx-cursor: hand;
+}
+
+.nav-button-active {
+    -fx-background-color: #A64452; /* Đỏ hồng đất (nhạt hơn cái cũ m nhé) */
+    -fx-text-fill: white !important; /* Đảm bảo chữ biến thành trắng */
+    -fx-font-weight: bold;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+    /* Đổ bóng nhẹ cho nút đang chọn */
+    -fx-effect: dropshadow(three-pass-box, rgba(166, 68, 82, 0.2), 10, 0, 0, 4);
 }
 
 /* ==========================================================
@@ -48,10 +57,10 @@
     /* Thẻ màu trắng tinh khôi để nổi bật trên nền kem tổng thể */
     -fx-background-color: #FFFFFF;
     -fx-background-radius: 15;
-    -fx-border-color: #F0F0F0;
+    -fx-border-color: #F5F0EE;
     -fx-border-radius: 15;
     /* Đổ bóng nhẹ giúp các thẻ trông như đang nổi lên khỏi mặt bàn */
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.04), 15, 0, 0, 5);
 }
 
 /* Tiêu đề/Tên sản phẩm trong thẻ */
@@ -61,16 +70,16 @@
     -fx-font-size: 15px;
 }
 
-/* Giá tiền - Phần quan trọng nhất nên giữ màu đỏ đô rực rỡ */
+/* Giá tiền - Phần quan trọng nhất nên giữ màu hồng đất đậm */
 .product-price {
-    -fx-text-fill: #6E1C1C; /* Đổi sang đỏ gạch */
+    -fx-text-fill: #A64452;
     -fx-font-weight: bold;
     -fx-font-size: 18px;
 }
 
 /* Nút "Ra giá" nằm trong mỗi thẻ sản phẩm */
 .bid-button {
-    -fx-background-color: #6E1C1C;
+    -fx-background-color: #A64452;
     -fx-text-fill: white !important;
     -fx-background-radius: 8;
     -fx-padding: 8 15;
@@ -79,13 +88,13 @@
 }
 
 .bid-button:hover {
-    -fx-background-color: #a02334;
+    -fx-background-color: #C25B69; /* Sáng hơn một chút khi hover */
 }
 
 /* Nhãn trạng thái nhỏ (Ví dụ: Đang diễn ra, Đã kết thúc) */
 .status-label {
-    -fx-background-color: #E8F5E9; /* Nền xanh lá cực nhạt */
-    -fx-text-fill: #2E7D32;         /* Chữ xanh lá đậm để phân biệt */
+    -fx-background-color: #F1F8E9; /* Nền xanh lá cực nhạt */
+    -fx-text-fill: #689F38;         /* Chữ xanh lá trung tính */
     -fx-background-radius: 5;
     -fx-padding: 3 8;
     -fx-font-size: 11px;
@@ -97,7 +106,7 @@
 .search-field {
     -fx-background-color: #FFFFFF;
     -fx-background-radius: 25;
-    -fx-border-color: #EEEEEE;
+    -fx-border-color: #F0EAE8;
     -fx-border-radius: 25;
     -fx-padding: 0 15 0 15;
 }
@@ -108,19 +117,23 @@
 }
 
 /* Ngoại lệ cho ô đăng sản phẩm */
+.post-product-button {
+    -fx-background-color: #A64452; /* Màu nhạt đồng bộ app */
+}
+
 .post-product-button .label {
     -fx-text-fill: #FFFDF5 !important; /* Ép màu kem trắng */
 }
 
 .post-product-button .label:last-child {
-    -fx-text-fill: #F4EFE6 !important;
+    -fx-text-fill: #FDECEC !important;
     -fx-font-size: 10px;
 }
 
 /* Logo hình cái khiên (Chỉ lấy khung) */
 .shield-logo {
     -fx-fill: transparent !important;
-    -fx-stroke: #6E1C1C;
+    -fx-stroke: #A64452;
     -fx-stroke-width: 2;
 }
 
@@ -128,9 +141,9 @@
 .combined-banner {
     -fx-background-color: #FFFFFF;
     -fx-background-radius: 20;
-    -fx-border-color: #F0F0F0;
+    -fx-border-color: #F5F0EE;
     -fx-border-radius: 20;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.03), 10, 0, 0, 5);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.02), 10, 0, 0, 5);
 }
 
 .combined-banner .label {
@@ -150,7 +163,7 @@
 
 .stat-icon {
     -fx-font-size: 16px;
-    -fx-text-fill: #6E1C1C;
+    -fx-text-fill: #A64452;
 }
 
 /* ==========================================================

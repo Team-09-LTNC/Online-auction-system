@@ -1,5 +1,6 @@
 package com.auction.client.network;
 
+import com.auction.client.controller.MainController;
 import com.auction.common.dto.BaseDTOs;
 import com.google.gson.Gson;
 import javafx.application.Platform;
@@ -8,6 +9,7 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
+import javafx.scene.control.Alert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,9 +114,39 @@ public class NetworkManager {
     /**
      * Logic xử lý dữ liệu sau khi nhận được từ Server
      */
-    private void handleServerResponse(String json) {
-        // sẽ parse JSON ở đây và báo cho các View update dữ liệu
-        // Ví dụ: update giá đấu mới nhất lên màn hình
+    public void handleServerResponse(String json) {
+        try {
+            BaseDTOs.Response response = gson.fromJson(json, BaseDTOs.Response.class);
+
+            // Kiểm tra loại phản hồi
+            if ("CREATE_AUCTION_RES".equals(response.type)) {
+                if (response.success) {
+                    showSimpleAlert(Alert.AlertType.INFORMATION, "Thành công", "Sản phẩm đã được đăng lên sàn!");
+
+                    // Cập nhật đường dẫn chuẩn về trang chủ card sản phẩm
+                    if (MainController.instance != null) {
+                        MainController.instance.setCenterContent("/fxml/bidder/MainDashboard.fxml");
+                    }
+                } else {
+                    showSimpleAlert(Alert.AlertType.ERROR, "Thất bại", "Lỗi từ Server: " + response.message);
+                }
+            }
+
+
+        } catch (Exception e) {
+            logger.error("Lỗi parse JSON phản hồi: {}", e.getMessage());
+        }
+    }
+
+    // Hàm bổ trợ để hiện thông báo cho gọn code
+    private void showSimpleAlert(Alert.AlertType type, String title, String content) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(type);
+            alert.setTitle(title);
+            alert.setHeaderText(null);
+            alert.setContentText(content);
+            alert.showAndWait();
+        });
     }
 
     /**

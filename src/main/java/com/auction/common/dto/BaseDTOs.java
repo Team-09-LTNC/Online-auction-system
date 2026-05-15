@@ -7,6 +7,21 @@ public class BaseDTOs {
         public String requestId; // Để theo dõi response tương ứng
     }
 
+    public static class CreateAuctionRequest extends Request {
+        public String productName;
+        public String category;
+        public String description;
+        public double startPrice;
+        public double increment;
+        public String startTime;
+        public String endTime;
+        public boolean antiSniping;
+
+        public CreateAuctionRequest() {
+            this.type = "CREATE_AUCTION";
+        }
+    }
+
     // Lớp cha cho mọi phản hồi
     public static class Response {
         public String type; // Để phân loại phản hồi tại NetworkManager

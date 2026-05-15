@@ -9,54 +9,48 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<!-- Thẻ sản phẩm (Card) với nền trắng, bo góc 10px, thêm tí viền nhạt -->
-<!-- dùng styleClass="product-card" để nó tự nhận hiệu ứng đổ bóng và bo góc từ CSS nhé -->
-<VBox prefHeight="350.0" prefWidth="250.0" spacing="10.0" styleClass="product-card" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<VBox prefHeight="350.0" prefWidth="250.0" spacing="10.0"
+      styleClass="product-card"
+      xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.auction.client.controller.components.ProductCardController">
+
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
     </padding>
 
-    <!-- 1. Khu vực Ảnh Sản Phẩm (Tạm dùng khối xám để giữ chỗ) -->
-    <!-- Bo góc khu vực ảnh cho đồng bộ với thẻ -->
     <StackPane prefHeight="150.0" prefWidth="220.0" style="-fx-background-color: #F8F9FA; -fx-background-radius: 8;">
-        <!-- Tạm để cái icon hoặc chữ thay ảnh thật -->
-        <Label text="🚗" style="-fx-font-size: 60.0;" />
+        <Label fx:id="lblProductIcon" text="🚗" style="-fx-font-size: 60.0;" />
 
-        <!-- Nhãn trạng thái "Đang diễn ra" góc trên trái ảnh -->
-        <Label styleClass="status-label" text="Đang diễn ra" StackPane.alignment="TOP_LEFT">
+        <Label fx:id="lblStatus" styleClass="status-label" text="Đang diễn ra" StackPane.alignment="TOP_LEFT">
             <StackPane.margin>
                 <Insets left="5.0" top="5.0" />
             </StackPane.margin>
         </Label>
     </StackPane>
 
-    <!-- 2. Tên Sản Phẩm -->
-    <Label styleClass="product-title" text="Mercedes-Benz S450 2023" wrapText="true">
+    <Label fx:id="lblProductName" styleClass="product-title" text="Tên sản phẩm" wrapText="true">
         <VBox.margin>
             <Insets top="5.0" />
         </VBox.margin>
     </Label>
 
-    <!-- 3. Khu vực Giá (Giá hiện tại nằm sát trái, chữ "Giá cao nhất" nhạt hơn) -->
     <VBox spacing="2.0">
         <Label text="Giá hiện tại" style="-fx-text-fill: #888888; -fx-font-size: 12px;" />
-        <Label styleClass="product-price" text="3.500.000.000 đ" />
+        <Label fx:id="lblCurrentPrice" styleClass="product-price" text="0 đ" />
     </VBox>
 
-    <!-- Khoảng trống đẩy các phần dưới xuống đáy -->
     <Region VBox.vgrow="ALWAYS" />
 
-    <!-- 4. Thời gian còn lại và Nút bấm -->
     <HBox alignment="CENTER_LEFT">
         <VBox>
             <Label text="Kết thúc sau:" style="-fx-text-fill: #888888; -fx-font-size: 11px;" />
-            <Label text="02:15:30" style="-fx-text-fill: #E65100; -fx-font-weight: bold; -fx-font-size: 13px;" />
+            <Label fx:id="lblTimeRemaining" text="00:00:00" style="-fx-text-fill: #E65100; -fx-font-weight: bold; -fx-font-size: 13px;" />
         </VBox>
 
-        <!-- Lò xo đẩy nút sang phải -->
         <Region HBox.hgrow="ALWAYS" />
 
-        <Button styleClass="bid-button" text="Ra giá" />
+        <Button fx:id="btnBid" onAction="#handleBidAction" styleClass="bid-button" text="Ra giá" />
     </HBox>
 
 </VBox>

@@ -9,7 +9,7 @@
             style="-fx-background-color: #f4f1ee;"
             xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.auction.client.controller.AuctionListController">
+            fx:controller="com.auction.client.controller.bidder.AuctionListScreenController">
 
     <!-- ===== HEADER ===== -->
     <top>
