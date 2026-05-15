@@ -26,7 +26,7 @@ public class ServerManager {
         this.clients = new CopyOnWriteArrayList<>(clients);
     }
 
-    public void batDauServer() {
+    public void startServer() {
         try (ServerSocket server = new ServerSocket(port)) {
             this.serverSocket = server;
             logger.info("Server đang lắng nghe cổng {}", port);
