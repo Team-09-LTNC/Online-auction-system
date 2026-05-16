@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+
+<HBox prefHeight="800.0" prefWidth="1300.0"
+      style="-fx-background-color: #FCF9F5;"
+      stylesheets="@../../css/style.css"
+      xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.auction.client.controller.MainController"> <!-- Thêm Controller quản lý chính  -->
+
+    <!-- Sidebar bên trái -->
+    <fx:include source="../components/Sidebar.fxml" />
+
+    <!-- Nội dung chính bên phải -->
+    <StackPane fx:id="mainContentArea" HBox.hgrow="ALWAYS">
+        <fx:include source="MainDashboard.fxml" />
+    </StackPane>
+
+</HBox>

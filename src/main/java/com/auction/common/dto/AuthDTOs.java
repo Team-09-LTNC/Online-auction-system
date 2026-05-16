@@ -1,4 +1,6 @@
 package com.auction.common.dto;
+
+import com.auction.common.enums.ActionType;
 import com.auction.common.enums.StatusCode;
 
 public class AuthDTOs {
@@ -9,7 +11,8 @@ public class AuthDTOs {
         private final String password;
 
         public LoginRequest(String username, String password) {
-            super("LOGIN_REQUEST");
+            // (AUTH_LOGIN)
+            super(ActionType.LOGIN);
             this.username = username;
             this.password = password;
         }
@@ -25,10 +28,7 @@ public class AuthDTOs {
         private final String fullName;
 
         public UserDTO(int id, String username, String role, String fullName) {
-            this.id = id;
-            this.username = username;
-            this.role = role;
-            this.fullName = fullName;
+            this.id = id; this.username = username; this.role = role; this.fullName = fullName;
         }
 
         public int getId() { return id; }
@@ -56,7 +56,8 @@ public class AuthDTOs {
         private final String role;
 
         public RegisterRequest(String username, String password, String fullName, String role) {
-            super("REGISTER_REQUEST");
+            //  (AUTH_REGISTER)
+            super(ActionType.REGISTER);
             this.username = username;
             this.password = password;
             this.fullName = fullName;
@@ -71,7 +72,8 @@ public class AuthDTOs {
 
     public static class RegisterResponse extends BaseDTOs.Response {
         public RegisterResponse(boolean success, String message) {
-            super("REGISTER_RESPONSE", StatusCode.CREATED, success, message);        }
+            super("REGISTER_RESPONSE", StatusCode.CREATED, success, message);
+        }
     }
 
     // --- ĐĂNG XUẤT ---
@@ -79,7 +81,7 @@ public class AuthDTOs {
         private final int userId;
 
         public LogoutRequest(int userId) {
-            super("LOGOUT_REQUEST");
+            super(ActionType.LOGOUT);
             this.userId = userId;
         }
 

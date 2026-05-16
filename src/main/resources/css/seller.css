@@ -1,0 +1,288 @@
+/* ==========================================================
+   TỔNG THỂ NỀN VÀ BỐ CỤC CHÍNH (Kế thừa tông màu Kem)
+   ========================================================== */
+.root {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.center-scroll {
+    -fx-background: #F4EFE6; /* Nền kem rất nhạt cho vùng nội dung chính */
+    -fx-background-color: transparent;
+}
+
+.main-container {
+    -fx-background-color: #F4EFE6;
+}
+
+/* ==========================================================
+   SIDEBAR TRÁI (Thanh điều hướng)
+   ========================================================== */
+.sidebar {
+    -fx-background-color: #FDFBF7; /* Trắng sữa/kem cực nhạt */
+    -fx-border-color: #EAE3D3;
+    -fx-border-width: 0 1 0 0;
+}
+
+.logo-title {
+    -fx-text-fill: #6E1C1C; /* Đỏ đô - Màu nhấn chủ đạo */
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.logo-subtitle {
+    -fx-text-fill: #888888;
+    -fx-font-size: 13px;
+}
+
+.section-sidebar-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1A0F0A;
+    -fx-padding: 15 0 5 0;
+}
+
+/* Nút bấm Menu thông thường */
+.menu-btn, .category-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #5D4037; /* Nâu trầm */
+    -fx-alignment: CENTER_LEFT;
+    -fx-font-size: 14px;
+    -fx-padding: 12 15;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.menu-btn:hover, .category-btn:hover {
+    -fx-background-color: rgba(110, 28, 28, 0.05); /* Hover đỏ nhạt */
+    -fx-text-fill: #6E1C1C;
+}
+
+/* Nút Menu Đang chọn (Active) - Như nút "Đăng sản phẩm" trong ảnh */
+.menu-btn-active {
+    -fx-background-color: #F5EBEB; /* Nền đỏ cực nhạt */
+    -fx-text-fill: #6E1C1C;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 12 15;
+    -fx-background-radius: 8;
+    -fx-border-color: #6E1C1C;
+    -fx-border-width: 0 0 0 4; /* Vạch đỏ bên trái */
+    -fx-border-radius: 8;
+}
+
+/* Nút "+ Đăng sản phẩm" Lớn ở góc dưới */
+.post-big-btn {
+    -fx-background-color: #6E1C1C;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER;
+}
+
+.post-big-btn:hover {
+    -fx-background-color: #4A1010;
+}
+
+/* ==========================================================
+   HEADER & ĐIỀU HƯỚNG TRANG (CENTER TOP)
+   ========================================================== */
+.back-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #5D4037;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+
+.page-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6E1C1C; /* Tiêu đề trang màu Đỏ đô */
+}
+
+.page-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #888888;
+}
+
+/* ==========================================================
+   THANH TIẾN TRÌNH (STEP BAR)
+   ========================================================== */
+.step-container {
+    -fx-padding: 20 0 20 0;
+}
+
+.step-active {
+    -fx-background-color: #6E1C1C;
+    -fx-background-radius: 50em;
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+}
+
+.step-number-active {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.step-inactive {
+    -fx-background-color: #EAE3D3;
+    -fx-background-radius: 50em;
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+}
+
+.step-inactive .label {
+    -fx-text-fill: #A0968C; /* Chữ số màu xám nhạt trong vòng tròn */
+}
+
+/* ==========================================================
+   THẺ NỘI DUNG (CARDS) & FORM NHẬP LIỆU
+   ========================================================== */
+/* Form bọc các khối Thông tin cơ bản, Thời gian... */
+.card {
+    -fx-background-color: #FDFBF7; /* Nền khối form hơi khác màu nền trang */
+    -fx-background-radius: 12;
+    -fx-padding: 25;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.03), 10, 0, 0, 3);
+}
+
+.card-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1A0F0A;
+}
+
+/* Các nhãn (Label) của ô nhập liệu */
+.card .label {
+    -fx-text-fill: #1A0F0A;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+/* TextFields, ComboBoxes, DatePickers */
+.modern-input, .modern-combo, .modern-date {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #EAE3D3;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8 12;
+    -fx-text-fill: #1A0F0A;
+    -fx-prompt-text-fill: #B0A8A0;
+}
+
+.modern-input:focused, .modern-combo:focused, .modern-date:focused {
+    -fx-border-color: #6E1C1C;
+    -fx-background-color: #FFFFFF;
+}
+
+/* Khu vực TextArea (Mô tả sản phẩm) */
+.editor-box {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #EAE3D3;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.editor-toolbar {
+    -fx-padding: 8;
+    -fx-border-color: transparent transparent #EAE3D3 transparent;
+    -fx-background-color: #FAFAFA;
+    -fx-background-radius: 8 8 0 0;
+}
+
+.editor-toolbar .button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #5D4037;
+    -fx-cursor: hand;
+}
+
+.editor-area {
+    -fx-background-color: transparent;
+    -fx-padding: 5;
+}
+
+.editor-area .content {
+    -fx-background-color: transparent;
+}
+
+/* Nút Tiếp tục và Hủy */
+.btn-next {
+    -fx-background-color: #6E1C1C;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10 30;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.btn-next:hover {
+    -fx-background-color: #4A1010;
+}
+
+.btn-cancel {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #EAE3D3;
+    -fx-border-radius: 8;
+    -fx-text-fill: #5D4037;
+    -fx-padding: 10 30;
+    -fx-cursor: hand;
+}
+
+/* ==========================================================
+   CỘT XEM TRƯỚC BÊN PHẢI (RIGHT PREVIEW)
+   ========================================================== */
+.preview-sidebar {
+    -fx-background-color: #FDFBF7;
+    -fx-border-color: #EAE3D3;
+    -fx-border-width: 0 0 0 1;
+}
+
+.preview-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6E1C1C;
+}
+
+.preview-card {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.preview-image {
+    -fx-background-color: #F5EBEB; /* Màu nền nhẹ đằng sau điện thoại */
+    -fx-background-radius: 12;
+}
+
+.thumb-active {
+    -fx-border-color: #6E1C1C;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.thumb-empty {
+    -fx-border-color: #EAE3D3;
+    -fx-border-radius: 8;
+    -fx-background-color: #FFFFFF;
+}
+
+.preview-product-name {
+    -fx-font-size: 15px;
+    -fx-text-fill: #1A0F0A;
+}
+
+.preview-price {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1A0F0A;
+}
+
+/* Thẻ Tag "Có áp dụng" xanh lá */
+.tag-success {
+    -fx-background-color: #E8F5E9;
+    -fx-text-fill: #2E7D32;
+    -fx-padding: 4 12;
+    -fx-background-radius: 15;
+    -fx-font-size: 11px;
+}

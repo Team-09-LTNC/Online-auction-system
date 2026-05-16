@@ -1,6 +1,6 @@
 package com.auction.server;
 
-import com.auction.server.network.ServerManager;
+import com.auction.server.networkserver.ServerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

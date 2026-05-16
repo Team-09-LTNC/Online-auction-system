@@ -1,0 +1,187 @@
+/* ================================================================
+   AUCTIONHUB — admin.css
+   Palette: #8B2C2C · #EDE6DF · #F0EAE4 · #1A0F0A · #5C3D30 · #C8AFA0
+   ================================================================ */
+
+/* ── Font gốc ── */
+.root {
+    -fx-font-family: "Segoe UI", "Tahoma", "Arial", "sans-serif";
+}
+
+.button, .label, .text-field {
+    -fx-font-family: "Segoe UI";
+}
+
+/* ════════════════════════════════════════
+   ADMIN SIDEBAR
+   Dùng trong: AdminLayout.fxml
+   ════════════════════════════════════════ */
+.admin-sidebar {
+    -fx-background-color: #1A0F0A;
+    -fx-pref-width: 248px;
+    -fx-min-width: 248px;
+}
+
+.admin-sidebar-header {
+    -fx-background-color: #0D0705;
+    -fx-padding: 22 20 22 20;
+}
+
+.admin-logo-primary {
+    -fx-text-fill: #F0EAE4;
+    -fx-font-size: 21px;
+    -fx-font-weight: bold;
+}
+
+.admin-logo-accent {
+    -fx-text-fill: #8B2C2C;
+    -fx-font-size: 21px;
+    -fx-font-weight: bold;
+}
+
+.admin-badge {
+    -fx-background-color: #8B2C2C;
+    -fx-background-radius: 4px;
+    -fx-padding: 3 8 3 8;
+}
+
+.admin-badge-label {
+    -fx-text-fill: #F0EAE4;
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+}
+
+.admin-nav-section {
+    -fx-text-fill: #5C3D30;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 14 20 5 20;
+}
+
+.admin-nav-item {
+    -fx-background-color: transparent;
+    -fx-text-fill: #C8AFA0;
+    -fx-font-size: 13px;
+    -fx-padding: 11 20 11 20;
+    -fx-alignment: CENTER_LEFT;
+    -fx-cursor: hand;
+    -fx-pref-width: 248px;
+    -fx-border-width: 0;
+}
+
+.admin-nav-item:hover {
+    -fx-background-color: #2A1A14;
+    -fx-text-fill: #F0EAE4;
+}
+
+.admin-nav-item-active {
+    -fx-background-color: #8B2C2C;
+    -fx-text-fill: #F0EAE4;
+    -fx-font-weight: bold;
+}
+
+.admin-nav-item-active:hover {
+    -fx-background-color: #9E3333;
+}
+
+.admin-sidebar-divider {
+    -fx-background-color: #2A1A14;
+    -fx-pref-height: 1px;
+}
+
+.admin-sidebar-footer {
+    -fx-background-color: #0D0705;
+    -fx-padding: 14 16 14 16;
+}
+
+/* ════════════════════════════════════════
+   SCROLL PANE
+   Dùng trong: AdminLayout.fxml (sidebar scroll)
+   ════════════════════════════════════════ */
+.admin-scroll {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+
+.admin-scroll .viewport {
+    -fx-background-color: transparent;
+}
+
+.admin-scroll .scroll-bar:vertical {
+    -fx-pref-width: 7px;
+    -fx-background-color: transparent;
+}
+
+.admin-scroll .scroll-bar:vertical .thumb {
+    -fx-background-color: #C8AFA0;
+    -fx-background-radius: 4px;
+}
+
+.admin-scroll .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #8B2C2C;
+}
+
+/* ════════════════════════════════════════
+   TOP HEADER
+   Dùng trong: AdminLayout.fxml, DashboardView.fxml
+   ════════════════════════════════════════ */
+.admin-header {
+    -fx-background-color: #F0EAE4;
+    -fx-pref-height: 60px;
+    -fx-border-color: #C8AFA0;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 24 0 24;
+}
+
+.admin-page-title {
+    -fx-text-fill: #1A0F0A;
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+}
+
+.admin-breadcrumb {
+    -fx-text-fill: #5C3D30;
+    -fx-font-size: 11px;
+}
+
+.admin-breadcrumb-active {
+    -fx-text-fill: #8B2C2C;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.admin-search {
+    -fx-background-color: #EDE6DF;
+    -fx-border-color: #C8AFA0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 7 14 7 14;
+    -fx-text-fill: #1A0F0A;
+    -fx-font-size: 13px;
+    -fx-pref-width: 260px;
+    -fx-prompt-text-fill: #C8AFA0;
+}
+
+.admin-search:focused {
+    -fx-border-color: #8B2C2C;
+}
+
+/* ════════════════════════════════════════
+   BUTTON — Ghost
+   Dùng trong: AdminLayout.fxml (☰, ⏻), DashboardView.fxml (☰)
+   ════════════════════════════════════════ */
+.btn-admin-ghost {
+    -fx-background-color: transparent;
+    -fx-text-fill: #5C3D30;
+    -fx-font-size: 12px;
+    -fx-padding: 7 14 7 14;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+}
+
+.btn-admin-ghost:hover {
+    -fx-text-fill: #8B2C2C;
+    -fx-background-color: rgba(139,44,44,0.07);
+    -fx-background-radius: 6px;
+}
