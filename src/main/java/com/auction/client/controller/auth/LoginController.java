@@ -22,6 +22,9 @@ public class LoginController {
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
     @FXML private TextField passwordTextField;
+    // 🔥 SỬA THÀNH BIẾN PUBLIC STATIC: Để SidebarController hoặc bất kỳ đâu trong Client
+    // đều có thể truy cập trực tiếp và biết chính xác vai trò vừa đăng nhập thành công!
+    public static ComboBox<String> roleComboBoxStatic;
     @FXML private ComboBox<String> roleComboBox;
     @FXML private Label statusLabel;
     @FXML private Button showPasswordButton;
@@ -30,6 +33,8 @@ public class LoginController {
     public void initialize() {
         if (roleComboBox != null) {
             roleComboBox.setItems(FXCollections.observableArrayList("Bidder", "Seller", "Admin"));
+            // Gán tham chiếu sang biến static để chia sẻ dữ liệu
+            roleComboBoxStatic = roleComboBox;
         }
     }
 

@@ -60,6 +60,16 @@
                     styleClass="nav-button" text="Đang theo dõi">
                 <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="♡" /></graphic>
             </Button>
+
+            <Button fx:id="btnWallet" onAction="#handleOpenWallet" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="220.0"
+                    styleClass="nav-button" text="Ví của tôi">
+                <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="💳" /></graphic>
+            </Button>
+
+            <Button fx:id="btnChat" onAction="#handleOpenChat" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="220.0"
+                    styleClass="nav-button" text="Tin nhắn">
+                <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="💬" /></graphic>
+            </Button>
         </VBox>
 
         <Region minHeight="1.0" prefHeight="1.0" style="-fx-background-color: #E5E5E5; -fx-margin: 10 0;" />

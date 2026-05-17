@@ -247,3 +247,31 @@ java.lang.RuntimeException: CRITICAL: Không tìm thấy file application.proper
 2026-05-17 08:48:06 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - Người dùng bấm nút Đăng xuất hệ thống.
 2026-05-17 08:49:35 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
 2026-05-17 08:49:36 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
+2026-05-17 09:04:07 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 09:04:14 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-17 09:04:18 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-17 09:04:21 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-17 09:16:46 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 09:16:46 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: Bidder - Tiến hành ẩn nút của Seller.
+2026-05-17 09:16:48 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-17 09:16:48 [JavaFX Application Thread] ERROR c.a.c.networkclient.ClientSocket - Kết nối Server thất bại: Connection refused: connect
+2026-05-17 09:16:48 [JavaFX Application Thread] ERROR c.a.c.networkclient.ClientSocket - Socket chưa sẵn sàng!
+2026-05-17 09:16:54 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-17 09:16:55 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-17 09:16:56 [JavaFX Application Thread] ERROR c.a.c.networkclient.ClientSocket - Socket chưa sẵn sàng!
+2026-05-17 09:16:58 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-17 09:16:59 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-17 09:17:00 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 09:17:02 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-17 09:17:04 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-17 09:17:05 [JavaFX Application Thread] ERROR c.a.c.networkclient.ClientSocket - Socket chưa sẵn sàng!
+2026-05-17 09:17:06 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-17 09:17:07 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-17 09:17:09 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 09:17:10 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-17 09:26:04 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 09:26:04 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: Bidder - Tiến hành ẩn nút của Seller.
+2026-05-17 09:26:13 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-17 09:26:15 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-17 09:26:15 [JavaFX Application Thread] ERROR c.a.c.networkclient.ClientSocket - Kết nối Server thất bại: Connection refused: connect
+2026-05-17 09:26:15 [JavaFX Application Thread] ERROR c.a.c.networkclient.ClientSocket - Socket chưa sẵn sàng!

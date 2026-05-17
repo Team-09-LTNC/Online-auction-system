@@ -2,6 +2,7 @@ package com.auction.client.controller.components;
 
 import com.auction.client.controller.MainController;
 import com.auction.client.controller.bidder.MainDashboardController;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -12,12 +13,46 @@ public class SidebarController {
 
     @FXML private Button btnDashboard, btnAuctions, btnMyAuctions, btnMyProducts, btnFollowed, btnPostAuction;
 
+    // 🔥 KHÔI PHỤC: Khai báo thêm biến nút Ví tiền kết nối với file FXML
+    @FXML private Button btnWallet;
+
     private List<Button> allButtons;
 
     @FXML
     public void initialize() {
-        // Gom các nút vào list để quản lý class cho nhàn
-        allButtons = List.of(btnDashboard, btnAuctions, btnMyAuctions, btnMyProducts, btnFollowed);
+        // 🔥 KHÔI PHỤC: Gom thêm cả btnWallet vào list để tự động quản lý class active/inactive cho nhàn
+        allButtons = List.of(btnDashboard, btnAuctions, btnMyAuctions, btnMyProducts, btnFollowed, btnWallet);
+
+        // 🔥 [BỔ SUNG] PHÂN QUYỀN REALTIME KHI KHỞI TẠO SIDEBAR
+        Platform.runLater(() -> {
+            try {
+                // Lấy vai trò chuẩn từ biến static bên LoginController lúc nãy anh em mình vừa gài
+                if (com.auction.client.controller.auth.LoginController.roleComboBoxStatic != null) {
+                    String currentRole = com.auction.client.controller.auth.LoginController.roleComboBoxStatic.getValue();
+
+                    if (currentRole != null && currentRole.contains("Seller")) {
+                        org.slf4j.LoggerFactory.getLogger(getClass()).info("[Sidebar] Vai trò: Seller - Tiến hành thu gọn menu Bidder.");
+
+                        // Ẩn sạch các tính năng không liên quan đến người bán (setManaged giúp dồn dòng menu khít rịt)
+                        if (btnDashboard != null) { btnDashboard.setVisible(false); btnDashboard.setManaged(false); }
+                        if (btnAuctions != null) { btnAuctions.setVisible(false); btnAuctions.setManaged(false); }
+                        if (btnMyAuctions != null) { btnMyAuctions.setVisible(false); btnMyAuctions.setManaged(false); }
+                        if (btnFollowed != null) { btnFollowed.setVisible(false); btnFollowed.setManaged(false); }
+
+                        // Ép ruột mặc định bên phải nhảy thẳng vào trang quản lý sản phẩm của người bán
+                        MainController.instance.setCenterContent("/fxml/seller/MyProducts.fxml");
+                    } else {
+                        org.slf4j.LoggerFactory.getLogger(getClass()).info("[Sidebar] Vai trò: Bidder - Tiến hành ẩn nút của Seller.");
+
+                        // Người đi mua thì không được quyền nhìn thấy nút đăng sản phẩm và nút quản lý đồ bán
+                        if (btnPostAuction != null) { btnPostAuction.setVisible(false); btnPostAuction.setManaged(false); }
+                        if (btnMyProducts != null) { btnMyProducts.setVisible(false); btnMyProducts.setManaged(false); }
+                    }
+                }
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(getClass()).warn("Chưa lấy được vai trò người dùng (Có thể do chạy dev thô): " + e.getMessage());
+            }
+        });
     }
 
     // Hàm lõi: Chuyển class "nav-button-active" sang nút được bấm
@@ -135,5 +170,18 @@ public class SidebarController {
         } catch (java.io.IOException e) {
             org.slf4j.LoggerFactory.getLogger(getClass()).error("Lỗi khi chuyển hướng giao diện đăng xuất: {}", e.getMessage());
         }
+    }
+
+    @FXML
+    private void handleOpenWallet(ActionEvent event) {
+        // Bấm nút Ví tiền thì xóa màu active các nút cũ và bật giao diện Ví lên ruột phải
+        setButtonActive((Button) event.getSource());
+        MainController.instance.setCenterContent("/fxml/components/Wallet.fxml");
+    }
+
+    @FXML
+    private void handleOpenChat(ActionEvent event) {
+        setButtonActive((Button) event.getSource());
+        MainController.instance.setCenterContent("/fxml/components/Chat.fxml");
     }
 }

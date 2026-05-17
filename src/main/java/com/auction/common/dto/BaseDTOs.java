@@ -59,27 +59,5 @@ public class BaseDTOs {
         public String getErrorCode() { return errorCode; }
     }
 
-    // =========================================================================
-    //  CÁC LỚP ĐỰNG DỮ LIỆU ĐẨY THỜI GIAN THỰC (REALTIME PUSH)
-    // =========================================================================
-    public static class AuctionBidUpdatePush {
-        private double newHighestBid;
-        private BidDetail latestBid;
 
-        public double getNewHighestBid() { return newHighestBid; }
-        public BidDetail getLatestBid() { return latestBid; }
-    }
-
-    public static class BidDetail {
-        private String bidderName;
-        public String getBidderName() { return bidderName; }
-    }
-
-    public static class AuctionResultPush {
-        private String winnerName;
-        private double finalPrice;
-
-        public String getWinnerName() { return winnerName; }
-        public double getFinalPrice() { return finalPrice; }
-    }
 }
