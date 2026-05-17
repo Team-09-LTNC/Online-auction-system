@@ -281,3 +281,582 @@ java.lang.RuntimeException: CRITICAL: Không tìm thấy file application.proper
 2026-05-17 20:29:54 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
 2026-05-17 20:29:54 [JavaFX Application Thread] ERROR c.a.c.networkclient.ClientSocket - Kết nối Server thất bại: Connection refused: connect
 2026-05-17 20:29:54 [JavaFX Application Thread] ERROR c.a.c.networkclient.ClientSocket - Socket chưa sẵn sàng!
+2026-05-17 20:36:14 [main] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 20:36:14 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 20:36:17 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@455b6df1
+2026-05-17 20:36:17 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 20:36:17 [main] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 20:36:22 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 20:36:22 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 20:36:22 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 20:36:50 [main] INFO  c.auction.server.ServerApplication - Đã nạp cấu hình cổng từ application.properties: 8080
+2026-05-17 20:36:50 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-17 20:36:50 [main] INFO  c.auction.server.ServerApplication -    HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   
+2026-05-17 20:36:50 [main] INFO  c.auction.server.ServerApplication -    Đang lắng nghe tại cổng: 8080                  
+2026-05-17 20:36:50 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-17 20:36:50 [main] INFO  c.a.s.networkserver.ServerManager - Server đã mở thành công và đang lắng nghe tại cổng: 8080
+2026-05-17 20:38:47 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-17 20:38:47 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-17 20:38:47 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-17 20:38:47 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang","password":"123456","fullName":"phạm việt hoàng","role":"Bidder","type":"AUTH_REGISTER","requestId":"6b4a4672-96a0-4fd3-a9a4-3e0c4374e82d"}
+2026-05-17 20:38:47 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang","password":"123456","fullName":"phạm việt hoàng","role":"Bidder","type":"AUTH_REGISTER","requestId":"6b4a4672-96a0-4fd3-a9a4-3e0c4374e82d"}
+2026-05-17 20:38:47 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 20:38:47 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 20:38:49 [pool-1-thread-1] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@5127a391
+2026-05-17 20:38:49 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 20:38:49 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 20:39:09 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang","password":"123456","type":"AUTH_LOGIN","requestId":"58ab9ee2-b1b4-472f-8578-4c43806817dc"}
+2026-05-17 20:39:09 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang","password":"123456","type":"AUTH_LOGIN","requestId":"58ab9ee2-b1b4-472f-8578-4c43806817dc"}
+2026-05-17 20:39:09 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 20:39:09 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: Bidder - Tiến hành ẩn nút của Seller.
+2026-05-17 20:42:05 [pool-1-thread-1] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-17 20:42:05 [pool-1-thread-1] INFO  c.a.s.networkserver.ClientHandler - Người dùng hoang đã thoát hệ thống.
+2026-05-17 20:42:14 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 20:42:14 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 20:42:14 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 20:42:49 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 20:42:49 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: Bidder - Tiến hành ẩn nút của Seller.
+2026-05-17 20:44:01 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 20:44:01 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: Bidder - Tiến hành ẩn nút của Seller.
+2026-05-17 20:44:03 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - Người dùng bấm nút Đăng xuất hệ thống.
+2026-05-17 20:44:15 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 20:44:16 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: Bidder - Tiến hành ẩn nút của Seller.
+2026-05-17 20:48:40 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 20:48:41 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: Bidder - Tiến hành ẩn nút của Seller.
+2026-05-17 20:51:05 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 20:51:05 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: Bidder - Tiến hành ẩn nút của Seller.
+2026-05-17 20:57:05 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 20:57:05 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 20:57:05 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: Bidder - Tiến hành ẩn nút của Seller.
+2026-05-17 21:03:52 [main] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 21:03:52 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 21:03:54 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@41ab013
+2026-05-17 21:03:54 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 21:03:54 [main] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 21:03:57 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 21:03:58 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 21:03:58 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 21:04:14 [main] INFO  c.auction.server.ServerApplication - Đã nạp cấu hình cổng từ application.properties: 8080
+2026-05-17 21:04:14 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-17 21:04:14 [main] INFO  c.auction.server.ServerApplication -    HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   
+2026-05-17 21:04:14 [main] INFO  c.auction.server.ServerApplication -    Đang lắng nghe tại cổng: 8080                  
+2026-05-17 21:04:14 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-17 21:04:14 [main] INFO  c.a.s.networkserver.ServerManager - Server đã mở thành công và đang lắng nghe tại cổng: 8080
+2026-05-17 21:04:44 [main] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 21:04:44 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 21:04:46 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@41ab013
+2026-05-17 21:04:46 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 21:04:46 [main] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 21:04:48 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 21:04:49 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 21:04:49 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 21:05:27 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-17 21:05:27 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-17 21:05:27 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-17 21:05:27 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang","password":"123456","type":"AUTH_LOGIN","requestId":"ad97f2ea-2bcf-4dd7-9829-0eb8055b0dc6"}
+2026-05-17 21:05:27 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang","password":"123456","type":"AUTH_LOGIN","requestId":"ad97f2ea-2bcf-4dd7-9829-0eb8055b0dc6"}
+2026-05-17 21:05:27 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 21:05:27 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 21:05:29 [pool-1-thread-1] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@5c0c42ee
+2026-05-17 21:05:29 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 21:05:29 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 21:05:29 [Thread-3] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback đăng ký: ERROR_RESPONSE
+2026-05-17 21:06:03 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang","password":"123456","fullName":"pham viet hoang","role":"Bidder","type":"AUTH_REGISTER","requestId":"f937780b-0440-4576-9c8f-f57903020a3f"}
+2026-05-17 21:06:03 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang","password":"123456","fullName":"pham viet hoang","role":"Bidder","type":"AUTH_REGISTER","requestId":"f937780b-0440-4576-9c8f-f57903020a3f"}
+2026-05-17 21:06:13 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"91e69e05-f347-4d23-8bca-a5f4e020c355"}
+2026-05-17 21:06:13 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"91e69e05-f347-4d23-8bca-a5f4e020c355"}
+2026-05-17 21:06:13 [Thread-3] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback đăng ký: ERROR_RESPONSE
+2026-05-17 21:08:55 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"ad5f64b3-2bb2-4245-ae4c-0efccdeafab1"}
+2026-05-17 21:08:55 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"ad5f64b3-2bb2-4245-ae4c-0efccdeafab1"}
+2026-05-17 21:08:56 [Thread-3] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback đăng ký: ERROR_RESPONSE
+2026-05-17 21:08:56 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"eed15398-d157-4068-9aae-026be9ec3969"}
+2026-05-17 21:08:56 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"eed15398-d157-4068-9aae-026be9ec3969"}
+2026-05-17 21:08:56 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"82ad9e83-779d-4c5e-a904-a45c856f68a2"}
+2026-05-17 21:08:56 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"82ad9e83-779d-4c5e-a904-a45c856f68a2"}
+2026-05-17 21:08:56 [Thread-3] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback đăng ký: ERROR_RESPONSE
+2026-05-17 21:08:56 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"b1bdeb12-a4d9-4745-b3e0-45568ec9651c"}
+2026-05-17 21:08:56 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"b1bdeb12-a4d9-4745-b3e0-45568ec9651c"}
+2026-05-17 21:08:56 [Thread-3] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback đăng ký: ERROR_RESPONSE
+2026-05-17 21:08:56 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"698010f3-9aa4-47d6-874e-3e84b47b2ca1"}
+2026-05-17 21:08:56 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"698010f3-9aa4-47d6-874e-3e84b47b2ca1"}
+2026-05-17 21:08:56 [Thread-3] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback đăng ký: ERROR_RESPONSE
+2026-05-17 21:08:57 [Thread-3] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback đăng ký: ERROR_RESPONSE
+2026-05-17 21:08:57 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"d843d0e3-5db4-4888-80d2-8904ff331bc8"}
+2026-05-17 21:08:57 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"d843d0e3-5db4-4888-80d2-8904ff331bc8"}
+2026-05-17 21:08:57 [Thread-3] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback đăng ký: ERROR_RESPONSE
+2026-05-17 21:09:53 [main] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 21:09:53 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 21:09:55 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@455b6df1
+2026-05-17 21:09:55 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 21:09:55 [main] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 21:09:58 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 21:09:59 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 21:09:59 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 21:10:13 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"54cfea8b-186e-43cc-9ceb-8c17d1ec30e3"}
+2026-05-17 21:10:13 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"54cfea8b-186e-43cc-9ceb-8c17d1ec30e3"}
+2026-05-17 21:10:13 [Thread-3] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback đăng ký: ERROR_RESPONSE
+2026-05-17 21:11:46 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang","password":"123456","fullName":"pham viet hoang","role":"Bidder","type":"AUTH_REGISTER","requestId":"ae5a7f5c-da9d-438c-b33e-bb93c70b47b2"}
+2026-05-17 21:11:46 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang","password":"123456","fullName":"pham viet hoang","role":"Bidder","type":"AUTH_REGISTER","requestId":"ae5a7f5c-da9d-438c-b33e-bb93c70b47b2"}
+2026-05-17 21:11:58 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang","password":"123456","type":"AUTH_LOGIN","requestId":"12905308-6dda-4d14-9ab8-0226d77351bb"}
+2026-05-17 21:11:58 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang","password":"123456","type":"AUTH_LOGIN","requestId":"12905308-6dda-4d14-9ab8-0226d77351bb"}
+2026-05-17 21:11:59 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 21:11:59 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 21:11:59 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: Bidder - Tiến hành ẩn nút của Seller.
+2026-05-17 21:14:38 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - Người dùng bấm nút Đăng xuất hệ thống.
+2026-05-17 21:16:07 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"6e6b7c51-6bf8-458b-8e88-097683f50a5a"}
+2026-05-17 21:16:07 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"6e6b7c51-6bf8-458b-8e88-097683f50a5a"}
+2026-05-17 21:16:07 [Thread-3] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback đăng ký: ERROR_RESPONSE
+2026-05-17 21:18:03 [pool-1-thread-1] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-17 21:18:03 [pool-1-thread-1] INFO  c.a.s.networkserver.ClientHandler - Người dùng hoang đã thoát hệ thống.
+2026-05-17 21:18:05 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 21:18:05 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 21:18:05 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 21:47:23 [main] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 21:47:23 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 21:47:25 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@455b6df1
+2026-05-17 21:47:25 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 21:47:25 [main] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 21:47:28 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 21:47:29 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 21:47:29 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 21:47:48 [main] INFO  c.auction.server.ServerApplication - Đã nạp cấu hình cổng từ application.properties: 8080
+2026-05-17 21:47:48 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-17 21:47:48 [main] INFO  c.auction.server.ServerApplication -    HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   
+2026-05-17 21:47:48 [main] INFO  c.auction.server.ServerApplication -    Đang lắng nghe tại cổng: 8080                  
+2026-05-17 21:47:48 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-17 21:47:48 [main] INFO  c.a.s.networkserver.ServerManager - Server đã mở thành công và đang lắng nghe tại cổng: 8080
+2026-05-17 21:48:00 [main] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 21:48:00 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 21:48:02 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@455b6df1
+2026-05-17 21:48:02 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 21:48:02 [main] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 21:48:05 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 21:48:05 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 21:48:05 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 21:48:12 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-17 21:48:12 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-17 21:48:12 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-17 21:48:12 [Thread-3] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
+2026-05-17 21:48:27 [main] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 21:48:27 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 21:48:30 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@41ab013
+2026-05-17 21:48:30 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 21:48:30 [main] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 21:48:33 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 21:48:34 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 21:48:34 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 21:48:55 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang","password":"123456","type":"AUTH_LOGIN","requestId":"d0814deb-2e9c-4823-a53d-52211dfcc94d"}
+2026-05-17 21:48:55 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang","password":"123456","type":"AUTH_LOGIN","requestId":"d0814deb-2e9c-4823-a53d-52211dfcc94d"}
+2026-05-17 21:48:55 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 21:48:55 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 21:48:58 [pool-1-thread-1] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@476a3ab1
+2026-05-17 21:48:58 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 21:48:58 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 21:48:58 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback đăng ký: ERROR_RESPONSE
+2026-05-17 21:49:04 [pool-1-thread-1] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-17 21:49:07 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 21:49:07 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 21:49:07 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 21:50:44 [main] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 21:50:44 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 21:50:46 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@41ab013
+2026-05-17 21:50:46 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 21:50:46 [main] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 21:50:48 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 21:50:49 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 21:50:49 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 21:52:03 [main] INFO  c.auction.server.ServerApplication - Đã nạp cấu hình cổng từ application.properties: 8080
+2026-05-17 21:52:03 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-17 21:52:03 [main] INFO  c.auction.server.ServerApplication -    HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   
+2026-05-17 21:52:03 [main] INFO  c.auction.server.ServerApplication -    Đang lắng nghe tại cổng: 8080                  
+2026-05-17 21:52:03 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-17 21:52:03 [main] INFO  c.a.s.networkserver.ServerManager - Server đã mở thành công và đang lắng nghe tại cổng: 8080
+2026-05-17 21:52:13 [main] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 21:52:13 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 21:52:15 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@455b6df1
+2026-05-17 21:52:15 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 21:52:15 [main] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 21:52:18 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 21:52:19 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 21:52:19 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 21:52:25 [main] INFO  c.auction.server.ServerApplication - Đã nạp cấu hình cổng từ application.properties: 8080
+2026-05-17 21:52:25 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-17 21:52:25 [main] INFO  c.auction.server.ServerApplication -    HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   
+2026-05-17 21:52:25 [main] INFO  c.auction.server.ServerApplication -    Đang lắng nghe tại cổng: 8080                  
+2026-05-17 21:52:25 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-17 21:52:25 [main] INFO  c.a.s.networkserver.ServerManager - Server đã mở thành công và đang lắng nghe tại cổng: 8080
+2026-05-17 21:52:33 [main] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 21:52:33 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 21:52:36 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@41ab013
+2026-05-17 21:52:36 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 21:52:36 [main] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 21:52:38 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 21:52:38 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 21:52:38 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 21:52:48 [main] INFO  c.auction.server.ServerApplication - Đã nạp cấu hình cổng từ application.properties: 8080
+2026-05-17 21:52:48 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-17 21:52:48 [main] INFO  c.auction.server.ServerApplication -    HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   
+2026-05-17 21:52:48 [main] INFO  c.auction.server.ServerApplication -    Đang lắng nghe tại cổng: 8080                  
+2026-05-17 21:52:48 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-17 21:52:48 [main] INFO  c.a.s.networkserver.ServerManager - Server đã mở thành công và đang lắng nghe tại cổng: 8080
+2026-05-17 21:53:01 [main] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 21:53:01 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 21:53:03 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3f67593e
+2026-05-17 21:53:03 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 21:53:03 [main] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 21:53:05 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 21:53:06 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 21:53:06 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 21:53:16 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-17 21:53:16 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-17 21:53:16 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-17 21:53:16 [Thread-3] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
+2026-05-17 21:55:23 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang","password":"123456","type":"AUTH_LOGIN","requestId":"59333c1d-a626-40c2-aea2-3575d5dc81f1"}
+2026-05-17 21:55:23 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang","password":"123456","type":"AUTH_LOGIN","requestId":"59333c1d-a626-40c2-aea2-3575d5dc81f1"}
+2026-05-17 21:55:23 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-17 21:55:23 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-17 21:55:25 [pool-1-thread-1] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7fc291fe
+2026-05-17 21:55:25 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-17 21:55:25 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-17 21:55:25 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback đăng ký: ERROR_RESPONSE
+2026-05-17 22:04:36 [pool-1-thread-1] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-17 22:04:40 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-17 22:04:40 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-17 22:04:40 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-17 22:04:40 [Thread-3] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
+2026-05-17 22:04:48 [JavaFX Application Thread] ERROR c.a.c.c.auth.LoginController - Lỗi chuyển màn hình: 
+javafx.fxml.LoadException: 
+/C:/Users/Viet%20Hoang/Documents/GitHub/Online-auction-system/target/classes/fxml/components/Sidebar.fxml
+/C:/Users/Viet%20Hoang/Documents/GitHub/Online-auction-system/target/classes/fxml/bidder/MainLayout.fxml:14
+
+	at javafx.fxml.FXMLLoader.constructLoadException(FXMLLoader.java:2722)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:2692)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:2563)
+	at javafx.fxml.FXMLLoader$IncludeElement.constructValue(FXMLLoader.java:1155)
+	at javafx.fxml.FXMLLoader$ValueElement.processStartElement(FXMLLoader.java:759)
+	at javafx.fxml.FXMLLoader.processStartElement(FXMLLoader.java:2853)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:2649)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:2563)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:3376)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:3332)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:3300)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:3272)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:3248)
+	at javafx.fxml.FXMLLoader.load(FXMLLoader.java:3241)
+	at com.auction.client.controller.auth.LoginController.switchScene(LoginController.java:154)
+	at com.auction.client.controller.auth.LoginController.onBackToHomeClick(LoginController.java:136)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at com.sun.javafx.reflect.Trampoline.invoke(MethodUtil.java:72)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at com.sun.javafx.reflect.MethodUtil.invoke(MethodUtil.java:270)
+	at com.sun.javafx.fxml.MethodHelper.invoke(MethodHelper.java:84)
+	at javafx.fxml.FXMLLoader$MethodHandler.invoke(FXMLLoader.java:1853)
+	at javafx.fxml.FXMLLoader$ControllerMethodEventHandler.handle(FXMLLoader.java:1726)
+	at com.sun.javafx.event.CompositeEventHandler.dispatchBubblingEvent(CompositeEventHandler.java:86)
+	at com.sun.javafx.event.EventHandlerManager.dispatchBubblingEvent(EventHandlerManager.java:232)
+	at com.sun.javafx.event.EventHandlerManager.dispatchBubblingEvent(EventHandlerManager.java:189)
+	at com.sun.javafx.event.CompositeEventDispatcher.dispatchBubblingEvent(CompositeEventDispatcher.java:59)
+	at com.sun.javafx.event.BasicEventDispatcher.dispatchEvent(BasicEventDispatcher.java:58)
+	at com.sun.javafx.event.EventDispatchChainImpl.dispatchEvent(EventDispatchChainImpl.java:114)
+	at com.sun.javafx.event.BasicEventDispatcher.dispatchEvent(BasicEventDispatcher.java:56)
+	at com.sun.javafx.event.EventDispatchChainImpl.dispatchEvent(EventDispatchChainImpl.java:114)
+	at com.sun.javafx.event.BasicEventDispatcher.dispatchEvent(BasicEventDispatcher.java:56)
+	at com.sun.javafx.event.EventDispatchChainImpl.dispatchEvent(EventDispatchChainImpl.java:114)
+	at com.sun.javafx.event.EventUtil.fireEventImpl(EventUtil.java:74)
+	at com.sun.javafx.event.EventUtil.fireEvent(EventUtil.java:49)
+	at javafx.event.Event.fireEvent(Event.java:198)
+	at javafx.scene.Node.fireEvent(Node.java:8875)
+	at javafx.scene.control.Button.fire(Button.java:203)
+	at com.sun.javafx.scene.control.behavior.ButtonBehavior.mouseReleased(ButtonBehavior.java:207)
+	at com.sun.javafx.scene.control.inputmap.InputMap.handle(InputMap.java:274)
+	at com.sun.javafx.event.CompositeEventHandler$NormalEventHandlerRecord.handleBubblingEvent(CompositeEventHandler.java:247)
+	at com.sun.javafx.event.CompositeEventHandler.dispatchBubblingEvent(CompositeEventHandler.java:80)
+	at com.sun.javafx.event.EventHandlerManager.dispatchBubblingEvent(EventHandlerManager.java:232)
+	at com.sun.javafx.event.EventHandlerManager.dispatchBubblingEvent(EventHandlerManager.java:189)
+	at com.sun.javafx.event.CompositeEventDispatcher.dispatchBubblingEvent(CompositeEventDispatcher.java:59)
+	at com.sun.javafx.event.BasicEventDispatcher.dispatchEvent(BasicEventDispatcher.java:58)
+	at com.sun.javafx.event.EventDispatchChainImpl.dispatchEvent(EventDispatchChainImpl.java:114)
+	at com.sun.javafx.event.BasicEventDispatcher.dispatchEvent(BasicEventDispatcher.java:56)
+	at com.sun.javafx.event.EventDispatchChainImpl.dispatchEvent(EventDispatchChainImpl.java:114)
+	at com.sun.javafx.event.BasicEventDispatcher.dispatchEvent(BasicEventDispatcher.java:56)
+	at com.sun.javafx.event.EventDispatchChainImpl.dispatchEvent(EventDispatchChainImpl.java:114)
+	at com.sun.javafx.event.EventUtil.fireEventImpl(EventUtil.java:74)
+	at com.sun.javafx.event.EventUtil.fireEvent(EventUtil.java:54)
+	at javafx.event.Event.fireEvent(Event.java:198)
+	at javafx.scene.Scene$MouseHandler.process(Scene.java:3984)
+	at javafx.scene.Scene.processMouseEvent(Scene.java:1890)
+	at javafx.scene.Scene$ScenePeerListener.mouseEvent(Scene.java:2708)
+	at com.sun.javafx.tk.quantum.GlassViewEventHandler$MouseEventNotification.run(GlassViewEventHandler.java:411)
+	at com.sun.javafx.tk.quantum.GlassViewEventHandler$MouseEventNotification.run(GlassViewEventHandler.java:301)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:138)
+	at com.sun.javafx.tk.quantum.GlassViewEventHandler.lambda$handleMouseEvent$2(GlassViewEventHandler.java:450)
+	at com.sun.javafx.tk.quantum.QuantumToolkit.runWithoutRenderLock(QuantumToolkit.java:424)
+	at com.sun.javafx.tk.quantum.GlassViewEventHandler.handleMouseEvent(GlassViewEventHandler.java:449)
+	at com.sun.glass.ui.View.handleMouseEvent(View.java:551)
+	at com.sun.glass.ui.View.notifyMouse(View.java:937)
+	at com.sun.glass.ui.win.WinApplication._runLoop(Native Method)
+	at com.sun.glass.ui.win.WinApplication.lambda$runLoop$3(WinApplication.java:185)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.lang.reflect.InvocationTargetException: null
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:116)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at com.sun.javafx.reflect.Trampoline.invoke(MethodUtil.java:72)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at com.sun.javafx.reflect.MethodUtil.invoke(MethodUtil.java:270)
+	at com.sun.javafx.fxml.MethodHelper.invoke(MethodHelper.java:84)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:2688)
+	... 68 common frames omitted
+Caused by: java.lang.NullPointerException: null
+	at java.base/java.util.Objects.requireNonNull(Objects.java:220)
+	at java.base/java.util.ImmutableCollections.listFromTrustedArray(ImmutableCollections.java:232)
+	at java.base/java.util.List.of(List.java:1053)
+	at com.auction.client.controller.components.SidebarController.initialize(SidebarController.java:30)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	... 75 common frames omitted
+2026-05-17 22:10:52 [pool-1-thread-2] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-17 22:10:56 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-17 22:10:56 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-17 22:10:56 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-17 22:10:56 [Thread-3] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
+2026-05-17 22:11:32 [pool-1-thread-3] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-17 22:11:35 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-17 22:11:35 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-17 22:11:35 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-17 22:11:35 [Thread-3] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
+2026-05-17 22:12:12 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang","password":"123456","fullName":"pham viet hoang","role":"Bidder","type":"AUTH_REGISTER","requestId":"1b855742-a9bb-4d53-92ae-9bfc4dc15ac8"}
+2026-05-17 22:12:12 [pool-1-thread-4] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang","password":"123456","fullName":"pham viet hoang","role":"Bidder","type":"AUTH_REGISTER","requestId":"1b855742-a9bb-4d53-92ae-9bfc4dc15ac8"}
+2026-05-17 22:12:13 [Thread-5] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
+2026-05-17 22:12:26 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"6bee9e18-b713-475c-be79-c3bc7f63538c"}
+2026-05-17 22:12:26 [pool-1-thread-4] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"6bee9e18-b713-475c-be79-c3bc7f63538c"}
+2026-05-17 22:12:26 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback đăng ký: ERROR_RESPONSE
+2026-05-17 22:12:35 [JavaFX Application Thread] ERROR c.a.c.c.auth.LoginController - Lỗi chuyển màn hình: 
+javafx.fxml.LoadException: 
+/C:/Users/Viet%20Hoang/Documents/GitHub/Online-auction-system/target/classes/fxml/components/Sidebar.fxml
+/C:/Users/Viet%20Hoang/Documents/GitHub/Online-auction-system/target/classes/fxml/bidder/MainLayout.fxml:14
+
+	at javafx.fxml.FXMLLoader.constructLoadException(FXMLLoader.java:2722)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:2692)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:2563)
+	at javafx.fxml.FXMLLoader$IncludeElement.constructValue(FXMLLoader.java:1155)
+	at javafx.fxml.FXMLLoader$ValueElement.processStartElement(FXMLLoader.java:759)
+	at javafx.fxml.FXMLLoader.processStartElement(FXMLLoader.java:2853)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:2649)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:2563)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:3376)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:3332)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:3300)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:3272)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:3248)
+	at javafx.fxml.FXMLLoader.load(FXMLLoader.java:3241)
+	at com.auction.client.controller.auth.LoginController.switchScene(LoginController.java:155)
+	at com.auction.client.controller.auth.LoginController.onBackToHomeClick(LoginController.java:137)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at com.sun.javafx.reflect.Trampoline.invoke(MethodUtil.java:72)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at com.sun.javafx.reflect.MethodUtil.invoke(MethodUtil.java:270)
+	at com.sun.javafx.fxml.MethodHelper.invoke(MethodHelper.java:84)
+	at javafx.fxml.FXMLLoader$MethodHandler.invoke(FXMLLoader.java:1853)
+	at javafx.fxml.FXMLLoader$ControllerMethodEventHandler.handle(FXMLLoader.java:1726)
+	at com.sun.javafx.event.CompositeEventHandler.dispatchBubblingEvent(CompositeEventHandler.java:86)
+	at com.sun.javafx.event.EventHandlerManager.dispatchBubblingEvent(EventHandlerManager.java:232)
+	at com.sun.javafx.event.EventHandlerManager.dispatchBubblingEvent(EventHandlerManager.java:189)
+	at com.sun.javafx.event.CompositeEventDispatcher.dispatchBubblingEvent(CompositeEventDispatcher.java:59)
+	at com.sun.javafx.event.BasicEventDispatcher.dispatchEvent(BasicEventDispatcher.java:58)
+	at com.sun.javafx.event.EventDispatchChainImpl.dispatchEvent(EventDispatchChainImpl.java:114)
+	at com.sun.javafx.event.BasicEventDispatcher.dispatchEvent(BasicEventDispatcher.java:56)
+	at com.sun.javafx.event.EventDispatchChainImpl.dispatchEvent(EventDispatchChainImpl.java:114)
+	at com.sun.javafx.event.BasicEventDispatcher.dispatchEvent(BasicEventDispatcher.java:56)
+	at com.sun.javafx.event.EventDispatchChainImpl.dispatchEvent(EventDispatchChainImpl.java:114)
+	at com.sun.javafx.event.EventUtil.fireEventImpl(EventUtil.java:74)
+	at com.sun.javafx.event.EventUtil.fireEvent(EventUtil.java:49)
+	at javafx.event.Event.fireEvent(Event.java:198)
+	at javafx.scene.Node.fireEvent(Node.java:8875)
+	at javafx.scene.control.Button.fire(Button.java:203)
+	at com.sun.javafx.scene.control.behavior.ButtonBehavior.mouseReleased(ButtonBehavior.java:207)
+	at com.sun.javafx.scene.control.inputmap.InputMap.handle(InputMap.java:274)
+	at com.sun.javafx.event.CompositeEventHandler$NormalEventHandlerRecord.handleBubblingEvent(CompositeEventHandler.java:247)
+	at com.sun.javafx.event.CompositeEventHandler.dispatchBubblingEvent(CompositeEventHandler.java:80)
+	at com.sun.javafx.event.EventHandlerManager.dispatchBubblingEvent(EventHandlerManager.java:232)
+	at com.sun.javafx.event.EventHandlerManager.dispatchBubblingEvent(EventHandlerManager.java:189)
+	at com.sun.javafx.event.CompositeEventDispatcher.dispatchBubblingEvent(CompositeEventDispatcher.java:59)
+	at com.sun.javafx.event.BasicEventDispatcher.dispatchEvent(BasicEventDispatcher.java:58)
+	at com.sun.javafx.event.EventDispatchChainImpl.dispatchEvent(EventDispatchChainImpl.java:114)
+	at com.sun.javafx.event.BasicEventDispatcher.dispatchEvent(BasicEventDispatcher.java:56)
+	at com.sun.javafx.event.EventDispatchChainImpl.dispatchEvent(EventDispatchChainImpl.java:114)
+	at com.sun.javafx.event.BasicEventDispatcher.dispatchEvent(BasicEventDispatcher.java:56)
+	at com.sun.javafx.event.EventDispatchChainImpl.dispatchEvent(EventDispatchChainImpl.java:114)
+	at com.sun.javafx.event.EventUtil.fireEventImpl(EventUtil.java:74)
+	at com.sun.javafx.event.EventUtil.fireEvent(EventUtil.java:54)
+	at javafx.event.Event.fireEvent(Event.java:198)
+	at javafx.scene.Scene$MouseHandler.process(Scene.java:3984)
+	at javafx.scene.Scene.processMouseEvent(Scene.java:1890)
+	at javafx.scene.Scene$ScenePeerListener.mouseEvent(Scene.java:2708)
+	at com.sun.javafx.tk.quantum.GlassViewEventHandler$MouseEventNotification.run(GlassViewEventHandler.java:411)
+	at com.sun.javafx.tk.quantum.GlassViewEventHandler$MouseEventNotification.run(GlassViewEventHandler.java:301)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:138)
+	at com.sun.javafx.tk.quantum.GlassViewEventHandler.lambda$handleMouseEvent$2(GlassViewEventHandler.java:450)
+	at com.sun.javafx.tk.quantum.QuantumToolkit.runWithoutRenderLock(QuantumToolkit.java:424)
+	at com.sun.javafx.tk.quantum.GlassViewEventHandler.handleMouseEvent(GlassViewEventHandler.java:449)
+	at com.sun.glass.ui.View.handleMouseEvent(View.java:551)
+	at com.sun.glass.ui.View.notifyMouse(View.java:937)
+	at com.sun.glass.ui.win.WinApplication._runLoop(Native Method)
+	at com.sun.glass.ui.win.WinApplication.lambda$runLoop$3(WinApplication.java:185)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.lang.reflect.InvocationTargetException: null
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:116)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at com.sun.javafx.reflect.Trampoline.invoke(MethodUtil.java:72)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at com.sun.javafx.reflect.MethodUtil.invoke(MethodUtil.java:270)
+	at com.sun.javafx.fxml.MethodHelper.invoke(MethodHelper.java:84)
+	at javafx.fxml.FXMLLoader.loadImpl(FXMLLoader.java:2688)
+	... 68 common frames omitted
+Caused by: java.lang.NullPointerException: null
+	at java.base/java.util.Objects.requireNonNull(Objects.java:220)
+	at java.base/java.util.ImmutableCollections.listFromTrustedArray(ImmutableCollections.java:232)
+	at java.base/java.util.List.of(List.java:1053)
+	at com.auction.client.controller.components.SidebarController.initialize(SidebarController.java:30)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	... 75 common frames omitted
+2026-05-17 22:18:14 [pool-1-thread-4] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-17 22:18:18 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-17 22:18:18 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-17 22:18:18 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-17 22:18:18 [Thread-3] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
+2026-05-17 22:18:20 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:18:20 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:18:20 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Đang tiến hành áp dụng phân quyền cho vai trò: 
+2026-05-17 22:18:20 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: BIDDER hoặc Chưa Đăng nhập - Tiến hành ẩn nút của Seller.
+2026-05-17 22:18:25 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - Người dùng bấm nút Đăng xuất hệ thống.
+2026-05-17 22:18:25 [Thread-5] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
+2026-05-17 22:18:38 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang","password":"123456","type":"AUTH_LOGIN","requestId":"d26a593d-6905-456f-a116-4fae9405b61a"}
+2026-05-17 22:18:38 [pool-1-thread-5] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang","password":"123456","type":"AUTH_LOGIN","requestId":"d26a593d-6905-456f-a116-4fae9405b61a"}
+2026-05-17 22:18:38 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:18:38 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:18:38 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Đang tiến hành áp dụng phân quyền cho vai trò: BIDDER
+2026-05-17 22:18:38 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: BIDDER hoặc Chưa Đăng nhập - Tiến hành ẩn nút của Seller.
+2026-05-17 22:18:38 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Đang tiến hành áp dụng phân quyền cho vai trò: BIDDER
+2026-05-17 22:18:38 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: BIDDER hoặc Chưa Đăng nhập - Tiến hành ẩn nút của Seller.
+2026-05-17 22:20:36 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-17 22:20:38 [JavaFX Application Thread] INFO  c.a.c.c.c.ProductCardController - Người dùng muốn vào phòng đấu giá sản phẩm: Đồng hồ Rolex Submariner 0
+2026-05-17 22:20:43 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-17 22:20:48 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-17 22:20:55 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:20:55 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:25:00 [JavaFX Application Thread] INFO  c.a.c.c.components.ChatController - [Chat] Đã khởi tạo phòng Chat cho phiên đấu giá ID: 1
+2026-05-17 22:25:00 [JavaFX Application Thread] INFO  c.a.c.c.components.ChatController - [Chat] Đã ẩn thanh chọn mục tiêu gửi tin nhắn đối với vai trò Người mua (BIDDER).
+2026-05-17 22:25:07 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"SEND_CHAT_MESSAGE","auctionId":1,"message":"alo","chatTarget":"ALL"}
+2026-05-17 22:25:07 [pool-1-thread-5] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"SEND_CHAT_MESSAGE","auctionId":1,"message":"alo","chatTarget":"ALL"}
+2026-05-17 22:25:21 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - Người dùng bấm nút Đăng xuất hệ thống.
+2026-05-17 22:25:21 [Thread-6] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
+2026-05-17 22:26:00 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"abcd","password":"123456","fullName":"pham văn a","role":"Seller","type":"AUTH_REGISTER","requestId":"000a4571-b5d4-431d-a6d6-c21f7c79439d"}
+2026-05-17 22:26:00 [pool-1-thread-5] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"abcd","password":"123456","fullName":"pham văn a","role":"Seller","type":"AUTH_REGISTER","requestId":"000a4571-b5d4-431d-a6d6-c21f7c79439d"}
+2026-05-17 22:26:01 [Thread-7] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
+2026-05-17 22:26:13 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"abcd","password":"123456","type":"AUTH_LOGIN","requestId":"3ecf3d48-bab9-4d89-a32c-b1e180727319"}
+2026-05-17 22:26:13 [pool-1-thread-5] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"abcd","password":"123456","type":"AUTH_LOGIN","requestId":"3ecf3d48-bab9-4d89-a32c-b1e180727319"}
+2026-05-17 22:26:13 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:26:13 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:26:13 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Đang tiến hành áp dụng phân quyền cho vai trò: SELLER
+2026-05-17 22:26:13 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: SELLER - Tiến hành thu gọn menu Bidder.
+2026-05-17 22:26:13 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-17 22:26:13 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Đang tiến hành áp dụng phân quyền cho vai trò: SELLER
+2026-05-17 22:26:13 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: SELLER - Tiến hành thu gọn menu Bidder.
+2026-05-17 22:26:13 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-17 22:26:17 [JavaFX Application Thread] INFO  c.a.c.c.components.ChatController - [Chat] Đã khởi tạo phòng Chat cho phiên đấu giá ID: 1
+2026-05-17 22:26:22 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"SEND_CHAT_MESSAGE","auctionId":1,"message":"alo","chatTarget":"ALL"}
+2026-05-17 22:26:22 [pool-1-thread-5] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"SEND_CHAT_MESSAGE","auctionId":1,"message":"alo","chatTarget":"ALL"}
+2026-05-17 22:35:09 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - Người dùng bấm nút Đăng xuất hệ thống.
+2026-05-17 22:35:09 [Thread-8] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
+2026-05-17 22:35:20 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"7841517d-e4fe-49e4-aac6-e9b0cbd1e723"}
+2026-05-17 22:35:20 [pool-1-thread-5] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang ","password":"123456","type":"AUTH_LOGIN","requestId":"7841517d-e4fe-49e4-aac6-e9b0cbd1e723"}
+2026-05-17 22:35:20 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback đăng ký: ERROR_RESPONSE
+2026-05-17 22:35:28 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"hoang","password":"123456","type":"AUTH_LOGIN","requestId":"8556654a-9964-4fce-a7df-e11fd7d2c8e9"}
+2026-05-17 22:35:28 [pool-1-thread-5] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"hoang","password":"123456","type":"AUTH_LOGIN","requestId":"8556654a-9964-4fce-a7df-e11fd7d2c8e9"}
+2026-05-17 22:35:28 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:28 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:35:28 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Đang tiến hành áp dụng phân quyền cho vai trò: BIDDER
+2026-05-17 22:35:28 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: BIDDER hoặc Chưa Đăng nhập - Tiến hành ẩn nút của Seller.
+2026-05-17 22:35:28 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Đang tiến hành áp dụng phân quyền cho vai trò: BIDDER
+2026-05-17 22:35:28 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: BIDDER hoặc Chưa Đăng nhập - Tiến hành ẩn nút của Seller.
+2026-05-17 22:35:38 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:38 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:35:39 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:39 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:35:41 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:41 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:35:42 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:42 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:35:43 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:43 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:35:44 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:44 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:35:45 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:45 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:35:46 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:46 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:35:47 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:47 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:35:47 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:47 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:35:47 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:47 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:35:49 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:49 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:35:49 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:49 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:35:50 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:35:50 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:36:07 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:36:07 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:36:08 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:36:08 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:36:09 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:36:09 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:36:10 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:36:10 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:36:12 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:36:12 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:36:13 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:36:13 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:36:15 [JavaFX Application Thread] INFO  c.a.c.c.components.ChatController - [Chat] Đã khởi tạo phòng Chat cho phiên đấu giá ID: 1
+2026-05-17 22:36:15 [JavaFX Application Thread] INFO  c.a.c.c.components.ChatController - [Chat] Đã ẩn thanh chọn mục tiêu gửi tin nhắn đối với vai trò Người mua (BIDDER).
+2026-05-17 22:36:16 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"GET_WALLET_BALANCE"}
+2026-05-17 22:36:16 [pool-1-thread-5] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"GET_WALLET_BALANCE"}
+2026-05-17 22:36:18 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-17 22:36:19 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-17 22:36:20 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:36:20 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:36:22 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-17 22:36:22 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-17 22:36:23 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"GET_WALLET_BALANCE"}
+2026-05-17 22:36:23 [pool-1-thread-5] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"GET_WALLET_BALANCE"}
+2026-05-17 22:36:25 [JavaFX Application Thread] INFO  c.a.c.c.components.ChatController - [Chat] Đã khởi tạo phòng Chat cho phiên đấu giá ID: 1
+2026-05-17 22:36:25 [JavaFX Application Thread] INFO  c.a.c.c.components.ChatController - [Chat] Đã ẩn thanh chọn mục tiêu gửi tin nhắn đối với vai trò Người mua (BIDDER).
+2026-05-17 22:36:27 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:36:27 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:44:35 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - Người dùng bấm nút Đăng xuất hệ thống.
+2026-05-17 22:44:35 [Thread-9] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
+2026-05-17 22:44:48 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"abcd","password":"123456","type":"AUTH_LOGIN","requestId":"5b604357-a573-4ec0-8e6b-e5739bdb183e"}
+2026-05-17 22:44:48 [pool-1-thread-5] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"abcd","password":"123456","type":"AUTH_LOGIN","requestId":"5b604357-a573-4ec0-8e6b-e5739bdb183e"}
+2026-05-17 22:44:48 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 22:44:48 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard.
+2026-05-17 22:44:48 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Đang tiến hành áp dụng phân quyền cho vai trò: SELLER
+2026-05-17 22:44:48 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: SELLER - Tiến hành thu gọn menu Bidder.
+2026-05-17 22:44:48 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-17 22:44:48 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Đang tiến hành áp dụng phân quyền cho vai trò: SELLER
+2026-05-17 22:44:48 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: SELLER - Tiến hành thu gọn menu Bidder.
+2026-05-17 22:44:48 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-17 22:44:49 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
+2026-05-17 22:44:52 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - Người dùng bấm nút Đăng xuất hệ thống.
+2026-05-17 22:44:52 [Thread-10] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
+2026-05-17 22:46:20 [pool-1-thread-5] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-17 22:46:20 [pool-1-thread-5] INFO  c.a.s.networkserver.ClientHandler - Người dùng abcd đã thoát hệ thống.
+2026-05-17 22:46:22 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-17 22:46:23 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-17 22:46:23 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
