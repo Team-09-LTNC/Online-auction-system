@@ -275,3 +275,9 @@ java.lang.RuntimeException: CRITICAL: Không tìm thấy file application.proper
 2026-05-17 09:26:15 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
 2026-05-17 09:26:15 [JavaFX Application Thread] ERROR c.a.c.networkclient.ClientSocket - Kết nối Server thất bại: Connection refused: connect
 2026-05-17 09:26:15 [JavaFX Application Thread] ERROR c.a.c.networkclient.ClientSocket - Socket chưa sẵn sàng!
+2026-05-17 20:07:23 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 20:07:23 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: Bidder - Tiến hành ẩn nút của Seller.
+2026-05-17 20:07:32 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
+2026-05-17 20:29:54 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-17 20:29:54 [JavaFX Application Thread] ERROR c.a.c.networkclient.ClientSocket - Kết nối Server thất bại: Connection refused: connect
+2026-05-17 20:29:54 [JavaFX Application Thread] ERROR c.a.c.networkclient.ClientSocket - Socket chưa sẵn sàng!

@@ -10,6 +10,8 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 
 import java.net.URL;
@@ -25,6 +27,9 @@ public class AuctionRoomController implements Initializable {
     // 🔥 BIẾN UI BỔ SUNG: Ô nhập mức giá tối đa cho Auto Bid và Nút kích hoạt
     @FXML private TextField txtMaxAutoBid;
     @FXML private Button btnEnableAutoBid;
+
+    // 🔥 BIẾN UI BỔ SUNG: ImageView nhận hiển thị ảnh sản phẩm từ URL
+    @FXML private ImageView imgProduct;
 
     private int totalSeconds = 900;
     private Timeline countdownTimeline;
@@ -60,6 +65,9 @@ public class AuctionRoomController implements Initializable {
                 }
             });
         }
+
+        // 🔥 DEMO LOAD ẢNH BAN ĐẦU (Tối ráp Socket sẽ truyền biến động url từ Server của Kiên trả về vào đây)
+        loadProductImage("");
     }
 
     private void startCountdown() {
@@ -137,7 +145,7 @@ public class AuctionRoomController implements Initializable {
     }
 
     // =========================================================================
-    // 🔥 [BỔ SUNG] CHỨC NĂNG TỰ ĐỘNG ĐẤU GIÁ (AUTO BIDDING)
+    // 🔥 CHỨC NĂNG TỰ ĐỘNG ĐẤU GIÁ (AUTO BIDDING)
     // =========================================================================
     @FXML
     private void handleEnableAutoBid() {
@@ -210,6 +218,36 @@ public class AuctionRoomController implements Initializable {
         // 🔥 ĐỒNG BỘ REALTIME: Bất kể ai đặt giá (hoặc hệ thống tự động Auto Bid của người khác kích nổ) trong 30s cuối,
         // toàn bộ các máy Client đang xem phòng này đều sẽ được tự động gia hạn thêm 1 phút đồng bộ cùng nhau!
         checkAndApplySnipingRule();
+    }
+
+    // =========================================================================
+    // 🔥LOGIC HIỂN THỊ ẢNH SẢN PHẨM TỪ ĐƯỜNG DẪN URL
+    // =========================================================================
+    public void loadProductImage(String urlString) {
+        if (imgProduct == null) return;
+
+        if (urlString == null || urlString.trim().isEmpty()) {
+            // Nếu không truyền URL, mặc định clear trống ImageView để lộ icon xe FXML nền bên dưới
+            imgProduct.setImage(null);
+            return;
+        }
+
+        try {
+            // Nạp ảnh qua luồng ngầm (backgroundLoading = true) để chống đơ lag giao diện Client
+            Image image = new Image(urlString, true);
+
+            // Gài Listener bẫy lỗi nếu link URL die hoặc sai định dạng file ảnh
+            image.exceptionProperty().addListener((obs, oldExc, newExc) -> {
+                if (newExc != null) {
+                    org.slf4j.LoggerFactory.getLogger(getClass()).error("[UI Error] Không thể nạp ảnh sản phẩm từ URL: {}", newExc.getMessage());
+                    Platform.runLater(() -> imgProduct.setImage(null)); // Xóa ảnh lỗi để quay về icon mặc định
+                }
+            });
+
+            imgProduct.setImage(image);
+        } catch (Exception e) {
+            imgProduct.setImage(null);
+        }
     }
 
     private void showAlert(String title, String content) {

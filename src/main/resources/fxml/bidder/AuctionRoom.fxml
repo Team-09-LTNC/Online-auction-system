@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
@@ -13,12 +14,18 @@
     </padding>
 
     <VBox spacing="15.0" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5);">
+
         <Label fx:id="lblProductName" text="Mercedes-Benz S450 2023" textFill="#3E2723">
             <font><Font name="System Bold" size="24.0" /></font>
         </Label>
 
-        <StackPane prefHeight="350.0" style="-fx-background-color: #F8F9FA; -fx-background-radius: 10;">
-            <Label text="🚗" style="-fx-font-size: 120;" />
+        <StackPane prefHeight="350.0" style="-fx-background-color: #F8F9FA; -fx-background-radius: 10; -fx-border-color: #EEEEEE; -fx-border-radius: 10;">
+            <children>
+                <Label text="🚗" style="-fx-font-size: 100; -fx-opacity: 0.2;" />
+
+                <ImageView fx:id="imgProduct" fitHeight="340.0" fitWidth="580.0"
+                           pickOnBounds="true" preserveRatio="true" style="-fx-background-radius: 8;" />
+            </children>
         </StackPane>
 
         <VBox spacing="10.0" VBox.vgrow="ALWAYS">
