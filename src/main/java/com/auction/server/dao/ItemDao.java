@@ -5,25 +5,50 @@ import com.auction.server.db.DatabaseConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
-// Nhiệm vụ: Quản lý thông tin các sản phẩm đấu giá (CRUD)
-
-// Các cột cần có trong Database: (bảng items)
-//  id (INT, Primary Key, Auto Increment): ID duy nhất của sản phẩm
-//  seller_id (INT): ID của người đăng bán (Liên kết với bảng users)
-//  name (VARCHAR): Tên sản phẩm
-//  description (TEXT): Mô tả chi tiết
-//  category (VARCHAR): Loại sản phẩm (ELECTRONICS, ART, VEHICLE)
-//  starting_price (BIGINT): Giá khởi điểm
-//  image_url (VARCHAR): Đường dẫn ảnh sản phẩm
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+/**
+ * ItemDao: Chịu trách nhiệm tương tác với bảng 'items' trong Database.
+ * Lớp này thực hiện các thao tác CRUD (Thêm, Đọc, Sửa, Xóa) và tìm kiếm sản phẩm.
+ */
 public class ItemDao {
+    private static final Logger logger = LoggerFactory.getLogger(ItemDao.class);
+    /**
+     * PHƯƠNG THỨC HỖ TRỢ (Helper Method):
+     * Chuyển đổi một dòng dữ liệu từ ResultSet (DB) thành đối tượng Item (Java).
+     */
+    private Item mapResultSetToItem(ResultSet rs) throws SQLException {
+        // Lấy loại sản phẩm để khởi tạo đúng lớp con
+        String loai = rs.getString("category").toUpperCase();
+        Item item;
+
+        // Factory logic: Dựa vào cột 'category' để tạo đối tượng tương ứng
+        switch (loai) {
+            case "ELECTRONICS": item = new Electronics(); break;
+            case "ART":         item = new Art(); break;
+            case "VEHICLE":     item = new Vehicle(); break;
+            case "OTHER":       item = new OtherItem(); break;
+            default:            return null; // Trả về null nếu loại không hợp lệ
+        }
+
+        // Đổ dữ liệu từ các cột trong Database vào các thuộc tính của đối tượng
+        item.setId(rs.getInt("id"));
+        item.setName(rs.getString("name"));
+        item.setDescription(rs.getString("description"));
+        item.setStartingPrice(rs.getLong("starting_price"));
+        item.setCategory(loai);
+        item.setImageUrl(rs.getString("image_url"));
+
+        return item;
+    }
 
     /**
-     * Thêm một sản phẩm mới vào hệ thống (thường dùng cho Seller)
+     * Lưu một sản phẩm mới vào cơ sở dữ liệu.
+     * Sử dụng PreparedStatement để ngăn chặn SQL Injection.
      */
     public boolean luuSanPham(Item item) {
         String sql = "INSERT INTO items (seller_id, name, description, category, starting_price, image_url) VALUES (?, ?, ?, ?, ?, ?)";
+        // Sử dụng try-with-resources để tự động đóng Connection và PreparedStatement
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -34,18 +59,15 @@ public class ItemDao {
             pstmt.setLong(5, item.getStartingPrice());
             pstmt.setString(6, item.getImageUrl());
 
-            return pstmt.executeUpdate() > 0;
+            return pstmt.executeUpdate() > 0; // Trả về true nếu thêm thành công ít nhất 1 dòng
         } catch (SQLException e) {
-            System.err.println("Lỗi luuSanPham: " + e.getMessage());
-            return false;
-        } catch (NumberFormatException e) {
-            System.err.println("Lỗi chuyển đổi sellerId: " + e.getMessage());
+            logger.error("Lỗi luuSanPham: ", e);
             return false;
         }
     }
 
     /**
-     * Lấy danh sách tất cả sản phẩm hiện có trong kho dữ liệu
+     * Lấy toàn bộ danh sách sản phẩm hiện có.
      */
     public List<Item> layTatCaSanPham() {
         List<Item> danhSach = new ArrayList<>();
@@ -56,37 +78,20 @@ public class ItemDao {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                String loai = rs.getString("category").toUpperCase();
-                Item item;
-
-                // Khởi tạo đúng lớp con dựa trên cột category (Tính đa hình)
-                switch (loai) {
-                    case "ELECTRONICS": item = new Electronics(); break;
-                    case "ART":         item = new Art(); break;
-                    case "VEHICLE":     item = new Vehicle(); break;
-                    case "OTHER":       item = new OtherItem(); break;
-                    default:            item = null; break;
-                }
-
+                // Gọi hàm mapResultSetToItem để chuyển dữ liệu dòng hiện tại thành đối tượng
+                Item item = mapResultSetToItem(rs);
                 if (item != null) {
-                    item.setId(rs.getInt("id"));
-                    item.setName(rs.getString("name"));
-                    item.setDescription(rs.getString("description"));
-                    item.setStartingPrice(rs.getLong("starting_price"));
-                    item.setCategory(loai);
-                    item.setImageUrl(rs.getString("image_url"));
-
                     danhSach.add(item);
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi layTatCaSanPham: " + e.getMessage());
+            logger.error("Lỗi layTatCaSanPham: ", e);
         }
         return danhSach;
     }
 
     /**
-     * Lấy thông tin chi tiết của một sản phẩm theo ID
+     * Tìm một sản phẩm cụ thể dựa trên mã ID.
      */
     public Item laySanPhamTheoId(int itemId) {
         String sql = "SELECT * FROM items WHERE id = ?";
@@ -96,46 +101,79 @@ public class ItemDao {
             pstmt.setInt(1, itemId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    String loai = rs.getString("category").toUpperCase();
-                    Item item;
-
-                    switch (loai) {
-                        case "ELECTRONICS": item = new Electronics(); break;
-                        case "ART":         item = new Art(); break;
-                        case "VEHICLE":     item = new Vehicle(); break;
-                        case "OTHER":       item = new OtherItem(); break;
-                        default:            item = null; break;
-                    }
-
-                    if (item != null) {
-                        item.setId(rs.getInt("id"));
-                        item.setName(rs.getString("name"));
-                        item.setDescription(rs.getString("description"));
-                        item.setStartingPrice(rs.getLong("starting_price"));
-                        item.setCategory(loai);
-                        item.setImageUrl(rs.getString("image_url"));
-                    }
-                    return item;
+                    return mapResultSetToItem(rs);
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi laySanPhamTheoId: " + e.getMessage());
+            logger.error("Lỗi laySanPhamTheoId: ", e);
         }
         return null;
     }
 
     /**
-     * Xóa sản phẩm khỏi danh sách ( dùng cho chức năng quản lý của Seller hoặc Admin)
+     * Tìm kiếm sản phẩm theo từ khóa (trong tên hoặc mô tả).
+     * Tương ứng với hành động PRODUCT_SEARCH trong ActionType.
+     */
+    public List<Item> timSanPhamTheoTukhoa(String keyword) {
+        List<Item> danhSach = new ArrayList<>();
+        // Sử dụng toán tử LIKE với ký tự % để tìm kiếm chuỗi con
+        String sql = "SELECT * FROM items WHERE name LIKE ? OR description LIKE ?";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // Cấu hình tham số tìm kiếm: %keyword%
+            String searchPattern = "%" + keyword + "%";
+            pstmt.setString(1, searchPattern);
+            pstmt.setString(2, searchPattern);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Item item = mapResultSetToItem(rs);
+                    if (item != null) {
+                        danhSach.add(item);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi timKiemSanPham: ", e);
+        }
+        return danhSach;
+    }
+
+    /**
+     * Xóa sản phẩm khỏi hệ thống dựa trên ID.
      */
     public boolean xoaSanPham(int itemId) {
         String sql = "DELETE FROM items WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
             pstmt.setInt(1, itemId);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Lỗi xoaSanPham: " + e.getMessage());
+            logger.error("Lỗi xoaSanPham: ", e);
+            return false;
+        }
+    }
+
+    /**
+     * Cập nhật thông tin mới cho một sản phẩm đã tồn tại.
+     */
+    public boolean updateSanPham(Item item) {
+        String sql = "UPDATE items SET name = ?, description = ?, starting_price = ?, category = ?, image_url = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, item.getName());
+            pstmt.setString(2, item.getDescription());
+            pstmt.setLong(3, item.getStartingPrice());
+            pstmt.setString(4, item.getCategory());
+            pstmt.setString(5, item.getImageUrl());
+            pstmt.setInt(6, item.getId());
+
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.error("Lỗi updateSanPham: ", e);
             return false;
         }
     }

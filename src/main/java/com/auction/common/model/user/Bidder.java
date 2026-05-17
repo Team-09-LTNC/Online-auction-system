@@ -2,6 +2,7 @@ package com.auction.common.model.user;
 
 // Tài khoản của người mua (được phép đặt giá)
 public class Bidder extends User {
+
     public Bidder(String username, String password, String fullName) {
         super(username, password, fullName);
     }
@@ -10,5 +11,4 @@ public class Bidder extends User {
     public String getRoleName() {
         return "BIDDER";
     }
-
 }

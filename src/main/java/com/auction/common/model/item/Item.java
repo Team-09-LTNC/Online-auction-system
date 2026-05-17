@@ -6,6 +6,7 @@ public abstract class Item extends Entity {
     protected String name;
     protected String description;
     protected long startingPrice;
+    protected long bidIncrement;
     protected int sellerId;
     protected String category;
     protected String imageUrl;
@@ -23,6 +24,7 @@ public abstract class Item extends Entity {
     public String getName() { return name; }
     public String getDescription() { return description; }
     public long getStartingPrice() { return startingPrice; }
+    public long getBidIncrement() { return bidIncrement; }
     public int getSellerId() { return sellerId; }
     public String getCategory() { return category; }
     public String getImageUrl() { return imageUrl; }
@@ -30,6 +32,7 @@ public abstract class Item extends Entity {
     public void setName(String name) { this.name = name; }
     public void setDescription(String description) { this.description = description; }
     public void setStartingPrice(long startingPrice) { this.startingPrice = startingPrice; }
+    public void setBidIncrement(long bidIncrement) { this.bidIncrement = bidIncrement; }
     public void setSellerId(int sellerId) { this.sellerId = sellerId; }
     public void setCategory(String category) { this.category = category; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }

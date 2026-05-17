@@ -71,4 +71,19 @@ public class ProductManager {
     public Item laySanPhamTheoId(int idSanPham) {
         return itemDao.laySanPhamTheoId(idSanPham);
     }
+
+    /**
+     * Tìm kiếm sản phẩm theo từ khóa (gọi xuống ItemDao)
+     */
+    public List<Item> timSanPhamTheoTukhoa(String tuKhoa) {
+        return itemDao.timSanPhamTheoTukhoa(tuKhoa);
+    }
+
+    /**
+     * Cập nhật thông tin sản phẩm đã có trong hệ thống
+     */
+    public boolean capNhatSanPham(Item sanPham) {
+        if (sanPham == null || sanPham.getId() <= 0) return false;
+        return itemDao.updateSanPham(sanPham);
+    }
 }

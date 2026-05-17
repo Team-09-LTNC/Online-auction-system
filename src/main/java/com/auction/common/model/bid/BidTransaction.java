@@ -14,7 +14,7 @@ public class BidTransaction extends Entity {
     private long bidAmount;   //
     private LocalDateTime timestamp;
 
-    public BidTransaction(int auctionId, Bidder bidder, long bidAmount) {
+    public BidTransaction(int auctionId, Bidder bidder, long bidAmount, LocalDateTime now) {
         super(); // id sẽ được set sau khi lấy từ DB hoặc tự tăng
         this.auctionId = auctionId;
         this.bidder = bidder;

@@ -12,13 +12,15 @@ import com.auction.common.model.user.*;
 import com.auction.server.db.DatabaseConnection;
 import java.sql.*;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Lớp này được thiết kế cho cả 3 vai trò (riêng admin thì k xử lý phần số dư, k hiển thị số dư)
  * Phần BidderSellerMoney mới thực hiện giao dịch tiền bạc giưa bidder vs seller
  */
 public class UserDao {
-
+    private static final Logger logger = LoggerFactory.getLogger(UserDao.class);
     /**
      * Lấy thông tin User để phục vụ Đăng nhập.
      */
@@ -57,7 +59,7 @@ public class UserDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi timTheoTenDangNhap: " + e.getMessage());
+            logger.error("Lỗi timTheoTenDangNhap: ", e);
         }
         return Optional.empty();
     }
@@ -77,7 +79,7 @@ public class UserDao {
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Lỗi luuNguoiDung: " + e.getMessage());
+            logger.error("Lỗi luuNguoiDung: ", e);
             return false;
         }
     }
@@ -94,7 +96,7 @@ public class UserDao {
             pstmt.setInt(2, idUser);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Lỗi capNhatSoDu: " + e.getMessage());
+            logger.error("Lỗi capNhatSoDu: ", e);
             return false;
         }
     }

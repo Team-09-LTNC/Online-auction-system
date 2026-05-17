@@ -1,11 +1,17 @@
 package com.auction.client.controller.bidder;
 
+import com.auction.client.networkclient.ClientSocket;
+import com.auction.common.dto.AuctionDTOs;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.util.Duration;
+
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -16,31 +22,29 @@ public class AuctionRoomController implements Initializable {
     @FXML private TextField txtBidAmount;
     @FXML private Button btnPlaceBid;
 
-    private double currentPrice = 3500000000.0; // Giá hiện tại
-    private int totalSeconds = 900; // Giả sử phiên còn 15 phút (900 giây)
+    private int totalSeconds = 900;
     private Timeline countdownTimeline;
+    private final int currentAuctionId = 1;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // 1. Nạp lịch sử ban đầu
+        // Đăng ký nhận luồng Real-time từ Server (Observer Push)
+        com.auction.client.networkclient.PushHandler.currentRoomController = this;
+
         lvBidHistory.getItems().addAll(
                 "Mạnh Hùng: 3,420,000,000 đ",
                 "Quốc Khánh: 3,480,000,000 đ",
                 "Nguyễn An: 3,500,000,000 đ"
         );
 
-        // 2. Chạy đồng hồ đếm ngược
         startCountdown();
 
-        // 3. Logic bổ sung: Format tiền khi đang gõ (Tăng trải nghiệm người dùng)
         txtBidAmount.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.isEmpty()) {
-                String cleanString = newVal.replaceAll("[^\\d]", "");
+                String cleanString = newVal.replaceAll("\\D", "");
                 try {
-                    double val = Double.parseDouble(cleanString);
-                    // Cái này để m nhìn console xem số thật, không cần hiện lên UI để tránh rối
-                    System.out.println("Giá trị đang nhập: " + val);
-                } catch (NumberFormatException e) {}
+                    Double.parseDouble(cleanString);
+                } catch (NumberFormatException ignored) {}
             }
         });
     }
@@ -52,7 +56,7 @@ public class AuctionRoomController implements Initializable {
             if (totalSeconds <= 0) {
                 lblCountdown.setText("HẾT GIỜ!");
                 lblCountdown.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
-                btnPlaceBid.setDisable(true); // Khóa nút khi hết giờ
+                btnPlaceBid.setDisable(true);
                 txtBidAmount.setEditable(false);
                 countdownTimeline.stop();
             } else {
@@ -76,28 +80,46 @@ public class AuctionRoomController implements Initializable {
         if (input.isEmpty()) return;
 
         try {
-            // Loại bỏ các dấu phân cách nếu có trước khi parse
-            double bidAmount = Double.parseDouble(input.replaceAll("[^\\d]", ""));
+            long bidAmount = Long.parseLong(input.replaceAll("\\D", ""));
+            int bidderId = 1;
 
-            // Logic: Giá mới phải cao hơn giá cũ (Ví dụ: bước giá tối thiểu là 10tr)
-            if (bidAmount >= currentPrice + 10000000) {
-                currentPrice = bidAmount;
+            AuctionDTOs.BidRequest request = new AuctionDTOs.BidRequest(currentAuctionId, bidAmount, bidderId);
 
-                // Cập nhật giao diện
-                lblCurrentPrice.setText(String.format("%,.0f đ", currentPrice));
-                lblLeader.setText("Người dẫn đầu: Bạn");
+            btnPlaceBid.setDisable(true);
 
-                // Thêm vào đầu danh sách lịch sử
-                lvBidHistory.getItems().add(0, "Bạn: " + String.format("%,.0f đ", bidAmount));
-                txtBidAmount.clear();
+            // [TỐI ƯU KIẾN TRÚC] Chuyển đổi sang JsonObject để gọi hàm mạng an toàn, đăng ký Callback
+            JsonObject jsonRequest = new Gson().toJsonTree(request).getAsJsonObject();
 
-                System.out.println("[AuctionRoom] Đặt giá thành công: " + bidAmount);
-            } else {
-                showAlert("Giá không hợp lệ", "M phải trả cao hơn ít nhất 10,000,000 đ so với giá hiện tại!");
-            }
+            ClientSocket.getInstance().sendJsonRequest(jsonRequest, "BID_RESPONSE", response -> {
+                // Đảm bảo cập nhật UI trên luồng JavaFX (Thread-safety)
+                Platform.runLater(() -> {
+                    btnPlaceBid.setDisable(false);
+                    boolean success = response.has("success") && response.get("success").getAsBoolean();
+                    if (!success) {
+                        String msg = response.has("message") ? response.get("message").getAsString() : "Đã có người trả giá cao hơn.";
+                        showAlert("Giá không hợp lệ", msg);
+                    }
+                });
+            });
+
+            txtBidAmount.clear();
+
         } catch (NumberFormatException e) {
-            showAlert("Lỗi nhập liệu", "Vui lòng chỉ nhập số!");
+            showAlert("Lỗi nhập liệu", "Vui lòng chỉ nhập số hợp lệ!");
         }
+    }
+
+    /**
+     * HÀM REAL-TIME: Gọi bởi PushHandler.
+     * Lưu ý: Hàm này an toàn vì PushHandler đã bọc Platform.runLater().
+     */
+    public void updateRealtimeBid(long newPrice, String bidderName) {
+        lblCurrentPrice.setText(String.format("%,.0f đ", (double) newPrice));
+        lblLeader.setText("Người dẫn đầu: " + bidderName);
+
+        // [TỐI ƯU JAVAFX] Sử dụng add(0, item) thay vì addFirst() để tương thích mọi phiên bản JDK
+        String historyEntry = String.format("%s: %,.0f đ", bidderName, (double) newPrice);
+        lvBidHistory.getItems().add(0, historyEntry);
     }
 
     private void showAlert(String title, String content) {

@@ -12,13 +12,14 @@ public class ClientApplication extends Application {
     public void start(Stage primaryStage) throws Exception {
         //lôi file Khung xương FXML ra
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/auth/Login.fxml"));
-
-        // Tạo một Scene (cái nền) kích thước 1280x800 chứa cái khung xương đó
-        Scene scene = new Scene(root, 1280, 800);
+        Scene scene = new Scene(root, 800, 600);
 
         // Đặt tên cho cửa sổ ứng dụng và nhét Scene vào
         primaryStage.setTitle("AuctionHub - Bảng Điều Khiển");
         primaryStage.setScene(scene);
+
+        //  Ép cửa sổ bung tràn toàn màn hình ngay khi vừa khởi động
+        primaryStage.setMaximized(true);
 
         // Hiển thị cửa sổ lên màn hình
         primaryStage.show();

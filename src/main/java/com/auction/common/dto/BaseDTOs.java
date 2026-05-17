@@ -1,70 +1,85 @@
 package com.auction.common.dto;
 
+import java.util.UUID;
+
 public class BaseDTOs {
-    // Lớp cha cho mọi yêu cầu
-    public static class Request {
-        public String type; // Để phân loại yêu cầu tại ClientHandler
-        public String requestId; // Để theo dõi response tương ứng
-    }
 
-    public static class CreateAuctionRequest extends Request {
-        public String productName;
-        public String category;
-        public String description;
-        public double startPrice;
-        public double increment;
-        public String startTime;
-        public String endTime;
-        public boolean antiSniping;
+    // --- Lớp cha cho mọi yêu cầu (Client -> Server) ---
+    public static abstract class Request {
+        private final String type;
 
-        public CreateAuctionRequest() {
-            this.type = "CREATE_AUCTION";
+        // [TỐI ƯU KIẾN TRÚC] Định danh duy nhất để tránh Race Condition khi gọi Callback.
+        // Khởi tạo trực tiếp để không ảnh hưởng đến code cũ trên Server.
+        private String requestId = UUID.randomUUID().toString();
+
+        public Request(String type) {
+            this.type = type;
         }
+
+        public String getType() { return type; }
+        public String getRequestId() { return requestId; }
+        public void setRequestId(String requestId) { this.requestId = requestId; }
     }
 
-    // Lớp cha cho mọi phản hồi
-    public static class Response {
-        public String type; // Để phân loại phản hồi tại NetworkManager
-        public boolean success;
-        public String message;
-        public String requestId; // Để trả về đúng response cho request đã nhận
+    // --- Lớp cha cho mọi phản hồi (Server -> Client) ---
+    public static abstract class Response {
+        private final String type;
+        private final int statusCode;
+        private final boolean success;
+        private final String message;
+
+        // [TỐI ƯU KIẾN TRÚC] Client sẽ dựa vào ID này để tìm đúng Callback tương ứng.
+        private String requestId;
+
+        public Response(String type, int statusCode, boolean success, String message) {
+            this.type = type;
+            this.statusCode = statusCode;
+            this.success = success;
+            this.message = message;
+        }
+
+        public String getType() { return type; }
+        public int getStatusCode() { return statusCode; }
+        public boolean isSuccess() { return success; }
+        public String getMessage() { return message; }
+
+        public String getRequestId() { return requestId; }
+        public void setRequestId(String requestId) { this.requestId = requestId; }
     }
 
-    // Thông báo lỗi chung
-    public static class ErrorResponse {
-        public String errorCode;
-        public String errorMessage;
+    // Lớp thông báo lỗi chung
+    public static class ErrorResponse extends Response {
+        private final String errorCode;
+
+        public ErrorResponse(int statusCode, String message, String errorCode) {
+            super("ERROR_RESPONSE", statusCode, false, message);
+            this.errorCode = errorCode;
+        }
+
+        public String getErrorCode() { return errorCode; }
     }
 
-    // Thông tin về một lượt đặt giá (dùng trong push cập nhật giá mới)
-    public static class BidData {
-        public long bidId;
-        public long auctionId;
-        public long bidderId;
-        public String bidderName;
-        public double amount;
-        public String bidTime;
+    // =========================================================================
+    //  CÁC LỚP ĐỰNG DỮ LIỆU ĐẨY THỜI GIAN THỰC (REALTIME PUSH)
+    // =========================================================================
+    public static class AuctionBidUpdatePush {
+        private double newHighestBid;
+        private BidDetail latestBid;
+
+        public double getNewHighestBid() { return newHighestBid; }
+        public BidDetail getLatestBid() { return latestBid; }
     }
 
-    // =========================================================
-    // SERVER PUSH – Server chủ động gửi về, không kèm requestId
-    // =========================================================
-
-    /** Push khi có người vừa đặt giá mới trong phiên */
-    public static class AuctionBidUpdatePush extends Response {
-        public long auctionId;
-        public BidData latestBid; // thông tin lượt đặt giá mới nhất
-        public double newHighestBid; // giá cao nhất hiện tại sau khi cập nhật
-
-        // Không cần constructor gán type
-        // vì đây là Response từ server, client chỉ nhận, không gửi
+    public static class BidDetail {
+        private String bidderName;
+        public String getBidderName() { return bidderName; }
     }
 
-    /** Push khi phiên đấu giá kết thúc */
-    public static class AuctionResultPush extends Response {
-        public long auctionId;
-        public long winnerId;
-        public String winnerName;
-        public double finalPrice;
+    public static class AuctionResultPush {
+        private String winnerName;
+        private double finalPrice;
+
+        public String getWinnerName() { return winnerName; }
+        public double getFinalPrice() { return finalPrice; }
     }
 }

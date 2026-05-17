@@ -1,43 +1,49 @@
 package com.auction.server;
 
-//import com.auction.server.db.DatabaseConnection;
-//import com.auction.server.manager.AuctionManager;
-//import com.auction.server.manager.ProductManager;
-//import com.auction.server.manager.UserManager;
-//import com.auction.server.network.ServerManager;
+import com.auction.server.networkserver.ServerManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
+import java.util.Properties;
+
+/**
+ * ServerApplication: Điểm khởi chạy (Entry Point) của toàn bộ hệ thống Server.
+ * Nhiệm vụ chính: Cấu hình cổng kết nối và kích hoạt ServerManager.
+ */
 public class ServerApplication {
+    private static final Logger logger = LoggerFactory.getLogger(ServerApplication.class);
 
-//    // Cấu hình cổng kết nối đồng bộ với Client (8080)
-//    private static final int PORT = 8080;
-//
-//    public static void main(String[] args) {
-//        System.out.println("=== HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN - SERVER ===");
-//
-//        try {
-//            // 1. Khởi tạo kết nối Database (HikariCP)
-//            System.out.println("Đang khởi tạo kết nối Cơ sở dữ liệu...");
-//            DatabaseConnection.getInstance();
-//
-//            // 2. Kích hoạt các bộ quản lý (Managers - Singleton)
-//            // AuctionManager sẽ tự động khởi động luồng kiểm tra phiên hết hạn
-//            System.out.println("Đang kích hoạt các dịch vụ nghiệp vụ...");
-//            UserManager.getInstance();
-//            ProductManager.getInstance();
-//            AuctionManager.getInstance();
-//
-//            // 3. Khởi tạo và chạy bộ quản lý mạng (ServerManager)
-//            System.out.println("Đang mở cổng kết nối mạng...");
-//            ServerManager networkManager = new ServerManager(PORT);
-//
-//            // 4. Bắt đầu lắng nghe kết nối (Phương thức này sẽ chặn luồng main)
-//            System.out.println("Server đã sẵn sàng tiếp nhận người dùng tại cổng: " + PORT);
-//            networkManager.batDauServer();
-//
-//        } catch (Exception e) {
-//            System.err.println("THẤT BẠI khi khởi động Server: " + e.getMessage());
-//            e.printStackTrace();
-//            System.exit(1);
-//        }
-//    }
+    //  giá trị mặc định của server,
+//  nếu muốn test xem chạy oke không ae cứ sửa địa chỉ thành localhost máy mình trong application.properties trước để test
+//  và không cần sửa đây, code  dưới đọc từ file properties, đây chỉ mặc định khi hệ thống chạy tốt
+    private static int PORT = 8080;
+
+    // --- KHỐI STATIC: ĐỌC CẤU HÌNH PORT ---
+    static {
+        try (InputStream input = ServerApplication.class.getClassLoader().getResourceAsStream("application.properties")) {
+            if (input != null) {
+                Properties props = new Properties();
+                props.load(input);
+                PORT = Integer.parseInt(props.getProperty("server.port", "8080"));
+                logger.info("Đã nạp cấu hình cổng từ application.properties: {}", PORT);
+            } else {
+                logger.warn("Không tìm thấy application.properties, dùng cổng mặc định 8080");
+            }
+        } catch (Exception e) {
+            logger.error("Lỗi khi đọc file cấu hình, dùng cổng mặc định 8080", e);
+        }
+    }
+    // ----------------------------------------
+
+    public static void main(String[] args) {
+        logger.info("==================================================");
+        logger.info("   HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   ");
+        logger.info("   Đang lắng nghe tại cổng: {}                  ", PORT);
+        logger.info("==================================================");
+
+        // Khởi tạo và ủy quyền toàn bộ việc quản lý mạng cho ServerManager
+        ServerManager quanLyMayChu = new ServerManager(PORT);
+        quanLyMayChu.batDauServer();
+    }
 }

@@ -1,8 +1,10 @@
 package com.auction.client.controller.auth;
 
-import com.auction.client.network.NetworkManager;
-import com.auction.common.dto.BaseDTOs;
-import com.auction.common.enums.ActionType;
+import com.auction.client.networkclient.ClientSocket;
+import com.auction.common.dto.AuthDTOs;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -11,9 +13,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+
 import java.io.IOException;
 import java.net.URL;
-import java.util.UUID;
 
 public class RegisterController {
 
@@ -29,7 +31,6 @@ public class RegisterController {
 
     @FXML
     public void initialize() {
-        // Khởi tạo danh sách vai trò khi màn hình vừa hiện lên
         if (roleComboBox != null) {
             roleComboBox.getItems().addAll("Bidder", "Seller", "Admin");
         }
@@ -37,64 +38,74 @@ public class RegisterController {
 
     @FXML
     void onRegisterButtonClick(ActionEvent event) {
-        // B1: Trích xuất dữ liệu từ các input field
         String fullName = fullNameField.getText().trim();
         String user = usernameField.getText().trim();
 
-        // B2: Xác định lấy pass từ ô ẩn hay ô hiện (phụ thuộc vào trạng thái nút 👁)
         String pass = passwordField.isVisible() ? passwordField.getText() : passwordTextField.getText();
         String confirm = confirmPasswordField.isVisible() ? confirmPasswordField.getText() : confirmPasswordTextField.getText();
         String role = roleComboBox.getValue();
 
-        // B3: Logic kiểm tra tính hợp lệ dữ liệu tại phía Client
+        // 1. Validate dữ liệu trống
         if (fullName.isEmpty() || user.isEmpty() || pass.isEmpty() || role == null) {
             updateStatus("Thiếu thông tin!", "red");
             return;
         }
 
+        // 2. Validate xác nhận mật khẩu
         if (!pass.equals(confirm)) {
             updateStatus("Mật khẩu xác nhận không khớp!", "red");
             return;
         }
 
-        // B4: Thực thi gửi gói tin qua Socket lên Server (Sửa: Dùng Singleton + DTO)
         sendDataToServer(fullName, user, pass, role, event);
     }
 
+    /**
+     * Xử lý giao tiếp mạng để đăng ký tài khoản
+     */
     private void sendDataToServer(String fullName, String user, String pass, String role, ActionEvent event) {
-        //dùng Singleton để duy trì "đường ống" duy nhất
         try {
-            // Controller chỉ lo giao diện, Network lo Socket
-            BaseDTOs.Request regReq = new BaseDTOs.Request();
-            regReq.type = ActionType.REGISTER; // Đã dùng hằng số chuẩn từ Common
-            regReq.requestId = UUID.randomUUID().toString();
-
-            //Server sẽ bóc tách các trường này từ JSON
-            // Thực thi gửi qua Singleton Socket
-            NetworkManager.getInstance().sendRequest(regReq);
-
+            // 3. Khởi tạo đối tượng DTO
+            AuthDTOs.RegisterRequest regReq = new AuthDTOs.RegisterRequest(user, pass, fullName, role);
             updateStatus("Đang gửi yêu cầu đăng ký...", "blue");
 
+            // [KIẾN TRÚC MỚI] 4. Ép kiểu sang JsonObject để tận dụng cơ chế Fallback Routing
+            JsonObject jsonRequest = new Gson().toJsonTree(regReq).getAsJsonObject();
+
+            // 5. Gửi JSON qua Socket và định tuyến Callback theo "REGISTER_RESPONSE"
+            ClientSocket.getInstance().sendJsonRequest(jsonRequest, "REGISTER_RESPONSE", responseJson -> {
+                // Thread-safety: Trả kết quả về luồng UI chính
+                Platform.runLater(() -> {
+                    boolean success = responseJson.has("success") && responseJson.get("success").getAsBoolean();
+                    if (success) {
+                        updateStatus("Đăng ký thành công!", "green");
+                        onLoginLinkClick(event); // Chuyển về trang đăng nhập
+                    } else {
+                        String msg = responseJson.has("message") ? responseJson.get("message").getAsString() : "Đăng ký thất bại!";
+                        updateStatus(msg, "red");
+                    }
+                });
+            });
+
         } catch (Exception e) {
-            // Xử lý ngoại lệ nếu Server không phản hồi
             updateStatus("Lỗi kết nối Network!", "red");
         }
     }
 
     @FXML
     void onShowPasswordButtonClick(ActionEvent event) {
-        // Thực thi logic hoán đổi hiển thị giữa PasswordField và TextField
         togglePassword(passwordField, passwordTextField);
     }
 
     @FXML
     void onShowConfirmPasswordButtonClick(ActionEvent event) {
-        // Thực thi logic hoán đổi hiển thị cho phần xác nhận
         togglePassword(confirmPasswordField, confirmPasswordTextField);
     }
 
+    /**
+     * Logic dùng chung để ẩn/hiện mật khẩu
+     */
     private void togglePassword(PasswordField pf, TextField tf) {
-        // Logic: Chuyển text từ ô ẩn sang ô hiện và ngược lại, sau đó đảo trạng thái Visible
         if (pf.isVisible()) {
             tf.setText(pf.getText());
             tf.setVisible(true);
@@ -108,30 +119,19 @@ public class RegisterController {
 
     @FXML
     void onLoginLinkClick(ActionEvent event) {
-        // Luồng chuyển đổi Scene: Tải file FXML -> Lấy Stage hiện tại -> Thay thế Scene
-        // ĐÃ FIX: Lỗi co màn hình (Shrink Issue) theo giải pháp Clean Code (setRoot)
         switchScene(event, "/fxml/auth/Login.fxml", "Đăng nhập tài khoản");
     }
 
-    /**
-     * Hàm dùng chung để chuyển đổi màn hình (Scene) - Giải pháp chống Shrink Screen
-     */
     private void switchScene(ActionEvent event, String fxmlPath, String title) {
         try {
             URL fxmlLocation = getClass().getResource(fxmlPath);
             if (fxmlLocation == null) {
                 throw new IOException("Không tìm thấy file FXML tại: " + fxmlPath);
             }
-            // Tải Root mới
             Parent newRoot = FXMLLoader.load(fxmlLocation);
-
-            // Lấy Scene hiện tại thay vì tạo Scene mới
             Scene currentScene = ((Node) event.getSource()).getScene();
-
-            // Thay đổi Root của Scene hiện tại để giữ nguyên kích thước cửa sổ
             currentScene.setRoot(newRoot);
 
-            // Cập nhật Title cho Stage
             Stage stage = (Stage) currentScene.getWindow();
             stage.setTitle(title);
             stage.show();
@@ -142,7 +142,6 @@ public class RegisterController {
     }
 
     private void updateStatus(String message, String color) {
-        // Thực thi cập nhật thuộc tính Style và Text cho Label trạng thái
         statusLabel.setText(message);
         statusLabel.setStyle("-fx-text-fill: " + color + ";");
     }

@@ -116,11 +116,14 @@ public class NetworkManager {
      */
     public void handleServerResponse(String json) {
         try {
+            // Sử dụng một class ẩn hoặc Custom Deserializer của Gson để đọc được thuộc tính đa hình (Polymorphism) từ lớp cha Response
+            // Tạm thời parse về lớp cha để lấy type check lệnh phản hồi
             BaseDTOs.Response response = gson.fromJson(json, BaseDTOs.Response.class);
 
-            // Kiểm tra loại phản hồi
-            if ("CREATE_AUCTION_RES".equals(response.type)) {
-                if (response.success) {
+            // 🔥 SỬA TẠI ĐÂY: Dùng .getType() thay cho .type vì thuộc tính đã chuyển sang private
+            if ("CREATE_AUCTION_RES".equals(response.getType())) {
+                // 🔥 SỬA TẠI ĐÂY: Dùng .isSuccess() và .getMessage() chuẩn OOP của Kiên
+                if (response.isSuccess()) {
                     showSimpleAlert(Alert.AlertType.INFORMATION, "Thành công", "Sản phẩm đã được đăng lên sàn!");
 
                     // Cập nhật đường dẫn chuẩn về trang chủ card sản phẩm
@@ -128,7 +131,7 @@ public class NetworkManager {
                         MainController.instance.setCenterContent("/fxml/bidder/MainDashboard.fxml");
                     }
                 } else {
-                    showSimpleAlert(Alert.AlertType.ERROR, "Thất bại", "Lỗi từ Server: " + response.message);
+                    showSimpleAlert(Alert.AlertType.ERROR, "Thất bại", "Lỗi từ Server: " + response.getMessage());
                 }
             }
 

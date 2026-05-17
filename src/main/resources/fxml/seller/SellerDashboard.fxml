@@ -5,6 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.image.ImageView?>
 
 <HBox prefHeight="850.0" prefWidth="1200.0" spacing="0" style="-fx-background-color: #FDFBF9;" stylesheets="@../../css/seller.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.seller.PostAuctionController">
 
@@ -51,7 +52,7 @@
                     <TextField fx:id="txtProductName" promptText="Tên sản phẩm *" styleClass="modern-input" />
                     <ComboBox fx:id="cbCategory" maxWidth="Infinity" promptText="-- Chọn danh mục --" styleClass="modern-combo" />
                     <TextArea fx:id="txtDescription" prefHeight="100.0" promptText="Mô tả chi tiết sản phẩm..." styleClass="editor-area" wrapText="true" />
-                    <Button prefHeight="40.0" style="-fx-background-color: #F8F9FA; -fx-border-color: #DDD; -fx-border-radius: 8;" text="📸 Tải lên ảnh sản phẩm" maxWidth="Infinity" />
+                    <Button fx:id="btnUploadImage" onAction="#handleUploadImage" prefHeight="40.0" style="-fx-background-color: #F8F9FA; -fx-border-color: #DDD; -fx-border-radius: 8;" text="📸 Tải lên ảnh sản phẩm" maxWidth="Infinity" />
                 </VBox>
 
                 <VBox spacing="15.0" styleClass="card">
@@ -104,9 +105,11 @@
 
     <VBox prefWidth="350.0" spacing="20.0" style="-fx-background-color: #FFFFFF; -fx-padding: 25; -fx-border-color: #EEEEEE; -fx-border-width: 0 0 0 1;">
         <Label styleClass="preview-title" text="👁 XEM TRƯỚC SẢN PHẨM" />
+
         <StackPane prefHeight="200.0" style="-fx-background-color: #F8F9FA; -fx-background-radius: 10;">
-            <Label text="[Hình ảnh sẽ hiện ở đây]" textFill="#A0968C" />
+            <ImageView fx:id="imgPreview" fitWidth="300.0" fitHeight="180.0" pickOnBounds="true" preserveRatio="true" />
         </StackPane>
+
         <VBox spacing="15.0">
             <VBox spacing="2.0">
                 <Label styleClass="preview-label" text="Tên sản phẩm" />

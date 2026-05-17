@@ -19,31 +19,33 @@ public class PushHandler {
     private static final Gson gson = new Gson();
 
     public static void handle(String type, String rawJson) {
-        switch (type) {
-
-            case ActionType.AUCTION_BID_UPDATE -> {
-                BaseDTOs.AuctionBidUpdatePush push =
-                        gson.fromJson(rawJson, BaseDTOs.AuctionBidUpdatePush.class);
-                onBidUpdate(push);
-            }
-
-            case ActionType.AUCTION_RESULT -> {
-                BaseDTOs.AuctionResultPush push =
-                        gson.fromJson(rawJson, BaseDTOs.AuctionResultPush.class);
-                onAuctionResult(push);
-            }
-
-            default -> logger.error("[PushHandler] Unknown push type: {}", type);
+        // 🔥 Chuyển sang check bằng chuỗi String chuẩn hoặc dùng Enum ActionType tương ứng với kiến trúc mới
+        if ("AUCTION_BID_UPDATE".equals(type)) {
+            BaseDTOs.AuctionBidUpdatePush push =
+                    gson.fromJson(rawJson, BaseDTOs.AuctionBidUpdatePush.class);
+            onBidUpdate(push);
+        } else if ("AUCTION_RESULT".equals(type)) {
+            BaseDTOs.AuctionResultPush push =
+                    gson.fromJson(rawJson, BaseDTOs.AuctionResultPush.class);
+            onAuctionResult(push);
+        } else {
+            logger.error("[PushHandler] Unknown push type: {}", type);
         }
     }
 
     private static void onBidUpdate(BaseDTOs.AuctionBidUpdatePush push) {
         // TODO: thông báo tới AuctionController/View đang mở
-        logger.info("[Push] Giá mới: {} bởi {}", push.newHighestBid, push.latestBid.bidderName);
+        // 🔥 SỬA TẠI ĐÂY: Chuyển sang gọi qua các hàm Getter chuẩn OOP của lớp BaseDTOs mới
+        if (push != null && push.getLatestBid() != null) {
+            logger.info("[Push] Giá mới: {} bởi {}", push.getNewHighestBid(), push.getLatestBid().getBidderName());
+        }
     }
 
     private static void onAuctionResult(BaseDTOs.AuctionResultPush push) {
         // TODO: thông báo kết quả tới View
-        logger.info("[Push] Phiên kết thúc! Người thắng: {} – Giá: {}", push.winnerName, push.finalPrice);
+        // 🔥 SỬA TẠI ĐÂY: Chuyển sang gọi qua các hàm Getter chuẩn OOP của lớp BaseDTOs mới
+        if (push != null) {
+            logger.info("[Push] Phiên kết thúc! Người thắng: {} – Giá: {}", push.getWinnerName(), push.getFinalPrice());
+        }
     }
 }

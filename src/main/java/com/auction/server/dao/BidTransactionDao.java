@@ -2,6 +2,9 @@ package com.auction.server.dao;
 
 import com.auction.common.model.bid.BidLine;
 import com.auction.server.db.DatabaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +20,7 @@ import java.util.List;
 //  - bid_time (TIMESTAMP): Thời điểm đặt giá
 
 public class BidTransactionDao {
-
+    private static final Logger logger = LoggerFactory.getLogger(BidTransactionDao.class);
     /**
      * Dùng để lưu: ai, đặt bao nhiêu tiền, vào lúc nào
      */
@@ -36,7 +39,7 @@ public class BidTransactionDao {
             return pstm.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("Lỗi luuLichSuDatGia: " + e.getMessage());
+            logger.error("Lỗi luuLichSuDatGia: ", e);
             return false;
         }
     }
@@ -71,7 +74,7 @@ public class BidTransactionDao {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi layLichSuPhien: " + e.getMessage());
+            logger.error("Lỗi layLichSuPhien: ", e);
         }
         return danhSach;
     }

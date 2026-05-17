@@ -1,108 +1,249 @@
-2026-05-15 09:09:05 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:11:37 [JavaFX Application Thread] INFO  c.a.c.c.c.ProductCardController - Người dùng muốn vào phòng đấu giá sản phẩm: Mercedes-Benz S450 0
-2026-05-15 09:21:24 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:21:28 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 09:21:29 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 09:21:30 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 09:21:30 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 09:21:30 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 09:21:33 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 09:21:35 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 09:21:37 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
-2026-05-15 09:21:38 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:28:42 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:28:48 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 09:28:49 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 09:28:51 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
-2026-05-15 09:31:48 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
-2026-05-15 09:31:52 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 09:31:57 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 09:32:00 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 09:34:03 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:37:24 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:37:26 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
-2026-05-15 09:40:06 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:40:07 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
-2026-05-15 09:40:54 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:40:55 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
-2026-05-15 09:41:32 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:41:34 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
-2026-05-15 09:46:14 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:46:16 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
-2026-05-15 09:47:31 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:51:03 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:51:05 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
-2026-05-15 09:53:27 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:53:28 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
-2026-05-15 09:54:05 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:54:07 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
-2026-05-15 09:54:18 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
-2026-05-15 09:54:19 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 09:54:20 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 09:54:23 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 09:56:44 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 09:56:51 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 09:56:53 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 09:56:54 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
-2026-05-15 09:56:57 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 09:57:00 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 09:57:02 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
-2026-05-15 09:57:04 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 09:57:06 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 10:04:45 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 10:04:54 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 10:04:56 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 10:04:58 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
-2026-05-15 10:11:49 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 10:11:51 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
-2026-05-15 10:12:11 [JavaFX Application Thread] DEBUG c.a.c.c.seller.PostAuctionController - Người dùng bấm nút Đăng sản phẩm.
-2026-05-15 10:20:50 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 10:20:53 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 10:20:55 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 10:21:06 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
-2026-05-15 10:21:10 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 10:21:11 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 10:21:13 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 10:21:14 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 10:21:16 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 10:23:07 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 10:23:10 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 10:24:52 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 10:24:55 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 10:24:56 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 10:24:59 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
-2026-05-15 10:25:00 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 10:25:01 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 10:27:42 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 10:27:47 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 10:27:48 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 10:27:51 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
-2026-05-15 10:27:53 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 10:27:53 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 10:27:56 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 10:27:59 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 10:27:59 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 10:28:00 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 14:43:17 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 14:43:25 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 14:43:28 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 16:21:55 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 16:21:58 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 16:21:59 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 16:22:00 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
-2026-05-15 16:30:26 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 16:32:31 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 16:32:33 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 16:45:42 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 16:45:44 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
-2026-05-15 16:45:45 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 16:45:46 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-15 16:45:47 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
-2026-05-15 16:59:45 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 16:59:49 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 16:59:50 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 16:59:52 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 16:59:53 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 16:59:54 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 16:59:55 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-15 17:04:43 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:39:57 [main] WARN  c.auction.server.ServerApplication - Không tìm thấy application.properties, dùng cổng mặc định 8080
+2026-05-16 20:39:57 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-16 20:39:57 [main] INFO  c.auction.server.ServerApplication -    HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   
+2026-05-16 20:39:57 [main] INFO  c.auction.server.ServerApplication -    Đang lắng nghe tại cổng: 8080                  
+2026-05-16 20:39:57 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-16 20:39:57 [main] INFO  c.a.s.networkserver.ServerManager - Server đã mở thành công và đang lắng nghe tại cổng: 8080
+2026-05-16 20:40:42 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-16 20:40:42 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-16 20:40:42 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"baokien","password":"123456","fullName":"truongbaokien","role":"Bidder","type":"REGISTER_REQUEST","requestId":"03cfbfda-42c9-423e-8f38-8999b6cb519e"}
+2026-05-16 20:40:42 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"baokien","password":"123456","fullName":"truongbaokien","role":"Bidder","type":"REGISTER_REQUEST","requestId":"03cfbfda-42c9-423e-8f38-8999b6cb519e"}
+2026-05-16 20:40:59 [pool-1-thread-1] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-16 20:42:48 [main] WARN  c.auction.server.ServerApplication - Không tìm thấy application.properties, dùng cổng mặc định 8080
+2026-05-16 20:42:48 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-16 20:42:48 [main] INFO  c.auction.server.ServerApplication -    HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   
+2026-05-16 20:42:48 [main] INFO  c.auction.server.ServerApplication -    Đang lắng nghe tại cổng: 8080                  
+2026-05-16 20:42:48 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-16 20:42:48 [main] INFO  c.a.s.networkserver.ServerManager - Server đã mở thành công và đang lắng nghe tại cổng: 8080
+2026-05-16 20:43:31 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-16 20:43:31 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-16 20:43:31 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"baokien","password":"123456","fullName":"truongbaokien","role":"Bidder","type":"REGISTER_REQUEST","requestId":"8e5eaac0-0628-4166-871e-e669e86626b4"}
+2026-05-16 20:43:31 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"baokien","password":"123456","fullName":"truongbaokien","role":"Bidder","type":"REGISTER_REQUEST","requestId":"8e5eaac0-0628-4166-871e-e669e86626b4"}
+2026-05-16 20:47:40 [pool-1-thread-1] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-16 20:48:39 [main] WARN  c.auction.server.ServerApplication - Không tìm thấy application.properties, dùng cổng mặc định 8080
+2026-05-16 20:48:39 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-16 20:48:39 [main] INFO  c.auction.server.ServerApplication -    HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   
+2026-05-16 20:48:39 [main] INFO  c.auction.server.ServerApplication -    Đang lắng nghe tại cổng: 8080                  
+2026-05-16 20:48:39 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-16 20:48:39 [main] INFO  c.a.s.networkserver.ServerManager - Server đã mở thành công và đang lắng nghe tại cổng: 8080
+2026-05-16 20:49:03 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-16 20:49:03 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-16 20:49:03 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"baokien","password":"123456","fullName":"truongbaokien","role":"Bidder","type":"AUTH_REGISTER","requestId":"820f4fbf-e9a7-4a1a-b8a4-6b63bd859f85"}
+2026-05-16 20:49:03 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"baokien","password":"123456","fullName":"truongbaokien","role":"Bidder","type":"AUTH_REGISTER","requestId":"820f4fbf-e9a7-4a1a-b8a4-6b63bd859f85"}
+2026-05-16 20:49:03 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-16 20:49:03 [pool-1-thread-1] ERROR c.a.server.db.DatabaseConnection - Lỗi nghiêm trọng khi khởi tạo Database Pool
+java.lang.RuntimeException: CRITICAL: Không tìm thấy file application.properties trong thư mục resources!
+	at com.auction.server.db.DatabaseConnection.<init>(DatabaseConnection.java:30)
+	at com.auction.server.db.DatabaseConnection.getInstance(DatabaseConnection.java:75)
+	at com.auction.server.dao.UserDao.timTheoTenDangNhap(UserDao.java:29)
+	at com.auction.server.manager.UserManager.dangKy(UserManager.java:58)
+	at com.auction.server.networkserver.handler.AuthController.xuLyDangKy(AuthController.java:59)
+	at com.auction.server.networkserver.handler.AuthController.xuLy(AuthController.java:30)
+	at com.auction.server.networkserver.RequestDispatcher.dieuPhoi(RequestDispatcher.java:59)
+	at com.auction.server.networkserver.ClientHandler.thucThiKetNoi(ClientHandler.java:58)
+	at com.auction.server.networkserver.ClientHandler.run(ClientHandler.java:40)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+2026-05-16 20:49:47 [main] INFO  c.auction.server.ServerApplication - Đã nạp cấu hình cổng từ application.properties: 8080
+2026-05-16 20:49:47 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-16 20:49:47 [main] INFO  c.auction.server.ServerApplication -    HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   
+2026-05-16 20:49:47 [main] INFO  c.auction.server.ServerApplication -    Đang lắng nghe tại cổng: 8080                  
+2026-05-16 20:49:47 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-16 20:49:47 [main] INFO  c.a.s.networkserver.ServerManager - Server đã mở thành công và đang lắng nghe tại cổng: 8080
+2026-05-16 20:50:11 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-16 20:50:11 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-16 20:50:11 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-16 20:50:11 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"baokien","password":"123456","fullName":"baokien","role":"Bidder","type":"AUTH_REGISTER","requestId":"1642ae9b-4752-41fd-b068-6f4e79b23d0f"}
+2026-05-16 20:50:11 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"baokien","password":"123456","fullName":"baokien","role":"Bidder","type":"AUTH_REGISTER","requestId":"1642ae9b-4752-41fd-b068-6f4e79b23d0f"}
+2026-05-16 20:50:11 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-16 20:50:11 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-16 20:50:14 [pool-1-thread-1] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@46d55f33
+2026-05-16 20:50:14 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-16 20:50:14 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-16 20:50:26 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"baokien","password":"123456","type":"AUTH_LOGIN","requestId":"7d5fe837-e44e-4cec-8ba7-e04274e39fee"}
+2026-05-16 20:50:26 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"baokien","password":"123456","type":"AUTH_LOGIN","requestId":"7d5fe837-e44e-4cec-8ba7-e04274e39fee"}
+2026-05-16 20:50:26 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:50:32 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:50:33 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:50:34 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:50:35 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:50:36 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:50:38 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:50:43 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:50:44 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:50:46 [JavaFX Application Thread] INFO  c.a.c.c.c.ProductCardController - Người dùng muốn vào phòng đấu giá sản phẩm: Mercedes-Benz S450 0
+2026-05-16 20:50:52 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:50:56 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:50:57 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:50:58 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:50:58 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:50:59 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:51:24 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:51:27 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:51:28 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:51:29 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:51:31 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:51:32 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:51:32 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:51:33 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:51:34 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:51:34 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:51:35 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:51:35 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:51:36 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:51:36 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:51:37 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:51:38 [JavaFX Application Thread] INFO  c.a.c.c.c.ProductCardController - Người dùng muốn vào phòng đấu giá sản phẩm: Mercedes-Benz S450 0
+2026-05-16 20:51:46 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"auctionId":1,"bidAmount":4500000000000,"bidderId":1,"type":"BID_REQUEST","requestId":"52e1961c-c458-4a03-b7c0-f750b2cc120b"}
+2026-05-16 20:51:46 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"auctionId":1,"bidAmount":4500000000000,"bidderId":1,"type":"BID_REQUEST","requestId":"52e1961c-c458-4a03-b7c0-f750b2cc120b"}
+2026-05-16 20:52:09 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:52:30 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
+2026-05-16 20:52:41 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:53:15 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:53:17 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:53:19 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:53:31 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:53:31 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:53:32 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:53:34 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:53:36 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:53:36 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:53:37 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:53:38 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:53:39 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:53:40 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:54:03 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:54:03 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:54:04 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:54:05 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:54:06 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:54:09 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:55:08 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:55:08 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:55:10 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:55:10 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:55:11 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:55:11 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:55:12 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:55:12 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:55:13 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:55:13 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:55:14 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:55:15 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:55:16 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:55:19 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:55:20 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:55:20 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:55:21 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:55:21 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:55:21 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:55:22 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:55:23 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:55:42 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:55:43 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:55:43 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:55:44 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:55:44 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:55:46 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:55:46 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:55:47 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:55:47 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:55:49 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:55:49 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:55:49 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:55:50 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:55:52 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 20:55:52 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 20:55:53 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 20:57:51 [pool-1-thread-1] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-16 20:57:51 [pool-1-thread-1] INFO  c.a.s.networkserver.ClientHandler - Người dùng baokien đã thoát hệ thống.
+2026-05-16 20:58:18 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-16 20:58:18 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-16 20:58:18 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-16 20:58:18 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"seller","password":"123456","fullName":"seller","role":"Seller","type":"AUTH_REGISTER","requestId":"241b9b86-4c90-48f1-82a1-9890662aba41"}
+2026-05-16 20:58:18 [pool-1-thread-2] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"seller","password":"123456","fullName":"seller","role":"Seller","type":"AUTH_REGISTER","requestId":"241b9b86-4c90-48f1-82a1-9890662aba41"}
+2026-05-16 20:58:26 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"seller","password":"123456","type":"AUTH_LOGIN","requestId":"a5700881-27b3-40f7-9e4b-ddfc861ede16"}
+2026-05-16 20:58:26 [pool-1-thread-2] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"seller","password":"123456","type":"AUTH_LOGIN","requestId":"a5700881-27b3-40f7-9e4b-ddfc861ede16"}
+2026-05-16 20:58:27 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 20:58:52 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
+2026-05-16 21:00:56 [pool-1-thread-2] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-16 21:00:56 [pool-1-thread-2] INFO  c.a.s.networkserver.ClientHandler - Người dùng seller đã thoát hệ thống.
+2026-05-16 21:01:46 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-16 21:01:46 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-16 21:01:46 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-16 21:01:46 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"bidder","password":"123456","fullName":"bidder","role":"Bidder","type":"AUTH_REGISTER","requestId":"edb66193-ad24-4b3a-b2a4-ab0695c341f1"}
+2026-05-16 21:01:46 [pool-1-thread-3] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"bidder","password":"123456","fullName":"bidder","role":"Bidder","type":"AUTH_REGISTER","requestId":"edb66193-ad24-4b3a-b2a4-ab0695c341f1"}
+2026-05-16 21:01:58 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"bidder","password":"123456","type":"AUTH_LOGIN","requestId":"00b288b5-d38a-4d0f-9b4c-1bc9105de323"}
+2026-05-16 21:01:58 [pool-1-thread-3] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"bidder","password":"123456","type":"AUTH_LOGIN","requestId":"00b288b5-d38a-4d0f-9b4c-1bc9105de323"}
+2026-05-16 21:01:58 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 21:02:02 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 21:02:02 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 21:02:04 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 21:02:05 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 21:02:06 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 21:02:10 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 21:02:11 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 21:02:16 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 21:02:19 [JavaFX Application Thread] INFO  c.a.c.c.c.ProductCardController - Người dùng muốn vào phòng đấu giá sản phẩm: Mercedes-Benz S450 0
+2026-05-16 21:02:24 [pool-1-thread-3] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-16 21:02:24 [pool-1-thread-3] INFO  c.a.s.networkserver.ClientHandler - Người dùng bidder đã thoát hệ thống.
+2026-05-16 21:04:45 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-16 21:04:45 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-16 21:04:45 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-16 21:04:48 [main] INFO  c.auction.server.ServerApplication - Đã nạp cấu hình cổng từ application.properties: 8080
+2026-05-16 21:04:48 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-16 21:04:48 [main] INFO  c.auction.server.ServerApplication -    HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   
+2026-05-16 21:04:48 [main] INFO  c.auction.server.ServerApplication -    Đang lắng nghe tại cổng: 8080                  
+2026-05-16 21:04:48 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-16 21:04:48 [main] INFO  c.a.s.networkserver.ServerManager - Server đã mở thành công và đang lắng nghe tại cổng: 8080
+2026-05-16 21:05:13 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-16 21:05:13 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-16 21:05:13 [JavaFX Application Thread] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-16 21:05:13 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"bidder","password":"123456","type":"AUTH_LOGIN","requestId":"66492f74-3128-469b-a2e7-cea32ee2f8f3"}
+2026-05-16 21:05:13 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"bidder","password":"123456","type":"AUTH_LOGIN","requestId":"66492f74-3128-469b-a2e7-cea32ee2f8f3"}
+2026-05-16 21:05:13 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-16 21:05:13 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-16 21:05:16 [pool-1-thread-1] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@74919e31
+2026-05-16 21:05:16 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-16 21:05:16 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-16 21:05:16 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 21:05:20 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 21:05:21 [JavaFX Application Thread] INFO  c.a.c.c.c.ProductCardController - Người dùng muốn vào phòng đấu giá sản phẩm: Mercedes-Benz S450 0
+2026-05-16 21:05:25 [JavaFX Application Thread] INFO  c.a.c.c.bidder.MyAuctionsController - Đang nạp danh sách các phiên đã tham gia đấu giá.
+2026-05-16 21:05:26 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
+2026-05-16 21:05:27 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm đang theo dõi.
+2026-05-16 21:05:29 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 21:05:30 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 21:05:31 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 21:05:37 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-16 21:05:41 [pool-1-thread-1] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-16 21:05:41 [pool-1-thread-1] INFO  c.a.s.networkserver.ClientHandler - Người dùng bidder đã thoát hệ thống.
+2026-05-16 21:05:54 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-16 21:05:54 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-16 21:05:54 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-17 08:16:39 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:16:47 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
+2026-05-17 08:16:49 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:16:50 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:16:51 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:16:52 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:16:52 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:16:53 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:24:48 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:26:13 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:26:18 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.
+2026-05-17 08:34:06 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:34:10 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - Người dùng bấm nút Đăng xuất hệ thống.
+2026-05-17 08:35:53 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:35:57 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - Người dùng bấm nút Đăng xuất hệ thống.
+2026-05-17 08:39:55 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:39:57 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - Người dùng bấm nút Đăng xuất hệ thống.
+2026-05-17 08:46:42 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:46:44 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - Người dùng bấm nút Đăng xuất hệ thống.
+2026-05-17 08:47:55 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:47:56 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - Người dùng bấm nút Đăng xuất hệ thống.
+2026-05-17 08:48:04 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:48:06 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - Người dùng bấm nút Đăng xuất hệ thống.
+2026-05-17 08:49:35 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-17 08:49:36 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Sẵn sàng nhận thông tin đấu giá.

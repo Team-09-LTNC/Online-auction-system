@@ -1,4 +1,4 @@
-name: Java CI
+name: Java CI with Database and Checkstyle
 
 on:
   push:
@@ -9,6 +9,17 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
+    # Khởi tạo MySQL Service để chạy Integration Tests
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: auction_db
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
       - name: Checkout code
@@ -21,11 +32,31 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      # 1. Kiểm tra Coding Convention (Checkstyle) [cite: 103, 183]
+      - name: Check Code Style
+        run: mvn checkstyle:check
+        continue-on-error: false # Sẽ fail build nếu code không sạch
+
+      # 2. Ghi đè cấu hình Database để Test chạy trên local container thay vì Aiven
+      # Việc này đảm bảo tính độc lập của Unit Test [cite: 89, 335]
+      - name: Configure Test Properties
+        run: |
+          echo "db.host=localhost" > src/test/resources/application-test.properties
+          echo "db.port=3306" >> src/test/resources/application-test.properties
+          echo "db.name=auction_db" >> src/test/resources/application-test.properties
+          echo "db.user=root" >> src/test/resources/application-test.properties
+          echo "db.password=root" >> src/test/resources/application-test.properties
+
+      # 3. Build & Run Tests
+      # Sử dụng -Dtest để chạy các class như AuctionLogicTest [cite: 89]
       - name: Build & Run Tests
         run: mvn --batch-mode test
+        env:
+          # Truyền biến môi trường nếu cần thiết cho DatabaseConnection
+          DB_URL: jdbc:mysql://localhost:3306/auction_db
 
       - name: Upload Test Report
-        if: always()   # upload kể cả khi test fail
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-report

@@ -1,4 +1,3 @@
-// common/enums/ActionType.java
 package com.auction.common.enums;
 
 public class ActionType {

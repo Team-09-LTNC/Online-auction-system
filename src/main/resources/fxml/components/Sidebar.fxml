@@ -105,5 +105,14 @@
                 </VBox>
             </graphic>
         </Button>
+
+        <Region minHeight="1.0" prefHeight="1.0" style="-fx-background-color: #E5E5E5; -fx-margin: 5 0;" />
+
+        <Button onAction="#handleLogout" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="220.0"
+                styleClass="nav-button" style="-fx-text-fill: #A64452; -fx-font-weight: bold;" text="Đăng xuất">
+            <graphic>
+                <Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="🚪" />
+            </graphic>
+        </Button>
     </VBox>
 </VBox>
