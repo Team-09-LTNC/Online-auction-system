@@ -1,17 +1,13 @@
 package com.auction.server.networkserver.handler;
 
-import com.auction.common.dto.AuctionDTOs;
-import com.auction.common.dto.BaseDTOs;
-import com.auction.common.enums.ActionType;
-import com.auction.common.enums.ErrorCode;
-import com.auction.common.enums.StatusCode;
-import com.auction.common.model.bid.Auction;
-import com.auction.common.model.bid.BidTransaction;
-import com.auction.common.model.user.Bidder;
-import com.auction.common.model.user.User;
+import com.auction.common.dto.*;
+import com.auction.common.enums.*;
+import com.auction.common.model.bid.*;
+import com.auction.common.model.user.*;
 import com.auction.server.dao.AuctionDao;
 import com.auction.server.manager.AuctionManager;
 import com.auction.server.networkserver.ClientHandler;
+import com.auction.common.util.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -19,7 +15,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 public class AuctionController implements RequestHandler {
-    private final Gson gson = new Gson();
+    private final Gson gson = GsonConfig.getInstance();
     private final AuctionDao auctionDao = new AuctionDao();
 
     @Override

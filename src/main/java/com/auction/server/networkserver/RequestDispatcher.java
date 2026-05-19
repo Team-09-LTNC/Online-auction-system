@@ -50,6 +50,7 @@ public class RequestDispatcher {
         danhSachTrinhXuLy.put(ActionType.DELETE_PRODUCT, productController);
         danhSachTrinhXuLy.put(ActionType.SEARCH_PRODUCT, productController);
         danhSachTrinhXuLy.put(ActionType.UPDATE_PRODUCT, productController);
+        danhSachTrinhXuLy.put(ActionType.GET_MY_PRODUCTS, productController);
     }
 
     public static RequestDispatcher layInstance() {

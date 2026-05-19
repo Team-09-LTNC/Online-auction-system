@@ -39,9 +39,8 @@ public class DatabaseConnection implements ConnectionProvider {
             String user = props.getProperty("db.user");
             String pass = props.getProperty("db.password");
 
-            // 3. Xây dựng chuỗi URL kết nối (Kèm SSL)
             String url = "jdbc:mysql://" + host + ":" + port + "/" + dbName +
-                    "?useSSL=true&requireSSL=true&trustServerCertificate=true&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+                    "?useSSL=true&requireSSL=true&trustServerCertificate=true&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true";
 
             // 4. Thiết lập HikariConfig
             HikariConfig config = new HikariConfig();

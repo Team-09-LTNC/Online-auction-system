@@ -20,13 +20,21 @@ public class ItemDao {
         Item item;
 
         switch (loai) {
-            case "ELECTRONICS": item = new Electronics(); break;
-            case "ART":         item = new Art(); break;
-            case "VEHICLE":     item = new Vehicle(); break;
-            case "OTHER":       item = new OtherItem(); break;
+            case "ELECTRONICS":
+            case "ĐIỆN TỬ":
+                item = new Electronics(); break;
+            case "ART":
+            case "NGHỆ THUẬT":
+                item = new Art(); break;
+            case "VEHICLE":
+            case "PHƯƠNG TIỆN":
+                item = new Vehicle(); break;
+            case "OTHER":
+            case "KHÁC":
+                item = new OtherItem(); break;
             default:
-                logger.warn("[ItemDao] Dữ liệu category không hợp lệ từ DB: '{}'", loai);
-                return null;
+                logger.warn("[ItemDao] Dữ liệu category không khớp chuẩn: '{}'. Tự động gán vào OtherItem.", loai);
+                item = new OtherItem(); break;
         }
 
         item.setId(rs.getInt("id"));
