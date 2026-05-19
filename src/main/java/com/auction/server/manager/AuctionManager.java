@@ -200,7 +200,6 @@ public class AuctionManager {
 
     // Đăng ký observer để nhận thông báo khi có bid mới
     public void dangKyTheoDoi(int idPhien, AuctionObserver obs) {
-        // Dùng CopyOnWriteArrayList để thread-safe khi duyệt gửi thông báo
         dsNguoiTheoDoi.computeIfAbsent(idPhien, k -> new CopyOnWriteArrayList<>()).add(obs);
     }
 
@@ -211,6 +210,20 @@ public class AuctionManager {
             for (AuctionObserver obs : observers) obs.onNewBid(tx);
         }
     }
+
+
+    // Gửi tin nhắn chat đến tất cả observer trong phiên
+    public void broadcastChatMessage(int idPhien, String senderName, String message, boolean isSystem) {
+        notifierPool.execute(() -> {
+            List<AuctionObserver> observers = dsNguoiTheoDoi.get(idPhien);
+            if (observers != null) {
+                for (AuctionObserver obs : observers) {
+                    obs.onChatMessage(senderName, message, isSystem);
+                }
+            }
+        });
+    }
+
     /** Lấy danh sách các phiên đang chạy (từ bộ nhớ tạm ConcurrentHashMap) */
     public List<Auction> layDanhSachPhienDangChay() {
         return new ArrayList<>(dsPhienDangChay.values());
@@ -232,7 +245,7 @@ public class AuctionManager {
     /** Ép buộc đóng phiên đấu giá ngay lập tức (Dành cho Admin) */
     public boolean buocDongPhien(int idPhien) {
         if (dsPhienDangChay.containsKey(idPhien)) {
-            dongPhien(idPhien); // Gọi hàm private dongPhien() bạn đã viết sẵn
+            dongPhien(idPhien);
             return true;
         }
         return false;

@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
@@ -16,11 +17,11 @@
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.auction.client.controller.components.SidebarController">
 
-    <VBox spacing="10.0" style="-fx-background-color: #FFFFFF; -fx-background-radius: 20; -fx-padding: 25 15 25 15;" VBox.vgrow="ALWAYS">
+    <VBox spacing="10.0" style="-fx-background-color: #FFFFFF; -fx-background-radius: 20; -fx-padding: 20 15 20 15;" VBox.vgrow="ALWAYS">
 
         <HBox alignment="CENTER_LEFT" spacing="12.0">
             <padding>
-                <Insets bottom="25.0" left="5.0" />
+                <Insets bottom="15.0" left="5.0" />
             </padding>
             <StackPane prefHeight="35.0" prefWidth="35.0">
                 <SVGPath content="M 12 2 L 4 5 V 11 C 4 16.5 7.4 21.7 12 23 C 16.6 21.7 20 16.5 20 11 V 5 L 12 2 Z"
@@ -32,78 +33,107 @@
             </VBox>
         </HBox>
 
-        <VBox spacing="5.0">
-            <Button fx:id="btnDashboard" onAction="#handleOpenDashboard" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="220.0"
-                    styleClass="nav-button-active" text="Trang chủ">
-                <font><Font name="System Bold" size="13.0" /></font>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="NEVER"
+                    style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;"
+                    VBox.vgrow="ALWAYS">
+            <content>
+                <VBox spacing="15.0" style="-fx-background-color: white;">
+
+                    <VBox spacing="4.0">
+                        <Button fx:id="btnDashboard" onAction="#handleOpenDashboard" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="210.0"
+                                styleClass="nav-button-active" text="Trang chủ">
+                            <font><Font name="System Bold" size="13.0" /></font>
+                            <graphic>
+                                <Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="🏠" textFill="WHITE" />
+                            </graphic>
+                        </Button>
+
+                        <Button fx:id="btnAuctions" onAction="#handleOpenAuctions" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="210.0"
+                                styleClass="nav-button" text="Phiên đấu giá">
+                            <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="🔨" /></graphic>
+                        </Button>
+
+                        <Button fx:id="btnMyAuctions" onAction="#handleOpenMyAuctions" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="210.0"
+                                styleClass="nav-button" text="Đấu giá của tôi">
+                            <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="⏱" /></graphic>
+                        </Button>
+
+                        <Button fx:id="btnMyProducts" onAction="#handleOpenMyProducts" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="210.0"
+                                styleClass="nav-button" text="Sản phẩm của tôi">
+                            <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="📦" /></graphic>
+                        </Button>
+
+                        <Button fx:id="btnFollowed" onAction="#handleOpenFollowed" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="210.0"
+                                styleClass="nav-button" text="Đang theo dõi">
+                            <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="♡" /></graphic>
+                        </Button>
+
+                        <Button fx:id="btnWallet" onAction="#handleOpenWallet" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="210.0"
+                                styleClass="nav-button" text="Ví của tôi">
+                            <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="💳" /></graphic>
+                        </Button>
+
+                        <Button fx:id="btnChat" onAction="#handleOpenChat" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="210.0"
+                                styleClass="nav-button" text="Tin nhắn">
+                            <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="💬" /></graphic>
+                        </Button>
+                    </VBox>
+
+                    <Region minHeight="1.0" prefHeight="1.0" style="-fx-background-color: #E5E5E5;" />
+
+                    <VBox spacing="2.0">
+                        <Label text="DANH MỤC" textFill="#BBBBBB" style="-fx-font-weight: bold; -fx-font-size: 10;">
+                            <padding><Insets bottom="5.0" left="15.0" /></padding>
+                        </Label>
+
+                        <Button fx:id="catAll" onAction="#handleFilterCategory" alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="210.0" styleClass="nav-button" text="Tất cả">
+                            <graphic><Label alignment="CENTER" prefWidth="30.0" text="🔍" /></graphic>
+                        </Button>
+
+                        <Button fx:id="catElec" onAction="#handleFilterCategory" alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="210.0" styleClass="nav-button" text="Điện tử">
+                            <graphic><Label alignment="CENTER" prefWidth="30.0" text="💻" /></graphic>
+                        </Button>
+
+                        <Button fx:id="catVeh" onAction="#handleFilterCategory" alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="210.0" styleClass="nav-button" text="Xe cộ">
+                            <graphic><Label alignment="CENTER" prefWidth="30.0" text="🚗" /></graphic>
+                        </Button>
+
+                        <Button fx:id="catArt"  onAction="#handleFilterCategory" alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="210.0" styleClass="nav-button" text="Nghệ thuật">
+                            <graphic><Label alignment="CENTER" prefWidth="30.0" text="🎨" /></graphic>
+                        </Button>
+
+                        <Button fx:id="catOther" onAction="#handleFilterCategory" alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="210.0" styleClass="nav-button" text="Khác">
+                            <graphic><Label alignment="CENTER" prefWidth="30.0" text="📦" /></graphic>
+                        </Button>
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+
+        <VBox spacing="10.0">
+            <padding>
+                <Insets top="10.0" />
+            </padding>
+
+            <Button fx:id="btnPostAuction" onAction="#handleOpenPostAuction" prefHeight="50.0" prefWidth="220.0"
+                    style="-fx-background-color: #A64452; -fx-background-radius: 15; -fx-cursor: hand;">
                 <graphic>
-                    <Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="🏠" textFill="WHITE" />
+                    <VBox alignment="CENTER">
+                        <Label text="+ Đăng sản phẩm" textFill="WHITE" style="-fx-font-weight: bold; -fx-font-size: 13;" />
+                        <Label text="Dành cho người bán" textFill="#F2D5D5" style="-fx-font-size: 9;" />
+                    </VBox>
                 </graphic>
             </Button>
 
-            <Button fx:id="btnAuctions" onAction="#handleOpenAuctions" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="220.0"
-                    styleClass="nav-button" text="Phiên đấu giá">
-                <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="🔨" /></graphic>
-            </Button>
+            <Region minHeight="1.0" prefHeight="1.0" style="-fx-background-color: #E5E5E5;" />
 
-            <Button fx:id="btnMyAuctions" onAction="#handleOpenMyAuctions" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="220.0"
-                    styleClass="nav-button" text="Đấu giá của tôi">
-                <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="⏱" /></graphic>
-            </Button>
-
-            <Button fx:id="btnMyProducts" onAction="#handleOpenMyProducts" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="220.0"
-                    styleClass="nav-button" text="Sản phẩm của tôi">
-                <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="📦" /></graphic>
-            </Button>
-
-            <Button fx:id="btnFollowed" onAction="#handleOpenFollowed" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="220.0"
-                    styleClass="nav-button" text="Đang theo dõi">
-                <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="♡" /></graphic>
+            <Button onAction="#handleLogout" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="220.0"
+                    styleClass="nav-button" style="-fx-text-fill: #A64452; -fx-font-weight: bold;" text="Đăng xuất">
+                <graphic>
+                    <Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="🚪" />
+                </graphic>
             </Button>
         </VBox>
 
-        <Region minHeight="1.0" prefHeight="1.0" style="-fx-background-color: #E5E5E5; -fx-margin: 10 0;" />
-
-        <VBox spacing="2.0">
-            <Label text="DANH MỤC" textFill="#BBBBBB" style="-fx-font-weight: bold; -fx-font-size: 10;">
-                <padding><Insets bottom="5.0" left="15.0" /></padding>
-            </Label>
-
-            <Button fx:id="catAll" onAction="#handleFilterCategory" alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="220.0" styleClass="nav-button" text="Tất cả">
-                <graphic><Label alignment="CENTER" prefWidth="30.0" text="🔍" /></graphic>
-            </Button>
-
-            <Button fx:id="catElec" onAction="#handleFilterCategory" alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="220.0" styleClass="nav-button" text="Điện tử">
-                <graphic><Label alignment="CENTER" prefWidth="30.0" text="💻" /></graphic>
-            </Button>
-
-            <Button fx:id="catVeh" onAction="#handleFilterCategory" alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="220.0" styleClass="nav-button" text="Xe cộ">
-                <graphic><Label alignment="CENTER" prefWidth="30.0" text="🚗" /></graphic>
-            </Button>
-
-            <Button fx:id="catArt" onAction="#handleFilterCategory" alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="220.0" styleClass="nav-button" text="Nghệ thuật">
-                <graphic><Label alignment="CENTER" prefWidth="30.0" text="🎨" /></graphic>
-            </Button>
-
-            <Button fx:id="catColl" onAction="#handleFilterCategory" alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="220.0" styleClass="nav-button" text="Đồ sưu tầm">
-                <graphic><Label alignment="CENTER" prefWidth="30.0" text="⏳" /></graphic>
-            </Button>
-
-            <Button fx:id="catOther" onAction="#handleFilterCategory" alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="220.0" styleClass="nav-button" text="Khác">
-                <graphic><Label alignment="CENTER" prefWidth="30.0" text="📦" /></graphic>
-            </Button>
-        </VBox>
-
-        <Region VBox.vgrow="ALWAYS" />
-
-        <Button onAction="#handleOpenPostAuction" prefHeight="55.0" prefWidth="220.0"
-                style="-fx-background-color: #A64452; -fx-background-radius: 15; -fx-cursor: hand;">
-            <graphic>
-                <VBox alignment="CENTER">
-                    <Label text="+ Đăng sản phẩm" textFill="WHITE" style="-fx-font-weight: bold; -fx-font-size: 14;" />
-                    <Label text="Dành cho người bán" textFill="#F2D5D5" style="-fx-font-size: 9;" />
-                </VBox>
-            </graphic>
-        </Button>
     </VBox>
 </VBox>

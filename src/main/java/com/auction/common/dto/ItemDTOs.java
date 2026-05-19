@@ -9,14 +9,20 @@ public class ItemDTOs {
         private final long startingPrice;
         private final String category;
         private final int sellerId;
+        private final String imageUrl;
+        private final String startTime;
+        private final String endTime;
 
-        public CreateItemRequest(String name, String description, long startingPrice, String category, int sellerId) {
+        public CreateItemRequest(String name, String description, long startingPrice, String category, int sellerId, String imageUrl, String startTime, String endTime) {
             super("CREATE_ITEM_REQUEST");
             this.name = name;
             this.description = description;
             this.startingPrice = startingPrice;
             this.category = category;
             this.sellerId = sellerId;
+            this.imageUrl = imageUrl;
+            this.startTime = startTime;
+            this.endTime = endTime;
         }
 
         public String getName() { return name; }
@@ -24,6 +30,9 @@ public class ItemDTOs {
         public long getStartingPrice() { return startingPrice; }
         public String getCategory() { return category; }
         public int getSellerId() { return sellerId; }
+        public String getImageUrl() { return imageUrl; }
+        public String getStartTime() { return startTime; }
+        public String getEndTime() { return endTime; }
     }
 
     public static class CreateItemResponse extends BaseDTOs.Response {

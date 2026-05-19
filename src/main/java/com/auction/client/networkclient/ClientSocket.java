@@ -42,7 +42,7 @@ public class ClientSocket {
     private BufferedReader in;
     private final Gson gson = new Gson();
 
-    // Lưu Callback theo "Loại phản hồi" (VD: "LOGIN_RESPONSE")
+    // LƯU Ý: Đã đổi cơ chế, giờ map sẽ lưu Callback với Khóa (Key) là `requestId` thay vì `type`
     private final Map<String, Consumer<JsonObject>> responseCallbacks = new ConcurrentHashMap<>();
 
     private ClientSocket() { connect(); }
@@ -65,14 +65,24 @@ public class ClientSocket {
     }
 
     /**
-     * Gửi JSON lên Server và đăng ký chờ đúng một type (Ví dụ: "REGISTER_RESPONSE")
+     * Gửi JSON lên Server. Lưu trữ Callback dựa vào requestId để định tuyến chính xác.
      */
     public void sendJsonRequest(JsonObject jsonObject, String expectedResponseType, Consumer<JsonObject> onResponse) {
         if (out != null) {
-            // [TỐI ƯU THEO SERVER] Chỉ đăng ký bằng type, không dùng requestId
-            if (onResponse != null && expectedResponseType != null) {
-                responseCallbacks.put(expectedResponseType, onResponse);
+            // Lấy requestId từ gói tin JSON (Lớp BaseDTOs.Request tự sinh ra)
+            String requestId = jsonObject.has("requestId") && !jsonObject.get("requestId").isJsonNull()
+                    ? jsonObject.get("requestId").getAsString() : null;
+
+            if (onResponse != null) {
+                if (requestId != null) {
+                    // Định tuyến chuẩn: Dùng requestId
+                    responseCallbacks.put(requestId, onResponse);
+                } else if (expectedResponseType != null) {
+                    // Dự phòng: Lỡ gói tin không có requestId thì vẫn dùng type như cũ
+                    responseCallbacks.put(expectedResponseType, onResponse);
+                }
             }
+
             String jsonPayload = gson.toJson(jsonObject);
             out.println(jsonPayload);
             logger.debug("Request -> Server: {}", jsonPayload);
@@ -111,12 +121,25 @@ public class ClientSocket {
             if (isPushEvent(type)) {
                 PushHandler.handle(type, jsonObject);
             } else {
-                // Rút Callback ra theo type chính xác từ Server trả về
-                Consumer<JsonObject> callback = responseCallbacks.remove(type);
+                // 1. Trích xuất requestId từ Server trả về
+                String requestId = jsonObject.has("requestId") && !jsonObject.get("requestId").isJsonNull()
+                        ? jsonObject.get("requestId").getAsString() : null;
+
+                Consumer<JsonObject> callback = null;
+
+                // 2. Tìm Callback tương ứng
+                if (requestId != null && responseCallbacks.containsKey(requestId)) {
+                    callback = responseCallbacks.remove(requestId); // Xóa sau khi dùng (tránh rò rỉ RAM)
+                } else if (responseCallbacks.containsKey(type)) {
+                    // Fallback (Dự phòng): Nếu Server quên trả requestId, tìm theo type cũ
+                    callback = responseCallbacks.remove(type);
+                }
+
+                // 3. Thực thi Callback đẩy data về Giao diện
                 if (callback != null) {
                     callback.accept(jsonObject);
                 } else {
-                    logger.debug("Nhận phản hồi nhưng không có Callback đăng ký: {}", type);
+                    logger.debug("Nhận phản hồi nhưng không có Callback (requestId: {}, type: {})", requestId, type);
                 }
             }
         } catch (JsonSyntaxException e) {
@@ -126,6 +149,7 @@ public class ClientSocket {
 
     private boolean isPushEvent(String type) {
         return com.auction.common.enums.ActionType.AUCTION_BID_UPDATE.equals(type) ||
-                com.auction.common.enums.ActionType.AUCTION_RESULT.equals(type);
+                com.auction.common.enums.ActionType.AUCTION_RESULT.equals(type) ||
+                com.auction.common.enums.ActionType.RECEIVE_CHAT_MESSAGE.equals(type);
     }
 }

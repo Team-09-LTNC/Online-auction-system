@@ -32,7 +32,8 @@ public class RegisterController {
     @FXML
     public void initialize() {
         if (roleComboBox != null) {
-            roleComboBox.getItems().addAll("Bidder", "Seller", "Admin");
+            // Đã xóa Role "Admin" theo yêu cầu
+            roleComboBox.getItems().addAll("Bidder", "Seller");
         }
     }
 

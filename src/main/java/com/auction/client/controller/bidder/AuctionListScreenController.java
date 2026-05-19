@@ -1,87 +1,133 @@
 package com.auction.client.controller.bidder;
 
-import com.auction.client.controller.MainController;
+import com.auction.client.controller.auth.UserSession;
+import com.auction.client.controller.components.ProductCardController;
+import com.auction.client.interfaces.CategoryFilterListener;
+import com.auction.client.networkclient.ClientSocket;
+import com.auction.common.enums.ActionType;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.Label;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.VBox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
-public class AuctionListScreenController implements Initializable {
+public class AuctionListScreenController implements Initializable, CategoryFilterListener {
 
-    // --- BIẾN GIAO DIỆN  ---
-    @FXML private TableView<AuctionModel> auctionTable;
-    @FXML private TableColumn<AuctionModel, String> colName;
-    @FXML private TableColumn<AuctionModel, String> colPrice;
-    @FXML private TableColumn<AuctionModel, String> colStatus;
-    @FXML private TableColumn<AuctionModel, String> colTime;
-    @FXML private Button btnBack;
-    @FXML private Button btnEnterAuction;
+    private static final Logger logger = LoggerFactory.getLogger(AuctionListScreenController.class);
+
+    @FXML private FlowPane productFlowPane;
+
+    // Khai báo nhãn Header phục vụ cá nhân hóa
+    @FXML private Label lblHeaderName;
+    @FXML private Label lblHeaderRole;
+
+    // Trạng thái bộ lọc danh mục
+    private String currentCategory = "Tất cả";
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // 1. Định nghĩa cách các cột lấy dữ liệu từ Model
-        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
-        colPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
-        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
-        colTime.setCellValueFactory(new PropertyValueFactory<>("timeRemaining"));
+        // 1. Đồng bộ người dùng thật
+        updateHeaderUserInfo();
 
-        // 2. Nạp dữ liệu giả để thầy thấy bảng không bị trống
-        loadMockData();
-    }
-
-    private void loadMockData() {
-        auctionTable.getItems().add(new AuctionModel("Laptop Dell XPS 15", "25,000,000 đ", "Đang diễn ra", "01:45:00"));
-        auctionTable.getItems().add(new AuctionModel("Máy ảnh Sony A7III", "35,000,000 đ", "Đang diễn ra", "00:20:10"));
-        auctionTable.getItems().add(new AuctionModel("Đồng hồ Apple Watch", "8,000,000 đ", "Đã kết thúc", "00:00:00"));
-    }
-
-    // Xử lý khi bấm nút "Quay về" (onAction="#onBackClick")
-    @FXML
-    private void onBackClick() {
-        // Quay lại trang Dashboard chính của Bidder
-        MainController.instance.setCenterContent("/fxml/bidder/MainDashboard.fxml");
-    }
-
-    // Xử lý khi bấm nút "VÀO ĐẤU GIÁ" (onAction="#onEnterAuctionClick")
-    @FXML
-    private void onEnterAuctionClick() {
-        AuctionModel selected = auctionTable.getSelectionModel().getSelectedItem();
-
-        if (selected != null) {
-            System.out.println("Vào phòng cho sản phẩm: " + selected.getName());
-            // Dẫn user vào cái AuctionRoom (Cái Mercedes m vừa làm xong ấy)
-            MainController.instance.setCenterContent("/fxml/bidder/AuctionRoom.fxml");
-        } else {
-            // Nếu chưa chọn dòng nào mà đã bấm nút
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Thông báo");
-            alert.setHeaderText(null);
-            alert.setContentText("M phải chọn một phiên đấu giá trong bảng trước khi bấm nút nhé!");
-            alert.showAndWait();
+        // 2. Fetch toàn bộ danh sách phiên đấu giá
+        if (productFlowPane != null) {
+            productFlowPane.getChildren().clear();
+            loadAuctionsFromServer();
         }
     }
 
-    // --- CLASS MODEL PHỤ (Dùng để chứa dữ liệu cho mỗi dòng trong bảng) ---
-    public static class AuctionModel {
-        private String name, price, status, timeRemaining;
+    private void updateHeaderUserInfo() {
+        try {
+            String currentUserName = UserSession.getUsername() != null ? UserSession.getUsername() : "Người dùng";
+            String currentUserRole = UserSession.getCurrentRole() != null ? UserSession.getCurrentRole() : "BIDDER";
 
-        public AuctionModel(String name, String price, String status, String timeRemaining) {
-            this.name = name;
-            this.price = price;
-            this.status = status;
-            this.timeRemaining = timeRemaining;
+            if (lblHeaderName != null) lblHeaderName.setText("Chào, " + currentUserName);
+            if (lblHeaderRole != null) {
+                lblHeaderRole.setText(currentUserRole.substring(0, 1).toUpperCase() + currentUserRole.substring(1).toLowerCase() + " ˅");
+            }
+        } catch (Exception e) {
+            logger.error("Lỗi cập nhật Header tại AuctionListScreen: {}", e.getMessage());
         }
+    }
 
-        // CỰC QUAN TRỌNG: Phải có Getter thì TableView mới hiện chữ được
-        public String getName() { return name; }
-        public String getPrice() { return price; }
-        public String getStatus() { return status; }
-        public String getTimeRemaining() { return timeRemaining; }
+    // Lắng nghe sự kiện click bộ lọc danh mục từ Main UI
+    @Override
+    public void onCategorySelected(String category) {
+        this.currentCategory = category;
+        logger.info("Đã chọn danh mục lọc: {}", category);
+
+        if (productFlowPane != null) {
+            productFlowPane.getChildren().clear();
+            loadAuctionsFromServer();
+        }
+    }
+
+    private void loadAuctionsFromServer() {
+        JsonObject request = new JsonObject();
+        request.addProperty("type", ActionType.GET_ALL_AUCTIONS);
+
+        // Gửi kèm trạng thái lọc lên Server (nếu Server hỗ trợ truy vấn lọc)
+        request.addProperty("category", currentCategory);
+
+        ClientSocket.getInstance().sendJsonRequest(request, "ALL_AUCTIONS_RESPONSE", response -> {
+
+            // THREAD-SAFETY: Đảm bảo JavaFX UI Thread xử lý Render
+            Platform.runLater(() -> {
+                if (response.has("success") && response.get("success").getAsBoolean() && response.has("auctions")) {
+                    JsonArray auctions = response.getAsJsonArray("auctions");
+
+                    // Trích xuất tập ID mà User hiện tại đang follow
+                    List<Integer> followedIds = new ArrayList<>();
+                    if (response.has("followedIds")) {
+                        for (JsonElement el : response.getAsJsonArray("followedIds")) {
+                            followedIds.add(el.getAsInt());
+                        }
+                    }
+
+                    for (JsonElement element : auctions) {
+                        JsonObject obj = element.getAsJsonObject();
+
+                        // Lọc phía Client (trong trường hợp Server trả toàn bộ)
+                        String itemCategory = obj.has("category") ? obj.get("category").getAsString() : "";
+                        if (!"Tất cả".equals(currentCategory) && !currentCategory.equalsIgnoreCase(itemCategory)) {
+                            continue;
+                        }
+
+                        int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
+                        String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Đang cập nhật";
+                        long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
+                        String status = obj.has("status") ? obj.get("status").getAsString() : "N/A";
+                        String imageUrl = obj.has("imageUrl") ? obj.get("imageUrl").getAsString() : "";
+
+                        boolean isFollowed = followedIds.contains(auctionId);
+
+                        try {
+                            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
+                            VBox card = loader.load();
+                            ProductCardController controller = loader.getController();
+
+                            // Inject Dữ liệu vào Card
+                            controller.setProductData(auctionId, name, price, "Đang diễn ra", status.equals("OPEN") ? "Đang diễn ra" : status, imageUrl, isFollowed);
+                            productFlowPane.getChildren().add(card);
+                        } catch (IOException e) {
+                            logger.error("Không nạp được giao diện ProductCard.fxml: {}", e.getMessage());
+                        }
+                    }
+                }
+            });
+        });
     }
 }

@@ -99,4 +99,23 @@ public class ClientHandler implements Runnable, AuctionObserver {
             out.println(gson.toJson(update));
         }
     }
+
+    /**
+     * phiên chat của phòng đấu giá
+     * @param senderName
+     * @param message
+     * @param isSystem
+     */
+    @Override
+    public void onChatMessage(String senderName, String message, boolean isSystem) {
+        if (out != null) {
+            JsonObject update = new JsonObject();
+            update.addProperty("type", ActionType.RECEIVE_CHAT_MESSAGE);
+            update.addProperty("senderName", senderName);
+            update.addProperty("message", message);
+            update.addProperty("isSystem", isSystem);
+
+            out.println(gson.toJson(update));
+        }
+    }
 }
