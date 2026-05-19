@@ -26,6 +26,8 @@ public class RequestDispatcher {
         danhSachTrinhXuLy.put(ActionType.WITHDRAW_MONEY, authController);
         danhSachTrinhXuLy.put(ActionType.ADMIN_GET_ALL_BIDDERS, authController);
         danhSachTrinhXuLy.put(ActionType.ADMIN_GET_ALL_SELLERS, authController);
+        danhSachTrinhXuLy.put(ActionType.ADMIN_TOGGLE_LOCK_USER, authController);
+
 
         // Nhóm Auction
         danhSachTrinhXuLy.put(ActionType.JOIN_AUCTION, auctionController);

@@ -46,5 +46,5 @@ public class ActionType {
     public static final String ADMIN_GET_ALL_BIDDERS = "ADMIN_GET_ALL_BIDDERS";
     public static final String ADMIN_GET_ALL_SELLERS = "ADMIN_GET_ALL_SELLERS";
     public static final String ADMIN_GET_ALL_AUCTIONS = "ADMIN_GET_ALL_AUCTIONS";
-    public static final String ADMIN_DELETE_BIDDER = "ADMIN_DELETE_BIDDER";
+    public static final String ADMIN_TOGGLE_LOCK_USER = "ADMIN_TOGGLE_LOCK_USER";
 }

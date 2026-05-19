@@ -116,7 +116,7 @@ public class UserDao {
                 rs.getString("password"),
                 rs.getString("full_name")
             );
-            // set id nếu cần
+            b.setStatus(rs.getString("status") != null ? rs.getString("status") : "ACTIVE"); // ← THÊM
             list.add(b);
         }
     } catch (SQLException e) {
@@ -137,12 +137,39 @@ public List<User> layTatCaSeller() {
                 rs.getString("password"),
                 rs.getString("full_name")
             );
-            // set id nếu cần
+            s.setStatus(rs.getString("status") != null ? rs.getString("status") : "ACTIVE"); // ← THÊM
             list.add(s);
         }
     } catch (SQLException e) {
         logger.error("Lỗi lấy danh sách seller: {}", e.getMessage());
     }
     return list;
+}
+
+// Admin có thể khóa tài khoản người dùng (đổi status thành ACTIVE hoặc LOCKED), không xóa hẳn để giữ lịch sử giao dịch.
+public boolean capNhatTrangThai(String username, String status) {
+    String sql = "UPDATE users SET status = ? WHERE username = ?";
+    try (Connection conn = DatabaseConnection.getInstance().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, status);
+        ps.setString(2, username);
+        return ps.executeUpdate() > 0;
+    } catch (SQLException e) {
+        logger.error("Lỗi cập nhật trạng thái user: {}", e.getMessage());
+        return false;
+    }
+}
+// Lấy trạng thái của user (ACTIVE, LOCKED) để kiểm tra khi đăng nhập hoặc thực hiện hành động nào đó.
+public String layTrangThai(String username) {
+    String sql = "SELECT status FROM users WHERE username = ?";
+    try (Connection conn = DatabaseConnection.getInstance().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, username);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) return rs.getString("status");
+    } catch (SQLException e) {
+        logger.error("Lỗi lấy trạng thái user: {}", e.getMessage());
+    }
+    return "ACTIVE";
 }
 }

@@ -7,6 +7,7 @@ public abstract class User extends Entity {
     protected String password;
     protected String fullName;
     protected long balance;
+    protected String status; // ACTIVE, LOCKED
 
     public User(String username, String password, String fullName) {
         super();
@@ -14,12 +15,15 @@ public abstract class User extends Entity {
         this.password = password;
         this.fullName = fullName;
         this.balance = 0;
+        this.status = "ACTIVE"; // Mặc định là hoạt động
     }
 
     public abstract String getRoleName();
 
     public String getUsername() { return username; }
     public String getFullName() { return fullName; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
     public String getPassword() { return password; }
 
     // Đảm bảo Thread-safety cho số dư

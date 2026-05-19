@@ -1,5 +1,6 @@
 package com.auction.client.controller.admin;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -175,7 +176,28 @@ public class BiddersViewController implements Initializable {
             String newStatus = isCurrentlyLocked ? STATUS_ACTIVE : STATUS_LOCKED;
             selected.setStatus(newStatus);
 
-            // TODO: gọi service cập nhật server
+            // ← THAY ĐOẠN "TODO: gọi service" bằng đoạn này
+        JsonObject request = new JsonObject();
+        request.addProperty("type", ActionType.ADMIN_TOGGLE_LOCK_USER);
+        request.addProperty("requestId", java.util.UUID.randomUUID().toString());
+        request.addProperty("username", selected.getUsername());
+        request.addProperty("newStatus", newStatus);
+
+        ClientSocket.getInstance().sendJsonRequest(request, "TOGGLE_LOCK_USER_RESPONSE", response -> {
+            Platform.runLater(() -> {
+                boolean ok = response.has("success") && response.get("success").getAsBoolean();
+                if (ok) {
+                    selected.setStatus(newStatus);
+                    bidderTable.refresh();
+                    refreshLockButtonText(selected);
+                    applyFilter();
+                    updateCountLabel();
+                } else {
+                    String msg = response.has("message") ? response.get("message").getAsString() : "Lỗi không xác định";
+                    new Alert(Alert.AlertType.ERROR, msg).showAndWait();
+                }
+            });
+        });
 
             bidderTable.refresh();                 // Cập nhật lại ô trạng thái
 

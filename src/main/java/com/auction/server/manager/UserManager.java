@@ -50,6 +50,11 @@ public class UserManager {
         if (!user.getRoleName().equalsIgnoreCase(role)) {
             throw new AuthenticationException("Tài khoản này không có quyền truy cập với vai trò " + role + "!");
         }
+        // 3.2 Kiểm tra xem tài khoản có bị khoá không (trạng thái LOCKED) - nếu có thì ném lỗi chi tiết
+        String status = userDao.layTrangThai(tenDangNhap);
+        if ("LOCKED".equals(status)) {
+            throw new AuthenticationException("Tài khoản đã bị khoá, vui lòng liên hệ Admin!");
+        }
         // 4. Đăng nhập thành công -> Cập nhật trạng thái Online và trả về dữ liệu
         onlineUsers.put(user.getId(), user);
         return user;

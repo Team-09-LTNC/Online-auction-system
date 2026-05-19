@@ -30,7 +30,8 @@ public class AuthController implements RequestHandler {
 
         // Trích xuất chung mã requestId từ Client gửi lên
         String reqId = yeuCau.has("requestId") && !yeuCau.get("requestId").isJsonNull()
-                ? yeuCau.get("requestId").getAsString() : null;
+                ? yeuCau.get("requestId").getAsString()
+                : null;
 
         // Truyền thêm reqId vào tất cả các phương thức con
         switch (loaiYeuCau) {
@@ -52,69 +53,70 @@ public class AuthController implements RequestHandler {
                 return xuLyLayDanhSachBidder(reqId);
             case ActionType.ADMIN_GET_ALL_SELLERS:
                 return xuLyLayDanhSachSeller(reqId);
-            // case ActionType.ADMIN_GET_ALL_AUCTIONS:
-            //     return xuLyLayDanhSachAuctions(reqId);
-            // case ActionType.ADMIN_DELETE_BIDDER:
-            //     return xuLyXoaNguoiDung(yeuCau, reqId);
+            case ActionType.ADMIN_TOGGLE_LOCK_USER:
+                return xuLyKhoaTaiKhoan(yeuCau, reqId);
             default:
                 return null;
         }
     }
 
+    // Xử lý yêu cầu lấy danh sách Bidder (Admin)
     private String xuLyLayDanhSachBidder(String reqId) {
-    List<User> bidders = userDao.layTatCaBidder(); // cần thêm method này vào UserDao
-    JsonArray array = new JsonArray();
-    for (User u : bidders) {
-        JsonObject obj = new JsonObject();
-        obj.addProperty("username", u.getUsername());
-        obj.addProperty("fullname", u.getFullName());
-        obj.addProperty("status", "ACTIVE"); // hoặc lấy từ DB nếu có cột status
-        array.add(obj);
+        List<User> bidders = userDao.layTatCaBidder(); // cần thêm method này vào UserDao
+        JsonArray array = new JsonArray();
+        for (User u : bidders) {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("username", u.getUsername());
+            obj.addProperty("fullname", u.getFullName());
+            obj.addProperty("status", u.getStatus() != null ? u.getStatus() : "ACTIVE");
+            array.add(obj);
+        }
+        JsonObject res = new JsonObject();
+        res.addProperty("type", "GET_ALL_BIDDERS_RESPONSE");
+        res.addProperty("success", true);
+        res.add("data", array);
+        if (reqId != null)
+            res.addProperty("requestId", reqId);
+        return gson.toJson(res);
     }
-    JsonObject res = new JsonObject();
-    res.addProperty("type", "GET_ALL_BIDDERS_RESPONSE");
-    res.addProperty("success", true);
-    res.add("data", array);
-    if (reqId != null) res.addProperty("requestId", reqId);
-    return gson.toJson(res);
-}
 
-private String xuLyLayDanhSachSeller(String reqId) {
-    List<User> sellers = userDao.layTatCaSeller(); // cần thêm method này vào UserDao
-    JsonArray array = new JsonArray();
-    for (User u : sellers) {
-        JsonObject obj = new JsonObject();
-        obj.addProperty("username", u.getUsername());
-        obj.addProperty("fullname", u.getFullName());
-        obj.addProperty("status", "ACTIVE"); // hoặc lấy từ DB nếu có cột status
-        array.add(obj);
+    // Tương tự như trên nhưng lấy danh sách Seller
+    private String xuLyLayDanhSachSeller(String reqId) {
+        List<User> sellers = userDao.layTatCaSeller(); // cần thêm method này vào UserDao
+        JsonArray array = new JsonArray();
+        for (User u : sellers) {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("username", u.getUsername());
+            obj.addProperty("fullname", u.getFullName());
+            obj.addProperty("status", u.getStatus() != null ? u.getStatus() : "ACTIVE");
+            array.add(obj);
+        }
+        JsonObject res = new JsonObject();
+        res.addProperty("type", "GET_ALL_SELLERS_RESPONSE");
+        res.addProperty("success", true);
+        res.add("data", array);
+        if (reqId != null)
+            res.addProperty("requestId", reqId);
+        return gson.toJson(res);
     }
-    JsonObject res = new JsonObject();
-    res.addProperty("type", "GET_ALL_SELLERS_RESPONSE");
-    res.addProperty("success", true);
-    res.add("data", array);
-    if (reqId != null) res.addProperty("requestId", reqId);
-    return gson.toJson(res);
-}
-
-
 
     private String xuLyDangNhap(JsonObject yeuCau, ClientHandler client, String reqId) {
         AuthDTOs.LoginRequest request = gson.fromJson(yeuCau, AuthDTOs.LoginRequest.class);
         try {
-            User nguoiDung = UserManager.getInstance().dangNhap(request.getUsername(), request.getPassword(), request.getRole());
+            User nguoiDung = UserManager.getInstance().dangNhap(request.getUsername(), request.getPassword(),
+                    request.getRole());
             client.datNguoiDungHienTai(nguoiDung);
 
             AuthDTOs.UserDTO userDTO = new AuthDTOs.UserDTO(
-                    nguoiDung.getId(), nguoiDung.getUsername(), nguoiDung.getRoleName(), nguoiDung.getFullName()
-            );
+                    nguoiDung.getId(), nguoiDung.getUsername(), nguoiDung.getRoleName(), nguoiDung.getFullName());
 
             AuthDTOs.LoginResponse response = new AuthDTOs.LoginResponse(true, "Đăng nhập thành công!", userDTO);
             response.setRequestId(reqId); // Bắt buộc: Gắn requestId vào response Thành công
             return gson.toJson(response);
 
         } catch (Exception e) {
-            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, e.getMessage(), ErrorCode.INVALID_CREDENTIALS);
+            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, e.getMessage(),
+                    ErrorCode.INVALID_CREDENTIALS);
             err.setRequestId(reqId); // Bắt buộc: Gắn requestId vào response Lỗi
             return gson.toJson(err);
         }
@@ -131,7 +133,8 @@ private String xuLyLayDanhSachSeller(String reqId) {
             response.setRequestId(reqId);
             return gson.toJson(response);
         } else {
-            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Tên đăng nhập đã tồn tại!", ErrorCode.USERNAME_ALREADY_EXISTS);
+            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Tên đăng nhập đã tồn tại!",
+                    ErrorCode.USERNAME_ALREADY_EXISTS);
             err.setRequestId(reqId);
             return gson.toJson(err);
         }
@@ -148,21 +151,24 @@ private String xuLyLayDanhSachSeller(String reqId) {
         phanHoi.addProperty("success", true);
         phanHoi.addProperty("message", "Đăng xuất thành công");
 
-        if (reqId != null) phanHoi.addProperty("requestId", reqId); // Gắn requestId
+        if (reqId != null)
+            phanHoi.addProperty("requestId", reqId); // Gắn requestId
         return gson.toJson(phanHoi);
     }
 
     private String xuLyNapTien(JsonObject yeuCau, ClientHandler client, String reqId) {
         User nguoiDung = client.layNguoiDungHienTai();
         if (nguoiDung == null) {
-            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Chưa đăng nhập!", ErrorCode.UNAUTHORIZED);
+            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Chưa đăng nhập!",
+                    ErrorCode.UNAUTHORIZED);
             err.setRequestId(reqId);
             return gson.toJson(err);
         }
 
         long soTienNap = yeuCau.has("amount") ? yeuCau.get("amount").getAsLong() : 0;
         if (soTienNap <= 0) {
-            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Số tiền nạp không hợp lệ", ErrorCode.BAD_REQUEST);
+            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Số tiền nạp không hợp lệ",
+                    ErrorCode.BAD_REQUEST);
             err.setRequestId(reqId);
             return gson.toJson(err);
         }
@@ -175,8 +181,9 @@ private String xuLyLayDanhSachSeller(String reqId) {
                 java.lang.reflect.Method getBalMethod = currentUser.getClass().getMethod("getBalance");
                 long currentBalance = (Long) getBalMethod.invoke(currentUser);
                 newBalance = currentBalance + soTienNap;
-            } catch(Exception e) {
-                BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Tài khoản không hỗ trợ số dư", ErrorCode.FORBIDDEN);
+            } catch (Exception e) {
+                BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN,
+                        "Tài khoản không hỗ trợ số dư", ErrorCode.FORBIDDEN);
                 err.setRequestId(reqId);
                 return gson.toJson(err);
             }
@@ -190,11 +197,13 @@ private String xuLyLayDanhSachSeller(String reqId) {
                 phanHoi.addProperty("message", "Nạp tiền thành công!");
                 phanHoi.addProperty("newBalance", newBalance);
 
-                if (reqId != null) phanHoi.addProperty("requestId", reqId);
+                if (reqId != null)
+                    phanHoi.addProperty("requestId", reqId);
                 return gson.toJson(phanHoi);
             }
         }
-        BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.SERVER_ERROR, "Lỗi khi nạp tiền", ErrorCode.INTERNAL_SERVER_ERROR);
+        BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.SERVER_ERROR, "Lỗi khi nạp tiền",
+                ErrorCode.INTERNAL_SERVER_ERROR);
         err.setRequestId(reqId);
         return gson.toJson(err);
     }
@@ -202,14 +211,16 @@ private String xuLyLayDanhSachSeller(String reqId) {
     private String xuLyRutTien(JsonObject yeuCau, ClientHandler client, String reqId) {
         User nguoiDung = client.layNguoiDungHienTai();
         if (nguoiDung == null) {
-            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Chưa đăng nhập!", ErrorCode.UNAUTHORIZED);
+            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Chưa đăng nhập!",
+                    ErrorCode.UNAUTHORIZED);
             err.setRequestId(reqId);
             return gson.toJson(err);
         }
 
         long soTienRut = yeuCau.has("amount") ? yeuCau.get("amount").getAsLong() : 0;
         if (soTienRut <= 0) {
-            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Số tiền rút không hợp lệ", ErrorCode.BAD_REQUEST);
+            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Số tiền rút không hợp lệ",
+                    ErrorCode.BAD_REQUEST);
             err.setRequestId(reqId);
             return gson.toJson(err);
         }
@@ -222,13 +233,15 @@ private String xuLyLayDanhSachSeller(String reqId) {
                 java.lang.reflect.Method getBalMethod = currentUser.getClass().getMethod("getBalance");
                 long currentBalance = (Long) getBalMethod.invoke(currentUser);
                 if (currentBalance < soTienRut) {
-                    BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Số dư không đủ để rút", ErrorCode.BAD_REQUEST);
+                    BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST,
+                            "Số dư không đủ để rút", ErrorCode.BAD_REQUEST);
                     err.setRequestId(reqId);
                     return gson.toJson(err);
                 }
                 newBalance = currentBalance - soTienRut;
-            } catch(Exception e) {
-                BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Tài khoản không hỗ trợ số dư", ErrorCode.FORBIDDEN);
+            } catch (Exception e) {
+                BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN,
+                        "Tài khoản không hỗ trợ số dư", ErrorCode.FORBIDDEN);
                 err.setRequestId(reqId);
                 return gson.toJson(err);
             }
@@ -242,11 +255,13 @@ private String xuLyLayDanhSachSeller(String reqId) {
                 phanHoi.addProperty("message", "Rút tiền thành công!");
                 phanHoi.addProperty("newBalance", newBalance);
 
-                if (reqId != null) phanHoi.addProperty("requestId", reqId);
+                if (reqId != null)
+                    phanHoi.addProperty("requestId", reqId);
                 return gson.toJson(phanHoi);
             }
         }
-        BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.SERVER_ERROR, "Lỗi khi rút tiền", ErrorCode.INTERNAL_SERVER_ERROR);
+        BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.SERVER_ERROR, "Lỗi khi rút tiền",
+                ErrorCode.INTERNAL_SERVER_ERROR);
         err.setRequestId(reqId);
         return gson.toJson(err);
     }
@@ -254,7 +269,8 @@ private String xuLyLayDanhSachSeller(String reqId) {
     private String xuLyLayLichSuGiaoDich(JsonObject yeuCau, ClientHandler client, String reqId) {
         User nguoiDung = client.layNguoiDungHienTai();
         if (nguoiDung == null) {
-            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Chưa đăng nhập!", ErrorCode.UNAUTHORIZED);
+            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Chưa đăng nhập!",
+                    ErrorCode.UNAUTHORIZED);
             err.setRequestId(reqId);
             return gson.toJson(err);
         }
@@ -265,7 +281,8 @@ private String xuLyLayDanhSachSeller(String reqId) {
         phanHoi.addProperty("success", true);
         phanHoi.add("data", history);
 
-        if (reqId != null) phanHoi.addProperty("requestId", reqId); // Gắn requestId
+        if (reqId != null)
+            phanHoi.addProperty("requestId", reqId); // Gắn requestId
 
         Optional<User> userOpt = userDao.timTheoTenDangNhap(nguoiDung.getUsername());
         if (userOpt.isPresent()) {
@@ -274,9 +291,38 @@ private String xuLyLayDanhSachSeller(String reqId) {
                 java.lang.reflect.Method getBalMethod = currentUser.getClass().getMethod("getBalance");
                 long currentBalance = (Long) getBalMethod.invoke(currentUser);
                 phanHoi.addProperty("currentBalance", currentBalance);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         return gson.toJson(phanHoi);
+    }
+
+    /*
+     * Xử lý yêu cầu khoá tài khoản từ Admin. Yêu cầu này sẽ nhận vào username và
+     * trạng thái mới (LOCKED/ACTIVE), cập nhật vào DB, và trả về kết quả cho Admin.
+     * Lưu ý: Chỉ Admin mới có quyền gửi yêu cầu này, nên controller không cần kiểm
+     * tra role ở đây mà sẽ dựa vào việc route yêu cầu từ ClientHandler đã đảm bảo
+     * chỉ Admin mới có thể gọi đến phương thức này.
+     * Response sẽ bao gồm thông tin username, trạng thái mới, và message phản hồi
+     * để Admin có thể hiển thị thông báo phù hợp trên UI.
+     */
+    private String xuLyKhoaTaiKhoan(JsonObject yeuCau, String reqId) {
+        String username = yeuCau.get("username").getAsString();
+        String newStatus = yeuCau.get("newStatus").getAsString();
+
+        boolean ok = userDao.capNhatTrangThai(username, newStatus);
+
+        JsonObject res = new JsonObject();
+        res.addProperty("type", "TOGGLE_LOCK_USER_RESPONSE");
+        res.addProperty("success", ok);
+        res.addProperty("message", ok
+                ? ("LOCKED".equals(newStatus) ? "Đã khoá tài khoản!" : "Đã mở khoá tài khoản!")
+                : "Cập nhật thất bại!");
+        res.addProperty("username", username);
+        res.addProperty("newStatus", newStatus);
+        if (reqId != null)
+            res.addProperty("requestId", reqId);
+        return gson.toJson(res);
     }
 }
