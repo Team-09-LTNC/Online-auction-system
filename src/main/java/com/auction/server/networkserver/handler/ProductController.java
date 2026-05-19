@@ -110,10 +110,10 @@ public class ProductController implements RequestHandler {
 
         if (thanhCong) {
             logger.info("xuLyThemSanPham: Thành công - Sản phẩm ID = {} đã được đăng bởi sellerId = {}", sanPhamMoi.getId(), nguoiDung.getId());
-            return buildResponse(yeuCau, "CREATE_ITEM_RESPONSE", new ItemDTOs.CreateItemResponse(true, "Đăng sản phẩm thành công!", sanPhamMoi.getId()));
+            return buildResponse(yeuCau, ActionType.CREATE_PRODUCT, new ItemDTOs.CreateItemResponse(true, "Đăng sản phẩm thành công!", sanPhamMoi.getId()));
         } else {
-            logger.error("xuLyThemSanPham: Thất bại - Lỗi khi lưu xuống DB");
-            return buildResponse(yeuCau, "CREATE_ITEM_RESPONSE", new BaseDTOs.ErrorResponse(StatusCode.SERVER_ERROR, "Lỗi hệ thống khi lưu sản phẩm.", ErrorCode.INTERNAL_SERVER_ERROR));
+            logger.error("xuLyThemSanPham: Thất bại - Lỗi khi lưu xuống DB hoặc tạo phiên đấu giá");
+            return buildResponse(yeuCau, ActionType.CREATE_PRODUCT, new BaseDTOs.ErrorResponse(StatusCode.SERVER_ERROR, "Lỗi hệ thống khi lưu sản phẩm.", ErrorCode.INTERNAL_SERVER_ERROR));
         }
     }
 

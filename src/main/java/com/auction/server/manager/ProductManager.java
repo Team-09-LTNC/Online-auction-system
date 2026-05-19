@@ -49,16 +49,33 @@ public class ProductManager {
 
     /**
      * Kiểm tra tính hợp lệ trước khi cho phép Seller đăng bán
-     * NẾU THÀNH CÔNG -> Tự động sinh ra phiên đấu giá (Auction)
+     * NẾU THÀNH CÔNG -> Tự động sinh ra phiên đấu giá và NẠP VÀO LỊCH TRÌNH
      */
     public boolean dangBanSanPham(Item sanPham, LocalDateTime startTime, LocalDateTime endTime) {
         if (sanPham == null || sanPham.getStartingPrice() <= 0) return false;
-        
+
+        // Lưu sản phẩm xuống DB
         int itemId = itemDao.luuSanPham(sanPham);
         if (itemId > 0) {
             sanPham.setId(itemId);
-            // Tiếp tục tạo phiên đấu giá cho sản phẩm vừa đăng
-            return auctionDao.taoPhienDauGia(itemId, sanPham.getStartingPrice(), startTime, endTime);
+
+            //Tạo phiên đấu giá
+            boolean isAuctionCreated = auctionDao.taoPhienDauGia(itemId, sanPham.getStartingPrice(), startTime, endTime);
+
+            if (isAuctionCreated) {
+                // Báo cho AuctionManager biết có phiên mới để lập lịch đếm ngược!
+                List<com.auction.common.model.bid.Auction> dsChoMo = auctionDao.layDanhSachPhienChoMo();
+                for (com.auction.common.model.bid.Auction a : dsChoMo) {
+                    if (a.getItem().getId() == itemId) {
+                        AuctionManager.getInstance().henGioMoPhien(a);
+                        break;
+                    }
+                }
+                return true;
+            } else {
+                itemDao.xoaSanPham(itemId);
+                return false;
+            }
         }
         return false;
     }

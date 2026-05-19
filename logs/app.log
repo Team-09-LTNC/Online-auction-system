@@ -666,59 +666,104 @@ java.sql.SQLSyntaxErrorException: Table 'defaultdb.wallet_transactions' doesn't 
 2026-05-19 08:13:17 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
 2026-05-19 08:13:17 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
 2026-05-19 08:13:17 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
-2026-05-19 08:31:28 [main] INFO  c.auction.server.ServerApplication - Đã nạp cấu hình cổng từ application.properties: 8080
-2026-05-19 08:31:28 [main] INFO  c.auction.server.ServerApplication - ==================================================
-2026-05-19 08:31:28 [main] INFO  c.auction.server.ServerApplication -    HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   
-2026-05-19 08:31:28 [main] INFO  c.auction.server.ServerApplication -    Đang lắng nghe tại cổng: 8080                  
-2026-05-19 08:31:28 [main] INFO  c.auction.server.ServerApplication - ==================================================
-2026-05-19 08:31:28 [main] INFO  c.a.s.networkserver.ServerManager - Server đã mở thành công và đang lắng nghe tại cổng: 8080
-2026-05-19 08:31:32 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
-2026-05-19 08:31:32 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
-2026-05-19 08:31:32 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
-2026-05-19 08:31:32 [Thread-3] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
-2026-05-19 08:31:42 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"seller","password":"123456","role":"SELLER","type":"AUTH_LOGIN","requestId":"77c83074-3e13-4c12-a0a1-b3d5052a0b66"}
-2026-05-19 08:31:42 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"seller","password":"123456","role":"SELLER","type":"AUTH_LOGIN","requestId":"77c83074-3e13-4c12-a0a1-b3d5052a0b66"}
-2026-05-19 08:31:42 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
-2026-05-19 08:31:42 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
-2026-05-19 08:31:45 [pool-1-thread-1] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@115e120d
-2026-05-19 08:31:45 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
-2026-05-19 08:31:45 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
-2026-05-19 08:31:45 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
-2026-05-19 08:31:45 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL"}
-2026-05-19 08:31:45 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL"}
-2026-05-19 08:31:45 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"USER_DASHBOARD_STATS"}
-2026-05-19 08:31:45 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Đang tiến hành áp dụng phân quyền cho vai trò: SELLER
-2026-05-19 08:31:45 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: SELLER - Tiến hành thu gọn menu Bidder.
-2026-05-19 08:31:45 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-19 08:31:45 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"GET_MY_PRODUCTS"}
-2026-05-19 08:31:46 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Đang tiến hành áp dụng phân quyền cho vai trò: SELLER
-2026-05-19 08:31:46 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: SELLER - Tiến hành thu gọn menu Bidder.
-2026-05-19 08:31:46 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-19 08:31:46 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"GET_MY_PRODUCTS"}
-2026-05-19 08:31:46 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"USER_DASHBOARD_STATS"}
-2026-05-19 08:31:46 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"GET_MY_PRODUCTS"}
-2026-05-19 08:31:46 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"GET_MY_PRODUCTS"}
-2026-05-19 08:31:46 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard từ Server.
-2026-05-19 08:31:50 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"GET_WALLET_HISTORY"}
-2026-05-19 08:31:50 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"GET_WALLET_HISTORY"}
-2026-05-19 08:31:52 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
-2026-05-19 08:31:52 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
-2026-05-19 08:31:52 [JavaFX Application Thread] INFO  c.a.c.c.b.AuctionListScreenController - Đã chọn danh mục lọc: Tất cả
-2026-05-19 08:31:52 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
-2026-05-19 08:31:52 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
-2026-05-19 08:31:52 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback (requestId: null, type: AUCTION_LIST_RESPONSE)
-2026-05-19 08:31:53 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
-2026-05-19 08:31:53 [JavaFX Application Thread] INFO  c.a.c.c.b.AuctionListScreenController - Đã chọn danh mục lọc: Xe cộ
-2026-05-19 08:31:53 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Xe cộ"}
-2026-05-19 08:31:53 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
-2026-05-19 08:31:53 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback (requestId: null, type: AUCTION_LIST_RESPONSE)
-2026-05-19 08:31:54 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Xe cộ"}
-2026-05-19 08:31:54 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback (requestId: null, type: AUCTION_LIST_RESPONSE)
-2026-05-19 08:31:54 [JavaFX Application Thread] INFO  c.a.c.c.seller.PostAuctionController - Seller Dashboard initialized - Đã đồng bộ toàn bộ form và xem trước.
-2026-05-19 08:31:54 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback (requestId: null, type: AUCTION_LIST_RESPONSE)
-2026-05-19 08:32:01 [JavaFX Application Thread] INFO  c.a.c.c.seller.MyProductsController - Người bán đang xem danh sách sản phẩm của chính mình.
-2026-05-19 08:32:01 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"GET_MY_PRODUCTS"}
-2026-05-19 08:32:01 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"GET_MY_PRODUCTS"}
-2026-05-19 08:32:20 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
-2026-05-19 08:32:20 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
-2026-05-19 08:32:20 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
+2026-05-19 13:56:09 [main] INFO  c.auction.server.ServerApplication - Đã nạp cấu hình cổng từ application.properties: 8080
+2026-05-19 13:56:09 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-19 13:56:09 [main] INFO  c.auction.server.ServerApplication -    HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   
+2026-05-19 13:56:09 [main] INFO  c.auction.server.ServerApplication -    Đang lắng nghe tại cổng: 8080                  
+2026-05-19 13:56:09 [main] INFO  c.auction.server.ServerApplication - ==================================================
+2026-05-19 13:56:09 [main] INFO  c.a.s.networkserver.ServerManager - Server đã mở thành công và đang lắng nghe tại cổng: 8080
+2026-05-19 13:56:14 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã nạp cấu hình mạng: IP = 127.0.0.1, Port = 8080
+2026-05-19 13:56:14 [main] INFO  c.a.s.networkserver.ServerManager - Có Client mới kết nối từ IP: /127.0.0.1
+2026-05-19 13:56:14 [Thread-3] INFO  c.a.c.networkclient.ClientSocket - Đã kết nối Server 127.0.0.1:8080
+2026-05-19 13:56:14 [Thread-3] INFO  c.a.c.c.auth.LoginController - [Socket] Đường truyền Socket đã sẵn sàng phục vụ đăng nhập!
+2026-05-19 13:56:27 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"username":"bidder1","password":"123456","role":"BIDDER","type":"AUTH_LOGIN","requestId":"88352739-41f0-4b0d-bf7c-038a3d6cd635"}
+2026-05-19 13:56:27 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"username":"bidder1","password":"123456","role":"BIDDER","type":"AUTH_LOGIN","requestId":"88352739-41f0-4b0d-bf7c-038a3d6cd635"}
+2026-05-19 13:56:27 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Đang khởi tạo Connection Pool (HikariCP)...
+2026-05-19 13:56:27 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-19 13:56:30 [pool-1-thread-1] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7a9ef733
+2026-05-19 13:56:30 [pool-1-thread-1] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-19 13:56:30 [pool-1-thread-1] INFO  c.a.server.db.DatabaseConnection - Thiết lập Connection Pool tới Database thành công!
+2026-05-19 13:56:31 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-19 13:56:31 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL"}
+2026-05-19 13:56:31 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL"}
+2026-05-19 13:56:31 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"USER_DASHBOARD_STATS"}
+2026-05-19 13:56:31 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Đang tiến hành áp dụng phân quyền cho vai trò: BIDDER
+2026-05-19 13:56:31 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: BIDDER hoặc Chưa Đăng nhập - Tiến hành ẩn nút của Seller.
+2026-05-19 13:56:31 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Đang tiến hành áp dụng phân quyền cho vai trò: BIDDER
+2026-05-19 13:56:31 [JavaFX Application Thread] INFO  c.a.c.c.components.SidebarController - [Sidebar] Vai trò: BIDDER hoặc Chưa Đăng nhập - Tiến hành ẩn nút của Seller.
+2026-05-19 13:56:31 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"USER_DASHBOARD_STATS"}
+2026-05-19 13:56:31 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard từ Server.
+2026-05-19 13:56:38 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:56:38 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:56:38 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback (requestId: null, type: AUCTION_LIST_RESPONSE)
+2026-05-19 13:56:44 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-19 13:56:44 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL"}
+2026-05-19 13:56:44 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL"}
+2026-05-19 13:56:44 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"USER_DASHBOARD_STATS"}
+2026-05-19 13:56:45 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"USER_DASHBOARD_STATS"}
+2026-05-19 13:56:45 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard từ Server.
+2026-05-19 13:56:47 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_FOLLOW","auctionId":1}
+2026-05-19 13:56:47 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_FOLLOW","auctionId":1}
+2026-05-19 13:56:50 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm Bidder đang theo dõi.
+2026-05-19 13:56:50 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_FOLLOWED"}
+2026-05-19 13:56:50 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_FOLLOWED"}
+2026-05-19 13:56:57 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.
+2026-05-19 13:56:57 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL"}
+2026-05-19 13:56:57 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL"}
+2026-05-19 13:56:57 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"USER_DASHBOARD_STATS"}
+2026-05-19 13:56:58 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"USER_DASHBOARD_STATS"}
+2026-05-19 13:56:58 [JavaFX Application Thread] INFO  c.a.c.c.b.MainDashboardController - Đã đồng bộ thành công số liệu thống kê lên Dashboard từ Server.
+2026-05-19 13:56:59 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"GET_WALLET_HISTORY"}
+2026-05-19 13:56:59 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"GET_WALLET_HISTORY"}
+2026-05-19 13:57:00 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm Bidder đang theo dõi.
+2026-05-19 13:57:00 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_FOLLOWED"}
+2026-05-19 13:57:00 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_FOLLOWED"}
+2026-05-19 13:57:02 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm Bidder đang theo dõi.
+2026-05-19 13:57:02 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_FOLLOWED"}
+2026-05-19 13:57:02 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_FOLLOWED"}
+2026-05-19 13:57:03 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:57:03 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:57:04 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback (requestId: null, type: AUCTION_LIST_RESPONSE)
+2026-05-19 13:57:05 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"GET_WALLET_HISTORY"}
+2026-05-19 13:57:05 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"GET_WALLET_HISTORY"}
+2026-05-19 13:57:06 [JavaFX Application Thread] INFO  c.a.c.c.b.FollowedAuctionsController - Đang nạp danh sách sản phẩm Bidder đang theo dõi.
+2026-05-19 13:57:06 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_FOLLOWED"}
+2026-05-19 13:57:06 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_FOLLOWED"}
+2026-05-19 13:57:09 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:57:09 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:57:09 [JavaFX Application Thread] INFO  c.a.c.c.b.AuctionListScreenController - Đã chọn danh mục lọc: Tất cả
+2026-05-19 13:57:09 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:57:09 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:57:09 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback (requestId: null, type: AUCTION_LIST_RESPONSE)
+2026-05-19 13:57:10 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:57:10 [JavaFX Application Thread] INFO  c.a.c.c.b.AuctionListScreenController - Đã chọn danh mục lọc: Điện tử
+2026-05-19 13:57:10 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Điện tử"}
+2026-05-19 13:57:10 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:57:10 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback (requestId: null, type: AUCTION_LIST_RESPONSE)
+2026-05-19 13:57:11 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Điện tử"}
+2026-05-19 13:57:11 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback (requestId: null, type: AUCTION_LIST_RESPONSE)
+2026-05-19 13:57:11 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:57:11 [JavaFX Application Thread] INFO  c.a.c.c.b.AuctionListScreenController - Đã chọn danh mục lọc: Xe cộ
+2026-05-19 13:57:11 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Xe cộ"}
+2026-05-19 13:57:11 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:57:11 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback (requestId: null, type: AUCTION_LIST_RESPONSE)
+2026-05-19 13:57:12 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Xe cộ"}
+2026-05-19 13:57:12 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback (requestId: null, type: AUCTION_LIST_RESPONSE)
+2026-05-19 13:57:12 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:57:12 [JavaFX Application Thread] INFO  c.a.c.c.b.AuctionListScreenController - Đã chọn danh mục lọc: Nghệ thuật
+2026-05-19 13:57:12 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Nghệ thuật"}
+2026-05-19 13:57:13 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:57:13 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback (requestId: null, type: AUCTION_LIST_RESPONSE)
+2026-05-19 13:57:13 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:57:13 [JavaFX Application Thread] INFO  c.a.c.c.b.AuctionListScreenController - Đã chọn danh mục lọc: Khác
+2026-05-19 13:57:13 [JavaFX Application Thread] DEBUG c.a.c.networkclient.ClientSocket - Request -> Server: {"type":"AUCTION_GET_ALL","category":"Khác"}
+2026-05-19 13:57:13 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Nghệ thuật"}
+2026-05-19 13:57:13 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback (requestId: null, type: AUCTION_LIST_RESPONSE)
+2026-05-19 13:57:14 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Tất cả"}
+2026-05-19 13:57:14 [Thread-4] DEBUG c.a.c.networkclient.ClientSocket - Nhận phản hồi nhưng không có Callback (requestId: null, type: AUCTION_LIST_RESPONSE)
+2026-05-19 13:57:15 [pool-1-thread-1] DEBUG c.a.s.networkserver.ClientHandler - Dữ liệu nhận từ /127.0.0.1: {"type":"AUCTION_GET_ALL","category":"Khác"}
+2026-05-19 13:57:15 [pool-1-thread-1] WARN  c.a.s.networkserver.ClientHandler - Client /127.0.0.1 đã ngắt kết nối đột ngột.
+2026-05-19 13:57:15 [pool-1-thread-1] INFO  c.a.s.networkserver.ClientHandler - Người dùng bidder1 đã thoát hệ thống.
+2026-05-19 13:58:09 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-19 13:58:09 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-19 13:58:09 [Thread-0] INFO  c.a.server.db.DatabaseConnection - Đã đóng Connection Pool tự động bởi JVM
