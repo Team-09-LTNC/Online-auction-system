@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.auction.common.util.*;
 
 import java.io.*;
 import java.net.Socket;
@@ -40,9 +41,9 @@ public class ClientSocket {
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
-    private final Gson gson = new Gson();
+    private final Gson gson = GsonConfig.getInstance();
 
-    // LƯU Ý: Đã đổi cơ chế, giờ map sẽ lưu Callback với Khóa (Key) là `requestId` thay vì `type`
+    // giờ map sẽ lưu Callback với Khóa (Key) là `requestId` thay vì `type`
     private final Map<String, Consumer<JsonObject>> responseCallbacks = new ConcurrentHashMap<>();
 
     private ClientSocket() { connect(); }

@@ -17,24 +17,18 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class AuctionManager {
-    // Singleton: chỉ có 1 instance duy nhất
     private static volatile AuctionManager instance;
 
-    // Lưu các phiên đấu giá đang chạy
     private final Map<Integer, Auction> dsPhienDangChay = new ConcurrentHashMap<>();
-    // Lưu danh sách observer theo dõi từng phiên
     private final Map<Integer, List<AuctionObserver>> dsNguoiTheoDoi = new ConcurrentHashMap<>();
-
-    // Quản lý tác vụ đóng phiên để tránh trùng lặp khi gia hạn (Anti-sniping)
     private final Map<Integer, ScheduledFuture<?>> tasksDongPhien = new ConcurrentHashMap<>();
+    private final Map<Integer, ScheduledFuture<?>> tasksMoPhien = new ConcurrentHashMap<>();
 
     private final AuctionDao auctionDao = new AuctionDao();
-    // Thread pool lên lịch đóng/mở phiên
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
-    // Thread pool gửi thông báo đến người theo dõi (không block luồng chính)
     private final ExecutorService notifierPool = Executors.newFixedThreadPool(50);
 
-    // Constructor private: tải phiên từ DB và lên lịch khi khởi động
+    //tải phiên từ DB và lên lịch khi khởi động
     private AuctionManager() {
         // Khôi phục các phiên đang chạy
         for (Auction a : auctionDao.layDanhSachPhienDangChay()) {
@@ -57,11 +51,19 @@ public class AuctionManager {
         return instance;
     }
 
-    // Lên lịch mở phiên vào thời điểm startTime
+    // Lên lịch mở phiên vào thời điểm startTime (Chính xác đến mili-giây)
     public void henGioMoPhien(Auction phien) {
-        long delay = ChronoUnit.SECONDS.between(LocalDateTime.now(), phien.getStartTime());
-        if (delay <= 0) thucThiMoPhien(phien); // Đã đến giờ thì mở luôn
-        else scheduler.schedule(() -> thucThiMoPhien(phien), delay, TimeUnit.SECONDS);
+        ScheduledFuture<?> taskCu = tasksMoPhien.get(phien.getId());
+        if (taskCu != null && !taskCu.isDone()) taskCu.cancel(false);
+
+        long delay = java.time.Duration.between(LocalDateTime.now(), phien.getStartTime()).toMillis();
+
+        if (delay <= 0) {
+            thucThiMoPhien(phien);
+        } else {
+            ScheduledFuture<?> taskMoi = scheduler.schedule(() -> thucThiMoPhien(phien), delay, TimeUnit.MILLISECONDS);
+            tasksMoPhien.put(phien.getId(), taskMoi); // Lưu lại thẻ quản lý
+        }
     }
 
     // Cập nhật trạng thái phiên thành RUNNING và lên lịch đóng
@@ -69,23 +71,28 @@ public class AuctionManager {
         if (auctionDao.capNhatTrangThai(phien.getId(), AuctionStatus.RUNNING.name())) {
             phien.setStatus(AuctionStatus.RUNNING);
             dsPhienDangChay.put(phien.getId(), phien);
+
+            tasksMoPhien.remove(phien.getId());
+
+            System.out.println("[AuctionManager] Đã TỰ ĐỘNG MỞ phiên đấu giá ID: " + phien.getId());
             henGioDongPhien(phien); // Bắt đầu đếm ngược đến giờ đóng
         }
     }
 
     // Lên lịch đóng phiên, hủy task cũ nếu có (dùng cho Anti-sniping khi gia hạn)
     public void henGioDongPhien(Auction phien) {
-        // Hủy tác vụ đóng phiên cũ nếu đang chạy (quan trọng khi gia hạn thời gian)
+        // Hủy tác vụ đóng phiên cũ nếu đang chạy
         ScheduledFuture<?> taskCu = tasksDongPhien.get(phien.getId());
         if (taskCu != null && !taskCu.isDone()) {
             taskCu.cancel(false);
         }
 
-        long delay = ChronoUnit.SECONDS.between(LocalDateTime.now(), phien.getEndTime());
+        // Đổi sang Mili-giây để đảm bảo đóng cực kỳ chuẩn xác
+        long delay = java.time.Duration.between(LocalDateTime.now(), phien.getEndTime()).toMillis();
         if (delay <= 0) {
             dongPhien(phien.getId()); // Đã quá giờ thì đóng luôn
         } else {
-            ScheduledFuture<?> taskMoi = scheduler.schedule(() -> dongPhien(phien.getId()), delay, TimeUnit.SECONDS);
+            ScheduledFuture<?> taskMoi = scheduler.schedule(() -> dongPhien(phien.getId()), delay, TimeUnit.MILLISECONDS);
             tasksDongPhien.put(phien.getId(), taskMoi);
         }
     }

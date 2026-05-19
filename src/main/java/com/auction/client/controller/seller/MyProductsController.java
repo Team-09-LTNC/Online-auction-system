@@ -64,8 +64,7 @@ public class MyProductsController implements Initializable {
         JsonObject reqJson = new JsonObject();
         reqJson.addProperty("type", ActionType.GET_MY_PRODUCTS);
 
-        // Không gửi sellerId từ Client lên nữa, Server sẽ tự lấy từ Session đăng nhập!
-        // reqJson.addProperty("sellerId", UserSession.getUserId());
+        reqJson.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
         ClientSocket.getInstance().sendJsonRequest(reqJson, ActionType.GET_MY_PRODUCTS, response -> {
             try {

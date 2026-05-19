@@ -32,8 +32,7 @@ public class Auction extends Entity {
     }
 
     public boolean isAcceptingBids() {
-        return this.status == AuctionStatus.RUNNING &&
-                (this.endTime != null && LocalDateTime.now().isBefore(this.endTime));
+        return getStatus() == AuctionStatus.RUNNING;
     }
 
     public void addAutoBidConfig(AutoBidConfig config) { autoBidders.offer(config); }
@@ -61,7 +60,16 @@ public class Auction extends Entity {
     public Bidder getCurrentWinner() { return currentWinner; }
     public void setCurrentWinner(Bidder winner) { this.currentWinner = winner; }
 
-    public AuctionStatus getStatus() { return status; }
+    public AuctionStatus getStatus() {
+        LocalDateTime now = LocalDateTime.now();
+        if (startTime != null && now.isBefore(startTime)) {
+            return AuctionStatus.OPEN; // Chưa đến giờ bắt đầu
+        }
+        if (endTime != null && now.isAfter(endTime)) {
+            return AuctionStatus.FINISHED; // Đã quá giờ kết thúc
+        }
+        return AuctionStatus.RUNNING; // Nằm trong khoảng thời gian diễn ra
+    }
     public void setStatus(AuctionStatus status) { this.status = status; }
 
     public LocalDateTime getStartTime() { return startTime; }
