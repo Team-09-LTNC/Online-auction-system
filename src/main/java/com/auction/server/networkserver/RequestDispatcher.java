@@ -8,9 +8,6 @@ import com.google.gson.JsonObject;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * RequestDispatcher: Bộ điều phối yêu cầu (Router).
- */
 public class RequestDispatcher {
     private static volatile RequestDispatcher instance;
     private final Map<String, RequestHandler> danhSachTrinhXuLy = new HashMap<>();
@@ -21,20 +18,29 @@ public class RequestDispatcher {
         AuctionController auctionController = new AuctionController();
         ProductController productController = new ProductController();
 
-        // Nhóm Auth
+        // Nhóm Auth & User
         danhSachTrinhXuLy.put(ActionType.LOGIN, authController);
         danhSachTrinhXuLy.put(ActionType.REGISTER, authController);
         danhSachTrinhXuLy.put(ActionType.LOGOUT, authController);
+        danhSachTrinhXuLy.put(ActionType.TOP_UP_MONEY, authController);
+        danhSachTrinhXuLy.put(ActionType.WITHDRAW_MONEY, authController);
 
         // Nhóm Auction
         danhSachTrinhXuLy.put(ActionType.JOIN_AUCTION, auctionController);
         danhSachTrinhXuLy.put(ActionType.PLACE_BID, auctionController);
         danhSachTrinhXuLy.put(ActionType.CREATE_AUCTION, auctionController);
         danhSachTrinhXuLy.put(ActionType.GET_ALL_AUCTIONS, auctionController);
+        danhSachTrinhXuLy.put(ActionType.GET_JOINED_AUCTIONS, auctionController);
         danhSachTrinhXuLy.put(ActionType.GET_AUCTION_BY_ID, auctionController);
         danhSachTrinhXuLy.put(ActionType.LEAVE_AUCTION, auctionController);
         danhSachTrinhXuLy.put(ActionType.CLOSE_AUCTION, auctionController);
         danhSachTrinhXuLy.put(ActionType.GET_BID_HISTORY, auctionController);
+        danhSachTrinhXuLy.put(ActionType.GET_DASHBOARD_STATS, auctionController);
+        danhSachTrinhXuLy.put(ActionType.REGISTER_AUTO_BID, auctionController);
+        danhSachTrinhXuLy.put(ActionType.FOLLOW_AUCTION, auctionController);
+        danhSachTrinhXuLy.put(ActionType.UNFOLLOW_AUCTION, auctionController);
+        danhSachTrinhXuLy.put(ActionType.GET_FOLLOWED_AUCTIONS, auctionController);
+        danhSachTrinhXuLy.put(ActionType.SEND_CHAT_MESSAGE, auctionController);
 
         // Nhóm Product
         danhSachTrinhXuLy.put(ActionType.CREATE_PRODUCT, productController);

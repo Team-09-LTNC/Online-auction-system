@@ -119,3 +119,4 @@ src/
 └── test/java/com/auction/             # JUnit 5
 └── manager/
 └── AuctionManagerTest.java    # Kiểm tra kịch bản đặt giá đồng thời (Concurrency Test).
+└── AuctionManagerTest.java    # Kiểm tra kịch bản đặt giá đồng thời (Concurrency Test).

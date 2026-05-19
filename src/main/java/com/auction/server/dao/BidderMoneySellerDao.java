@@ -45,6 +45,22 @@ public class BidderMoneySellerDao {
                     p2.executeUpdate();
                 }
 
+                // Ghi log biến động số dư cho Bidder
+                String sqlLogBidder = "INSERT INTO wallet_transactions (user_id, transaction_type, amount, description) VALUES (?, 'PAYMENT_SENT', ?, 'Thanh toán đấu giá')";
+                try (PreparedStatement p3 = conn.prepareStatement(sqlLogBidder)) {
+                    p3.setInt(1, idBidder);
+                    p3.setLong(2, soTien);
+                    p3.executeUpdate();
+                }
+
+                // Ghi log biến động số dư cho Seller
+                String sqlLogSeller = "INSERT INTO wallet_transactions (user_id, transaction_type, amount, description) VALUES (?, 'PAYMENT_RECEIVED', ?, 'Nhận tiền bán đấu giá')";
+                try (PreparedStatement p4 = conn.prepareStatement(sqlLogSeller)) {
+                    p4.setInt(1, idSeller);
+                    p4.setLong(2, soTien);
+                    p4.executeUpdate();
+                }
+
                 // Nếu cả hai bước thành công, xác nhận thay đổi vĩnh viễn vào DB
                 conn.commit();
                 return true;

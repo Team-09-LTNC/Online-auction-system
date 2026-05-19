@@ -17,33 +17,29 @@
       xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1">
 
-    <!-- PHẦN 1: HEADER (Tìm kiếm + User) - Đã thu hẹp chiều cao -->
     <HBox alignment="CENTER_LEFT" prefHeight="70.0" spacing="20.0" style="-fx-padding: 10 30 10 30;">
         <TextField prefHeight="40.0" prefWidth="450.0" promptText="Tìm kiếm sản phẩm, người bán..." style="-fx-background-color: #FFFFFF; -fx-background-radius: 25; -fx-border-color: #EEEEEE; -fx-border-radius: 25; -fx-padding: 0 15;" />
         <Region HBox.hgrow="ALWAYS" />
         <HBox alignment="CENTER" spacing="15.0">
             <Label style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 18;" text="🔔" />
             <VBox alignment="CENTER_RIGHT">
-                <Label text="Chào, Nguyễn An" textFill="#3E2723">
+                <Label fx:id="lblHeaderName" text="Chào, Đang tải..." textFill="#3E2723">
                     <font><Font name="System Bold" size="14.0" /></font>
                 </Label>
-                <Label style="-fx-font-size: 11;" text="Bidder" textFill="#888888" />
+                <Label fx:id="lblHeaderRole" style="-fx-font-size: 11;" text="Vai trò" textFill="#888888" />
             </VBox>
             <Circle fill="#7A1B28" radius="18.0" />
         </HBox>
     </HBox>
 
-    <!-- PHẦN 2: NỘI DUNG CUỘN -->
     <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
         <content>
-            <!-- Giảm spacing giữa các dòng từ 30 xuống 20 để khít hơn -->
             <VBox spacing="20.0" style="-fx-padding: 10 30 30 30;">
 
                 <HBox alignment="CENTER_LEFT" spacing="20.0" style="-fx-background-color: #FFFFFF; -fx-background-radius: 20; -fx-padding: 15 25; -fx-border-color: #F0F0F0; -fx-border-radius: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.03), 10, 0, 0, 5);">
 
-                    <!-- Nhóm bên trái: Lời chào -->
                     <VBox alignment="CENTER_LEFT" spacing="2.0">
-                        <Label text="Chào mừng trở lại, Nguyễn An! 👋" textFill="#3E2723">
+                        <Label fx:id="lblBannerWelcome" text="Chào mừng trở lại! 👋" textFill="#3E2723">
                             <font><Font name="System Bold" size="18.0" /></font>
                         </Label>
                         <Label text="Khám phá các phiên đấu giá hấp dẫn ngay hôm nay." textFill="#888888">
@@ -51,58 +47,59 @@
                         </Label>
                     </VBox>
 
-                    <!-- Lò xo đẩy phần thống kê sang phải -->
                     <Region HBox.hgrow="ALWAYS" />
 
-                    <!-- Nhóm bên phải: 4 ô thống kê thu nhỏ nằm ngang -->
                     <HBox alignment="CENTER" spacing="25.0">
-                        <!-- Ô 1: Phiên đang diễn ra -->
+
                         <HBox alignment="CENTER" spacing="10.0">
                             <Label style="-fx-font-size: 16;" text="🔨" textFill="#7A1B28" />
                             <VBox alignment="CENTER_LEFT">
-                                <Label text="128" textFill="#3E2723"><font><Font name="System Bold" size="16.0" /></font></Label>
+                                <Label fx:id="lblActiveAuctions" text="0" textFill="#3E2723">
+                                    <font><Font name="System Bold" size="16.0" /></font>
+                                </Label>
                                 <Label style="-fx-font-size: 10;" text="Đang diễn ra" textFill="#888888" />
                             </VBox>
                         </HBox>
 
-                        <Region prefWidth="1.0" style="-fx-background-color: #EEEEEE; -fx-min-height: 30;" /> <!-- Vạch ngăn cách -->
+                        <Region prefWidth="1.0" style="-fx-background-color: #EEEEEE; -fx-min-height: 30;" />
 
-                        <!-- Ô 2: Sắp kết thúc -->
                         <HBox alignment="CENTER" spacing="10.0">
                             <Label style="-fx-font-size: 16;" text="⏳" textFill="#7A1B28" />
                             <VBox alignment="CENTER_LEFT">
-                                <Label text="23" textFill="#3E2723"><font><Font name="System Bold" size="16.0" /></font></Label>
+                                <Label fx:id="lblEndingSoonAuctions" text="0" textFill="#3E2723">
+                                    <font><Font name="System Bold" size="16.0" /></font>
+                                </Label>
                                 <Label style="-fx-font-size: 10;" text="Sắp kết thúc" textFill="#888888" />
                             </VBox>
                         </HBox>
 
                         <Region prefWidth="1.0" style="-fx-background-color: #EEEEEE; -fx-min-height: 30;" />
 
-                        <!-- Ô 3: Đang theo dõi -->
                         <HBox alignment="CENTER" spacing="10.0">
                             <Label style="-fx-font-size: 16;" text="♡" textFill="#7A1B28" />
                             <VBox alignment="CENTER_LEFT">
-                                <Label text="56" textFill="#3E2723"><font><Font name="System Bold" size="16.0" /></font></Label>
+                                <Label fx:id="lblFollowedAuctions" text="0" textFill="#3E2723">
+                                    <font><Font name="System Bold" size="16.0" /></font>
+                                </Label>
                                 <Label style="-fx-font-size: 10;" text="Theo dõi" textFill="#888888" />
                             </VBox>
                         </HBox>
 
                         <Region prefWidth="1.0" style="-fx-background-color: #EEEEEE; -fx-min-height: 30;" />
 
-                        <!-- Ô 4: Đấu giá của tôi -->
                         <HBox alignment="CENTER" spacing="10.0">
                             <Label style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="🏷️" textFill="#7A1B28" />
                             <VBox alignment="CENTER_LEFT">
-                                <Label text="12" textFill="#3E2723"><font><Font name="System Bold" size="16.0" /></font></Label>
+                                <Label fx:id="lblMyBidsCount" text="0" textFill="#3E2723">
+                                    <font><Font name="System Bold" size="16.0" /></font>
+                                </Label>
                                 <Label style="-fx-font-size: 10;" text="Đấu giá của tôi" textFill="#888888" />
                             </VBox>
                         </HBox>
                     </HBox>
                 </HBox>
 
-                <!-- DÒNG 3: Khu vực chính - Nội dung sẽ trồi lên cao hơn -->
                 <HBox spacing="20.0">
-                    <!-- Ô Phiên đấu giá nổi bật -->
                     <VBox style="-fx-background-color: #FFFFFF; -fx-background-radius: 20; -fx-padding: 20; -fx-border-color: #F0F0F0; -fx-border-radius: 20;" HBox.hgrow="ALWAYS">
                         <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 0 20 0;">
                             <Label text="🔥 Phiên đấu giá nổi bật" textFill="#3E2723">

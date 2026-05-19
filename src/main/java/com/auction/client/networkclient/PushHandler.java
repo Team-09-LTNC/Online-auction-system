@@ -17,20 +17,19 @@ public class PushHandler {
     private static final Logger logger = LoggerFactory.getLogger(PushHandler.class);
     private static final Gson gson = new Gson();
 
-    // TỐI ƯU KIẾN TRÚC: Lưu tham chiếu đến phòng đấu giá đang mở
     public static com.auction.client.controller.bidder.AuctionRoomController currentRoomController;
 
     public static void handle(String type, JsonObject payload) {
         switch (type) {
             case ActionType.AUCTION_BID_UPDATE -> onBidUpdate(payload);
             case ActionType.AUCTION_RESULT -> onAuctionResult(payload);
+            case ActionType.RECEIVE_CHAT_MESSAGE -> onReceiveChatMessage(payload);
             default -> logger.error("[PushHandler] Unknown push type: {}", type);
         }
     }
 
     private static void onBidUpdate(JsonObject payload) {
         try {
-            // Đối chiếu với Server: Server gửi đối tượng "transaction"
             JsonObject transaction = payload.getAsJsonObject("transaction");
             long newBidAmount = transaction.get("bidAmount").getAsLong();
 
@@ -38,7 +37,6 @@ public class PushHandler {
             String bidderName = (bidder != null && bidder.has("username"))
                     ? bidder.get("username").getAsString() : "Unknown";
 
-            // Luôn đảm bảo tác động lên UI nằm trong JavaFX Application Thread
             Platform.runLater(() -> {
                 logger.info("[Push] Giá mới: {} bởi {}", newBidAmount, bidderName);
                 if (currentRoomController != null) {
@@ -59,6 +57,22 @@ public class PushHandler {
             });
         } catch (Exception e) {
             logger.error("[PushHandler] Lỗi bóc tách dữ liệu AUCTION_RESULT: {}", e.getMessage());
+        }
+    }
+    
+    private static void onReceiveChatMessage(JsonObject payload) {
+        try {
+            String senderName = payload.has("senderName") ? payload.get("senderName").getAsString() : "Ẩn danh";
+            String message = payload.has("message") ? payload.get("message").getAsString() : "";
+            boolean isSystem = payload.has("isSystem") && payload.get("isSystem").getAsBoolean();
+            
+            Platform.runLater(() -> {
+                if (com.auction.client.controller.components.ChatController.instance != null) {
+                    com.auction.client.controller.components.ChatController.instance.receiveIncomingMessage(senderName, message, isSystem);
+                }
+            });
+        } catch (Exception e) {
+            logger.error("[PushHandler] Lỗi bóc tách dữ liệu RECEIVE_CHAT_MESSAGE: {}", e.getMessage());
         }
     }
 }

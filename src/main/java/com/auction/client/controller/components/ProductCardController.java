@@ -1,49 +1,64 @@
 package com.auction.client.controller.components;
 
+import com.auction.client.networkclient.ClientSocket;
+import com.auction.common.enums.ActionType;
+import com.google.gson.JsonObject;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ProductCardController {
-    // Logger để in log ra console cho dễ debug
     private static final Logger logger = LoggerFactory.getLogger(ProductCardController.class);
 
-    // --- CÁC BIẾN LIÊN KẾT VỚI FXML (fx:id) ---
-    @FXML private Label lblProductName;     // Tên sản phẩm
-    @FXML private Label lblCurrentPrice;    // Giá hiện tại
-    @FXML private Label lblTimeRemaining;   // Thời gian còn lại
-    @FXML private Label lblStatus;          // Trạng thái (Đang diễn ra/Kết thúc)
-    @FXML private Button btnBid;            // Nút "Ra giá"
+    @FXML private ImageView imgProduct;
+    @FXML private Label lblProductName;
+    @FXML private Label lblCurrentPrice;
+    @FXML private Label lblTimeRemaining;
+    @FXML private Label lblStatus;
+    @FXML private Button btnBid;
+    @FXML private Button btnFollow;
 
-    // --- BIẾN PHỤC VỤ ĐẾM NGƯỢC ---
     private int timeInSeconds;
     private Timeline timeline;
+    private int auctionId = -1;
+    private String imageUrl = "";
+    private boolean isFollowed = false;
 
-    /**
-     * Hàm đổ dữ liệu vào Card.
-     * Được gọi từ vòng lặp ở trang chủ (MainDashboardController).
-     */
-    public void setProductData(String name, double price, String time, String status) {
-        // Gán tên sản phẩm
+    public void setProductData(int auctionId, String name, double price, String time, String status, String imageUrl, boolean isFollowed) {
+        this.auctionId = auctionId;
+        this.imageUrl = imageUrl;
+        this.isFollowed = isFollowed;
+
         lblProductName.setText(name);
-
-        // Định dạng giá tiền có dấu phẩy (Ví dụ: 3,500,000,000)
         lblCurrentPrice.setText(String.format("%,.0f đ", price));
-
-        // Gán thời gian và trạng thái
         lblTimeRemaining.setText(time);
         lblStatus.setText(status);
 
-        // --- XỬ LÝ ĐẾM NGƯỢC ---
-        this.timeInSeconds = parseTimeToSeconds(time);
+        // TẢI ẢNH
+        if (imgProduct != null && imageUrl != null && !imageUrl.trim().isEmpty()) {
+            try {
+                // Tham số 'true' giúp tải ảnh ở luồng nền (Background Thread) không làm đơ UI
+                Image image = new Image(imageUrl, true);
+                imgProduct.setImage(image);
+            } catch (Exception e) {
+                logger.warn("Không thể tải ảnh cho sản phẩm ID {}: {}", auctionId, imageUrl);
+            }
+        }
 
+        updateHeartUI();
+
+        this.timeInSeconds = parseTimeToSeconds(time);
         if ("Đã kết thúc".equals(status) || timeInSeconds <= 0) {
             stopAndFinish();
         } else {
@@ -51,9 +66,21 @@ public class ProductCardController {
         }
     }
 
-    /**
-     * Chạy đồng hồ đếm ngược từng giây
-     */
+    public void setProductData(int auctionId, String name, double price, String time, String status, String imageUrl) {
+        setProductData(auctionId, name, price, time, status, imageUrl, false);
+    }
+
+
+    private void updateHeartUI() {
+        if (isFollowed) {
+            btnFollow.setText("♥");
+            btnFollow.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: #e74c3c; -fx-padding: 0;");
+        } else {
+            btnFollow.setText("♡");
+            btnFollow.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: #888888; -fx-padding: 0;");
+        }
+    }
+
     private void startCountdown() {
         if (timeline != null) timeline.stop();
 
@@ -69,32 +96,57 @@ public class ProductCardController {
         timeline.play();
     }
 
-    /**
-     * Dừng đếm ngược và cập nhật trạng thái kết thúc
-     */
     private void stopAndFinish() {
         if (timeline != null) timeline.stop();
         lblTimeRemaining.setText("00:00:00");
         lblStatus.setText("Đã kết thúc");
-        lblStatus.setStyle("-fx-text-fill: #757575;"); // Màu xám
-        btnBid.setDisable(true); // Vô hiệu hóa nút
+        lblStatus.setStyle("-fx-text-fill: #757575;");
+        btnBid.setDisable(true);
         btnBid.setText("Hết hạn");
     }
 
-    /**
-     * Hàm xử lý khi người dùng bấm nút "Ra giá" trên Card.
-     * (onAction="#handleBidAction" bên FXML)
-     */
     @FXML
     private void handleBidAction(ActionEvent event) {
-        String name = lblProductName.getText();
-        logger.info("Người dùng muốn vào phòng đấu giá sản phẩm: {}", name);
+        logger.info("Người dùng muốn vào phòng đấu giá ID: {}", auctionId);
 
-        // Gọi MainController để thay đổi vùng nội dung chính (Center)
+        if (auctionId == -1) {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "Không tìm thấy dữ liệu phòng đấu giá này!");
+            alert.showAndWait();
+            return;
+        }
+
         com.auction.client.controller.MainController.instance.setCenterContent("/fxml/bidder/AuctionRoom.fxml");
+
+        Object controller = com.auction.client.controller.MainController.instance.getCurrentCenterController();
+        if (controller instanceof com.auction.client.controller.bidder.AuctionRoomController) {
+            ((com.auction.client.controller.bidder.AuctionRoomController) controller).initData(auctionId, imageUrl);
+        }
     }
 
-    // Chuyển HH:mm:ss -> tổng số giây
+    @FXML
+    private void handleFollowAction(ActionEvent event) {
+        if (auctionId == -1) return;
+
+        isFollowed = !isFollowed;
+        updateHeartUI();
+        btnFollow.setDisable(true);
+
+        JsonObject jsonRequest = new JsonObject();
+        jsonRequest.addProperty("type", isFollowed ? ActionType.FOLLOW_AUCTION : ActionType.UNFOLLOW_AUCTION);
+        jsonRequest.addProperty("auctionId", auctionId);
+
+        ClientSocket.getInstance().sendJsonRequest(jsonRequest, isFollowed ? "FOLLOW_RESPONSE" : "UNFOLLOW_RESPONSE", response -> {
+            Platform.runLater(() -> {
+                btnFollow.setDisable(false);
+                boolean success = response.has("success") && response.get("success").getAsBoolean();
+                if (!success) {
+                    isFollowed = !isFollowed;
+                    updateHeartUI();
+                }
+            });
+        });
+    }
+
     private int parseTimeToSeconds(String timeStr) {
         try {
             String[] parts = timeStr.split(":");
@@ -102,7 +154,6 @@ public class ProductCardController {
         } catch (Exception e) { return 0; }
     }
 
-    // Chuyển giây -> HH:mm:ss
     private String formatTime(int totalSeconds) {
         int h = totalSeconds / 3600;
         int m = (totalSeconds % 3600) / 60;

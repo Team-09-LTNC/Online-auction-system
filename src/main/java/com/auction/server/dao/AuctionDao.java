@@ -18,9 +18,7 @@ import org.slf4j.LoggerFactory;
  */
 public class AuctionDao {
     private static final Logger logger = LoggerFactory.getLogger(AuctionDao.class);
-    /**
-     * Đa hình (Polymorphism): Khởi tạo đúng loại Item dựa vào category.
-     */
+    
     private Auction mapResultSetToAuction(ResultSet rs) throws SQLException {
         String loai = rs.getString("category").toUpperCase();
         Item item;
@@ -37,6 +35,9 @@ public class AuctionDao {
         item.setBidIncrement(rs.getLong("bid_increment"));
         item.setSellerId(rs.getInt("seller_id"));
         item.setCategory(loai);
+        
+        // Thêm an toàn khi load image_url (vì có thể query JOIN bị trùng tên cột, nên cần cẩn thận)
+        try { item.setImageUrl(rs.getString("image_url")); } catch (Exception ignored) {}
 
         Auction phien = new Auction(item);
         phien.setId(rs.getInt("id"));
@@ -49,13 +50,27 @@ public class AuctionDao {
     }
 
     public List<Auction> layDanhSachPhienDangChay() {
-        return thucThiTruyVanDanhSach("SELECT a.*, i.name, i.category, i.starting_price, i.bid_increment, i.seller_id " +
-                "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = 'RUNNING'");
+        return thucThiTruyVanDanhSach("SELECT a.*, i.name, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
+                "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = 'RUNNING' OR a.status = 'OPEN'");
     }
 
     public List<Auction> layDanhSachPhienChoMo() {
-        return thucThiTruyVanDanhSach("SELECT a.*, i.name, i.category, i.starting_price, i.bid_increment, i.seller_id " +
+        return thucThiTruyVanDanhSach("SELECT a.*, i.name, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
                 "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = 'OPEN'");
+    }
+    
+    // Lấy danh sách các phiên mà User đã tham gia đặt giá (hoặc là người bán)
+    public List<Auction> layDanhSachPhienThamGia(int userId, String role) {
+        String sql;
+        if ("SELLER".equals(role)) {
+            sql = "SELECT a.*, i.name, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
+                  "FROM auctions a JOIN items i ON a.item_id = i.id WHERE i.seller_id = " + userId;
+        } else {
+            sql = "SELECT DISTINCT a.*, i.name, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
+                  "FROM auctions a JOIN items i ON a.item_id = i.id " +
+                  "JOIN bid_history b ON a.id = b.auction_id WHERE b.bidder_id = " + userId;
+        }
+        return thucThiTruyVanDanhSach(sql);
     }
 
     private List<Auction> thucThiTruyVanDanhSach(String sql) {
@@ -71,9 +86,6 @@ public class AuctionDao {
         return danhSach;
     }
 
-    /**
-     * Đảm bảo Cập nhật giá và Lưu lịch sử diễn ra đồng thời. Nếu 1 bước lỗi, Rollback toàn bộ.
-     */
     public boolean thucHienGiaoDichDatGia(int idPhien, BidTransaction tx) {
         String sqlUpdate = "UPDATE auctions SET current_price = ?, highest_bidder_id = ? " +
                 "WHERE id = ? AND current_price < ? AND status = 'RUNNING'";
@@ -82,21 +94,19 @@ public class AuctionDao {
         Connection conn = null;
         try {
             conn = DatabaseConnection.getInstance().getConnection();
-            conn.setAutoCommit(false); // 1. Bắt đầu Transaction
+            conn.setAutoCommit(false); 
 
-            // 2. Cập nhật bảng Auctions (Có kiểm tra điều kiện giá để chống Race Condition)
             try (PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate)) {
                 psUpdate.setLong(1, tx.getBidAmount());
                 psUpdate.setInt(2, tx.getBidder().getId());
                 psUpdate.setInt(3, idPhien);
                 psUpdate.setLong(4, tx.getBidAmount());
                 if (psUpdate.executeUpdate() == 0) {
-                    conn.rollback(); // Giá đã bị người khác đẩy lên trước, hủy giao dịch
+                    conn.rollback(); 
                     return false;
                 }
             }
 
-            // 3. Lưu lịch sử đặt giá
             try (PreparedStatement psInsert = conn.prepareStatement(sqlInsert)) {
                 psInsert.setInt(1, idPhien);
                 psInsert.setInt(2, tx.getBidder().getId());
@@ -105,7 +115,7 @@ public class AuctionDao {
                 psInsert.executeUpdate();
             }
 
-            conn.commit(); // 4. Hoàn tất giao dịch thành công
+            conn.commit(); 
             return true;
 
         } catch (SQLException e) {
@@ -148,5 +158,28 @@ public class AuctionDao {
             pstmt.setInt(2, idPhien);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) { return false; }
+    }
+    
+    // TẠO PHIÊN ĐẤU GIÁ MỚI
+    public boolean taoPhienDauGia(int itemId, long startingPrice, LocalDateTime startTime, LocalDateTime endTime) {
+        String sql = "INSERT INTO auctions (item_id, current_price, status, start_time, end_time) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, itemId);
+            pstmt.setLong(2, startingPrice);
+            
+            // Nếu thời gian bắt đầu nhỏ hơn hoặc bằng hiện tại -> RUNNING, ngược lại OPEN
+            String status = startTime.isBefore(LocalDateTime.now().plusSeconds(1)) ? "RUNNING" : "OPEN";
+            pstmt.setString(3, status);
+            
+            pstmt.setTimestamp(4, Timestamp.valueOf(startTime));
+            pstmt.setTimestamp(5, Timestamp.valueOf(endTime));
+
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.error("Lỗi khi tạo phiên đấu giá: ", e);
+            return false;
+        }
     }
 }
