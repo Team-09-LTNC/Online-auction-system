@@ -9,27 +9,22 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Xử lý các gói tin server tự gửi về (không kèm requestId)
- * Khớp chuẩn 100% với logic phát gói tin bất đồng bộ từ AuctionManager bên Server
  */
 public class PushHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PushHandler.class);
     private static final Gson gson = new Gson();
 
-    // LIÊN KẾT BIẾN TOÀN CỤC: Giúp tầng mạng tìm thấy giao diện phòng đấu giá đang mở để ép cập nhật UI
     public static com.auction.client.controller.bidder.AuctionRoomController currentRoomController;
 
     public static void handle(String type, String rawJson) {
         if ("NEW_BID_UPDATE".equals(type) || "AUCTION_BID_UPDATE".equals(type)) {
-            // Sử dụng đúng class AuctionUpdateDTO mà Kiên đã viết sẵn trong Common
             AuctionDTOs.AuctionUpdateDTO push = gson.fromJson(rawJson, AuctionDTOs.AuctionUpdateDTO.class);
             onBidUpdate(push);
         } else if ("AUCTION_RESULT".equals(type)) {
-            // Gói kết thúc phiên xử lý linh hoạt bằng JsonObject để tránh sửa file Common
             JsonObject pushData = gson.fromJson(rawJson, JsonObject.class);
             onAuctionResult(pushData);
         } else if ("CHAT_MESSAGE_PUSH".equals(type)) {
-            // Nhánh hứng tin nhắn chat real-time
             JsonObject chatPush = gson.fromJson(rawJson, JsonObject.class);
             onChatMessageReceived(chatPush);
         } else {
@@ -38,14 +33,12 @@ public class PushHandler {
     }
 
     private static void onBidUpdate(AuctionDTOs.AuctionUpdateDTO push) {
-        // Bốc các trường dữ liệu theo đúng hàm Getter có sẵn của Kiên bên Common
         if (push != null) {
             long newPrice = push.getCurrentPrice();
             String bidderName = push.getHighestBidderName();
 
             logger.info("[Push Server] Giá mới: {} đ bởi {}", newPrice, bidderName);
 
-            // NỐI MẠCH REAL-TIME: Ép giao diện phòng đấu giá nhảy số ngay lập tức
             if (currentRoomController != null) {
                 currentRoomController.updateRealtimeBid(newPrice, bidderName);
             }
@@ -72,25 +65,22 @@ public class PushHandler {
     }
 
     /**
-     *  ĐÃ CHUẨN HÓA: Hàm xử lý tin nhắn chat đổ về từ Server qua đường Push ngầm
+     * Hàm xử lý tin nhắn chat đổ về từ Server qua đường Push ngầm
      */
     private static void onChatMessageReceived(JsonObject chatPush) {
         if (chatPush != null && chatPush.has("senderName") && chatPush.has("message")) {
             String sender = chatPush.get("senderName").getAsString();
             String content = chatPush.get("message").getAsString();
 
-            // Kiểm tra xem tin nhắn đổ về có phải dạng thông báo từ hệ thống không
             boolean isSystem = chatPush.has("isSystem") && chatPush.get("isSystem").getAsBoolean();
 
-            // Xử lý chuỗi hiển thị đặc biệt nếu tin nhắn này chỉ gửi riêng cho người theo dõi (Followers Only)
             String chatTarget = chatPush.has("chatTarget") ? chatPush.get("chatTarget").getAsString() : "ALL";
             if ("FOLLOWERS_ONLY".equals(chatTarget)) {
-                content = "📢 [CHỦ PHÒNG GỬI ĐẾN NGƯỜI THEO DÕI] " + content;
+                content = " [CHỦ PHÒNG GỬI ĐẾN NGƯỜI THEO DÕI] " + content;
             }
 
             logger.info("[Push Chat] Nhận tin nhắn từ {}: {}", sender, content);
 
-            // Gửi thẳng vào ChatController đang hiển thị trên màn hình để tự động cập nhật ListView
             if (com.auction.client.controller.components.ChatController.instance != null) {
                 com.auction.client.controller.components.ChatController.instance.receiveIncomingMessage(sender, content, isSystem);
             }

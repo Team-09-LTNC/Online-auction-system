@@ -34,7 +34,7 @@ public class UserManager {
     /**
      * Xác thực thông tin và đưa người dùng vào danh sách Online
      */
-    public User dangNhap(String tenDangNhap, String matKhau) throws AuthenticationException {
+    public User dangNhap(String tenDangNhap, String matKhau, String role) throws AuthenticationException {
         // 1. Truy vấn Database tìm người dùng
         Optional<User> userOpt = userDao.timTheoTenDangNhap(tenDangNhap);
         // 2. Nếu không tìm thấy -> Ném lỗi chi tiết
@@ -45,6 +45,10 @@ public class UserManager {
         // 3. Kiểm tra mật khẩu (Tạm thời so sánh chuỗi thô, sau này áp dụng mã hóa nếu đủ thời gian)
         if (!user.getPassword().equals(matKhau)) {
             throw new AuthenticationException("Sai mật khẩu, vui lòng thử lại!");
+        }
+        // 3.1 Kiểm tra xem Role trên Client gửi xuống có khớp với Role trong Database không
+        if (!user.getRoleName().equalsIgnoreCase(role)) {
+            throw new AuthenticationException("Tài khoản này không có quyền truy cập với vai trò " + role + "!");
         }
         // 4. Đăng nhập thành công -> Cập nhật trạng thái Online và trả về dữ liệu
         onlineUsers.put(user.getId(), user);

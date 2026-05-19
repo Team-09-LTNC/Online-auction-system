@@ -102,10 +102,6 @@
                             <graphic><Label alignment="CENTER" prefWidth="30.0" text="🎨" /></graphic>
                         </Button>
 
-                        <Button fx:id="catColl" onAction="#handleFilterCategory" alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="210.0" styleClass="nav-button" text="Đồ sưu tầm">
-                            <graphic><Label alignment="CENTER" prefWidth="30.0" text="⏳" /></graphic>
-                        </Button>
-
                         <Button fx:id="catOther" onAction="#handleFilterCategory" alignment="BASELINE_LEFT" prefHeight="40.0" prefWidth="210.0" styleClass="nav-button" text="Khác">
                             <graphic><Label alignment="CENTER" prefWidth="30.0" text="📦" /></graphic>
                         </Button>

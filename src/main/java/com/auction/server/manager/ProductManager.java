@@ -2,6 +2,8 @@ package com.auction.server.manager;
 
 import com.auction.common.model.item.*;
 import com.auction.server.dao.ItemDao;
+import com.auction.server.dao.AuctionDao;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -11,9 +13,11 @@ import java.util.List;
 public class ProductManager {
     private static volatile ProductManager instance;
     private final ItemDao itemDao;
+    private final AuctionDao auctionDao;
 
     private ProductManager() {
         this.itemDao = new ItemDao();
+        this.auctionDao = new AuctionDao();
     }
 
     public static ProductManager getInstance() {
@@ -45,10 +49,18 @@ public class ProductManager {
 
     /**
      * Kiểm tra tính hợp lệ trước khi cho phép Seller đăng bán
+     * NẾU THÀNH CÔNG -> Tự động sinh ra phiên đấu giá (Auction)
      */
-    public boolean dangBanSanPham(Item sanPham) {
+    public boolean dangBanSanPham(Item sanPham, LocalDateTime startTime, LocalDateTime endTime) {
         if (sanPham == null || sanPham.getStartingPrice() <= 0) return false;
-        return itemDao.luuSanPham(sanPham);
+        
+        int itemId = itemDao.luuSanPham(sanPham);
+        if (itemId > 0) {
+            sanPham.setId(itemId);
+            // Tiếp tục tạo phiên đấu giá cho sản phẩm vừa đăng
+            return auctionDao.taoPhienDauGia(itemId, sanPham.getStartingPrice(), startTime, endTime);
+        }
+        return false;
     }
 
     /**
@@ -57,7 +69,12 @@ public class ProductManager {
     public List<Item> layTatCaSanPham() {
         return itemDao.layTatCaSanPham();
     }
-
+    /**
+     * Lấy sản phẩm theo sellerID
+     */
+    public List<Item> laySanPhamTheoSellerId(int sellerId) {
+        return itemDao.laySanPhamTheoSellerId(sellerId);
+    }
     /**
      * Gỡ sản phẩm khỏi hệ thống
      */

@@ -1,20 +1,20 @@
 package com.auction.client.controller.auth;
 
 /**
- * 🔥 LỚP QUẢN LÝ PHIÊN ĐĂNG NHẬP (USER SESSION) CHUẨN KIẾN TRÚC
- * Đã sửa giá trị mặc định thành rỗng để tránh việc app tự ý nhận bừa vai trò BIDDER khi chưa đăng nhập.
+ * UserSession: Quản lý phiên làm việc tập trung tại Client.
+ * Đã cấu trúc lại để lưu trữ thêm ID người dùng từ hệ thống.
  */
 public class UserSession {
-    private static String currentRole = "";      // 🔥 SỬA THÀNH RỖNG: Chưa login thì chưa có quyền gì cả!
-    private static String username = "Khách";    // Mặc định ban đầu khi chưa xác thực
-    private static int userId = 0;
+    private static int userId;
+    private static String username;
+    private static String currentRole;
 
-    public static String getCurrentRole() {
-        return currentRole;
+    public static int getUserId() {
+        return userId;
     }
 
-    public static void setCurrentRole(String role) {
-        currentRole = role;
+    public static void setUserId(int id) {
+        userId = id;
     }
 
     public static String getUsername() {
@@ -25,20 +25,17 @@ public class UserSession {
         username = name;
     }
 
-    public static int getUserId() {
-        return userId;
+    public static String getCurrentRole() {
+        return currentRole;
     }
 
-    public static void setUserId(int id) {
-        userId = id;
+    public static void setCurrentRole(String role) {
+        currentRole = role;
     }
 
-    /**
-     * Hàm dọn rác khi Đăng xuất: Đưa mọi thứ về trạng thái nguyên bản an toàn
-     */
     public static void clear() {
-        currentRole = "";      // 🔥 Reset về rỗng để Sidebar quét lại hiện đủ phân quyền
-        username = "Khách";
         userId = 0;
+        username = null;
+        currentRole = null;
     }
 }

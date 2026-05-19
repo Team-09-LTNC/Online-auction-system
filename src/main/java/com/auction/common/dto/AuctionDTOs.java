@@ -17,18 +17,21 @@ public class AuctionDTOs {
         private final String itemName;
         private final long currentPrice;
         private final String status; // OPEN, RUNNING, FINISHED, PAID, CANCELED
+        private final String imageUrl;
 
-        public AuctionSummaryDTO(int auctionId, String itemName, long currentPrice, String status) {
+        public AuctionSummaryDTO(int auctionId, String itemName, long currentPrice, String status, String imageUrl) {
             this.auctionId = auctionId;
             this.itemName = itemName;
             this.currentPrice = currentPrice;
             this.status = status;
+            this.imageUrl = imageUrl;
         }
 
         public int getAuctionId() { return auctionId; }
         public String getItemName() { return itemName; }
         public long getCurrentPrice() { return currentPrice; }
         public String getStatus() { return status; }
+        public String getImageUrl() { return imageUrl; }
     }
 
     public static class AuctionListResponse extends BaseDTOs.Response {

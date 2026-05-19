@@ -2,6 +2,7 @@ package com.auction.client.controller.bidder;
 
 import com.auction.client.networkclient.ClientSocket;
 import com.auction.common.dto.AuctionDTOs;
+import com.auction.common.enums.ActionType;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import javafx.animation.KeyFrame;
@@ -24,16 +25,14 @@ public class AuctionRoomController implements Initializable {
     @FXML private TextField txtBidAmount;
     @FXML private Button btnPlaceBid;
 
-    // 🔥 BIẾN UI BỔ SUNG: Ô nhập mức giá tối đa cho Auto Bid và Nút kích hoạt
     @FXML private TextField txtMaxAutoBid;
     @FXML private Button btnEnableAutoBid;
 
-    // 🔥 BIẾN UI BỔ SUNG: ImageView nhận hiển thị ảnh sản phẩm từ URL
     @FXML private ImageView imgProduct;
 
     private int totalSeconds = 900;
     private Timeline countdownTimeline;
-    private final int currentAuctionId = 1;
+    private int currentAuctionId = -1; // Đổi thành biến thay đổi được
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -65,9 +64,23 @@ public class AuctionRoomController implements Initializable {
                 }
             });
         }
+    }
 
-        // 🔥 DEMO LOAD ẢNH BAN ĐẦU (Tối ráp Socket sẽ truyền biến động url từ Server của Kiên trả về vào đây)
-        loadProductImage("");
+    // HÀM MỚI: Được gọi từ AuctionListScreenController để truyền dữ liệu thật vào
+    public void initData(int auctionId, String imageUrl) {
+        this.currentAuctionId = auctionId;
+        
+        // Load ảnh thật
+        loadProductImage(imageUrl);
+
+        // Gửi lệnh JOIN_AUCTION để Server biết User này đang theo dõi phòng này
+        JsonObject joinReq = new JsonObject();
+        joinReq.addProperty("type", ActionType.JOIN_AUCTION);
+        joinReq.addProperty("auctionId", auctionId);
+        ClientSocket.getInstance().sendJsonRequest(joinReq, null, null);
+
+        // Kéo lịch sử thật của phiên này về (nếu muốn làm mịn hơn thì gọi GET_BID_HISTORY)
+        // Hiện tại tạm để mock để giữ UI không rỗng
     }
 
     private void startCountdown() {
@@ -84,7 +97,6 @@ public class AuctionRoomController implements Initializable {
             } else {
                 updateCountdownLabel();
 
-                // 🔥 ĐỔI MÀU ĐỒNG HỒ CẢNH BÁO: Nếu thời gian dưới 30 giây, chuyển chữ sang màu đỏ nhấp nháy cho kịch tính
                 if (totalSeconds <= 30) {
                     lblCountdown.setStyle("-fx-text-fill: #A64452; -fx-font-weight: bold;");
                 }
@@ -103,27 +115,25 @@ public class AuctionRoomController implements Initializable {
 
     @FXML
     private void handlePlaceBid() {
+        if (currentAuctionId == -1) {
+            showAlert("Lỗi", "Chưa xác định được phiên đấu giá!");
+            return;
+        }
+
         String input = txtBidAmount.getText().trim();
         if (input.isEmpty()) return;
 
         try {
             long bidAmount = Long.parseLong(input.replaceAll("\\D", ""));
-            int bidderId = 1; // Tạm thời mock ID người mua bằng 1
-
-            // Khởi tạo DTO đặt giá chuẩn của Kiên
-            AuctionDTOs.BidRequest request = new AuctionDTOs.BidRequest(currentAuctionId, bidAmount, bidderId);
+            // bidderId truyền 0 vì Server sẽ tự xác định qua UserSession trong ClientHandler
+            AuctionDTOs.BidRequest request = new AuctionDTOs.BidRequest(currentAuctionId, bidAmount, 0);
 
             btnPlaceBid.setDisable(true);
 
-            // Tối ưu cấu trúc map sang JsonObject
             JsonObject jsonRequest = new Gson().toJsonTree(request).getAsJsonObject();
-
-            // 🔥 SỬA CHO ĐÚNG THEO SERVER: Đổi từ "PLACE_BID" thành "BID_REQUEST"
-            // để khớp chuẩn 100% với tên hành động định nghĩa trong file AuctionDTOs.java ở Common!
-            jsonRequest.addProperty("type", "BID_REQUEST");
+            jsonRequest.addProperty("type", ActionType.PLACE_BID);
 
             ClientSocket.getInstance().sendJsonRequest(jsonRequest, "BID_RESPONSE", response -> {
-                // Đảm bảo cập nhật UI trên luồng JavaFX (Thread-safety)
                 Platform.runLater(() -> {
                     btnPlaceBid.setDisable(false);
                     boolean success = response.has("success") && response.get("success").getAsBoolean();
@@ -131,7 +141,6 @@ public class AuctionRoomController implements Initializable {
                         String msg = response.has("message") ? response.get("message").getAsString() : "Đã có người trả giá cao hơn.";
                         showAlert("Giá không hợp lệ", msg);
                     } else {
-                        // Nếu đặt giá thành công cục bộ, kiểm tra xem có cần tự kích hoạt luật gia hạn 1 phút không (Đề phòng mạng chậm)
                         checkAndApplySnipingRule();
                     }
                 });
@@ -144,11 +153,13 @@ public class AuctionRoomController implements Initializable {
         }
     }
 
-    // =========================================================================
-    // 🔥 CHỨC NĂNG TỰ ĐỘNG ĐẤU GIÁ (AUTO BIDDING)
-    // =========================================================================
     @FXML
     private void handleEnableAutoBid() {
+        if (currentAuctionId == -1) {
+            showAlert("Lỗi", "Chưa xác định được phiên đấu giá!");
+            return;
+        }
+
         if (txtMaxAutoBid == null || txtMaxAutoBid.getText().trim().isEmpty()) {
             showAlert("Thiếu thông tin", "Vui lòng nhập số tiền tối đa bạn có thể trả cho sản phẩm này!");
             return;
@@ -156,14 +167,11 @@ public class AuctionRoomController implements Initializable {
 
         try {
             long maxPrice = Long.parseLong(txtMaxAutoBid.getText().trim());
-            int bidderId = 1;
 
-            // Đóng gói JSON gửi yêu cầu đăng ký Auto Bid lên Server
             JsonObject jsonRequest = new JsonObject();
-            jsonRequest.addProperty("type", "ENABLE_AUTO_BID");
+            jsonRequest.addProperty("type", ActionType.REGISTER_AUTO_BID);
             jsonRequest.addProperty("auctionId", currentAuctionId);
-            jsonRequest.addProperty("bidderId", bidderId);
-            jsonRequest.addProperty("maxPrice", maxPrice);
+            jsonRequest.addProperty("maxBid", maxPrice); 
 
             if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(true);
 
@@ -175,7 +183,7 @@ public class AuctionRoomController implements Initializable {
                         Alert alert = new Alert(Alert.AlertType.INFORMATION);
                         alert.setTitle("Thành công");
                         alert.setHeaderText(null);
-                        alert.setContentText("Đã kích hoạt hệ thống Tự động đấu giá (Auto Bidding) thành công! Hệ thống sẽ tự nâng giá để bảo vệ vị thế dẫn đầu của bạn.");
+                        alert.setContentText("Đã kích hoạt hệ thống Tự động đấu giá (Auto Bidding) thành công!");
                         alert.showAndWait();
                     } else {
                         String msg = response.has("message") ? response.get("message").getAsString() : "Lỗi không thể kích hoạt.";
@@ -189,61 +197,41 @@ public class AuctionRoomController implements Initializable {
         }
     }
 
-    // =========================================================================
-    // GIA HẠN THÊM 1 PHÚT (ANTI-SNIPING RULE)
-    // =========================================================================
     private void checkAndApplySnipingRule() {
-        // Luật đặt ra: Nếu thời gian còn lại ít hơn hoặc bằng 30 giây mà có người bid, tự động cộng thêm 60 giây
         if (totalSeconds > 0 && totalSeconds <= 30) {
             totalSeconds += 60;
-            // Khôi phục lại màu sắc bình thường cho đồng hồ
             lblCountdown.setStyle("-fx-text-fill: #1A0F0A; -fx-font-weight: normal;");
             updateCountdownLabel();
             org.slf4j.LoggerFactory.getLogger(getClass()).info("[Anti-Sniping] Phát hiện bid trong 30s cuối! Tự động gia hạn thêm 1 phút.");
         }
     }
 
-    /**
-     * HÀM REAL-TIME: Gọi bởi PushHandler.
-     * Lưu ý: Hàm này an toàn vì PushHandler đã bọc Platform.runLater().
-     */
     public void updateRealtimeBid(long newPrice, String bidderName) {
         lblCurrentPrice.setText(String.format("%,.0f đ", (double) newPrice));
         lblLeader.setText("Người dẫn đầu: " + bidderName);
 
-        // [TỐI ƯU JAVAFX] Sử dụng add(0, item) thay vì addFirst() để tương thích mọi phiên bản JDK
         String historyEntry = String.format("%s: %,.0f đ", bidderName, (double) newPrice);
         lvBidHistory.getItems().add(0, historyEntry);
 
-        // 🔥 ĐỒNG BỘ REALTIME: Bất kể ai đặt giá (hoặc hệ thống tự động Auto Bid của người khác kích nổ) trong 30s cuối,
-        // toàn bộ các máy Client đang xem phòng này đều sẽ được tự động gia hạn thêm 1 phút đồng bộ cùng nhau!
         checkAndApplySnipingRule();
     }
 
-    // =========================================================================
-    // 🔥LOGIC HIỂN THỊ ẢNH SẢN PHẨM TỪ ĐƯỜNG DẪN URL
-    // =========================================================================
     public void loadProductImage(String urlString) {
         if (imgProduct == null) return;
 
         if (urlString == null || urlString.trim().isEmpty()) {
-            // Nếu không truyền URL, mặc định clear trống ImageView để lộ icon xe FXML nền bên dưới
             imgProduct.setImage(null);
             return;
         }
 
         try {
-            // Nạp ảnh qua luồng ngầm (backgroundLoading = true) để chống đơ lag giao diện Client
             Image image = new Image(urlString, true);
-
-            // Gài Listener bẫy lỗi nếu link URL die hoặc sai định dạng file ảnh
             image.exceptionProperty().addListener((obs, oldExc, newExc) -> {
                 if (newExc != null) {
                     org.slf4j.LoggerFactory.getLogger(getClass()).error("[UI Error] Không thể nạp ảnh sản phẩm từ URL: {}", newExc.getMessage());
-                    Platform.runLater(() -> imgProduct.setImage(null)); // Xóa ảnh lỗi để quay về icon mặc định
+                    Platform.runLater(() -> imgProduct.setImage(null));
                 }
             });
-
             imgProduct.setImage(image);
         } catch (Exception e) {
             imgProduct.setImage(null);

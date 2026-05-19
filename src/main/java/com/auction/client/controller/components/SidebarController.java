@@ -96,27 +96,26 @@ public class SidebarController {
         }
     }
 
-    // HÀM LỌC DANH MỤC (DÙNG CHUNG)
+    // HÀM LỌC DANH MỤC
     @FXML
     private void handleFilterCategory(ActionEvent event) {
         Button clickedBtn = (Button) event.getSource();
-        String category = clickedBtn.getText().trim();
+        String category = clickedBtn.getText().trim(); // Lấy chữ "Điện tử", "Xe cộ", "Nghệ thuật"...
 
-        // 1. Highlight nút bấm
+        // 1. Đổi màu nút đang được bấm
         setButtonActive(clickedBtn);
 
-        // 2. Ép MainController quay về trang Dashboard (nếu user đang ở trang khác)
-        MainController.instance.setCenterContent("/fxml/bidder/MainDashboard.fxml");
+        // 2. Ép hệ thống chuyển hướng sang màn hình "Tất cả phiên"
+        MainController.instance.setCenterContent("/fxml/bidder/AuctionListScreen.fxml");
 
-        // 3. Lấy cái Controller vừa được load lên
+        // 3. Lấy ra Controller của màn hình vừa được load lên
         Object currentCtrl = MainController.instance.getCurrentCenterController();
 
-        // 4. Nếu đúng là trang Dashboard thì ra lệnh lọc
-        if (currentCtrl instanceof MainDashboardController) {
-            ((MainDashboardController) currentCtrl).onCategorySelected(category);
+        // 4. Kiểm tra Đa hình: Truyền lệnh lọc qua Interface
+        if (currentCtrl instanceof com.auction.client.interfaces.CategoryFilterListener) {
+            ((com.auction.client.interfaces.CategoryFilterListener) currentCtrl).onCategorySelected(category);
         }
     }
-
     @FXML
     private void handleOpenDashboard(ActionEvent event) {
         setButtonActive(btnDashboard);

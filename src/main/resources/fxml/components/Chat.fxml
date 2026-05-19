@@ -5,39 +5,42 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="700.0" prefWidth="900.0" spacing="15.0" style="-fx-background-color: #FDFBF9; -fx-padding: 25;"
+<HBox prefHeight="700.0" prefWidth="1000.0" spacing="15.0" style="-fx-background-color: #FDFBF9; -fx-padding: 20;"
       xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.auction.client.controller.components.ChatController">
 
-    <HBox alignment="CENTER_LEFT" spacing="15.0">
-        <children>
+    <!-- PAN TRÁI: DANH SÁCH PHÒNG CHAT -->
+    <VBox prefWidth="300.0" spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #EEEEEE;">
+        <Label text="LỊCH SỬ THAM GIA" textFill="#7A1B28" style="-fx-font-weight: bold; -fx-font-size: 16;" />
+        <Label text="Chọn một phiên để nhắn tin" textFill="#888888" style="-fx-font-size: 12;" />
+
+        <ListView fx:id="lvChatRooms" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-control-inner-background: transparent;" />
+    </VBox>
+
+    <!-- PAN PHẢI: KHU VỰC CHAT -->
+    <VBox fx:id="chatArea" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS" spacing="15.0">
+        <HBox alignment="CENTER_LEFT" spacing="15.0">
             <VBox spacing="2.0" HBox.hgrow="ALWAYS">
-                <Label text="TRUNG TÂM TIN NHẮN REAL-TIME" textFill="#7A1B28" style="-fx-font-weight: bold; -fx-font-size: 20;" />
+                <Label fx:id="lblRoomName" text="CHƯA CHỌN PHÒNG CHAT" textFill="#3E2723" style="-fx-font-weight: bold; -fx-font-size: 18;" />
                 <Label text="Trao đổi trực tiếp trong phiên đấu giá và nhận thông báo từ người bán." textFill="#888888" style="-fx-font-size: 12;" />
             </VBox>
 
             <HBox fx:id="hboxSellerTarget" alignment="CENTER_RIGHT" spacing="10.0" style="-fx-background-color: #F5EBEB; -fx-padding: 8 15; -fx-background-radius: 10; -fx-border-color: #E8DFD8;">
-                <children>
-                    <Label text="🎯 Chế độ gửi của Người bán:" style="-fx-font-size: 12; -fx-font-weight: bold;" textFill="#7A1B28" />
-                    <ComboBox fx:id="comboChatTarget" prefWidth="180.0" style="-fx-background-radius: 5;" />
-                </children>
+                <Label text="🎯 Gửi:" style="-fx-font-size: 12; -fx-font-weight: bold;" textFill="#7A1B28" />
+                <ComboBox fx:id="comboChatTarget" prefWidth="150.0" style="-fx-background-radius: 5;" />
             </HBox>
-        </children>
-    </HBox>
+        </HBox>
 
-    <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #EEEEEE; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.02), 10, 0, 0, 5);">
-        <children>
+        <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #EEEEEE; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.02), 10, 0, 0, 5);">
             <ListView fx:id="lvChatMessages" VBox.vgrow="ALWAYS" style="-fx-background-radius: 10; -fx-background-color: transparent;" />
-        </children>
-    </VBox>
+        </VBox>
 
-    <HBox spacing="15.0" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #EEEEEE;">
-        <children>
+        <HBox spacing="15.0" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #EEEEEE;">
             <TextField fx:id="txtMessageInput" prefHeight="45.0" promptText="Nhập nội dung tin nhắn của bạn tại đây..." HBox.hgrow="ALWAYS"
                        style="-fx-background-radius: 10; -fx-font-size: 14; -fx-padding: 0 15;" />
             <Button fx:id="btnSendMessage" onAction="#handleSendMessage" prefHeight="45.0" prefWidth="120.0"
                     text="GỬI ĐI 🚀"
                     style="-fx-background-color: #7A1B28; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-cursor: hand;" />
-        </children>
-    </HBox>
-</VBox>
+        </HBox>
+    </VBox>
+</HBox>

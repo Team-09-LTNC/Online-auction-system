@@ -15,17 +15,20 @@
     </VBox>
 
     <HBox spacing="20.0">
-        <VBox prefWidth="400.0" style="-fx-background-color: #7A1B28; -fx-background-radius: 15; -fx-padding: 25; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
-            <Label text="SỐ DƯ KHẢ DỤNG" textFill="#F2D5D5" style="-fx-font-size: 12; -fx-font-weight: bold;" />
-            <Label fx:id="lblBalance" text="0 đ" textFill="WHITE">
+        <VBox prefWidth="400.0" style="-fx-background-color: #FFF5E1; -fx-background-radius: 15; -fx-border-color: #E8D8C8; -fx-border-radius: 15; -fx-padding: 25; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5);">
+            <Label text="SỐ DƯ KHẢ DỤNG" textFill="#888888" style="-fx-font-size: 12; -fx-font-weight: bold;" />
+
+            <Label fx:id="lblBalance" text="0 đ" textFill="#3E2723">
                 <font><Font name="System Bold" size="32.0" /></font>
                 <padding><Insets top="10.0" bottom="15.0" /></padding>
             </Label>
+
             <HBox spacing="15.0">
                 <Button onAction="#handleDeposit" prefHeight="35.0" prefWidth="120.0" text="💰 Nạp tiền"
-                        style="-fx-background-color: white; -fx-text-fill: #7A1B28; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;" />
+                        style="-fx-background-color: #3E2723; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;" />
+
                 <Button onAction="#handleWithdraw" prefHeight="35.0" prefWidth="120.0" text="💸 Rút tiền"
-                        style="-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 8; -fx-font-weight: bold; -fx-cursor: hand;" />
+                        style="-fx-background-color: transparent; -fx-text-fill: #3E2723; -fx-border-color: #3E2723; -fx-border-radius: 8; -fx-border-width: 1.5; -fx-font-weight: bold; -fx-cursor: hand;" />
             </HBox>
         </VBox>
 
@@ -41,6 +44,6 @@
 
     <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 20; -fx-border-color: #EEEEEE;">
         <Label text="📜 Lịch sử biến động số dư" style="-fx-font-weight: bold; -fx-font-size: 16; -fx-padding: 0 0 10 0;" />
-        <ListView fx:id="lvTransactionHistory" VBox.vgrow="ALWAYS" style="-fx-background-radius: 10;" />
+        <ListView fx:id="lvTransactionHistory" VBox.vgrow="ALWAYS" style="-fx-background-radius: 10; -fx-border-color: transparent;" />
     </VBox>
 </VBox>

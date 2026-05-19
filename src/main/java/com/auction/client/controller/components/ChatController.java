@@ -1,7 +1,10 @@
 package com.auction.client.controller.components;
 
 import com.auction.client.networkclient.ClientSocket;
-import com.auction.client.controller.auth.UserSession; // Import Session mới chuẩn chỉ
+import com.auction.client.controller.auth.UserSession;
+import com.auction.common.enums.ActionType;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -9,6 +12,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,86 +25,121 @@ public class ChatController {
     @FXML private ListView<String> lvChatMessages;
     @FXML private TextField txtMessageInput;
     @FXML private Button btnSendMessage;
+    @FXML private ListView<String> lvChatRooms;
+    @FXML private VBox chatArea;
+    @FXML private Label lblRoomName;
 
-    // Biến static để file PushHandler/ClientSocket từ tầng mạng có thể tìm thấy và ném tin nhắn vào
     public static ChatController instance;
-    private final int currentAuctionId = 1; // Mock tạm ID phiên đấu giá hiện tại bằng 1
+    private int currentAuctionId = -1; 
+    
+    // Lưu tạm danh sách ID phòng chat tương ứng với item trong ListView
+    private final java.util.Map<String, Integer> roomMap = new java.util.HashMap<>();
 
     @FXML
     public void initialize() {
         instance = this;
-        logger.info("[Chat] Đã khởi tạo phòng Chat cho phiên đấu giá ID: {}", currentAuctionId);
-
-        // Cấu hình danh sách mục tiêu gửi cho Seller
+        chatArea.setVisible(false); // Ẩn vùng chat đi cho đến khi chọn phòng
+        
         if (comboChatTarget != null) {
             comboChatTarget.setItems(FXCollections.observableArrayList("Gửi tất cả mọi người", "Chỉ gửi người đang theo dõi"));
             comboChatTarget.setValue("Gửi tất cả mọi người");
         }
 
-        // Lấy vai trò (Role) an toàn từ UserSession để phân quyền giao diện Chat
         String role = UserSession.getCurrentRole();
-
         if (role != null) {
-            // So sánh chuẩn chỉ với ENUM viết hoa "SELLER" để phân quyền
             if (!"SELLER".equalsIgnoreCase(role)) {
-                // Nếu là Bidder (Người mua), ẩn hoàn toàn cái cụm chọn mục tiêu gửi đi để tránh nhầm lẫn
                 if (hboxSellerTarget != null) {
                     hboxSellerTarget.setVisible(false);
                     hboxSellerTarget.setManaged(false);
-                    logger.info("[Chat] Đã ẩn thanh chọn mục tiêu gửi tin nhắn đối với vai trò Người mua (BIDDER).");
                 }
             }
         }
 
-        // Dọn sạch tin nhắn cũ khi vào phòng để chuẩn bị hứng luồng dữ liệu real-time
-        if (lvChatMessages != null) {
-            lvChatMessages.getItems().clear();
-            lvChatMessages.getItems().add("[Hệ thống]: Chào mừng bạn tham gia phòng trao đổi trực tuyến!");
+        // Sự kiện khi click vào một phòng trong ListView
+        if (lvChatRooms != null) {
+            lvChatRooms.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue != null && roomMap.containsKey(newValue)) {
+                    openChatRoom(roomMap.get(newValue), newValue);
+                }
+            });
         }
+
+        fetchJoinedRooms();
+    }
+
+    private void fetchJoinedRooms() {
+        JsonObject request = new JsonObject();
+        request.addProperty("type", ActionType.GET_JOINED_AUCTIONS);
+
+        ClientSocket.getInstance().sendJsonRequest(request, "JOINED_AUCTIONS_RESPONSE", response -> {
+            Platform.runLater(() -> {
+                if (response.has("success") && response.get("success").getAsBoolean() && response.has("auctions")) {
+                    JsonArray auctions = response.getAsJsonArray("auctions");
+                    lvChatRooms.getItems().clear();
+                    roomMap.clear();
+                    
+                    for (JsonElement element : auctions) {
+                        JsonObject obj = element.getAsJsonObject();
+                        int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
+                        String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Phiên Đấu Giá";
+                        
+                        if (auctionId != -1) {
+                            String displayTxt = "💬 " + name;
+                            roomMap.put(displayTxt, auctionId);
+                            lvChatRooms.getItems().add(displayTxt);
+                        }
+                    }
+                    if (lvChatRooms.getItems().isEmpty()) {
+                        lvChatRooms.getItems().add("Chưa tham gia phiên nào");
+                        lvChatRooms.setDisable(true);
+                    } else {
+                        lvChatRooms.setDisable(false);
+                    }
+                }
+            });
+        });
+    }
+
+    private void openChatRoom(int auctionId, String roomName) {
+        this.currentAuctionId = auctionId;
+        chatArea.setVisible(true);
+        lblRoomName.setText(roomName.replace("💬 ", ""));
+        
+        lvChatMessages.getItems().clear();
+        lvChatMessages.getItems().add("[Hệ thống]: Chào mừng bạn tham gia phòng trao đổi trực tuyến của " + lblRoomName.getText());
+
+        // Gửi lệnh tham gia phòng để Server add vào Observer (nếu chưa)
+        JsonObject joinReq = new JsonObject();
+        joinReq.addProperty("type", ActionType.JOIN_AUCTION);
+        joinReq.addProperty("auctionId", auctionId);
+        ClientSocket.getInstance().sendJsonRequest(joinReq, null, null);
+    }
+
+    public void setAuctionId(int auctionId) {
+        this.currentAuctionId = auctionId;
     }
 
     @FXML
     private void handleSendMessage(ActionEvent event) {
+        if (currentAuctionId == -1) return;
+        
         String message = txtMessageInput.getText().trim();
         if (message.isEmpty()) return;
 
-        // ĐÓNG GÓI RUỘT DỮ LIỆU ĐỘNG 100% GỬI LÊN SERVER
         JsonObject jsonRequest = new JsonObject();
-
-        // Đổi từ "type" thành "action" để đồng bộ với cấu hình Socket toàn hệ thống
-        jsonRequest.addProperty("action", "SEND_CHAT_MESSAGE");
-        jsonRequest.addProperty("roomId", currentAuctionId);
+        jsonRequest.addProperty("type", ActionType.SEND_CHAT_MESSAGE);
+        jsonRequest.addProperty("auctionId", currentAuctionId);
         jsonRequest.addProperty("message", message);
-
-        jsonRequest.addProperty("userId", UserSession.getUserId());
-        jsonRequest.addProperty("username", UserSession.getUsername());
-
-        String role = UserSession.getCurrentRole();
-        if (role != null) {
-            if ("SELLER".equalsIgnoreCase(role) && comboChatTarget != null) {
-                String target = comboChatTarget.getValue();
-                if ("Chỉ gửi người đang theo dõi".equals(target)) {
-                    jsonRequest.addProperty("chatTarget", "FOLLOWERS_ONLY");
-                } else {
-                    jsonRequest.addProperty("chatTarget", "ALL");
-                }
-            } else {
-                jsonRequest.addProperty("chatTarget", "ALL"); // Người mua mặc định luôn là gửi tất cả
-            }
-        } else {
-            jsonRequest.addProperty("chatTarget", "ALL");
-        }
 
         if (btnSendMessage != null) btnSendMessage.setDisable(true);
 
-        // Bắn Socket qua ClientSocket lên Server của Kiên
-        ClientSocket.getInstance().sendJsonRequest(jsonRequest, "SEND_CHAT_RESPONSE", response -> {
+        ClientSocket.getInstance().sendJsonRequest(jsonRequest, "CHAT_SEND_RESPONSE", response -> {
             Platform.runLater(() -> {
                 if (btnSendMessage != null) btnSendMessage.setDisable(false);
 
                 boolean success = response.has("success") && response.get("success").getAsBoolean();
                 if (success) {
-                    if (txtMessageInput != null) txtMessageInput.clear(); // Xóa chữ ô nhập khi gửi thành công
+                    if (txtMessageInput != null) txtMessageInput.clear();
                 } else {
                     Alert alert = new Alert(Alert.AlertType.WARNING, "Không thể gửi tin nhắn!");
                     alert.showAndWait();
@@ -109,9 +148,6 @@ public class ChatController {
         });
     }
 
-    /**
-     * HÀM REAL-TIME: Được gọi từ PushHandler tầng mạng khi có gói PUSH_CHAT_MESSAGE đổ về
-     */
     public void receiveIncomingMessage(String senderName, String msgContent, boolean isSystem) {
         if (lvChatMessages == null) return;
 
@@ -123,17 +159,11 @@ public class ChatController {
                 logEntry = String.format("%s: %s", senderName, msgContent);
             }
             lvChatMessages.getItems().add(logEntry);
-
-            // Tự động cuộn ListView xuống dòng cuối cùng để người dùng dễ đọc, không cần kéo tay
             lvChatMessages.scrollTo(lvChatMessages.getItems().size() - 1);
         });
     }
 
-    /**
-     * HÀM GIẢI PHÓNG BỘ NHỚ: Gọi hàm này khi người dùng bấm nút đóng/thoát phòng đấu giá
-     */
     public static void shutdown() {
         instance = null;
-        logger.info("[Chat] Đã giải phóng instance ChatController để sẵn sàng cho phòng đấu giá mới.");
     }
 }
