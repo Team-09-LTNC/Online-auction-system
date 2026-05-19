@@ -47,7 +47,8 @@ public class ClientHandler implements Runnable, AuctionObserver {
                 PrintWriter outWriter = new PrintWriter(new OutputStreamWriter(socketClient.getOutputStream(), StandardCharsets.UTF_8), true)
         ) {
             this.out = outWriter;
-            String chuoiJson;
+            String chuoiJson = "";
+            logger.info("Đang chờ dữ liệu từ client {}: {}", socketClient.getInetAddress(), socketClient.getPort());
             while ((chuoiJson = in.readLine()) != null) {
                 logger.debug("Dữ liệu nhận từ {}: {}", socketClient.getInetAddress(), chuoiJson);
 

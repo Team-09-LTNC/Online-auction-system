@@ -9,8 +9,11 @@ package com.auction.server.dao;
 //balance	(BIGINT	DEFAULT 0) : Số dư tài khoản
 
 import com.auction.common.model.user.*;
+import com.auction.server.db.ConnectionProvider;
 import com.auction.server.db.DatabaseConnection;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,4 +103,46 @@ public class UserDao {
             return false;
         }
     }
+
+    public List<User> layTatCaBidder() {
+    List<User> list = new ArrayList<>();
+    String sql = "SELECT * FROM users WHERE role = 'BIDDER'";
+    try (Connection conn = DatabaseConnection.getInstance().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+            Bidder b = new Bidder(
+                rs.getString("username"),
+                rs.getString("password"),
+                rs.getString("full_name")
+            );
+            // set id nếu cần
+            list.add(b);
+        }
+    } catch (SQLException e) {
+        logger.error("Lỗi lấy danh sách bidder: {}", e.getMessage());
+    }
+    return list;
+}
+
+public List<User> layTatCaSeller() {
+    List<User> list = new ArrayList<>();
+    String sql = "SELECT * FROM users WHERE role = 'SELLER'";
+    try (Connection conn = DatabaseConnection.getInstance().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+            Seller s = new Seller(
+                rs.getString("username"),
+                rs.getString("password"),
+                rs.getString("full_name")
+            );
+            // set id nếu cần
+            list.add(s);
+        }
+    } catch (SQLException e) {
+        logger.error("Lỗi lấy danh sách seller: {}", e.getMessage());
+    }
+    return list;
+}
 }

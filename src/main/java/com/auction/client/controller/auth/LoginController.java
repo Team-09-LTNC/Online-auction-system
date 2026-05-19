@@ -95,7 +95,7 @@ public class LoginController {
                             UserSession.setUserId(userData.get("id").getAsInt());
                         }
 
-                        String userName = userData.has("userName") ? userData.get("userName").getAsString() : user;
+                        String userName = userData.has("username") ? userData.get("username").getAsString() : user;
                         UserSession.setUsername(userName);
                     }
 

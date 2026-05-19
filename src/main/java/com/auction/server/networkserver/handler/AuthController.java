@@ -15,6 +15,8 @@ import com.auction.server.dao.WalletTransactionDao;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
+import java.util.List;
 import java.util.Optional;
 
 public class AuthController implements RequestHandler {
@@ -44,10 +46,58 @@ public class AuthController implements RequestHandler {
                 return xuLyRutTien(yeuCau, client, reqId);
             case "GET_WALLET_HISTORY":
                 return xuLyLayLichSuGiaoDich(yeuCau, client, reqId);
+
+            // Thêm vào switch trong xuLy() để xử lý các yêu cầu admin mới
+            case ActionType.ADMIN_GET_ALL_BIDDERS:
+                return xuLyLayDanhSachBidder(reqId);
+            case ActionType.ADMIN_GET_ALL_SELLERS:
+                return xuLyLayDanhSachSeller(reqId);
+            // case ActionType.ADMIN_GET_ALL_AUCTIONS:
+            //     return xuLyLayDanhSachAuctions(reqId);
+            // case ActionType.ADMIN_DELETE_BIDDER:
+            //     return xuLyXoaNguoiDung(yeuCau, reqId);
             default:
                 return null;
         }
     }
+
+    private String xuLyLayDanhSachBidder(String reqId) {
+    List<User> bidders = userDao.layTatCaBidder(); // cần thêm method này vào UserDao
+    JsonArray array = new JsonArray();
+    for (User u : bidders) {
+        JsonObject obj = new JsonObject();
+        obj.addProperty("username", u.getUsername());
+        obj.addProperty("fullname", u.getFullName());
+        obj.addProperty("status", "ACTIVE"); // hoặc lấy từ DB nếu có cột status
+        array.add(obj);
+    }
+    JsonObject res = new JsonObject();
+    res.addProperty("type", "GET_ALL_BIDDERS_RESPONSE");
+    res.addProperty("success", true);
+    res.add("data", array);
+    if (reqId != null) res.addProperty("requestId", reqId);
+    return gson.toJson(res);
+}
+
+private String xuLyLayDanhSachSeller(String reqId) {
+    List<User> sellers = userDao.layTatCaSeller(); // cần thêm method này vào UserDao
+    JsonArray array = new JsonArray();
+    for (User u : sellers) {
+        JsonObject obj = new JsonObject();
+        obj.addProperty("username", u.getUsername());
+        obj.addProperty("fullname", u.getFullName());
+        obj.addProperty("status", "ACTIVE"); // hoặc lấy từ DB nếu có cột status
+        array.add(obj);
+    }
+    JsonObject res = new JsonObject();
+    res.addProperty("type", "GET_ALL_SELLERS_RESPONSE");
+    res.addProperty("success", true);
+    res.add("data", array);
+    if (reqId != null) res.addProperty("requestId", reqId);
+    return gson.toJson(res);
+}
+
+
 
     private String xuLyDangNhap(JsonObject yeuCau, ClientHandler client, String reqId) {
         AuthDTOs.LoginRequest request = gson.fromJson(yeuCau, AuthDTOs.LoginRequest.class);

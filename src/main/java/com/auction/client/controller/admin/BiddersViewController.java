@@ -15,6 +15,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
+import com.auction.client.networkclient.ClientSocket;
+import com.auction.common.enums.ActionType;
+import com.google.gson.JsonObject;
+
 /**
  * BiddersViewController
  * ─────────────────────────────────────────────────────────────
@@ -91,16 +95,29 @@ public class BiddersViewController implements Initializable {
     }
 
     private void loadData() {
-        // TODO: thay bằng service call
-        masterList.setAll(
-                new Bidder("bidder01", "Nguyễn Văn An",   STATUS_ACTIVE),
-                new Bidder("bidder02", "Trần Thị Bình",   STATUS_ACTIVE),
-                new Bidder("bidder03", "Lê Hoàng Cường",  STATUS_LOCKED),
-                new Bidder("bidder04", "Phạm Thị Dung",   STATUS_ACTIVE),
-                new Bidder("bidder05", "Hoàng Minh Đức",  STATUS_LOCKED)
-        );
-        updateCountLabel();
-    }
+    // Xóa dữ liệu hardcode cũ, thay bằng gọi server
+    JsonObject request = new JsonObject();
+    request.addProperty("type", ActionType.ADMIN_GET_ALL_BIDDERS);
+    request.addProperty("requestId", java.util.UUID.randomUUID().toString());
+
+    ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_BIDDERS_RESPONSE", response -> {
+        javafx.application.Platform.runLater(() -> {
+            boolean success = response.has("success") && response.get("success").getAsBoolean();
+            if (success && response.has("data")) {
+                masterList.clear();
+                response.getAsJsonArray("data").forEach(el -> {
+                    JsonObject obj = el.getAsJsonObject();
+                    masterList.add(new Bidder(
+                        obj.get("username").getAsString(),
+                        obj.get("fullname").getAsString(),
+                        obj.get("status").getAsString()
+                    ));
+                });
+                updateCountLabel();
+            }
+        });
+    });
+}
 
     // ── FXML handlers ────────────────────────────────────────
 
