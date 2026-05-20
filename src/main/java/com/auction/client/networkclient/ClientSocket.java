@@ -43,7 +43,6 @@ public class ClientSocket {
     private BufferedReader in;
     private final Gson gson = GsonConfig.getInstance();
 
-    // giờ map sẽ lưu Callback với Khóa (Key) là `requestId` thay vì `type`
     private final Map<String, Consumer<JsonObject>> responseCallbacks = new ConcurrentHashMap<>();
 
     private ClientSocket() { connect(); }
@@ -65,21 +64,15 @@ public class ClientSocket {
         }
     }
 
-    /**
-     * Gửi JSON lên Server. Lưu trữ Callback dựa vào requestId để định tuyến chính xác.
-     */
     public void sendJsonRequest(JsonObject jsonObject, String expectedResponseType, Consumer<JsonObject> onResponse) {
         if (out != null) {
-            // Lấy requestId từ gói tin JSON (Lớp BaseDTOs.Request tự sinh ra)
             String requestId = jsonObject.has("requestId") && !jsonObject.get("requestId").isJsonNull()
                     ? jsonObject.get("requestId").getAsString() : null;
 
             if (onResponse != null) {
                 if (requestId != null) {
-                    // Định tuyến chuẩn: Dùng requestId
                     responseCallbacks.put(requestId, onResponse);
                 } else if (expectedResponseType != null) {
-                    // Dự phòng: Lỡ gói tin không có requestId thì vẫn dùng type như cũ
                     responseCallbacks.put(expectedResponseType, onResponse);
                 }
             }
@@ -122,21 +115,17 @@ public class ClientSocket {
             if (isPushEvent(type)) {
                 PushHandler.handle(type, jsonObject);
             } else {
-                // 1. Trích xuất requestId từ Server trả về
                 String requestId = jsonObject.has("requestId") && !jsonObject.get("requestId").isJsonNull()
                         ? jsonObject.get("requestId").getAsString() : null;
 
                 Consumer<JsonObject> callback = null;
 
-                // 2. Tìm Callback tương ứng
                 if (requestId != null && responseCallbacks.containsKey(requestId)) {
-                    callback = responseCallbacks.remove(requestId); // Xóa sau khi dùng (tránh rò rỉ RAM)
+                    callback = responseCallbacks.remove(requestId);
                 } else if (responseCallbacks.containsKey(type)) {
-                    // Fallback (Dự phòng): Nếu Server quên trả requestId, tìm theo type cũ
                     callback = responseCallbacks.remove(type);
                 }
 
-                // 3. Thực thi Callback đẩy data về Giao diện
                 if (callback != null) {
                     callback.accept(jsonObject);
                 } else {

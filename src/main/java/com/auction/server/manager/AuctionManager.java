@@ -12,6 +12,7 @@ import com.auction.common.observer.AuctionObserver;
 import com.auction.server.dao.AuctionDao;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
@@ -87,8 +88,7 @@ public class AuctionManager {
             taskCu.cancel(false);
         }
 
-        // Đổi sang Mili-giây để đảm bảo đóng cực kỳ chuẩn xác
-        long delay = java.time.Duration.between(LocalDateTime.now(), phien.getEndTime()).toMillis();
+        long delay = java.time.Duration.between(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")), phien.getStartTime()).toMillis();
         if (delay <= 0) {
             dongPhien(phien.getId()); // Đã quá giờ thì đóng luôn
         } else {
@@ -238,7 +238,19 @@ public class AuctionManager {
 
     /** Lấy chi tiết 1 phiên đang chạy */
     public Auction layPhienTheoId(int idPhien) {
-        return dsPhienDangChay.get(idPhien);
+        Auction phien = dsPhienDangChay.get(idPhien);
+
+        //Nếu RAM không có, móc xuống Database tìm lại
+        if (phien == null) {
+            for (Auction a : auctionDao.layDanhSachPhienDangChay()) {
+                if (a.getId() == idPhien) {
+                    dsPhienDangChay.put(a.getId(), a); // Nạp lại vào RAM
+                    henGioDongPhien(a); // Lên dây cót đếm ngược luôn
+                    return a;
+                }
+            }
+        }
+        return phien;
     }
 
     /** Gỡ Client khỏi danh sách nhận thông báo Real-time (Rời phòng) */

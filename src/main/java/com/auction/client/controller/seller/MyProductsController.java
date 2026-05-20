@@ -18,6 +18,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ResourceBundle;
 
 public class MyProductsController implements Initializable {
@@ -27,6 +30,11 @@ public class MyProductsController implements Initializable {
     @FXML private Label lblHeaderName;
     @FXML private Label lblHeaderRole;
     @FXML private Label lblBannerWelcome;
+
+    // Bộ formatter Lazy-Load chấp hết mọi định dạng lỗi chuỗi nano của MySQL
+    private static final DateTimeFormatter MYSQL_LAZY_FORMATTER = DateTimeFormatter.ofPattern(
+            "[yyyy-MM-dd HH:mm:ss[.S]][yyyy-MM-dd HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss[.SSS]]"
+    );
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -63,7 +71,6 @@ public class MyProductsController implements Initializable {
 
         JsonObject reqJson = new JsonObject();
         reqJson.addProperty("type", ActionType.GET_MY_PRODUCTS);
-
         reqJson.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
         ClientSocket.getInstance().sendJsonRequest(reqJson, ActionType.GET_MY_PRODUCTS, response -> {
@@ -86,15 +93,27 @@ public class MyProductsController implements Initializable {
                                 int id = itemObj.has("id") ? itemObj.get("id").getAsInt() : -1;
                                 String name = itemObj.has("name") ? itemObj.get("name").getAsString() : "Sản phẩm không tên";
                                 double startingPrice = itemObj.has("startingPrice") ? itemObj.get("startingPrice").getAsDouble() : 0.0;
-                                String category = itemObj.has("category") ? itemObj.get("category").getAsString() : "Khác";
                                 String imageUrl = itemObj.has("imageUrl") ? itemObj.get("imageUrl").getAsString() : "";
+
+                                // Đọc trạng thái từ Server trả về
+                                String status = itemObj.has("status") ? itemObj.get("status").getAsString() : "RUNNING";
+
+                                // Bốc tách đồng bộ chuỗi an toàn
+                                String startTimeStr = itemObj.has("startTime") && !itemObj.get("startTime").isJsonNull() ? itemObj.get("startTime").getAsString() : null;
+                                String endTimeStr = itemObj.has("endTime") && !itemObj.get("endTime").isJsonNull() ? itemObj.get("endTime").getAsString() : null;
+
+                                if (endTimeStr == null && itemObj.has("endTimeStr") && !itemObj.get("endTimeStr").isJsonNull()) {
+                                    endTimeStr = itemObj.get("endTimeStr").getAsString();
+                                }
+
+                                int countdownSeconds = calculateCountdownSeconds(startTimeStr, endTimeStr, status);
 
                                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
                                 VBox card = loader.load();
                                 ProductCardController controller = loader.getController();
 
-                                // Truyền dữ liệu vào Card (bao gồm cả ID và URL ảnh mạng)
-                                controller.setProductData(id, name, startingPrice, "Đang chờ", category, imageUrl);
+                                controller.setProductData(id, name, startingPrice, countdownSeconds, status, imageUrl, false);
+
                                 productFlowPane.getChildren().add(card);
                             } catch (IOException e) {
                                 logger.error("Lỗi vẽ thẻ sản phẩm: {}", e.getMessage());
@@ -111,5 +130,27 @@ public class MyProductsController implements Initializable {
                 logger.error("Lỗi phân tích dữ liệu JSON mạng: ", ex);
             }
         });
+    }
+
+    private int calculateCountdownSeconds(String startTimeRaw, String endTimeRaw, String status) {
+        try {
+            LocalDateTime now = LocalDateTime.now();
+
+            if ("OPEN".equalsIgnoreCase(status) && startTimeRaw != null && !startTimeRaw.trim().isEmpty()) {
+                String cleanStart = startTimeRaw.trim().replace("T", " ");
+                LocalDateTime start = LocalDateTime.parse(cleanStart, MYSQL_LAZY_FORMATTER);
+                long diff = ChronoUnit.SECONDS.between(now, start);
+                return diff > 0 ? (int) diff : 0;
+
+            } else if (endTimeRaw != null && !endTimeRaw.trim().isEmpty()) {
+                String cleanEnd = endTimeRaw.trim().replace("T", " ");
+                LocalDateTime end = LocalDateTime.parse(cleanEnd, MYSQL_LAZY_FORMATTER);
+                long diff = ChronoUnit.SECONDS.between(now, end);
+                return diff > 0 ? (int) diff : 0;
+            }
+        } catch (Exception e) {
+            logger.error("❌ Lỗi xử lý ngày tháng: " + e.getMessage());
+        }
+        return "OPEN".equalsIgnoreCase(status) ? 300 : 1800; // Trả về fallback nếu lỗi nặng phá hủy luồng
     }
 }

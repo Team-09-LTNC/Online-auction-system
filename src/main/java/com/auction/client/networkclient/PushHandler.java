@@ -1,4 +1,3 @@
-// client/network/PushHandler.java
 package com.auction.client.networkclient;
 
 import com.auction.common.enums.ActionType;
@@ -10,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Xử lý các gói tin server tự gửi về (không kèm requestId)
- * Tách riêng khỏi NetworkManager để dễ mở rộng
+ * Tách riêng khỏi Socket để dễ mở rộng
  */
 public class PushHandler {
 
@@ -38,7 +37,7 @@ public class PushHandler {
                     ? bidder.get("username").getAsString() : "Unknown";
 
             Platform.runLater(() -> {
-                logger.info("[Push] Giá mới: {} bởi {}", newBidAmount, bidderName);
+                logger.info("[Push] Giá mới: {} đ bởi {}", newBidAmount, bidderName);
                 if (currentRoomController != null) {
                     currentRoomController.updateRealtimeBid(newBidAmount, bidderName);
                 }
@@ -53,19 +52,19 @@ public class PushHandler {
             String newStatus = payload.get("newStatus").getAsString();
             Platform.runLater(() -> {
                 logger.info("[Push] Phiên kết thúc! Trạng thái mới: {}", newStatus);
-                // Bạn có thể thiết lập hàm kết thúc phiên tại AuctionRoomController nếu cần
+                // Cài đặt hàm kết thúc phiên tại AuctionRoomController nếu cần
             });
         } catch (Exception e) {
             logger.error("[PushHandler] Lỗi bóc tách dữ liệu AUCTION_RESULT: {}", e.getMessage());
         }
     }
-    
+
     private static void onReceiveChatMessage(JsonObject payload) {
         try {
             String senderName = payload.has("senderName") ? payload.get("senderName").getAsString() : "Ẩn danh";
             String message = payload.has("message") ? payload.get("message").getAsString() : "";
             boolean isSystem = payload.has("isSystem") && payload.get("isSystem").getAsBoolean();
-            
+
             Platform.runLater(() -> {
                 if (com.auction.client.controller.components.ChatController.instance != null) {
                     com.auction.client.controller.components.ChatController.instance.receiveIncomingMessage(senderName, message, isSystem);

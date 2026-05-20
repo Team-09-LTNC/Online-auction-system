@@ -24,110 +24,145 @@ public class AuctionRoomController implements Initializable {
     @FXML private ListView<String> lvBidHistory;
     @FXML private TextField txtBidAmount;
     @FXML private Button btnPlaceBid;
-
     @FXML private TextField txtMaxAutoBid;
     @FXML private Button btnEnableAutoBid;
-
     @FXML private ImageView imgProduct;
 
-    private int totalSeconds = 900;
+    private int totalSeconds = 0;
     private Timeline countdownTimeline;
-    private int currentAuctionId = -1; // Đổi thành biến thay đổi được
+    private int currentAuctionId = -1;
+    private boolean isAuctionStarted = false;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Đăng ký nhận luồng Real-time từ Server (Observer Push)
-        com.auction.client.network.PushHandler.currentRoomController = this;
-
-        lvBidHistory.getItems().addAll(
-                "Mạnh Hùng: 3,420,000,000 đ",
-                "Quốc Khánh: 3,480,000,000 đ",
-                "Nguyễn An: 3,500,000,000 đ"
-        );
-
-        startCountdown();
+        com.auction.client.networkclient.PushHandler.currentRoomController = this;
 
         txtBidAmount.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal.isEmpty()) {
-                String cleanString = newVal.replaceAll("\\D", "");
-                try {
-                    Double.parseDouble(cleanString);
-                } catch (NumberFormatException ignored) {}
-            }
+            if (!newVal.isEmpty()) txtBidAmount.setText(newVal.replaceAll("\\D", ""));
         });
 
-        // Bắt lỗi nhập liệu cho ô Auto Bid (Chỉ cho nhập số)
         if (txtMaxAutoBid != null) {
             txtMaxAutoBid.textProperty().addListener((obs, oldVal, newVal) -> {
-                if (!newVal.isEmpty()) {
-                    txtMaxAutoBid.setText(newVal.replaceAll("\\D", ""));
-                }
+                if (!newVal.isEmpty()) txtMaxAutoBid.setText(newVal.replaceAll("\\D", ""));
             });
         }
     }
 
-    // HÀM MỚI: Được gọi từ AuctionListScreenController để truyền dữ liệu thật vào
     public void initData(int auctionId, String imageUrl) {
         this.currentAuctionId = auctionId;
-        
-        // Load ảnh thật
         loadProductImage(imageUrl);
 
-        // Gửi lệnh JOIN_AUCTION để Server biết User này đang theo dõi phòng này
         JsonObject joinReq = new JsonObject();
         joinReq.addProperty("type", ActionType.JOIN_AUCTION);
         joinReq.addProperty("auctionId", auctionId);
         ClientSocket.getInstance().sendJsonRequest(joinReq, null, null);
 
-        // Kéo lịch sử thật của phiên này về (nếu muốn làm mịn hơn thì gọi GET_BID_HISTORY)
-        // Hiện tại tạm để mock để giữ UI không rỗng
+        JsonObject getReq = new JsonObject();
+        getReq.addProperty("type", ActionType.GET_AUCTION_BY_ID);
+        getReq.addProperty("auctionId", auctionId);
+
+        ClientSocket.getInstance().sendJsonRequest(getReq, ActionType.GET_AUCTION_BY_ID, response -> {
+            Platform.runLater(() -> {
+                if (response.has("success") && response.get("success").getAsBoolean()) {
+                    JsonObject data = response.getAsJsonObject("data");
+
+                    long currentPrice = data.has("currentHighestBid") ? data.get("currentHighestBid").getAsLong() : 0;
+                    lblCurrentPrice.setText(String.format("%,.0f đ", (double) currentPrice));
+
+                    if (data.has("highestBidderName") && lblLeader != null) {
+                        lblLeader.setText("Người dẫn đầu: " + data.get("highestBidderName").getAsString());
+                    }
+
+                    String rawStartTime = data.has("startTime") ? data.get("startTime").getAsString() : null;
+                    String rawEndTime = data.has("endTime") ? data.get("endTime").getAsString() : null;
+                    String serverStatus = data.has("status") ? data.get("status").getAsString() : "RUNNING";
+
+                    AuctionListScreenController.AuctionSecondsState state =
+                            AuctionListScreenController.calculateAuctionSecondsState(rawStartTime, rawEndTime, serverStatus);
+                    this.totalSeconds = state.countdownSeconds;
+
+                    if ("OPEN".equalsIgnoreCase(state.finalStatus)) {
+                        isAuctionStarted = false;
+                        btnPlaceBid.setDisable(true);
+                        txtBidAmount.setEditable(false);
+                        if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(true);
+                    } else if ("RUNNING".equalsIgnoreCase(state.finalStatus)) {
+                        isAuctionStarted = true;
+                        btnPlaceBid.setDisable(false);
+                        txtBidAmount.setEditable(true);
+                        if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(false);
+                    } else {
+                        isAuctionStarted = true;
+                        this.totalSeconds = 0;
+                    }
+
+                    startCountdown();
+                } else {
+                    showAlert("Lỗi", "Phiên đấu giá đã kết thúc hoặc không tồn tại!");
+                }
+            });
+        });
     }
 
     private void startCountdown() {
+        if (countdownTimeline != null) countdownTimeline.stop();
+
         countdownTimeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
-            totalSeconds--;
-
-            if (totalSeconds <= 0) {
-                lblCountdown.setText("HẾT GIỜ!");
-                lblCountdown.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
-                btnPlaceBid.setDisable(true);
-                if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(true);
-                txtBidAmount.setEditable(false);
-                countdownTimeline.stop();
-            } else {
+            if (totalSeconds > 0) {
+                totalSeconds--;
                 updateCountdownLabel();
-
-                if (totalSeconds <= 30) {
+                if (isAuctionStarted && totalSeconds <= 30) {
                     lblCountdown.setStyle("-fx-text-fill: #A64452; -fx-font-weight: bold;");
+                }
+            } else {
+                if (!isAuctionStarted) {
+                    isAuctionStarted = true;
+                    this.totalSeconds = 1200; // Mở xới cho 20 phút chạy test tiếp
+                    btnPlaceBid.setDisable(false);
+                    txtBidAmount.setEditable(true);
+                    if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(false);
+                    lblCountdown.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+                } else {
+                    lblCountdown.setText("HẾT GIỜ!");
+                    lblCountdown.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                    btnPlaceBid.setDisable(true);
+                    if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(true);
+                    txtBidAmount.setEditable(false);
+                    countdownTimeline.stop();
                 }
             }
         }));
         countdownTimeline.setCycleCount(Timeline.INDEFINITE);
         countdownTimeline.play();
+        updateCountdownLabel();
     }
 
     private void updateCountdownLabel() {
         int h = totalSeconds / 3600;
         int m = (totalSeconds % 3600) / 60;
         int s = totalSeconds % 60;
-        lblCountdown.setText(String.format("%02d:%02d:%02d", h, m, s));
+        if (!isAuctionStarted) {
+            lblCountdown.setText(String.format("Sắp mở: %02d:%02d:%02d", h, m, s));
+            lblCountdown.setStyle("-fx-text-fill: #FFA500; -fx-font-weight: bold;");
+        } else {
+            lblCountdown.setText(String.format("%02d:%02d:%02d", h, m, s));
+        }
     }
 
     @FXML
     private void handlePlaceBid() {
-        if (currentAuctionId == -1) {
-            showAlert("Lỗi", "Chưa xác định được phiên đấu giá!");
+        if (!isAuctionStarted) {
+            showAlert("Thông báo", "Phiên đấu giá chưa mở!");
             return;
         }
+        if (currentAuctionId == -1) return;
 
         String input = txtBidAmount.getText().trim();
         if (input.isEmpty()) return;
 
         try {
             long bidAmount = Long.parseLong(input.replaceAll("\\D", ""));
-            // bidderId truyền 0 vì Server sẽ tự xác định qua UserSession trong ClientHandler
-            AuctionDTOs.BidRequest request = new AuctionDTOs.BidRequest(currentAuctionId, bidAmount, 0);
-
+            AuctionDTOs.BidRequest request = new AuctionDTOs.BidRequest(currentAuctionId, bidAmount, 1);
             btnPlaceBid.setDisable(true);
 
             JsonObject jsonRequest = new Gson().toJsonTree(request).getAsJsonObject();
@@ -138,104 +173,64 @@ public class AuctionRoomController implements Initializable {
                     btnPlaceBid.setDisable(false);
                     boolean success = response.has("success") && response.get("success").getAsBoolean();
                     if (!success) {
-                        String msg = response.has("message") ? response.get("message").getAsString() : "Đã có người trả giá cao hơn.";
+                        String msg = response.has("message") ? response.get("message").getAsString() : "Lỗi đặt giá.";
                         showAlert("Giá không hợp lệ", msg);
                     } else {
                         checkAndApplySnipingRule();
                     }
                 });
             });
-
             txtBidAmount.clear();
-
         } catch (NumberFormatException e) {
-            showAlert("Lỗi nhập liệu", "Vui lòng chỉ nhập số hợp lệ!");
+            showAlert("Lỗi", "Vui lòng chỉ nhập số hợp lệ!");
         }
     }
 
     @FXML
     private void handleEnableAutoBid() {
-        if (currentAuctionId == -1) {
-            showAlert("Lỗi", "Chưa xác định được phiên đấu giá!");
-            return;
-        }
-
-        if (txtMaxAutoBid == null || txtMaxAutoBid.getText().trim().isEmpty()) {
-            showAlert("Thiếu thông tin", "Vui lòng nhập số tiền tối đa bạn có thể trả cho sản phẩm này!");
-            return;
-        }
+        if (!isAuctionStarted || currentAuctionId == -1) return;
+        if (txtMaxAutoBid == null || txtMaxAutoBid.getText().trim().isEmpty()) return;
 
         try {
             long maxPrice = Long.parseLong(txtMaxAutoBid.getText().trim());
-
             JsonObject jsonRequest = new JsonObject();
             jsonRequest.addProperty("type", ActionType.REGISTER_AUTO_BID);
             jsonRequest.addProperty("auctionId", currentAuctionId);
-            jsonRequest.addProperty("maxBid", maxPrice); 
+            jsonRequest.addProperty("maxBid", maxPrice);
 
             if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(true);
 
             ClientSocket.getInstance().sendJsonRequest(jsonRequest, "AUTO_BID_RESPONSE", response -> {
                 Platform.runLater(() -> {
                     if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(false);
-                    boolean success = response.has("success") && response.get("success").getAsBoolean();
-                    if (success) {
+                    if (response.has("success") && response.get("success").getAsBoolean()) {
                         Alert alert = new Alert(Alert.AlertType.INFORMATION);
                         alert.setTitle("Thành công");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Đã kích hoạt hệ thống Tự động đấu giá (Auto Bidding) thành công!");
+                        alert.setContentText("Đã kích hoạt hệ thống Tự động đấu giá!");
                         alert.showAndWait();
-                    } else {
-                        String msg = response.has("message") ? response.get("message").getAsString() : "Lỗi không thể kích hoạt.";
-                        showAlert("Thất bại", msg);
                     }
                 });
             });
-
-        } catch (NumberFormatException e) {
-            showAlert("Lỗi nhập liệu", "Giá trần Auto Bid không hợp lệ!");
-        }
+        } catch (Exception e) { e.printStackTrace(); }
     }
 
     private void checkAndApplySnipingRule() {
-        if (totalSeconds > 0 && totalSeconds <= 30) {
+        if (isAuctionStarted && totalSeconds > 0 && totalSeconds <= 30) {
             totalSeconds += 60;
-            lblCountdown.setStyle("-fx-text-fill: #1A0F0A; -fx-font-weight: normal;");
             updateCountdownLabel();
-            org.slf4j.LoggerFactory.getLogger(getClass()).info("[Anti-Sniping] Phát hiện bid trong 30s cuối! Tự động gia hạn thêm 1 phút.");
         }
     }
 
     public void updateRealtimeBid(long newPrice, String bidderName) {
         lblCurrentPrice.setText(String.format("%,.0f đ", (double) newPrice));
-        lblLeader.setText("Người dẫn đầu: " + bidderName);
-
-        String historyEntry = String.format("%s: %,.0f đ", bidderName, (double) newPrice);
-        lvBidHistory.getItems().add(0, historyEntry);
-
+        if (lblLeader != null) lblLeader.setText("Người dẫn đầu: " + bidderName);
+        lvBidHistory.getItems().add(0, bidderName + ": " + String.format("%,.0f đ", (double) newPrice));
         checkAndApplySnipingRule();
     }
 
     public void loadProductImage(String urlString) {
-        if (imgProduct == null) return;
-
-        if (urlString == null || urlString.trim().isEmpty()) {
-            imgProduct.setImage(null);
-            return;
-        }
-
-        try {
-            Image image = new Image(urlString, true);
-            image.exceptionProperty().addListener((obs, oldExc, newExc) -> {
-                if (newExc != null) {
-                    org.slf4j.LoggerFactory.getLogger(getClass()).error("[UI Error] Không thể nạp ảnh sản phẩm từ URL: {}", newExc.getMessage());
-                    Platform.runLater(() -> imgProduct.setImage(null));
-                }
-            });
-            imgProduct.setImage(image);
-        } catch (Exception e) {
-            imgProduct.setImage(null);
-        }
+        if (imgProduct == null || urlString == null || urlString.trim().isEmpty()) return;
+        try { imgProduct.setImage(new Image(urlString, true)); } catch (Exception e) { imgProduct.setImage(null); }
     }
 
     private void showAlert(String title, String content) {

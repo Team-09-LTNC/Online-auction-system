@@ -8,12 +8,10 @@
       stylesheets="@../../css/style.css"
       xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.auction.client.controller.MainController"> <!-- Thêm Controller quản lý chính  -->
+      fx:controller="com.auction.client.controller.MainController">
 
-    <!-- Sidebar bên trái -->
-    <fx:include source="../components/Sidebar.fxml" />
+    <fx:include source="../components/Sidebar.fxml" HBox.hgrow="NEVER" />
 
-    <!-- Nội dung chính bên phải -->
     <StackPane fx:id="mainContentArea" HBox.hgrow="ALWAYS">
         <fx:include source="MainDashboard.fxml" />
     </StackPane>

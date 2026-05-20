@@ -2,14 +2,12 @@ package com.auction.client.controller.bidder;
 
 import com.auction.client.controller.auth.UserSession;
 import com.auction.client.controller.components.ProductCardController;
-import com.auction.client.interfaces.CategoryFilterListener;
 import com.auction.client.networkclient.ClientSocket;
 import com.auction.common.enums.ActionType;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import javafx.application.Platform;
-import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
@@ -17,32 +15,45 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import javafx.fxml.FXML;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class AuctionListScreenController implements Initializable, CategoryFilterListener {
+public class AuctionListScreenController implements Initializable, com.auction.client.interfaces.CategoryFilterListener {
 
     private static final Logger logger = LoggerFactory.getLogger(AuctionListScreenController.class);
 
     @FXML private FlowPane productFlowPane;
-
-    // Khai báo nhãn Header phục vụ cá nhân hóa
     @FXML private Label lblHeaderName;
     @FXML private Label lblHeaderRole;
 
-    // Trạng thái bộ lọc danh mục
     private String currentCategory = "Tất cả";
+
+    // Bộ giải mã thời gian siêu cấp, cân mọi loại định dạng từ DB
+    private static final DateTimeFormatter MULTI_FORMATTER = DateTimeFormatter.ofPattern(
+            "[yyyy-MM-dd HH:mm:ss.SSSSSS]" +
+                    "[yyyy-MM-dd HH:mm:ss.SSS]" +
+                    "[yyyy-MM-dd HH:mm:ss.S]" +
+                    "[yyyy-MM-dd HH:mm:ss]" +
+                    "[yyyy-MM-dd'T'HH:mm:ss.SSSSSS]" +
+                    "[yyyy-MM-dd'T'HH:mm:ss.SSS]" +
+                    "[yyyy-MM-dd'T'HH:mm:ss.S]" +
+                    "[yyyy-MM-dd'T'HH:mm:ss]"
+    );
+    private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // 1. Đồng bộ người dùng thật
         updateHeaderUserInfo();
-
-        // 2. Fetch toàn bộ danh sách phiên đấu giá
         if (productFlowPane != null) {
             productFlowPane.getChildren().clear();
             loadAuctionsFromServer();
@@ -63,12 +74,9 @@ public class AuctionListScreenController implements Initializable, CategoryFilte
         }
     }
 
-    // Lắng nghe sự kiện click bộ lọc danh mục từ Main UI
     @Override
     public void onCategorySelected(String category) {
         this.currentCategory = category;
-        logger.info("Đã chọn danh mục lọc: {}", category);
-
         if (productFlowPane != null) {
             productFlowPane.getChildren().clear();
             loadAuctionsFromServer();
@@ -78,18 +86,17 @@ public class AuctionListScreenController implements Initializable, CategoryFilte
     private void loadAuctionsFromServer() {
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.GET_ALL_AUCTIONS);
-
-        // Gửi kèm trạng thái lọc lên Server (nếu Server hỗ trợ truy vấn lọc)
         request.addProperty("category", currentCategory);
 
-        ClientSocket.getInstance().sendJsonRequest(request, "ALL_AUCTIONS_RESPONSE", response -> {
-
-            // THREAD-SAFETY: Đảm bảo JavaFX UI Thread xử lý Render
+        ClientSocket.getInstance().sendJsonRequest(request, "AUCTION_LIST_RESPONSE", response -> {
             Platform.runLater(() -> {
-                if (response.has("success") && response.get("success").getAsBoolean() && response.has("auctions")) {
+                if (response.has("auctions")) {
                     JsonArray auctions = response.getAsJsonArray("auctions");
 
-                    // Trích xuất tập ID mà User hiện tại đang follow
+                    if (productFlowPane != null) {
+                        productFlowPane.getChildren().clear();
+                    }
+
                     List<Integer> followedIds = new ArrayList<>();
                     if (response.has("followedIds")) {
                         for (JsonElement el : response.getAsJsonArray("followedIds")) {
@@ -100,7 +107,6 @@ public class AuctionListScreenController implements Initializable, CategoryFilte
                     for (JsonElement element : auctions) {
                         JsonObject obj = element.getAsJsonObject();
 
-                        // Lọc phía Client (trong trường hợp Server trả toàn bộ)
                         String itemCategory = obj.has("category") ? obj.get("category").getAsString() : "";
                         if (!"Tất cả".equals(currentCategory) && !currentCategory.equalsIgnoreCase(itemCategory)) {
                             continue;
@@ -109,18 +115,28 @@ public class AuctionListScreenController implements Initializable, CategoryFilte
                         int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
                         String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Đang cập nhật";
                         long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
-                        String status = obj.has("status") ? obj.get("status").getAsString() : "N/A";
                         String imageUrl = obj.has("imageUrl") ? obj.get("imageUrl").getAsString() : "";
-
                         boolean isFollowed = followedIds.contains(auctionId);
+
+                        String rawStartTime = null;
+                        if (obj.has("startTime") && !obj.get("startTime").isJsonNull()) rawStartTime = obj.get("startTime").getAsString();
+                        else if (obj.has("start_time") && !obj.get("start_time").isJsonNull()) rawStartTime = obj.get("start_time").getAsString();
+
+                        String rawEndTime = null;
+                        if (obj.has("endTime") && !obj.get("endTime").isJsonNull()) rawEndTime = obj.get("endTime").getAsString();
+                        else if (obj.has("end_time") && !obj.get("end_time").isJsonNull()) rawEndTime = obj.get("end_time").getAsString();
+
+                        String serverStatus = obj.has("status") ? obj.get("status").getAsString() : "RUNNING";
+
+                        // Gọi bộ tính toán giây siêu cấp
+                        AuctionSecondsState state = calculateAuctionSecondsState(rawStartTime, rawEndTime, serverStatus);
 
                         try {
                             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
                             VBox card = loader.load();
                             ProductCardController controller = loader.getController();
 
-                            // Inject Dữ liệu vào Card
-                            controller.setProductData(auctionId, name, price, "Đang diễn ra", status.equals("OPEN") ? "Đang diễn ra" : status, imageUrl, isFollowed);
+                            controller.setProductData(auctionId, name, price, state.countdownSeconds, state.finalStatus, imageUrl, isFollowed);
                             productFlowPane.getChildren().add(card);
                         } catch (IOException e) {
                             logger.error("Không nạp được giao diện ProductCard.fxml: {}", e.getMessage());
@@ -129,5 +145,68 @@ public class AuctionListScreenController implements Initializable, CategoryFilte
                 }
             });
         });
+    }
+
+    /**
+     * BỘ NÃO TÍNH TOÁN THỜI GIAN CHUẨN XÁC 100%
+     * Bỏ qua Server, Client tự cầm cân nảy mực dựa vào mốc thời gian thực.
+     */
+
+    public static AuctionSecondsState calculateAuctionSecondsState(String rawStartTime, String rawEndTime, String serverStatus) {
+        try {
+            ZonedDateTime now = ZonedDateTime.now(VIETNAM_ZONE);
+
+            // Hàm này t sửa để nó ép về múi giờ VN ngay khi parse xong, triệt tiêu mọi sai số
+            ZonedDateTime start = parseToVietnamZoned(rawStartTime);
+            ZonedDateTime end = parseToVietnamZoned(rawEndTime);
+
+            if (start != null && end != null) {
+                if (now.isBefore(start)) {
+                    return new AuctionSecondsState((int) ChronoUnit.SECONDS.between(now, start), "OPEN");
+                } else if (now.isAfter(start) && now.isBefore(end)) {
+                    return new AuctionSecondsState((int) ChronoUnit.SECONDS.between(now, end), "RUNNING");
+                }
+            }
+            return new AuctionSecondsState(0, "FINISHED");
+        } catch (Exception e) {
+            return new AuctionSecondsState(0, "FINISHED");
+        }
+    }
+
+
+    private static ZonedDateTime parseToVietnamZoned(String timeStr) {
+        if (timeStr == null || timeStr.isEmpty()) return null;
+        LocalDateTime ldt = LocalDateTime.parse(timeStr.replace(" ", "T"), MULTI_FORMATTER);
+        // Giả định Server gửi là giờ UTC, ép về giờ VN để tính toán
+        return ldt.atZone(ZoneId.of("UTC")).withZoneSameInstant(VIETNAM_ZONE);
+    }
+
+    /**
+     * Hàm dịch chuỗi thông minh: Tự hiểu DB đang lưu là giờ Việt Nam (GMT+7)
+     */
+    private static ZonedDateTime parseAndSyncTime(String rawTime) {
+        if (rawTime == null || rawTime.trim().isEmpty() || "null".equalsIgnoreCase(rawTime.trim())) {
+            return null;
+        }
+        try {
+            String cleanTime = rawTime.trim().replace(" ", "T");
+            LocalDateTime localTime = LocalDateTime.parse(cleanTime, MULTI_FORMATTER);
+
+            // Xóa bỏ trò bù 7 tiếng thủ công.
+            // Nạp thẳng múi giờ VN vào chuỗi giờ thô để ép nó khớp hoàn toàn với đồng hồ máy tính!
+            return localTime.atZone(VIETNAM_ZONE);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static class AuctionSecondsState {
+        public final int countdownSeconds;
+        public final String finalStatus;
+
+        public AuctionSecondsState(int countdownSeconds, String finalStatus) {
+            this.countdownSeconds = countdownSeconds;
+            this.finalStatus = finalStatus;
+        }
     }
 }

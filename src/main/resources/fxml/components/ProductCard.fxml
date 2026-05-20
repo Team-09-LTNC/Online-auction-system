@@ -10,11 +10,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="350.0" prefWidth="250.0" spacing="10.0"
-      styleClass="product-card"
-      xmlns="http://javafx.com/javafx/21"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.auction.client.controller.components.ProductCardController">
+<VBox prefHeight="350.0" prefWidth="250.0" spacing="10.0" styleClass="product-card" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.components.ProductCardController">
 
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
@@ -24,15 +20,13 @@
 
         <ImageView fx:id="imgProduct" fitHeight="148.0" fitWidth="218.0" pickOnBounds="true" preserveRatio="true" />
 
-        <Label fx:id="lblStatus" styleClass="status-label" text="Đang diễn ra" StackPane.alignment="TOP_LEFT">
+        <Label fx:id="lblStatus" styleClass="status-label" text="" StackPane.alignment="TOP_LEFT">
             <StackPane.margin>
                 <Insets left="8.0" top="8.0" />
             </StackPane.margin>
         </Label>
 
-        <Button fx:id="btnFollow" onAction="#handleFollowAction"
-                style="-fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: #888888; -fx-padding: 0;"
-                text="♡" StackPane.alignment="TOP_RIGHT">
+        <Button fx:id="btnFollow" onAction="#handleFollowAction" style="-fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: #888888; -fx-padding: 0;" text="♡" StackPane.alignment="TOP_RIGHT">
             <font>
                 <Font name="System Bold" size="22.0" />
             </font>
@@ -42,14 +36,14 @@
         </Button>
     </StackPane>
 
-    <Label fx:id="lblProductName" styleClass="product-title" text="Tên sản phẩm" wrapText="true">
+    <Label fx:id="lblProductName" styleClass="product-title" text="Đang tải..." wrapText="true">
         <VBox.margin>
             <Insets top="5.0" />
         </VBox.margin>
     </Label>
 
     <VBox spacing="2.0">
-        <Label text="Giá hiện tại" style="-fx-text-fill: #888888; -fx-font-size: 12px;" />
+        <Label style="-fx-text-fill: #888888; -fx-font-size: 12px;" text="Giá hiện tại" />
         <Label fx:id="lblCurrentPrice" styleClass="product-price" text="0 đ" />
     </VBox>
 
@@ -57,10 +51,10 @@
 
     <HBox alignment="CENTER_LEFT">
         <VBox>
-            <Label text="Thời gian còn lại" style="-fx-text-fill: #888888; -fx-font-size: 12px;" />
-            <Label fx:id="lblTimeRemaining" style="-fx-font-weight: bold; -fx-text-fill: #D32F2F;" text="00:00:00" />
+            <Label style="-fx-text-fill: #888888; -fx-font-size: 12px;" text="Thời gian còn lại" />
+            <Label fx:id="lblTimeRemaining" style="-fx-font-weight: bold; -fx-text-fill: #D32F2F;" text="--:--:--" />
         </VBox>
         <Region HBox.hgrow="ALWAYS" />
-        <Button fx:id="btnBid" mnemonicParsing="false" onAction="#handleBidAction" styleClass="btn-primary" text="Đấu giá" />
+        <Button fx:id="btnBid" mnemonicParsing="false" onAction="#handleBidAction" styleClass="btn-primary" text="Vào phòng" />
     </HBox>
 </VBox>

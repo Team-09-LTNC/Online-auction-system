@@ -71,6 +71,6 @@ public class DashboardViewController implements Initializable {
     private void handleGlobalSearch() {
         String query = globalSearch.getText();
         logger.info("Admin thực hiện tìm kiếm toàn cục với từ khóa: {}", query);
-        // Thực hiện logic filter dữ liệu ở đây
+
     }
 }
