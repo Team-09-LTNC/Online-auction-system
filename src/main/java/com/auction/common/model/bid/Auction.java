@@ -16,6 +16,9 @@ public class Auction extends Entity {
     private long currentHighestBid;
     private Bidder currentWinner;
 
+    // --- THÊM GIÁ MUA ĐỨT ---
+    private Long buyNowPrice;
+
     private final List<BidTransaction> bidHistory = new ArrayList<>();
     private final Queue<AutoBidConfig> autoBidders = new PriorityQueue<>();
 
@@ -79,4 +82,8 @@ public class Auction extends Entity {
     public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
 
     public List<BidTransaction> getBidHistory() { return bidHistory; }
+
+    // --- GETTER/SETTER CHO GIÁ MUA ĐỨT ---
+    public Long getBuyNowPrice() { return buyNowPrice; }
+    public void setBuyNowPrice(Long buyNowPrice) { this.buyNowPrice = buyNowPrice; }
 }

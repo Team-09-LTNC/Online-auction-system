@@ -102,46 +102,50 @@ public class MainDashboardController implements Initializable, com.auction.clien
         request.addProperty("type", ActionType.GET_ALL_AUCTIONS);
 
         ClientSocket.getInstance().sendJsonRequest(request, "AUCTION_LIST_RESPONSE", response -> {
-            Platform.runLater(() -> {
-                if (response.has("success") && response.get("success").getAsBoolean() && response.has("auctions")) {
-                    JsonArray auctions = response.getAsJsonArray("auctions");
+            // 1. Phân tích JSON ở Background Thread (KHÔNG ĐẶT TRONG runLater)
+            if (response.has("success") && response.get("success").getAsBoolean() && response.has("auctions")) {
+                JsonArray auctions = response.getAsJsonArray("auctions");
 
-                    if (productFlowPane != null) {
-                        productFlowPane.getChildren().clear();
-                    }
+                // Chuẩn bị danh sách các Card (Vẫn ở Background Thread)
+                java.util.List<VBox> preparedCards = new java.util.ArrayList<>();
 
-                    int count = 0;
-                    for (JsonElement element : auctions) {
-                        if (count >= 6) break;
+                int count = 0;
+                for (JsonElement element : auctions) {
+                    if (count >= 6) break;
+                    JsonObject obj = element.getAsJsonObject();
 
-                        JsonObject obj = element.getAsJsonObject();
-                        int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
-                        String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Sản phẩm";
-                        long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
-                        String status = obj.has("status") ? obj.get("status").getAsString() : "N/A";
-                        String imageUrl = obj.has("imageUrl") ? obj.get("imageUrl").getAsString() : "";
+                    // Lấy dữ liệu...
+                    int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
+                    String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Sản phẩm";
+                    long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
+                    String status = obj.has("status") ? obj.get("status").getAsString() : "N/A";
+                    String imageUrl = obj.has("imageUrl") ? obj.get("imageUrl").getAsString() : "";
 
-                        String rawStartTime = obj.has("startTime") && !obj.get("startTime").isJsonNull() ? obj.get("startTime").getAsString() : "";
-                        String rawEndTime = obj.has("endTime") && !obj.get("endTime").isJsonNull() ? obj.get("endTime").getAsString() : "";
+                    String rawStartTime = obj.has("startTime") && !obj.get("startTime").isJsonNull() ? obj.get("startTime").getAsString() : "";
+                    String rawEndTime = obj.has("endTime") && !obj.get("endTime").isJsonNull() ? obj.get("endTime").getAsString() : "";
+                    int calculatedSeconds = calculateRealSeconds(rawStartTime, rawEndTime, status);
 
-                        // FIX CỨNG: Tính số giây thực tế từ DB qua múi giờ Ho_Chi_Minh thay vì gán bừa 300/1800 giây!
-                        int calculatedSeconds = calculateRealSeconds(rawStartTime, rawEndTime, status);
-
-                        try {
-                            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
-                            VBox card = loader.load();
-                            ProductCardController controller = loader.getController();
-
-                            controller.setProductData(auctionId, name, price, calculatedSeconds, status, imageUrl);
-
-                            productFlowPane.getChildren().add(card);
-                            count++;
-                        } catch (IOException e) {
-                            logger.error("Không nạp được ProductCard.fxml: {}", e.getMessage());
-                        }
+                    try {
+                        // Vẫn tải FXML ngầm (JavaFX cho phép điều này nếu Node chưa gắn vào Scene)
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
+                        VBox card = loader.load();
+                        ProductCardController controller = loader.getController();
+                        controller.setProductData(auctionId, name, price, calculatedSeconds, status, imageUrl);
+                        preparedCards.add(card);
+                        count++;
+                    } catch (IOException e) {
+                        logger.error("Không nạp được ProductCard.fxml: {}", e.getMessage());
                     }
                 }
-            });
+
+                // 2. CHỈ ĐẨY PHẦN HIỂN THỊ LÊN LUỒNG UI
+                Platform.runLater(() -> {
+                    if (productFlowPane != null) {
+                        productFlowPane.getChildren().clear();
+                        productFlowPane.getChildren().addAll(preparedCards); // Thêm tất cả cùng lúc (Batch Update)
+                    }
+                });
+            }
         });
     }
 

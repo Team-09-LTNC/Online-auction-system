@@ -15,51 +15,61 @@
 
     <VBox spacing="15.0" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5);">
 
-        <Label fx:id="lblProductName" text="Mercedes-Benz S450 2023" textFill="#3E2723">
+        <Label fx:id="lblProductName" text="Đang tải tên sản phẩm..." textFill="#3E2723">
             <font><Font name="System Bold" size="24.0" /></font>
         </Label>
 
-        <StackPane prefHeight="350.0" style="-fx-background-color: #F8F9FA; -fx-background-radius: 10; -fx-border-color: #EEEEEE; -fx-border-radius: 10;">
-            <children>
-                <Label text="🚗" style="-fx-font-size: 100; -fx-opacity: 0.2;" />
+        <Label fx:id="lblCategory" text="Danh mục: ..." textFill="#7D6608" style="-fx-font-size: 14px; -fx-font-weight: bold;" />
 
-                <ImageView fx:id="imgProduct" fitHeight="340.0" fitWidth="580.0"
-                           pickOnBounds="true" preserveRatio="true" style="-fx-background-radius: 8;" />
+        <StackPane prefHeight="300.0" style="-fx-background-color: #F9F9F9; -fx-background-radius: 10;">
+            <children>
+                <ImageView fx:id="imgProduct" fitHeight="280.0" fitWidth="400.0" pickOnBounds="true" preserveRatio="true" />
             </children>
         </StackPane>
 
-        <VBox spacing="10.0" VBox.vgrow="ALWAYS">
-            <Label text="Chi tiết sản phẩm" style="-fx-font-weight: bold; -fx-font-size: 16;" />
-            <TextArea fx:id="txtDescription" editable="false" wrapText="true"
-                      text="Xe chính chủ, bảo dưỡng định kỳ. Nội thất sang trọng, hỗ trợ lái tự động..."
-                      style="-fx-background-color: transparent; -fx-border-color: #EEEEEE;" VBox.vgrow="ALWAYS" />
-        </VBox>
+        <Label text="Giá sản phẩm:" textFill="#3E2723" style="-fx-font-size: 14px; -fx-font-weight: bold;" />
+
+        <GridPane hgap="15.0" vgap="10.0" style="-fx-background-color: #FAFAFA; -fx-padding: 12; -fx-background-radius: 8; -fx-border-color: #EAEAEA;">
+            <columnConstraints>
+                <ColumnConstraints prefWidth="120.0" />
+                <ColumnConstraints hgrow="ALWAYS" />
+            </columnConstraints>
+            <children>
+                <Label text="Giá khởi điểm:" textFill="#777777" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-size: 13px;" />
+                <Label fx:id="lblStartingPrice" text="0 đ" textFill="#3E2723" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-font-size: 13px; -fx-font-weight: bold;" />
+
+                <Label text="Bước giá quy định:" textFill="#777777" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-size: 13px;" />
+                <Label fx:id="lblBidIncrement" text="0 đ" textFill="#1E8449" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-font-size: 13px; -fx-font-weight: bold;" />
+
+                <Label text="Giá mua đứt:" textFill="#777777" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-size: 13px;" />
+                <Label fx:id="lblBuyNowPrice" text="0 đ" textFill="#A64452" GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-font-size: 13px; -fx-font-weight: bold;" />
+            </children>
+        </GridPane>
+
+        <Label text="Mô tả tài sản:" textFill="#3E2723" style="-fx-font-size: 14px; -fx-font-weight: bold;" />
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background-insets: 0;">
+            <content>
+                <Label fx:id="lblDescription" text="Đang tải mô tả sản phẩm từ Database..." textFill="#555555" wrapText="true" style="-fx-font-size: 13px; -fx-line-spacing: 1.2;" />
+            </content>
+        </ScrollPane>
     </VBox>
 
-    <VBox spacing="15.0" prefWidth="350.0">
+    <VBox prefWidth="380.0" spacing="15.0">
 
-        <VBox alignment="CENTER" style="-fx-background-color: #7A1B28; -fx-background-radius: 15; -fx-padding: 15;">
-            <Label text="THỜI GIAN CÒN LẠI" textFill="WHITE" style="-fx-font-size: 11; -fx-font-weight: bold;" />
-            <Label fx:id="lblCountdown" text="00:10:45" textFill="WHITE">
-                <font><Font name="System Bold" size="32.0" /></font>
-            </Label>
+        <VBox spacing="10.0" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5);">
+            <children>
+                <Label text="GIÁ THẦU CAO NHẤT HIỆN TẠI" textFill="#888888" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-alignment: center;" />
+                <Label fx:id="lblCurrentPrice" text="0 đ" textFill="#A64452" style="-fx-font-size: 28px; -fx-font-weight: bold;" />
+                <Label fx:id="lblLeader" text="Chưa có ai đặt giá" textFill="#555555" style="-fx-font-size: 13px; -fx-font-style: italic;" />
+
+                <Separator prefWidth="200.0" style="-fx-padding: 5 0;" />
+
+                <Label fx:id="lblCountdown" text="Còn lại: 00:00:00" textFill="#2E7D32" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+            </children>
         </VBox>
 
-        <VBox style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #EEEEEE;">
-            <Label text="Giá cao nhất hiện tại:" textFill="#888888" />
-            <Label fx:id="lblCurrentPrice" text="3.500.000.000 đ" textFill="#7A1B28">
-                <font><Font name="System Bold" size="24.0" /></font>
-            </Label>
-            <Label fx:id="lblLeader" text="Người dẫn đầu: Nguyễn An" style="-fx-font-size: 12;" />
-        </VBox>
-
-        <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 10; -fx-border-color: #EEEEEE;">
-            <Label text="Lịch sử trả giá" style="-fx-font-weight: bold; -fx-padding: 0 0 5 5;" />
-            <ListView fx:id="lvBidHistory" VBox.vgrow="ALWAYS" />
-        </VBox>
-
-        <VBox spacing="10.0" style="-fx-background-color: #FDF8F8; -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #E8DFD8;">
-            <Label text="🤖 CHẾ ĐỘ AUTO BIDDING" textFill="#7A1B28" style="-fx-font-weight: bold; -fx-font-size: 12;" />
+        <VBox spacing="10.0" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #EEEEEE;">
+            <Label text="Đấu giá tự động:" textFill="#888888" style="-fx-font-size: 12px; -fx-font-weight: bold;" />
             <HBox spacing="10.0">
                 <children>
                     <TextField fx:id="txtMaxAutoBid" prefHeight="40.0" promptText="Giá trần tối đa..." HBox.hgrow="ALWAYS"
@@ -72,12 +82,18 @@
         </VBox>
 
         <VBox spacing="10.0" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #EEEEEE;">
-            <Label text="Đặt giá thủ công:" textFill="#888888" style="-fx-font-size: 12; -fx-font-weight: bold;" />
+            <Label text="Đặt giá thủ công:" textFill="#888888" style="-fx-font-size: 12px; -fx-font-weight: bold;" />
             <TextField fx:id="txtBidAmount" prefHeight="45.0" promptText="Nhập số tiền..."
-                       style="-fx-background-radius: 10; -fx-alignment: center; -fx-font-size: 15;" />
-            <Button fx:id="btnPlaceBid" onAction="#handlePlaceBid" prefHeight="45.0" prefWidth="Infinity"
-                    text="RA GIÁ NGAY"
-                    style="-fx-background-color: #7A1B28; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-cursor: hand;" />
+                       style="-fx-background-radius: 10; -fx-alignment: center; -fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #A64452; -fx-border-color: #DDD; -fx-border-radius: 10;" />
+            <Button fx:id="btnPlaceBid" maxWidth="1.7E308" onAction="#handlePlaceBid" prefHeight="45.0" text="ĐẶT GIÁ"
+                    style="-fx-background-color: #A64452; -fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold; -fx-background-radius: 10; -fx-cursor: hand;" />
+        </VBox>
+
+        <VBox spacing="8.0" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5);">
+            <children>
+                <Label text="LỊCH SỬ ĐẤU GIÁ" textFill="#3E2723" style="-fx-font-size: 12px; -fx-font-weight: bold;" />
+                <ListView fx:id="lvBidHistory" VBox.vgrow="ALWAYS" style="-fx-background-radius: 10; -fx-border-color: #EEEEEE; -fx-background-insets: 0;" />
+            </children>
         </VBox>
     </VBox>
 </HBox>

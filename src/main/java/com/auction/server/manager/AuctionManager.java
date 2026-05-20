@@ -88,7 +88,10 @@ public class AuctionManager {
             taskCu.cancel(false);
         }
 
-        long delay = java.time.Duration.between(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")), phien.getStartTime()).toMillis();
+        // BẢN VÁ LỖI CỰC KỲ QUAN TRỌNG:
+        // Thay getStartTime() thành getEndTime() để tính toán chính xác thời gian đóng phiên.
+        long delay = java.time.Duration.between(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")), phien.getEndTime()).toMillis();
+
         if (delay <= 0) {
             dongPhien(phien.getId()); // Đã quá giờ thì đóng luôn
         } else {

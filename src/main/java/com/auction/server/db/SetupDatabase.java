@@ -6,6 +6,7 @@ import java.sql.Statement;
 /**
  * Script khởi tạo Database CHUẨN:
  * Bao gồm đầy đủ các bảng và cột cần thiết cho hệ thống đấu giá.
+ * Đã tích hợp bộ dữ liệu mẫu (Seeder) đa dạng cho UI test.
  */
 public class SetupDatabase {
     public static void main(String[] args) {
@@ -36,11 +37,12 @@ public class SetupDatabase {
                 "FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE" +
                 ") ENGINE=InnoDB;";
 
-        // Bảng 3: Auctions
+        // Bảng 3: Auctions (ĐÃ THÊM CỘT buy_now_price)
         String createAuctionsTable = "CREATE TABLE auctions (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY, " +
                 "item_id INT NOT NULL, " +
                 "current_price BIGINT NOT NULL DEFAULT 0, " +
+                "buy_now_price BIGINT DEFAULT NULL, " + // <-- Cột giá mua đứt
                 "highest_bidder_id INT, " +
                 "start_time DATETIME NOT NULL, " +
                 "end_time DATETIME NOT NULL, " +
@@ -130,22 +132,46 @@ public class SetupDatabase {
             System.out.println(">>> Đang tạo bảng 'wallet_transactions'...");
             stmt.execute(createWalletTransactionsTable);
 
-            System.out.println(">>> Đang nạp dữ liệu mẫu để Test...");
+            System.out.println(">>> Đang nạp dữ liệu mẫu (Users)...");
             stmt.execute("INSERT INTO users (id, username, password, full_name, role, balance) VALUES " +
                     "(1, 'admin', 'admin', 'Quản trị viên', 'ADMIN', 0), " +
                     "(2, 'seller1', '123456', 'Người Bán Số 1', 'SELLER', 5000000), " +
                     "(3, 'bidder1', '123456', 'Người Mua Số 1', 'BIDDER', 150000000), " +
                     "(4, 'bidder2', '123456', 'Người Mua Số 2', 'BIDDER', 200000000);");
 
+            System.out.println(">>> Đang nạp dữ liệu mẫu (Items)...");
             stmt.execute("INSERT INTO items (id, seller_id, name, description, category, starting_price, bid_increment, image_url) VALUES " +
-                    "(1, 2, 'Mercedes-Benz S450', 'Xe sang lướt 5000km', 'VEHICLE', 3000000000, 1000000, 'https://img.freepik.com/free-photo/mercedes-benz-s-class-driving-down-empty-road_114579-22340.jpg'), " +
-                    "(2, 2, 'MacBook Pro M3 Max', 'Máy likenew', 'ELECTRONICS', 80000000, 500000, ''), " +
-                    "(3, 2, 'Tranh Cổ', 'Nghệ thuật nguyên bản', 'ART', 50000000, 1000000, '');");
+                    // --- DANH MỤC: XE CỘ (VEHICLE) ---
+                    "(1, 2, 'Mercedes-Benz S450 2023', 'Xe sang lướt 5000km, màu đen nội thất kem.', 'VEHICLE', 3000000000, 10000000, 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800'), " +
+                    "(2, 2, 'Porsche 911 GT3 RS', 'Siêu xe thể thao nhập khẩu nguyên chiếc từ Đức.', 'VEHICLE', 8500000000, 50000000, 'https://images.unsplash.com/photo-1503376713295-8bc2584400f9?w=800'), " +
+                    "(3, 2, 'BMW S1000RR 2024', 'Cá mập siêu phân khối, ODO 1000km.', 'VEHICLE', 750000000, 5000000, 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800'), " +
+                    // --- DANH MỤC: ĐIỆN TỬ (ELECTRONICS) ---
+                    "(4, 2, 'MacBook Pro M3 Max 16inch', 'Bản max option 128GB RAM, 4TB SSD. Likenew 99%.', 'ELECTRONICS', 120000000, 1000000, 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800'), " +
+                    "(5, 2, 'Sony A7 IV Camera & Lens', 'Máy ảnh mirrorless chuyên nghiệp kèm ống kính 24-70mm f/2.8.', 'ELECTRONICS', 65000000, 500000, 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800'), " +
+                    "(6, 2, 'iPhone 15 Pro Max 1TB', 'Màu Titan Tự Nhiên, pin 100%, bảo hành Apple Care+ 2025.', 'ELECTRONICS', 35000000, 500000, 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800'), " +
+                    // --- DANH MỤC: TRANH ẢNH & NGHỆ THUẬT (ART) ---
+                    "(7, 2, 'Tranh Sơn Dầu: Đêm Đầy Sao', 'Bản sao chép cao cấp, kích thước 100x150cm, có khung gỗ sồi.', 'ART', 15000000, 500000, 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800'), " +
+                    "(8, 2, 'Tượng Thạch Cao Cổ Điển', 'Tượng điêu khắc lấy cảm hứng từ thời kỳ Phục Hưng.', 'ART', 25000000, 1000000, 'https://images.unsplash.com/photo-1544531586-fde5298cdd40?w=800'), " +
+                    "(9, 2, 'Bình Gốm Cổ Men Rạn', 'Đồ cổ thế kỷ 19, bảo quản hoàn hảo không tì vết.', 'ART', 150000000, 5000000, 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=800');"
+            );
 
-            stmt.execute("INSERT INTO auctions (id, item_id, current_price, status, start_time, end_time) VALUES " +
-                    "(1, 1, 3000000000, 'RUNNING', DATE_SUB(NOW(), INTERVAL 1 HOUR), DATE_ADD(NOW(), INTERVAL 1 HOUR)), " +
-                    "(2, 2, 80000000, 'RUNNING', DATE_SUB(NOW(), INTERVAL 2 HOUR), DATE_ADD(NOW(), INTERVAL 12 HOUR)), " +
-                    "(3, 3, 50000000, 'OPEN', DATE_ADD(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 2 DAY));");
+            System.out.println(">>> Đang nạp dữ liệu mẫu (Auctions)...");
+            stmt.execute("INSERT INTO auctions (id, item_id, current_price, buy_now_price, status, start_time, end_time) VALUES " +
+                    // Trạng thái RUNNING: Đang diễn ra
+                    "(1, 1, 3000000000, 3500000000, 'RUNNING', DATE_SUB(NOW(), INTERVAL 1 HOUR), DATE_ADD(NOW(), INTERVAL 2 HOUR)), " +
+                    "(4, 4, 125000000,  150000000,  'RUNNING', DATE_SUB(NOW(), INTERVAL 2 HOUR), DATE_ADD(NOW(), INTERVAL 5 HOUR)), " +
+                    "(7, 7, 18000000,   NULL,       'RUNNING', DATE_SUB(NOW(), INTERVAL 30 MINUTE), DATE_ADD(NOW(), INTERVAL 12 HOUR)), " +
+
+                    // Trạng thái OPEN: Sắp diễn ra
+                    "(2, 2, 8500000000, 9500000000, 'OPEN', DATE_ADD(NOW(), INTERVAL 30 MINUTE), DATE_ADD(NOW(), INTERVAL 24 HOUR)), " +
+                    "(5, 5, 65000000,   NULL,       'OPEN', DATE_ADD(NOW(), INTERVAL 1 HOUR), DATE_ADD(NOW(), INTERVAL 48 HOUR)), " +
+                    "(8, 8, 25000000,   35000000,   'OPEN', DATE_ADD(NOW(), INTERVAL 2 HOUR), DATE_ADD(NOW(), INTERVAL 72 HOUR)), " +
+
+                    // Trạng thái FINISHED: Đã kết thúc (Cập nhật từ CLOSED -> FINISHED)
+                    "(3, 3, 820000000,  900000000,  'FINISHED', DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)), " +
+                    "(6, 6, 38500000,   45000000,   'FINISHED', DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY)), " +
+                    "(9, 9, 210000000,  NULL,       'FINISHED', DATE_SUB(NOW(), INTERVAL 10 DAY), DATE_SUB(NOW(), INTERVAL 8 DAY));"
+            );
 
             System.out.println("\n==================================================");
             System.out.println(">>> THIẾT LẬP DATABASE MỚI THÀNH CÔNG VỚI ĐẦY ĐỦ CÁC BẢNG & DATA!");

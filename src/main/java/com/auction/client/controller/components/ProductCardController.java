@@ -54,9 +54,11 @@ public class ProductCardController {
         lblTimeRemaining.setText(formatTime(timeInSeconds));
 
         if (imgProduct != null) {
-            if (imageUrl != null && !imageUrl.trim().isEmpty()) {
-                try { imgProduct.setImage(new Image(imageUrl, true)); } catch (Exception e) { imgProduct.setImage(null); }
-            } else { imgProduct.setImage(null); }
+            try {
+                imgProduct.setImage(com.auction.client.util.ImageCacheManager.getImage(imageUrl));
+            } catch (Exception e) {
+                imgProduct.setImage(null);
+            }
         }
 
         updateHeartUI();

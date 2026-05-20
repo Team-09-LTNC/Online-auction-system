@@ -16,8 +16,6 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
-import java.io.IOException;
-import java.net.URL;
 
 public class LoginController {
     @FXML private TextField usernameField;
@@ -90,7 +88,7 @@ public class LoginController {
                     if (responseJson.has("userData")) {
                         JsonObject userData = responseJson.getAsJsonObject("userData");
 
-                        // 🔥 ĐỒNG BỘ QUAN TRỌNG: Lấy ID người dùng thực từ Server trả về để gán vào Client Session
+                        // ĐỒNG BỘ QUAN TRỌNG: Lấy ID người dùng thực từ Server trả về để gán vào Client Session
                         if (userData.has("id")) {
                             UserSession.setUserId(userData.get("id").getAsInt());
                         }
@@ -136,14 +134,24 @@ public class LoginController {
 
     private void switchScene(String fxmlPath, String title) {
         try {
-            URL fxmlLocation = getClass().getResource(fxmlPath);
-            if (fxmlLocation == null) throw new IOException("Không tìm thấy file FXML tại: " + fxmlPath);
-            Parent newRoot = FXMLLoader.load(fxmlLocation);
+            Parent newRoot = com.auction.client.util.ViewCacheManager.getView(fxmlPath);
             Stage stage = (Stage) usernameField.getScene().getWindow();
-            Scene currentScene = stage.getScene();
-            currentScene.setRoot(newRoot);
+            double currentWidth = stage.getScene().getWidth();
+            double currentHeight = stage.getScene().getHeight();
+
+            // ---> BẢN VÁ LỖI TẠI ĐÂY <---
+            // Thay vì dùng currentScene.setRoot(newRoot) gây lỗi vì Node đã cache bị dính vào Scene cũ.
+            // Ta sẽ sử dụng lại chính Scene cũ của Node đó nếu có, nếu chưa có thì tạo Scene mới.
+            if (newRoot.getScene() != null) {
+                stage.setScene(newRoot.getScene());
+            } else {
+                stage.setScene(new Scene(newRoot, currentWidth, currentHeight));
+            }
+
             stage.setTitle(title);
-        } catch (IOException e) {
+            stage.show();
+
+        } catch (Exception e) {
             org.slf4j.LoggerFactory.getLogger(getClass()).error("Lỗi chuyển màn hình: ", e);
             showAlert("Lỗi Hệ thống", "Không thể tải giao diện: " + e.getMessage());
         }

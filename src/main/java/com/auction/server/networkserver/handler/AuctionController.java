@@ -66,8 +66,13 @@ public class AuctionController implements RequestHandler {
         AuctionDTOs.BidRequest request = gson.fromJson(yeuCau, AuctionDTOs.BidRequest.class);
         User nguoiDung = client.layNguoiDungHienTai();
 
+        // Lấy lại mã định danh requestId từ client để gửi phản hồi khớp luồng callback
+        String requestId = yeuCau.has("requestId") ? yeuCau.get("requestId").getAsString() : null;
+
         if (nguoiDung == null || !"BIDDER".equals(nguoiDung.getRoleName())) {
-            return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Chỉ người mua (Bidder) mới được đặt giá.", ErrorCode.UNAUTHORIZED));
+            JsonObject errorRes = gson.toJsonTree(new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Chỉ người mua (Bidder) mới được đặt giá.", ErrorCode.UNAUTHORIZED)).getAsJsonObject();
+            if (requestId != null) errorRes.addProperty("requestId", requestId);
+            return gson.toJson(errorRes);
         }
 
         try {
@@ -75,14 +80,20 @@ public class AuctionController implements RequestHandler {
             if (AuctionManager.getInstance().xuLyDatGia(request.getAuctionId(), giaoDich)) {
                 JsonObject phanHoi = new JsonObject();
                 phanHoi.addProperty("type", "BID_RESPONSE");
+                if (requestId != null) phanHoi.addProperty("requestId", requestId);
                 phanHoi.addProperty("statusCode", StatusCode.OK);
                 phanHoi.addProperty("success", true);
                 phanHoi.addProperty("message", "Đặt giá thành công!");
                 return gson.toJson(phanHoi);
             }
-            return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Đã có người trả giá cao hơn.", ErrorCode.CONCURRENT_CONFLICT));
+
+            JsonObject failRes = gson.toJsonTree(new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Đã có người trả giá cao hơn.", ErrorCode.CONCURRENT_CONFLICT)).getAsJsonObject();
+            if (requestId != null) failRes.addProperty("requestId", requestId);
+            return gson.toJson(failRes);
         } catch (Exception e) {
-            return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.SERVER_ERROR, e.getMessage(), ErrorCode.INTERNAL_SERVER_ERROR));
+            JsonObject errRes = gson.toJsonTree(new BaseDTOs.ErrorResponse(StatusCode.SERVER_ERROR, e.getMessage(), ErrorCode.INTERNAL_SERVER_ERROR)).getAsJsonObject();
+            if (requestId != null) errRes.addProperty("requestId", requestId);
+            return gson.toJson(errRes);
         }
     }
 
@@ -112,7 +123,6 @@ public class AuctionController implements RequestHandler {
     }
 
     private String xuLyLayDanhSachDauGia(JsonObject yeuCau, ClientHandler client) {
-        // 1. Móc toàn bộ các phiên đang chạy dưới DB lên RAM
         List<Auction> danhSachPhien = auctionDao.layDanhSachPhienDangChay();
         if (danhSachPhien == null) {
             danhSachPhien = new ArrayList<>();
@@ -121,7 +131,6 @@ public class AuctionController implements RequestHandler {
         List<Auction> danhSachChoMo = auctionDao.layDanhSachPhienChoMo();
         if (danhSachChoMo != null) {
             for (Auction openAuction : danhSachChoMo) {
-                // Chống trùng lặp: Nếu RAM chưa chứa ID này thì mới add vào danh sách tổng
                 boolean daTonTai = false;
                 for (Auction activeAuction : danhSachPhien) {
                     if (activeAuction.getId() == openAuction.getId()) {
@@ -135,7 +144,6 @@ public class AuctionController implements RequestHandler {
             }
         }
 
-        // 3. Đọc yêu cầu lọc từ Client (Giữ nguyên logic OOP của Kiên)
         String categoryFilter = yeuCau.has("category") ? yeuCau.get("category").getAsString() : "Tất cả";
         if (!"Tất cả".equals(categoryFilter)) {
             danhSachPhien.removeIf(phien -> {
@@ -154,14 +162,13 @@ public class AuctionController implements RequestHandler {
             });
         }
 
-        // 4. Đóng gói kết quả gửi về Client thông qua danh sách tóm tắt duy nhất
         List<AuctionDTOs.AuctionSummaryDTO> summaries = new ArrayList<>();
         for (Auction a : danhSachPhien) {
             summaries.add(new AuctionDTOs.AuctionSummaryDTO(
                     a.getId(),
                     a.getItem().getName(),
                     a.getCurrentHighestBid(),
-                    a.getStatus().name(), // Trả về chuỗi nguyên bản "RUNNING" hoặc "OPEN"
+                    a.getStatus().name(),
                     a.getItem().getImageUrl()
             ));
         }
@@ -170,7 +177,6 @@ public class AuctionController implements RequestHandler {
                 true, "Lấy danh sách thành công", summaries);
         JsonObject jsonResponse = gson.toJsonTree(response).getAsJsonObject();
 
-        // 5. Kèm trạng thái Tim đỏ (Followed)
         User user = client.layNguoiDungHienTai();
         com.google.gson.JsonArray followedArray = new com.google.gson.JsonArray();
         if (user != null) {
@@ -215,7 +221,6 @@ public class AuctionController implements RequestHandler {
         List<Integer> followedIds = new com.auction.server.dao.FollowDao().getFollowedAuctionIds(user.getId());
         List<Auction> danhSachPhien = auctionDao.layDanhSachPhienDangChay();
 
-        // Cứu hộ nốt danh sách follow: Nhét thêm cả những phiên OPEN đã lên lịch mở
         List<Auction> danhSachChoMo = auctionDao.layDanhSachPhienChoMo();
         if (danhSachChoMo != null) {
             danhSachPhien.addAll(danhSachChoMo);
@@ -235,32 +240,34 @@ public class AuctionController implements RequestHandler {
         return gson.toJson(jsonResponse);
     }
 
-    // Tìm kiếm phòng đấu giá chi tiết theo ID kể cả khi chưa hiển thị trên RAM
     private String xuLyLayPhienTheoID(JsonObject yeuCau, ClientHandler client) {
         int idPhien = yeuCau.get("auctionId").getAsInt();
+
+        // 1. Cố gắng lấy từ RAM trước (chứa thông tin realtime của các phiên ĐANG CHẠY)
         Auction phien = AuctionManager.getInstance().layPhienTheoId(idPhien);
 
+        // 2.Nếu RAM không có (phiên SẮP MỞ hoặc ĐÃ KẾT THÚC), móc thẳng từ Database lên!
         if (phien == null) {
-            List<Auction> tatCaPhienChoMo = auctionDao.layDanhSachPhienChoMo();
-            if (tatCaPhienChoMo != null) {
-                for (Auction a : tatCaPhienChoMo) {
-                    if (a.getId() == idPhien) {
-                        phien = a;
-                        break;
-                    }
-                }
-            }
+            phien = auctionDao.layPhienTheoId(idPhien);
+        }
+
+        JsonObject phanHoi = new JsonObject();
+        if (yeuCau.has("requestId")) {
+            phanHoi.addProperty("requestId", yeuCau.get("requestId").getAsString());
         }
 
         if (phien != null) {
-            JsonObject phanHoi = new JsonObject();
             phanHoi.addProperty("type", ActionType.GET_AUCTION_BY_ID);
             phanHoi.addProperty("success", true);
             phanHoi.add("data", gson.toJsonTree(phien));
             return gson.toJson(phanHoi);
         }
-        return gson.toJson(new BaseDTOs.ErrorResponse(
-                StatusCode.NOT_FOUND, "Phiên đấu giá không tồn tại hoặc đã kết thúc", ErrorCode.AUCTION_NOT_FOUND));
+
+        // Đồng bộ hóa lỗi chuẩn mực
+        phanHoi.addProperty("type", "ERROR_RESPONSE");
+        phanHoi.addProperty("success", false);
+        phanHoi.addProperty("message", "Phiên đấu giá không tồn tại trong Database!");
+        return gson.toJson(phanHoi);
     }
 
     private String xuLyRoiPhien(JsonObject yeuCau, ClientHandler client) {
@@ -303,6 +310,12 @@ public class AuctionController implements RequestHandler {
 
         JsonObject phanHoi = new JsonObject();
         phanHoi.addProperty("type", ActionType.GET_BID_HISTORY);
+
+        // Trả ngược lại requestId để tránh lỗi mất Callback ở Client
+        if (yeuCau.has("requestId")) {
+            phanHoi.addProperty("requestId", yeuCau.get("requestId").getAsString());
+        }
+
         phanHoi.addProperty("success", true);
         phanHoi.add("data", gson.toJsonTree(lichSu));
         return gson.toJson(phanHoi);

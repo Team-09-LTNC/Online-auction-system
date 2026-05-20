@@ -177,6 +177,10 @@
                         <Label fx:id="lblPreviewIncrement" text="0 đ" style="-fx-font-size: 13px; -fx-text-fill: #1A0F0A;"/>
                     </VBox>
                     <VBox spacing="2">
+                        <Label text="Giá mua đứt" styleClass="preview-label"/>
+                        <Label fx:id="lblPreviewBuyNow" text="0 đ" style="-fx-font-size: 13px; -fx-text-fill: #1A0F0A;"/>
+                    </VBox>
+                    <VBox spacing="2">
                         <Label text="Thời gian" styleClass="preview-label"/>
                         <Label fx:id="lblPreviewTime" text="--/--/---- --:--&#10;đến --/--/---- --:--" style="-fx-font-size: 13px; -fx-text-fill: #1A0F0A;"/>
                     </VBox>

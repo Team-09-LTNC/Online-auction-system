@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  */
 public class AuctionDao {
     private static final Logger logger = LoggerFactory.getLogger(AuctionDao.class);
-    
+
     private Auction mapResultSetToAuction(ResultSet rs) throws SQLException {
         String loai = rs.getString("category").toUpperCase();
         Item item;
@@ -31,11 +31,15 @@ public class AuctionDao {
 
         item.setId(rs.getInt("item_id"));
         item.setName(rs.getString("name"));
+
+        // ---> CẬP NHẬT QUAN TRỌNG: ĐỌC MÔ TẢ SẢN PHẨM TỪ DATABASE <---
+        try { item.setDescription(rs.getString("description")); } catch (Exception ignored) {}
+
         item.setStartingPrice(rs.getLong("starting_price"));
         item.setBidIncrement(rs.getLong("bid_increment"));
         item.setSellerId(rs.getInt("seller_id"));
         item.setCategory(loai);
-        
+
         // Thêm an toàn khi load image_url (vì có thể query JOIN bị trùng tên cột, nên cần cẩn thận)
         try { item.setImageUrl(rs.getString("image_url")); } catch (Exception ignored) {}
 
@@ -46,29 +50,37 @@ public class AuctionDao {
         phien.setEndTime(rs.getTimestamp("end_time").toLocalDateTime());
         phien.setCurrentPrice(rs.getLong("current_price"));
 
+        // ---> CẬP NHẬT: ĐỌC DỮ LIỆU GIÁ MUA ĐỨT TỪ DATABASE <---
+        long buyNowPrice = rs.getLong("buy_now_price");
+        if (!rs.wasNull()) {
+            phien.setBuyNowPrice(buyNowPrice);
+        }
+
         return phien;
     }
 
     public List<Auction> layDanhSachPhienDangChay() {
-        return thucThiTruyVanDanhSach("SELECT a.*, i.name, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
+        // Đã bổ sung i.description vào câu lệnh SQL SELECT
+        return thucThiTruyVanDanhSach("SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
                 "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = 'RUNNING' OR a.status = 'OPEN'");
     }
 
     public List<Auction> layDanhSachPhienChoMo() {
-        return thucThiTruyVanDanhSach("SELECT a.*, i.name, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
+        // Đã bổ sung i.description vào câu lệnh SQL SELECT
+        return thucThiTruyVanDanhSach("SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
                 "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = 'OPEN'");
     }
-    
+
     // Lấy danh sách các phiên mà User đã tham gia đặt giá (hoặc là người bán)
     public List<Auction> layDanhSachPhienThamGia(int userId, String role) {
         String sql;
         if ("SELLER".equals(role)) {
-            sql = "SELECT a.*, i.name, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
-                  "FROM auctions a JOIN items i ON a.item_id = i.id WHERE i.seller_id = " + userId;
+            sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
+                    "FROM auctions a JOIN items i ON a.item_id = i.id WHERE i.seller_id = " + userId;
         } else {
-            sql = "SELECT DISTINCT a.*, i.name, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
-                  "FROM auctions a JOIN items i ON a.item_id = i.id " +
-                  "JOIN bid_history b ON a.id = b.auction_id WHERE b.bidder_id = " + userId;
+            sql = "SELECT DISTINCT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
+                    "FROM auctions a JOIN items i ON a.item_id = i.id " +
+                    "JOIN bid_history b ON a.id = b.auction_id WHERE b.bidder_id = " + userId;
         }
         return thucThiTruyVanDanhSach(sql);
     }
@@ -94,7 +106,7 @@ public class AuctionDao {
         Connection conn = null;
         try {
             conn = DatabaseConnection.getInstance().getConnection();
-            conn.setAutoCommit(false); 
+            conn.setAutoCommit(false);
 
             try (PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate)) {
                 psUpdate.setLong(1, tx.getBidAmount());
@@ -102,7 +114,7 @@ public class AuctionDao {
                 psUpdate.setInt(3, idPhien);
                 psUpdate.setLong(4, tx.getBidAmount());
                 if (psUpdate.executeUpdate() == 0) {
-                    conn.rollback(); 
+                    conn.rollback();
                     return false;
                 }
             }
@@ -115,7 +127,7 @@ public class AuctionDao {
                 psInsert.executeUpdate();
             }
 
-            conn.commit(); 
+            conn.commit();
             return true;
 
         } catch (SQLException e) {
@@ -159,7 +171,7 @@ public class AuctionDao {
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) { return false; }
     }
-    
+
     // TẠO PHIÊN ĐẤU GIÁ MỚI
     public boolean taoPhienDauGia(int itemId, long startingPrice, LocalDateTime startTime, LocalDateTime endTime) {
         String sql = "INSERT INTO auctions (item_id, current_price, status, start_time, end_time) VALUES (?, ?, ?, ?, ?)";
@@ -168,11 +180,11 @@ public class AuctionDao {
 
             pstmt.setInt(1, itemId);
             pstmt.setLong(2, startingPrice);
-            
+
             // Nếu thời gian bắt đầu nhỏ hơn hoặc bằng hiện tại -> RUNNING, ngược lại OPEN
             String status = startTime.isBefore(LocalDateTime.now().plusSeconds(1)) ? "RUNNING" : "OPEN";
             pstmt.setString(3, status);
-            
+
             pstmt.setTimestamp(4, Timestamp.valueOf(startTime));
             pstmt.setTimestamp(5, Timestamp.valueOf(endTime));
 
@@ -181,5 +193,14 @@ public class AuctionDao {
             logger.error("Lỗi khi tạo phiên đấu giá: ", e);
             return false;
         }
+    }
+
+    //Lấy chi tiết 1 phiên trực tiếp từ Database
+    public Auction layPhienTheoId(int idPhien) {
+        // Đã bổ sung i.description vào câu lệnh SQL SELECT trực tiếp
+        String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
+                "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = " + idPhien;
+        List<Auction> danhSach = thucThiTruyVanDanhSach(sql);
+        return danhSach.isEmpty() ? null : danhSach.get(0);
     }
 }

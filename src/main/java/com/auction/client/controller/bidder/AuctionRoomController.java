@@ -4,6 +4,8 @@ import com.auction.client.networkclient.ClientSocket;
 import com.auction.common.dto.AuctionDTOs;
 import com.auction.common.enums.ActionType;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -16,11 +18,27 @@ import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ResourceBundle;
 
 public class AuctionRoomController implements Initializable {
 
-    @FXML private Label lblCurrentPrice, lblCountdown, lblLeader;
+    // --- LIÊN KẾT THÔNG TIN SẢN PHẨM ---
+    @FXML private Label lblProductName;
+    @FXML private Label lblDescription;
+    @FXML private Label lblCategory;
+    @FXML private Label lblStartingPrice; // Giá khởi điểm
+    @FXML private Label lblBidIncrement;  // Bước giá
+    @FXML private Label lblBuyNowPrice;   // Giá mua đứt
+
+    // --- LIÊN KẾT TRẠNG THÁI PHÒNG ĐẤU GIÁ ---
+    @FXML private Label lblCurrentPrice;
+    @FXML private Label lblCountdown;
+    @FXML private Label lblLeader;
     @FXML private ListView<String> lvBidHistory;
     @FXML private TextField txtBidAmount;
     @FXML private Button btnPlaceBid;
@@ -32,15 +50,25 @@ public class AuctionRoomController implements Initializable {
     private Timeline countdownTimeline;
     private int currentAuctionId = -1;
     private boolean isAuctionStarted = false;
+    private String currentStatus = "OPEN";
+    private String productImageUrl = "";
+
+    private static final DateTimeFormatter MULTI_FORMATTER = DateTimeFormatter.ofPattern(
+            "[yyyy-MM-dd HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss.SSS]"
+    );
+    private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        // Đăng ký controller với bộ xử lý Push Notification realtime
         com.auction.client.networkclient.PushHandler.currentRoomController = this;
 
-        txtBidAmount.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal.isEmpty()) txtBidAmount.setText(newVal.replaceAll("\\D", ""));
-        });
-
+        // Ràng buộc nhập số cho các ô văn bản đầu vào để đảm bảo Thread-safety và tránh lỗi định dạng
+        if (txtBidAmount != null) {
+            txtBidAmount.textProperty().addListener((obs, oldVal, newVal) -> {
+                if (!newVal.isEmpty()) txtBidAmount.setText(newVal.replaceAll("\\D", ""));
+            });
+        }
         if (txtMaxAutoBid != null) {
             txtMaxAutoBid.textProperty().addListener((obs, oldVal, newVal) -> {
                 if (!newVal.isEmpty()) txtMaxAutoBid.setText(newVal.replaceAll("\\D", ""));
@@ -48,60 +76,167 @@ public class AuctionRoomController implements Initializable {
         }
     }
 
+    /**
+     * Khởi tạo và đồng bộ dữ liệu phòng từ Database Server
+     */
     public void initData(int auctionId, String imageUrl) {
         this.currentAuctionId = auctionId;
+        this.productImageUrl = imageUrl;
         loadProductImage(imageUrl);
 
+        // 1. Gửi yêu cầu gia nhập phòng (Observer Pattern)
         JsonObject joinReq = new JsonObject();
         joinReq.addProperty("type", ActionType.JOIN_AUCTION);
         joinReq.addProperty("auctionId", auctionId);
         ClientSocket.getInstance().sendJsonRequest(joinReq, null, null);
 
+        // 2. Tải thông tin phòng chi tiết
+        refreshAuctionState();
+    }
+
+    /**
+     * Gọi lên Server để cập nhật trạng thái mới nhất từ Database
+     */
+    private void refreshAuctionState() {
+        if (currentAuctionId == -1) return;
+
         JsonObject getReq = new JsonObject();
         getReq.addProperty("type", ActionType.GET_AUCTION_BY_ID);
-        getReq.addProperty("auctionId", auctionId);
+        getReq.addProperty("auctionId", currentAuctionId);
 
         ClientSocket.getInstance().sendJsonRequest(getReq, ActionType.GET_AUCTION_BY_ID, response -> {
             Platform.runLater(() -> {
                 if (response.has("success") && response.get("success").getAsBoolean()) {
                     JsonObject data = response.getAsJsonObject("data");
+                    JsonObject itemData = data.getAsJsonObject("item");
 
-                    long currentPrice = data.has("currentHighestBid") ? data.get("currentHighestBid").getAsLong() : 0;
-                    lblCurrentPrice.setText(String.format("%,.0f đ", (double) currentPrice));
+                    // Đổ dữ liệu sản phẩm căn bản
+                    if (lblProductName != null) lblProductName.setText(itemData.has("name") ? itemData.get("name").getAsString() : "Sản phẩm");
+                    if (lblDescription != null) lblDescription.setText(itemData.has("description") ? itemData.get("description").getAsString() : "Không có mô tả.");
+                    if (lblCategory != null) lblCategory.setText("Danh mục: " + (itemData.has("category") ? itemData.get("category").getAsString() : "Khác"));
 
-                    if (data.has("highestBidderName") && lblLeader != null) {
-                        lblLeader.setText("Người dẫn đầu: " + data.get("highestBidderName").getAsString());
+                    // Trích xuất cấu hình giá gốc của Seller
+                    long startingPrice = itemData.has("startingPrice") ? itemData.get("startingPrice").getAsLong() : 0;
+                    long bidIncrement = itemData.has("bidIncrement") ? itemData.get("bidIncrement").getAsLong() : 0;
+
+                    if (lblStartingPrice != null) lblStartingPrice.setText(String.format("%,d đ", startingPrice));
+                    if (lblBidIncrement != null) lblBidIncrement.setText(String.format("%,d đ", bidIncrement));
+
+                    // LẤY DỮ LIỆU THẬT CHO GIÁ MUA ĐỨT
+                    if (lblBuyNowPrice != null) {
+                        if (data.has("buyNowPrice") && !data.get("buyNowPrice").isJsonNull()) {
+                            long realBuyNowPrice = data.get("buyNowPrice").getAsLong();
+                            lblBuyNowPrice.setText(String.format("%,d đ", realBuyNowPrice));
+                        } else {
+                            lblBuyNowPrice.setText("Không hỗ trợ");
+                        }
                     }
 
-                    String rawStartTime = data.has("startTime") ? data.get("startTime").getAsString() : null;
-                    String rawEndTime = data.has("endTime") ? data.get("endTime").getAsString() : null;
-                    String serverStatus = data.has("status") ? data.get("status").getAsString() : "RUNNING";
+                    // ---> SỬA LỖI ĐỒNG BỘ MỨC GIÁ HIỆN TẠI TỪ SERVER <---
+                    // Đọc chính xác thuộc tính định danh tuần tự của đối tượng gốc
+                    long displayPrice = startingPrice;
+                    if (data.has("currentHighestBid") && !data.get("currentHighestBid").isJsonNull()) {
+                        displayPrice = data.get("currentHighestBid").getAsLong();
+                    } else if (data.has("currentPrice") && !data.get("currentPrice").isJsonNull()) {
+                        displayPrice = data.get("currentPrice").getAsLong();
+                    }
 
-                    AuctionListScreenController.AuctionSecondsState state =
-                            AuctionListScreenController.calculateAuctionSecondsState(rawStartTime, rawEndTime, serverStatus);
-                    this.totalSeconds = state.countdownSeconds;
+                    String leaderText = "Chưa có ai đặt giá";
+                    boolean hasWinner = data.has("currentWinner") && !data.get("currentWinner").isJsonNull();
+                    if (hasWinner) {
+                        JsonObject winnerObj = data.getAsJsonObject("currentWinner");
+                        leaderText = winnerObj.has("fullName") ? winnerObj.get("fullName").getAsString() : winnerObj.get("username").getAsString();
+                    }
 
-                    if ("OPEN".equalsIgnoreCase(state.finalStatus)) {
+                    if (lblCurrentPrice != null) lblCurrentPrice.setText(String.format("%,d đ", displayPrice));
+                    if (lblLeader != null) lblLeader.setText(hasWinner ? "Người dẫn đầu: " + leaderText : leaderText);
+
+                    // Xử lý đồng bộ thời gian và phân luồng nút bấm
+                    currentStatus = data.has("status") ? data.get("status").getAsString() : "OPEN";
+                    String rawStartTime = data.has("startTime") && !data.get("startTime").isJsonNull() ? data.get("startTime").getAsString() : "";
+                    String rawEndTime = data.has("endTime") && !data.get("endTime").isJsonNull() ? data.get("endTime").getAsString() : "";
+
+                    this.totalSeconds = calculateRealSeconds(rawStartTime, rawEndTime, currentStatus);
+
+                    if ("OPEN".equalsIgnoreCase(currentStatus)) {
                         isAuctionStarted = false;
-                        btnPlaceBid.setDisable(true);
-                        txtBidAmount.setEditable(false);
+                        if (btnPlaceBid != null) { btnPlaceBid.setDisable(true); btnPlaceBid.setText("CHỜ MỞ BÁN"); }
+                        if (txtBidAmount != null) txtBidAmount.setEditable(false);
                         if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(true);
-                    } else if ("RUNNING".equalsIgnoreCase(state.finalStatus)) {
+                    } else if ("RUNNING".equalsIgnoreCase(currentStatus)) {
                         isAuctionStarted = true;
-                        btnPlaceBid.setDisable(false);
-                        txtBidAmount.setEditable(true);
+                        if (btnPlaceBid != null) { btnPlaceBid.setDisable(false); btnPlaceBid.setText("ĐẶT GIÁ"); }
+                        if (txtBidAmount != null) txtBidAmount.setEditable(true);
                         if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(false);
                     } else {
-                        isAuctionStarted = true;
-                        this.totalSeconds = 0;
+                        setExpiredUI();
                     }
 
                     startCountdown();
+
+                    // Tự động tải lịch sử đấu giá thực tế từ Database
+                    loadBidHistoryFromServer();
                 } else {
-                    showAlert("Lỗi", "Phiên đấu giá đã kết thúc hoặc không tồn tại!");
+                    showAlert("Lỗi", "Không thể đồng bộ dữ liệu phòng đấu giá từ Server.");
                 }
             });
         });
+    }
+
+    /**
+     * Tải danh sách lịch sử các lượt đặt giá trước đó từ database thông qua Server
+     */
+    private void loadBidHistoryFromServer() {
+        if (currentAuctionId == -1) return;
+
+        JsonObject historyReq = new JsonObject();
+        historyReq.addProperty("type", ActionType.GET_BID_HISTORY);
+        historyReq.addProperty("auctionId", currentAuctionId);
+
+        ClientSocket.getInstance().sendJsonRequest(historyReq, ActionType.GET_BID_HISTORY, response -> {
+            Platform.runLater(() -> {
+                if (response.has("success") && response.get("success").getAsBoolean() && response.has("data")) {
+                    JsonArray historyArray = response.getAsJsonArray("data");
+                    if (lvBidHistory != null) {
+                        lvBidHistory.getItems().clear();
+                        for (JsonElement el : historyArray) {
+                            JsonObject bidObj = el.getAsJsonObject();
+
+                            String name = "Người dùng";
+                            if (bidObj.has("bidderName")) name = bidObj.get("bidderName").getAsString();
+                            else if (bidObj.has("fullName")) name = bidObj.get("fullName").getAsString();
+                            else if (bidObj.has("username")) name = bidObj.get("username").getAsString();
+
+                            long amount = 0;
+                            if (bidObj.has("bidAmount")) amount = bidObj.get("bidAmount").getAsLong();
+                            else if (bidObj.has("amount")) amount = bidObj.get("amount").getAsLong();
+
+                            lvBidHistory.getItems().add(name + " đã đặt: " + String.format("%,d đ", amount));
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    private int calculateRealSeconds(String rawStart, String rawEnd, String status) {
+        if (rawEnd == null || rawEnd.trim().isEmpty()) return 0;
+        try {
+            ZonedDateTime nowZoned = ZonedDateTime.now(VIETNAM_ZONE);
+            LocalDateTime localEnd = LocalDateTime.parse(rawEnd.trim().replace(" ", "T"), MULTI_FORMATTER);
+            ZonedDateTime endZoned = localEnd.atZone(ZoneId.of("UTC")).withZoneSameInstant(VIETNAM_ZONE);
+
+            long diff = ChronoUnit.SECONDS.between(nowZoned, endZoned);
+
+            if ("OPEN".equalsIgnoreCase(status) && rawStart != null && !rawStart.trim().isEmpty()) {
+                LocalDateTime localStart = LocalDateTime.parse(rawStart.trim().replace(" ", "T"), MULTI_FORMATTER);
+                ZonedDateTime startZoned = localStart.atZone(ZoneId.of("UTC")).withZoneSameInstant(VIETNAM_ZONE);
+                diff = ChronoUnit.SECONDS.between(nowZoned, startZoned);
+            }
+            return diff > 0 ? (int) diff : 0;
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     private void startCountdown() {
@@ -111,25 +246,12 @@ public class AuctionRoomController implements Initializable {
             if (totalSeconds > 0) {
                 totalSeconds--;
                 updateCountdownLabel();
-                if (isAuctionStarted && totalSeconds <= 30) {
+                if (isAuctionStarted && totalSeconds <= 30 && lblCountdown != null) {
                     lblCountdown.setStyle("-fx-text-fill: #A64452; -fx-font-weight: bold;");
                 }
             } else {
-                if (!isAuctionStarted) {
-                    isAuctionStarted = true;
-                    this.totalSeconds = 1200; // Mở xới cho 20 phút chạy test tiếp
-                    btnPlaceBid.setDisable(false);
-                    txtBidAmount.setEditable(true);
-                    if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(false);
-                    lblCountdown.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
-                } else {
-                    lblCountdown.setText("HẾT GIỜ!");
-                    lblCountdown.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
-                    btnPlaceBid.setDisable(true);
-                    if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(true);
-                    txtBidAmount.setEditable(false);
-                    countdownTimeline.stop();
-                }
+                countdownTimeline.stop();
+                refreshAuctionState();
             }
         }));
         countdownTimeline.setCycleCount(Timeline.INDEFINITE);
@@ -138,30 +260,37 @@ public class AuctionRoomController implements Initializable {
     }
 
     private void updateCountdownLabel() {
+        if (lblCountdown == null) return;
         int h = totalSeconds / 3600;
         int m = (totalSeconds % 3600) / 60;
         int s = totalSeconds % 60;
+
         if (!isAuctionStarted) {
             lblCountdown.setText(String.format("Sắp mở: %02d:%02d:%02d", h, m, s));
-            lblCountdown.setStyle("-fx-text-fill: #FFA500; -fx-font-weight: bold;");
+            lblCountdown.setStyle("-fx-text-fill: #E65100; -fx-font-weight: bold;");
         } else {
-            lblCountdown.setText(String.format("%02d:%02d:%02d", h, m, s));
+            lblCountdown.setText(String.format("Còn lại: %02d:%02d:%02d", h, m, s));
+            lblCountdown.setStyle("-fx-text-fill: #2E7D32; -fx-font-weight: bold;");
         }
+    }
+
+    private void setExpiredUI() {
+        isAuctionStarted = true;
+        this.totalSeconds = 0;
+        if (lblCountdown != null) { lblCountdown.setText("ĐÃ KẾT THÚC!"); lblCountdown.setStyle("-fx-text-fill: #888888; -fx-font-weight: bold;"); }
+        if (btnPlaceBid != null) { btnPlaceBid.setDisable(true); btnPlaceBid.setText("HẾT HẠN"); }
+        if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(true);
+        if (txtBidAmount != null) txtBidAmount.setEditable(false);
     }
 
     @FXML
     private void handlePlaceBid() {
-        if (!isAuctionStarted) {
-            showAlert("Thông báo", "Phiên đấu giá chưa mở!");
-            return;
-        }
-        if (currentAuctionId == -1) return;
-
+        if (!isAuctionStarted || currentAuctionId == -1) return;
         String input = txtBidAmount.getText().trim();
         if (input.isEmpty()) return;
 
         try {
-            long bidAmount = Long.parseLong(input.replaceAll("\\D", ""));
+            long bidAmount = Long.parseLong(input);
             AuctionDTOs.BidRequest request = new AuctionDTOs.BidRequest(currentAuctionId, bidAmount, 1);
             btnPlaceBid.setDisable(true);
 
@@ -171,18 +300,19 @@ public class AuctionRoomController implements Initializable {
             ClientSocket.getInstance().sendJsonRequest(jsonRequest, "BID_RESPONSE", response -> {
                 Platform.runLater(() -> {
                     btnPlaceBid.setDisable(false);
-                    boolean success = response.has("success") && response.get("success").getAsBoolean();
-                    if (!success) {
+                    if (!(response.has("success") && response.get("success").getAsBoolean())) {
                         String msg = response.has("message") ? response.get("message").getAsString() : "Lỗi đặt giá.";
-                        showAlert("Giá không hợp lệ", msg);
+                        showAlert("Giá thầu không hợp lệ", msg);
                     } else {
                         checkAndApplySnipingRule();
+                        // Đồng bộ lại toàn bộ trạng thái phòng để kéo giá trị tiền và người thắng mới nhất về UI
+                        refreshAuctionState();
+                        txtBidAmount.clear();
                     }
                 });
             });
-            txtBidAmount.clear();
         } catch (NumberFormatException e) {
-            showAlert("Lỗi", "Vui lòng chỉ nhập số hợp lệ!");
+            showAlert("Lỗi", "Số tiền nhập không hợp lệ.");
         }
     }
 
@@ -198,15 +328,15 @@ public class AuctionRoomController implements Initializable {
             jsonRequest.addProperty("auctionId", currentAuctionId);
             jsonRequest.addProperty("maxBid", maxPrice);
 
-            if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(true);
+            btnEnableAutoBid.setDisable(true);
 
             ClientSocket.getInstance().sendJsonRequest(jsonRequest, "AUTO_BID_RESPONSE", response -> {
                 Platform.runLater(() -> {
-                    if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(false);
+                    btnEnableAutoBid.setDisable(false);
                     if (response.has("success") && response.get("success").getAsBoolean()) {
                         Alert alert = new Alert(Alert.AlertType.INFORMATION);
                         alert.setTitle("Thành công");
-                        alert.setContentText("Đã kích hoạt hệ thống Tự động đấu giá!");
+                        alert.setContentText("Hệ thống Đấu giá tự động (Auto-bid) đã kích hoạt thành công!");
                         alert.showAndWait();
                     }
                 });
@@ -222,9 +352,9 @@ public class AuctionRoomController implements Initializable {
     }
 
     public void updateRealtimeBid(long newPrice, String bidderName) {
-        lblCurrentPrice.setText(String.format("%,.0f đ", (double) newPrice));
+        if (lblCurrentPrice != null) lblCurrentPrice.setText(String.format("%,d đ", newPrice));
         if (lblLeader != null) lblLeader.setText("Người dẫn đầu: " + bidderName);
-        lvBidHistory.getItems().add(0, bidderName + ": " + String.format("%,.0f đ", (double) newPrice));
+        if (lvBidHistory != null) lvBidHistory.getItems().add(0, bidderName + " đã đặt: " + String.format("%,d đ", newPrice));
         checkAndApplySnipingRule();
     }
 

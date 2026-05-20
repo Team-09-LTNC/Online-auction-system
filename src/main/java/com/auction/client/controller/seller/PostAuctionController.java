@@ -2,7 +2,7 @@ package com.auction.client.controller.seller;
 
 import com.auction.client.controller.auth.UserSession;
 import com.auction.client.networkclient.ClientSocket;
-import com.auction.client.util.CloudStorageUtil; // Import công cụ upload
+import com.auction.client.util.CloudStorageUtil;
 import com.auction.common.dto.ItemDTOs;
 import com.auction.common.enums.ActionType;
 import com.google.gson.Gson;
@@ -15,7 +15,7 @@ import javafx.scene.image.ImageView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File; // Import xử lý File
+import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -32,6 +32,7 @@ public class PostAuctionController {
     @FXML private TextArea txtDescription;
     @FXML private TextField txtStartingPrice;
     @FXML private TextField txtIncrement;
+    @FXML private TextField txtBuyNowPrice;
     @FXML private DatePicker dpStartDate;
     @FXML private TextField txtStartTime;
     @FXML private DatePicker dpEndDate;
@@ -44,6 +45,7 @@ public class PostAuctionController {
     @FXML private Label lblPreviewCategory;
     @FXML private Label lblPreviewPrice;
     @FXML private Label lblPreviewIncrement;
+    @FXML private Label lblPreviewBuyNow;
     @FXML private Label lblPreviewTime;
     @FXML private Label lblPreviewAntiSniping;
     @FXML private ImageView imgPreview;
@@ -54,7 +56,7 @@ public class PostAuctionController {
     @FXML private Label lblProfileRole;
 
     private String selectedImagePath = "";
-    private File selectedImageFile = null; // Biến lưu file thật để gửi lên Cloud
+    private File selectedImageFile = null;
 
     @FXML
     public void initialize() {
@@ -67,7 +69,6 @@ public class PostAuctionController {
     }
 
     private void setupLivePreview() {
-        // ... (GIỮ NGUYÊN 100% CODE CỦA BẠN TRONG HÀM NÀY)
         if (lblProfileName != null && UserSession.getUsername() != null) {
             lblProfileName.setText("Chào, " + UserSession.getUsername());
         }
@@ -88,6 +89,7 @@ public class PostAuctionController {
             });
         }
 
+        // Lắng nghe Giá khởi điểm
         if (txtStartingPrice != null && lblPreviewPrice != null) {
             txtStartingPrice.textProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal.isEmpty()) {
@@ -104,6 +106,7 @@ public class PostAuctionController {
             });
         }
 
+        // Lắng nghe Bước giá
         if (txtIncrement != null && lblPreviewIncrement != null) {
             txtIncrement.textProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal.isEmpty()) {
@@ -115,6 +118,23 @@ public class PostAuctionController {
                         lblPreviewIncrement.setText(String.format("%,.0f đ", price));
                     } catch (NumberFormatException e) {
                         lblPreviewIncrement.setText("Giá không hợp lệ");
+                    }
+                }
+            });
+        }
+
+        // Lắng nghe Giá mua đứt (Chống lỗi Thread-safety)
+        if (txtBuyNowPrice != null && lblPreviewBuyNow != null) {
+            txtBuyNowPrice.textProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal.isEmpty()) {
+                    lblPreviewBuyNow.setText("Không có");
+                } else {
+                    try {
+                        String cleanString = newVal.replaceAll("[^\\d]", "");
+                        double price = Double.parseDouble(cleanString);
+                        lblPreviewBuyNow.setText(String.format("%,.0f đ", price));
+                    } catch (NumberFormatException e) {
+                        lblPreviewBuyNow.setText("Giá không hợp lệ");
                     }
                 }
             });
@@ -154,6 +174,7 @@ public class PostAuctionController {
         if (txtProductName != null) txtProductName.clear();
         if (txtStartingPrice != null) txtStartingPrice.clear();
         if (txtIncrement != null) txtIncrement.clear();
+        if (txtBuyNowPrice != null) txtBuyNowPrice.clear();
         if (txtDescription != null) txtDescription.clear();
         if (cbCategory != null) cbCategory.getSelectionModel().clearSelection();
         if (dpStartDate != null) dpStartDate.setValue(null);
@@ -164,7 +185,7 @@ public class PostAuctionController {
         if (chkCommit != null) chkCommit.setSelected(false);
 
         selectedImagePath = "";
-        selectedImageFile = null; // Xóa tham chiếu file khi clear
+        selectedImageFile = null;
         if (imgPreview != null) imgPreview.setImage(null);
         logger.info("Đã làm sạch form nhập liệu.");
     }
@@ -177,7 +198,7 @@ public class PostAuctionController {
         java.io.File selectedFile = fileChooser.showOpenDialog(((javafx.scene.Node) event.getSource()).getScene().getWindow());
 
         if (selectedFile != null) {
-            this.selectedImageFile = selectedFile; // Ghi nhớ file vật lý để lát gọi API
+            this.selectedImageFile = selectedFile;
             this.selectedImagePath = selectedFile.toURI().toString();
             javafx.scene.image.Image image = new javafx.scene.image.Image(this.selectedImagePath);
             if (imgPreview != null) imgPreview.setImage(image);
@@ -188,7 +209,6 @@ public class PostAuctionController {
     public void handleSubmitAuction(ActionEvent event) {
         if (isInputInvalid()) return;
 
-        // Bắt buộc phải có ảnh
         if (this.selectedImageFile == null) {
             showAlert(Alert.AlertType.WARNING, "Thiếu ảnh", "Vui lòng chọn ảnh cho sản phẩm!");
             return;
@@ -196,7 +216,10 @@ public class PostAuctionController {
 
         try {
             String name = txtProductName.getText();
-            long startPrice = Long.parseLong(txtStartingPrice.getText().replace(",", ""));
+            long startPrice = Long.parseLong(txtStartingPrice.getText().replaceAll("[^\\d]", ""));
+            long increment = (txtIncrement != null && !txtIncrement.getText().isEmpty()) ? Long.parseLong(txtIncrement.getText().replaceAll("[^\\d]", "")) : 0;
+            long buyNow = (txtBuyNowPrice != null && !txtBuyNowPrice.getText().isEmpty()) ? Long.parseLong(txtBuyNowPrice.getText().replaceAll("[^\\d]", "")) : 0;
+
             String category = mapCategoryToEnum(cbCategory.getValue());
             String description = txtDescription.getText() != null ? txtDescription.getText() : "";
 
@@ -208,24 +231,30 @@ public class PostAuctionController {
                 return;
             }
 
+            // Kiểm tra tính hợp lệ về logic tài chính
+            if (buyNow > 0 && buyNow <= startPrice) {
+                showAlert(Alert.AlertType.WARNING, "Lỗi cấu hình giá", "Giá mua đứt phải lớn hơn giá khởi điểm!");
+                return;
+            }
+
             String startTimeStr = startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
             String endTimeStr = endTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
-            // Bắt đầu upload ảnh lên Cloud thay vì truyền chuỗi file nội bộ
             CloudStorageUtil.uploadImageAsync(this.selectedImageFile).thenAccept(imageUrl -> {
-
-                // Cập nhật UI và đẩy Socket qua luồng chính của JavaFX
                 Platform.runLater(() -> {
                     if (imageUrl == null) {
                         showAlert(Alert.AlertType.ERROR, "Lỗi kết nối", "Không thể tải ảnh lên hệ thống đám mây!");
                         return;
                     }
 
-                    // Gắn URL mới nhận được vào DTO
+                    // Khởi tạo DTO cơ bản
                     ItemDTOs.CreateItemRequest requestDto = new ItemDTOs.CreateItemRequest(
                             name, description, startPrice, category, 0, imageUrl, startTimeStr, endTimeStr);
 
+                    // Bơm thêm các thuộc tính mở rộng bằng JSON thao tác trực tiếp (Giải pháp linh hoạt)
                     JsonObject reqJson = new Gson().toJsonTree(requestDto).getAsJsonObject();
+                    reqJson.addProperty("bidIncrement", increment);
+                    reqJson.addProperty("buyNowPrice", buyNow);
                     reqJson.addProperty("type", ActionType.CREATE_PRODUCT);
 
                     ClientSocket.getInstance().sendJsonRequest(reqJson, "CREATE_ITEM_RESPONSE", response -> {
