@@ -22,4 +22,24 @@ public class AdminDTOs {
         return status;
     }
 }
+public static class AuctionSummaryDTO {
+        private final String itemName;
+        private final String startTime;
+        private final String endTime;
+        private final String status; // OPEN, RUNNING, FINISHED, PAID, CANCELED
+        private final String imageUrl;
+        public AuctionSummaryDTO(String itemName, String startTime, String endTime, String status, String imageUrl) {
+            this.itemName = itemName;
+            this.startTime = startTime;
+            this.endTime = endTime;
+            this.status = status;
+            this.imageUrl = imageUrl; // Placeholder, cần sửa lại sau
+        }
+
+        public String getItemName() { return itemName; }
+        public String getStartTime() { return startTime; }
+        public String getEndTime() { return endTime; }
+        public String getStatus() { return status; }
+        public String getImageUrl() { return imageUrl; }
+    }
 }

@@ -10,6 +10,11 @@ public class OtherItem extends Item {
         this.customCategoryName = customCategoryName;
     }
 
+    public OtherItem(String name, String imageUrl) {
+        super(name, "", 0);
+        this.imageUrl = imageUrl;
+    }       
+
     public String getCustomCategoryName() { return customCategoryName; }
     public void setCustomCategoryName(String customCategoryName) { this.customCategoryName = customCategoryName; }
 

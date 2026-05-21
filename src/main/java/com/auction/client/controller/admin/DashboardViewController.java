@@ -53,6 +53,9 @@ public class DashboardViewController implements Initializable {
         AdminManager.getInstance().layTongSoSeller(
                 count -> Platform.runLater(() -> lblSellerCount.setText(String.valueOf(count))),
                 error -> System.err.println("Lỗi: " + error));
+        AdminManager.getInstance().layTongSoAuction(
+                count -> Platform.runLater(() -> lblAuctionCount.setText(String.valueOf(count))),
+                error -> System.err.println("Lỗi: " + error));
     }
 
     // ── FXML handlers ────────────────────────────────────────

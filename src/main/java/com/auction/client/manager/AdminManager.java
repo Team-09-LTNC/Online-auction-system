@@ -4,6 +4,7 @@ import com.auction.client.networkclient.ClientSocket;
 import com.auction.common.enums.ActionType;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.auction.common.dto.AdminDTOs.AuctionSummaryDTO;
 import com.auction.common.dto.AdminDTOs.UserSummaryDTO;
 
 import java.util.ArrayList;
@@ -95,7 +96,7 @@ public class AdminManager {
         JsonObject request = buildRequest(ActionType.ADMIN_GET_ALL_BIDDERS);
 
         ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_BIDDERS_RESPONSE", response -> {
-            xuLyDanhSachResponse(response, "GET_ALL_BIDDERS_RESPONSE", onSuccess, onError);
+            xuLyDanhSachUserResponse(response, "GET_ALL_BIDDERS_RESPONSE", onSuccess, onError);
         });
     }
 
@@ -106,17 +107,17 @@ public class AdminManager {
         JsonObject request = buildRequest(ActionType.ADMIN_GET_ALL_SELLERS);
 
         ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_SELLERS_RESPONSE", response -> {
-            xuLyDanhSachResponse(response, "GET_ALL_SELLERS_RESPONSE", onSuccess, onError);
+            xuLyDanhSachUserResponse(response, "GET_ALL_SELLERS_RESPONSE", onSuccess, onError);
         });
     }
 
-    // public void layDanhSachAuction(Consumer<List<AuctionSummaryDTO>> onSuccess, Consumer<String> onError) {
-    //     JsonObject request = buildRequest(ActionType.ADMIN_GET_ALL_AUCTIONS);
+    public void layDanhSachAuction(Consumer<List<AuctionSummaryDTO>> onSuccess, Consumer<String> onError) {
+        JsonObject request = buildRequest(ActionType.ADMIN_GET_ALL_AUCTIONS);
 
-    //     ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_AUCTIONS_RESPONSE", response -> {
-    //         xuLyDanhSachResponse(response, "GET_ALL_AUCTIONS_RESPONSE", onSuccess, onError);
-    //     });  
-    // }
+        ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_AUCTIONS_RESPONSE", response -> {
+            xuLyDanhSachAuctionResponse(response, "GET_ALL_AUCTIONS_RESPONSE", onSuccess, onError);
+        });  
+    }
 
     /**
      * Khoá hoặc mở khoá tài khoản.
@@ -155,6 +156,12 @@ public class AdminManager {
                 onError);
     }
 
+    public void layTongSoAuction(Consumer<Integer> onSuccess, Consumer<String> onError) {
+        layDanhSachAuction(
+                list -> onSuccess.accept(list.size()),
+                onError);
+    }
+
     // ── Helpers ───────────────────────────────────────────────
 
     private JsonObject buildRequest(String type) {
@@ -164,7 +171,7 @@ public class AdminManager {
         return request;
     }
 
-    private void xuLyDanhSachResponse(JsonObject response, String expectedType,
+    private void xuLyDanhSachUserResponse(JsonObject response, String expectedType,
             Consumer<List<UserSummaryDTO>> onSuccess, Consumer<String> onError) {
         boolean ok = response.has("success") && response.get("success").getAsBoolean();
         if (!ok) {
@@ -182,6 +189,32 @@ public class AdminManager {
                         obj.get("username").getAsString(),
                         obj.get("fullname").getAsString(),
                         obj.has("status") ? obj.get("status").getAsString() : "ACTIVE"
+                ));
+            });
+        }
+        onSuccess.accept(list);
+    }
+
+    private void xuLyDanhSachAuctionResponse(JsonObject response, String expectedType,
+            Consumer<List<AuctionSummaryDTO>> onSuccess, Consumer<String> onError) {
+        boolean ok = response.has("success") && response.get("success").getAsBoolean();
+        if (!ok) {
+            String msg = response.has("message") ? response.get("message").getAsString() : "Lỗi không xác định";
+            onError.accept(msg);
+            return;
+        }
+
+        List<AuctionSummaryDTO> list = new ArrayList<>();
+        JsonArray data = response.getAsJsonArray("data");
+        if (data != null) {
+            data.forEach(el -> {
+                JsonObject obj = el.getAsJsonObject();
+                list.add(new AuctionSummaryDTO(
+                        obj.get("itemname").getAsString(),
+                        obj.get("starttime").getAsString(),
+                        obj.get("endtime").getAsString(),
+                        obj.has("status") ? obj.get("status").getAsString() : "OPEN",
+                        obj.has("imageurl") ? obj.get("imageurl").getAsString() : null
                 ));
             });
         }

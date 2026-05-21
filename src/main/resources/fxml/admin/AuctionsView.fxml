@@ -70,6 +70,7 @@
                 <TableColumn fx:id="colStartTime" text="Thời gian bắt đầu" prefWidth="180"/>
                 <TableColumn fx:id="colEndTime"   text="Thời gian kết thúc" prefWidth="180"/>
                 <TableColumn fx:id="colStatus"    text="Trạng thái"   prefWidth="140"/>
+                <TableColumn fx:id="colImageUrl"    text="URLHình ảnh"   prefWidth="140"/>
             </columns>
             <placeholder>
                 <Label text="Không có phiên đấu giá nào"
