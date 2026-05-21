@@ -18,6 +18,13 @@ public abstract class User extends Entity {
         this.status = "ACTIVE"; // Mặc định là hoạt động
     }
 
+    // public User(String username, String fullName) {
+    //     super();
+    //     this.username = username;
+    //     this.fullName = fullName;
+    //     this.status = "ACTIVE"; // Mặc định là hoạt động
+    // }
+
     public abstract String getRoleName();
 
     public String getUsername() { return username; }
