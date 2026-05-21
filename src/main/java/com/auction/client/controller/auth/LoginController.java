@@ -138,10 +138,6 @@ public class LoginController {
             Stage stage = (Stage) usernameField.getScene().getWindow();
             double currentWidth = stage.getScene().getWidth();
             double currentHeight = stage.getScene().getHeight();
-
-            // ---> BẢN VÁ LỖI TẠI ĐÂY <---
-            // Thay vì dùng currentScene.setRoot(newRoot) gây lỗi vì Node đã cache bị dính vào Scene cũ.
-            // Ta sẽ sử dụng lại chính Scene cũ của Node đó nếu có, nếu chưa có thì tạo Scene mới.
             if (newRoot.getScene() != null) {
                 stage.setScene(newRoot.getScene());
             } else {

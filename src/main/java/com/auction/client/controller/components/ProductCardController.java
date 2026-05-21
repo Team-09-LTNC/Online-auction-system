@@ -12,7 +12,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 import org.slf4j.Logger;
@@ -37,110 +36,147 @@ public class ProductCardController {
     private String currentStatus = "";
 
     /**
-     * Hàm cấu hình dữ liệu chuẩn của Card Sản phẩm
+     * Hàm cấu hình dữ liệu Card
      */
-    public void setProductData(int auctionId, String name, double price, int countdownSeconds, String status, String imageUrl, boolean isFollowed) {
+    public void setProductData(
+            int auctionId,
+            String name,
+            double price,
+            int countdownSeconds,
+            String status,
+            String imageUrl,
+            boolean isFollowed
+    ) {
+        stopTimer();
         this.auctionId = auctionId;
         this.imageUrl = imageUrl;
         this.isFollowed = isFollowed;
         this.currentStatus = status;
-        this.timeInSeconds = countdownSeconds;
 
-        // DỌN DẸP SẠCH ĐỒNG HỒ CŨ TRƯỚC KHI NẠP DỮ LIỆU MỚI (Tránh rò rỉ luồng chạy ngầm)
-        stopTimer();
-
+        // Chống âm giây
+        this.timeInSeconds = Math.max(countdownSeconds, 0);
         lblProductName.setText(name);
-        lblCurrentPrice.setText(String.format("%,.0f đ", price));
-        lblTimeRemaining.setText(formatTime(timeInSeconds));
-
-        if (imgProduct != null) {
-            try {
-                imgProduct.setImage(com.auction.client.util.ImageCacheManager.getImage(imageUrl));
-            } catch (Exception e) {
-                imgProduct.setImage(null);
-            }
-        }
-
+        lblCurrentPrice.setText(
+                String.format("%,.0f đ", price));
+        lblTimeRemaining.setText(formatTime(this.timeInSeconds));
+        loadImage();
         updateHeartUI();
+        setupStatusUI(status);
+        // Chỉ chạy countdown nếu còn thời gian
+        if (this.timeInSeconds > 0 && !"FINISHED".equalsIgnoreCase(status)) {
+            startCountdown();
+        }
+    }
+    public void setProductData(
+            int auctionId,
+            String name,
+            double price,
+            int countdownSeconds,
+            String status,
+            String imageUrl
+    ) {
+        setProductData(
+                auctionId,
+                name,
+                price,
+                countdownSeconds,
+                status,
+                imageUrl,
+                false);
+    }
 
-        // ĐỒNG BỘ TUYỆT ĐỐI THEO TRẠNG THÁI GỐC TỪ DATABASE
+    /**
+     * Load ảnh
+     */
+    private void loadImage() {
+        if (imgProduct == null) return;
+        try {imgProduct.setImage(com.auction.client.util.ImageCacheManager.getImage(imageUrl));
+        } catch (Exception e) {
+            logger.error("Lỗi load ảnh", e);
+            imgProduct.setImage(null);
+        }
+    }
+    /**
+     * Setup trạng thái UI
+     */
+    private void setupStatusUI(String status) {
         if ("OPEN".equalsIgnoreCase(status)) {
             lblStatus.setText("Sắp diễn ra");
-            lblStatus.setStyle("-fx-background-color: #FFF3E0; -fx-text-fill: #E65100; -fx-padding: 2 8; -fx-background-radius: 4; -fx-font-weight: bold;");
-            lblTimeRemaining.setStyle("-fx-text-fill: #E65100; -fx-font-weight: bold;");
+            lblStatus.setStyle(
+                    "-fx-background-color: #FFF3E0;" +
+                            "-fx-text-fill: #E65100;" +
+                            "-fx-padding: 2 8;" +
+                            "-fx-background-radius: 4;" +
+                            "-fx-font-weight: bold;");
+            lblTimeRemaining.setStyle(
+                    "-fx-text-fill: #E65100;" +
+                            "-fx-font-weight: bold;");
             btnBid.setDisable(true);
             btnBid.setText("Chờ mở bán");
-            if (timeInSeconds > 0) startCountdown();
-
         } else if ("RUNNING".equalsIgnoreCase(status)) {
             lblStatus.setText("Đang diễn ra");
-            lblStatus.setStyle("-fx-background-color: #E8F5E9; -fx-text-fill: #2E7D32; -fx-padding: 2 8; -fx-background-radius: 4; -fx-font-weight: bold;");
-            lblTimeRemaining.setStyle("-fx-text-fill: #2E7D32; -fx-font-weight: bold;");
-            btnBid.setDisable(false);
-            btnBid.setText("Vào phòng");
-            if (timeInSeconds > 0) startCountdown();
-
+            lblStatus.setStyle(
+                    "-fx-background-color: #E8F5E9;" +
+                            "-fx-text-fill: #2E7D32;" +
+                            "-fx-padding: 2 8;" +
+                            "-fx-background-radius: 4;" +
+                            "-fx-font-weight: bold;");
+            lblTimeRemaining.setStyle(
+                    "-fx-text-fill: #2E7D32;" +
+                            "-fx-font-weight: bold;");
+            if (btnBid != null) {
+                btnBid.setDisable(false);
+                btnBid.setText("Vào phòng");
+            }
         } else {
             setExpiredUI();
         }
     }
-
-    public void setProductData(int auctionId, String name, double price, int countdownSeconds, String status, String imageUrl) {
-        setProductData(auctionId, name, price, countdownSeconds, status, imageUrl, false);
-    }
-
-    private void updateHeartUI() {
-        if (btnFollow == null) return;
-        if (isFollowed) {
-            btnFollow.setText("♥");
-            btnFollow.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: #e74c3c; -fx-padding: 0; -fx-font-size: 16px;");
-        } else {
-            btnFollow.setText("♡");
-            btnFollow.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: #888888; -fx-padding: 0; -fx-font-size: 16px;");
-        }
-    }
-
+    /**
+     * Countdown chuẩn
+     */
     private void startCountdown() {
+        stopTimer();
         timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
-            if (timeInSeconds > 0) {
-                timeInSeconds--;
-                lblTimeRemaining.setText(formatTime(timeInSeconds));
 
-                // Sửa lỗi nhấp nháy: Đảm bảo giữ màu đỏ đậm ổn định nếu dưới 30s, ngược lại giữ màu xanh lá
-                if ("RUNNING".equalsIgnoreCase(currentStatus)) {
-                    if (timeInSeconds <= 30) {
-                        lblTimeRemaining.setStyle("-fx-text-fill: #A64452; -fx-font-weight: bold;");
-                    } else {
-                        lblTimeRemaining.setStyle("-fx-text-fill: #2E7D32; -fx-font-weight: bold;");
-                    }
-                }
-            } else {
-                stopTimer();
-
-                if ("OPEN".equalsIgnoreCase(currentStatus)) {
-                    System.out.println("🚀 Card [" + lblProductName.getText() + "] chuyển trạng thái: OPEN -> RUNNING!");
-                    // Giả định phiên chạy thực tế mở trong 20 phút (1200 giây) ngoài sảnh chính
-                    setProductData(auctionId, lblProductName.getText(), Double.parseDouble(lblCurrentPrice.getText().replaceAll("\\D", "")), 1200, "RUNNING", imageUrl, isFollowed);
-                } else {
-                    setExpiredUI();
-                }
+            timeInSeconds--;
+            if (timeInSeconds <= 0) {
+                timeInSeconds = 0;
+                lblTimeRemaining.setText("00:00:00");
+                setExpiredUI();
+                return;
             }
-        }));
+
+            lblTimeRemaining.setText(formatTime(timeInSeconds));
+            // Đỏ khi dưới 30s
+            if ("RUNNING".equalsIgnoreCase(currentStatus) && timeInSeconds <= 30) {
+                lblTimeRemaining.setStyle("-fx-text-fill: #A64452;" + "-fx-font-weight: bold;");}}));
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
     }
-
-    private void setExpiredUI() {
-        lblTimeRemaining.setText("00:00:00");
-        lblTimeRemaining.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
-        lblStatus.setText("Đã kết thúc");
-        lblStatus.setStyle("-fx-background-color: #F5F5F5; -fx-text-fill: #888888; -fx-padding: 2 8; -fx-background-radius: 4;");
-        btnBid.setDisable(true);
-        btnBid.setText("Hết hạn");
-    }
-
     /**
-     * Hàm dọn dẹp bộ nhớ đếm ngược (Bắt buộc phải gọi khi hủy hoặc làm mới sảnh)
+     * UI hết hạn
+     */
+    private void setExpiredUI() {
+        stopTimer();
+        currentStatus = "FINISHED";
+        lblTimeRemaining.setText("00:00:00");
+        lblTimeRemaining.setStyle(
+                "-fx-text-fill: red;" +
+                        "-fx-font-weight: bold;");
+        lblStatus.setText("Đã kết thúc");
+        lblStatus.setStyle(
+                "-fx-background-color: #F5F5F5;" +
+                        "-fx-text-fill: #888888;" +
+                        "-fx-padding: 2 8;" +
+                        "-fx-background-radius: 4;");
+        if (btnBid != null) {
+            btnBid.setDisable(true);
+            btnBid.setText("Hết hạn");
+        }
+    }
+    /**
+     * Cleanup timer
      */
     public void stopTimer() {
         if (timeline != null) {
@@ -148,63 +184,114 @@ public class ProductCardController {
             timeline = null;
         }
     }
+    /**
+     * Update tim
+     */
+    private void updateHeartUI() {
+        if (btnFollow == null) return;
+        if (isFollowed) {
+            btnFollow.setText("♥");
+            btnFollow.setStyle(
+                    "-fx-background-color: transparent;" +
+                            "-fx-cursor: hand;" +
+                            "-fx-text-fill: #e74c3c;" +
+                            "-fx-padding: 0;" +
+                            "-fx-font-size: 16px;");
+
+        } else {
+            btnFollow.setText("♡");
+            btnFollow.setStyle(
+                    "-fx-background-color: transparent;" +
+                            "-fx-cursor: hand;" +
+                            "-fx-text-fill: #888888;" +
+                            "-fx-padding: 0;" +
+                            "-fx-font-size: 16px;");
+        }
+    }
 
     @FXML
     private void handleBidAction(ActionEvent event) {
         if (auctionId == -1) {
-            showAlert("Cảnh báo", "Không tìm thấy dữ liệu phòng đấu giá này!");
+            showAlert(
+                    "Cảnh báo",
+                    "Không tìm thấy dữ liệu phòng đấu giá!");
             return;
         }
-
         if ("OPEN".equalsIgnoreCase(currentStatus)) {
-            showAlert("Thông báo", "Phiên đấu giá chưa mở, vui lòng đợi đếm ngược mở phòng!");
+            showAlert(
+                    "Thông báo",
+                    "Phiên đấu giá chưa mở!");
             return;
         }
-
-        // BÍ KÍP ĐỒNG BỘ: Trước khi chuyển cảnh, dọn dẹp sạch Timer của Card hiện tại tránh chạy ngầm vô dụng
+        if ("FINISHED".equalsIgnoreCase(currentStatus)) {
+            showAlert(
+                    "Thông báo",
+                    "Phiên đấu giá đã kết thúc!");
+            return;
+        }
         stopTimer();
-
-        com.auction.client.controller.MainController.instance.setCenterContent("/fxml/bidder/AuctionRoom.fxml");
+        com.auction.client.controller.MainController.instance
+                .setCenterContent("/fxml/bidder/AuctionRoom.fxml");
         Object controller = com.auction.client.controller.MainController.instance.getCurrentCenterController();
         if (controller instanceof com.auction.client.controller.bidder.AuctionRoomController) {
-            ((com.auction.client.controller.bidder.AuctionRoomController) controller).initData(auctionId, imageUrl);
+            ((com.auction.client.controller.bidder.AuctionRoomController)
+                    controller).initData(auctionId, imageUrl);
         }
     }
-
     @FXML
     private void handleFollowAction(ActionEvent event) {
         if (auctionId == -1) return;
         isFollowed = !isFollowed;
         updateHeartUI();
         btnFollow.setDisable(true);
-
         JsonObject jsonRequest = new JsonObject();
         jsonRequest.addProperty("type", isFollowed ? ActionType.FOLLOW_AUCTION : ActionType.UNFOLLOW_AUCTION);
-        jsonRequest.addProperty("auctionId", auctionId);
+        jsonRequest.addProperty(
+                "auctionId",
+                auctionId
+        );
 
-        ClientSocket.getInstance().sendJsonRequest(jsonRequest, isFollowed ? "FOLLOW_RESPONSE" : "UNFOLLOW_RESPONSE", response -> {
-            Platform.runLater(() -> {
-                btnFollow.setDisable(false);
-                if (!(response.has("success") && response.get("success").getAsBoolean())) {
-                    isFollowed = !isFollowed;
-                    updateHeartUI();
-                }
-            });
-        });
+        ClientSocket.getInstance().sendJsonRequest(
+                jsonRequest,
+                isFollowed
+                        ? "FOLLOW_RESPONSE"
+                        : "UNFOLLOW_RESPONSE",
+                response -> Platform.runLater(() -> {
+                    btnFollow.setDisable(false);
+                    if (!(response.has("success") && response.get("success").getAsBoolean())) {
+                        isFollowed = !isFollowed;
+                        updateHeartUI();}
+                })
+        );
     }
 
+    /**
+     * Format countdown chuẩn tuyệt đối
+     */
     private String formatTime(int totalSeconds) {
+        totalSeconds = Math.max(totalSeconds, 0);
         int h = totalSeconds / 3600;
         int m = (totalSeconds % 3600) / 60;
         int s = totalSeconds % 60;
-        return String.format("%02d:%02d:%02d", h, m, s);
+        return String.format(
+                "%02d:%02d:%02d", h, m, s);
     }
-
     private void showAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    @FXML
+    private void initialize() {
+        if (lblProductName != null) {
+            lblProductName.sceneProperty().addListener((obs, oldScene, newScene) -> {
+                if (newScene == null) {
+                    stopTimer();
+                }
+            });
+        }
     }
 }

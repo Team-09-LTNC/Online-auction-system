@@ -154,7 +154,7 @@ public class AuctionRoomController implements Initializable {
 
                     // ĐỒNG BỘ: Mượn não của AuctionListScreenController để tính số giây chuẩn
                     AuctionListScreenController.AuctionSecondsState state =
-                            AuctionListScreenController.calculateAuctionSecondsState(rawStartTime, rawEndTime, rawServerStatus);
+                            AuctionListScreenController.calculateAuctionSecondsState(rawStartTime, rawEndTime);
 
                     this.totalSeconds = state.countdownSeconds;
                     this.currentStatus = state.finalStatus;

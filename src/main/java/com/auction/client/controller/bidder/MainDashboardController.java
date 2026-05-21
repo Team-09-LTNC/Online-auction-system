@@ -19,11 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.ResourceBundle;
 
 public class MainDashboardController implements Initializable, com.auction.client.interfaces.CategoryFilterListener {
@@ -121,14 +117,20 @@ public class MainDashboardController implements Initializable, com.auction.clien
 
                     String rawStartTime = obj.has("startTime") && !obj.get("startTime").isJsonNull() ? obj.get("startTime").getAsString() : "";
                     String rawEndTime = obj.has("endTime") && !obj.get("endTime").isJsonNull() ? obj.get("endTime").getAsString() : "";
-                    int calculatedSeconds = calculateRealSeconds(rawStartTime, rawEndTime, status);
+
+                    AuctionListScreenController.AuctionSecondsState state =
+                            AuctionListScreenController.calculateAuctionSecondsState(
+                                    rawStartTime,
+                                    rawEndTime
+                            );
 
                     try {
                         // Vẫn tải FXML ngầm (JavaFX cho phép điều này nếu Node chưa gắn vào Scene)
                         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
                         VBox card = loader.load();
                         ProductCardController controller = loader.getController();
-                        controller.setProductData(auctionId, name, price, calculatedSeconds, status, imageUrl);
+
+                        controller.setProductData(auctionId, name, price, state.countdownSeconds, state.finalStatus, imageUrl);
                         preparedCards.add(card);
                         count++;
                     } catch (IOException e) {
@@ -147,24 +149,6 @@ public class MainDashboardController implements Initializable, com.auction.clien
         });
     }
 
-    private int calculateRealSeconds(String rawStart, String rawEnd, String status) {
-        if (rawEnd == null || rawEnd.trim().isEmpty()) {
-            return "OPEN".equalsIgnoreCase(status) ? 3600 : 7200;
-        }
-        try {
-            LocalDateTime now = LocalDateTime.now();
-            LocalDateTime end = LocalDateTime.parse(rawEnd.trim().replace(" ", "T"), MULTI_FORMATTER);
-            long diff = ChronoUnit.SECONDS.between(now, end);
-            // Nếu chưa mở auction
-            if ("OPEN".equalsIgnoreCase(status) && rawStart != null && !rawStart.trim().isEmpty()) {
-                LocalDateTime start = LocalDateTime.parse(rawStart.trim().replace(" ", "T"), MULTI_FORMATTER);
-                diff = ChronoUnit.SECONDS.between(now, start);
-            }
-            return diff > 0 ? (int) diff : 0;
-        } catch (Exception e) {e.printStackTrace();
-            return "OPEN".equalsIgnoreCase(status) ? 600 : 1200;
-        }
-    }
 
     @Override
     public void onCategorySelected(String category) {

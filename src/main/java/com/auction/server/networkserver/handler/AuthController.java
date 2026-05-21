@@ -111,14 +111,19 @@ public class AuthController implements RequestHandler {
                     nguoiDung.getId(), nguoiDung.getUsername(), nguoiDung.getRoleName(), nguoiDung.getFullName());
 
             AuthDTOs.LoginResponse response = new AuthDTOs.LoginResponse(true, "Đăng nhập thành công!", userDTO);
-            response.setRequestId(reqId); // Bắt buộc: Gắn requestId vào response Thành công
+            response.setRequestId(reqId);
             return gson.toJson(response);
 
         } catch (Exception e) {
-            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, e.getMessage(),
-                    ErrorCode.INVALID_CREDENTIALS);
-            err.setRequestId(reqId); // Bắt buộc: Gắn requestId vào response Lỗi
-            return gson.toJson(err);
+            JsonObject errorJson = new JsonObject();
+            errorJson.addProperty("type", "LOGIN_RESPONSE"); // Bắt buộc phải có dòng này
+            errorJson.addProperty("success", false);
+            errorJson.addProperty("message", e.getMessage());
+
+            if (reqId != null) {
+                errorJson.addProperty("requestId", reqId);
+            }
+            return gson.toJson(errorJson);
         }
     }
 

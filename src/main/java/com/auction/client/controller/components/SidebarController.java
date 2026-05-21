@@ -126,6 +126,10 @@ public class SidebarController {
     private void handleOpenAuctions(ActionEvent event) {
         setButtonActive(btnAuctions);
         MainController.instance.setCenterContent("/fxml/bidder/AuctionListScreen.fxml");
+        Object currentCtrl = MainController.instance.getCurrentCenterController();
+        if (currentCtrl instanceof com.auction.client.controller.bidder.AuctionListScreenController) {
+            ((com.auction.client.controller.bidder.AuctionListScreenController) currentCtrl).refreshData();
+        }
     }
 
     @FXML
@@ -208,4 +212,5 @@ public class SidebarController {
             org.slf4j.LoggerFactory.getLogger(getClass()).error("Lỗi khi chuyển hướng giao diện đăng xuất: {}", e.getMessage());
         }
     }
+
 }

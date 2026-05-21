@@ -19,14 +19,12 @@ import javafx.fxml.FXML;
 
 import java.io.IOException;
 import java.net.URL;
-import java.time.*;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
 
 public class AuctionListScreenController implements Initializable, com.auction.client.interfaces.CategoryFilterListener {
 
@@ -38,17 +36,17 @@ public class AuctionListScreenController implements Initializable, com.auction.c
 
     private String currentCategory = "Tất cả";
 
-    private static final DateTimeFormatter MULTI_FORMATTER = new DateTimeFormatterBuilder()
-            .appendPattern("yyyy-MM-dd")
-            // Chấp nhận cả 'T' hoặc dấu cách
-            .optionalStart().appendLiteral('T').optionalEnd()
-            .optionalStart().appendLiteral(' ').optionalEnd()
-            .appendPattern("HH:mm")
-            // Chấp nhận có giây hoặc không
-            .optionalStart().appendPattern(":ss").optionalEnd()
-            // Chấp nhận có hoặc không có phần mili giây (.S, .SSS, .SSSSSS)
-            .optionalStart().appendFraction(ChronoField.NANO_OF_SECOND, 1, 6, true).optionalEnd()
-            .toFormatter();
+    // Bộ giải mã thời gian siêu cấp, cân mọi loại định dạng từ DB
+    private static final DateTimeFormatter MULTI_FORMATTER = DateTimeFormatter.ofPattern(
+            "[yyyy-MM-dd HH:mm:ss.SSSSSS]" +
+                    "[yyyy-MM-dd HH:mm:ss.SSS]" +
+                    "[yyyy-MM-dd HH:mm:ss.S]" +
+                    "[yyyy-MM-dd HH:mm:ss]" +
+                    "[yyyy-MM-dd'T'HH:mm:ss.SSSSSS]" +
+                    "[yyyy-MM-dd'T'HH:mm:ss.SSS]" +
+                    "[yyyy-MM-dd'T'HH:mm:ss.S]" +
+                    "[yyyy-MM-dd'T'HH:mm:ss]"
+    );
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -88,128 +86,126 @@ public class AuctionListScreenController implements Initializable, com.auction.c
         request.addProperty("category", currentCategory);
 
         ClientSocket.getInstance().sendJsonRequest(request, "AUCTION_LIST_RESPONSE", response -> {
-            Platform.runLater(() -> {
+            try {
                 if (response.has("auctions")) {
                     JsonArray auctions = response.getAsJsonArray("auctions");
-
-                    if (productFlowPane != null) {
-                        productFlowPane.getChildren().clear();
-                    }
-
-                    List<Integer> followedIds = new ArrayList<>();
-                    if (response.has("followedIds")) {
-                        for (JsonElement el : response.getAsJsonArray("followedIds")) {
-                            followedIds.add(el.getAsInt());
-                        }
-                    }
-
-                    for (JsonElement element : auctions) {
-                        JsonObject obj = element.getAsJsonObject();
-
-                        String itemCategory = obj.has("category") ? obj.get("category").getAsString() : "";
-                        if (!"Tất cả".equals(currentCategory) && !currentCategory.equalsIgnoreCase(itemCategory)) {
-                            continue;
+                        List<Integer> followedIds = new ArrayList<>();
+                        if (response.has("followedIds")) {
+                            for (JsonElement el : response.getAsJsonArray("followedIds")) {
+                                followedIds.add(el.getAsInt());
+                            }
                         }
 
-                        int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
-                        String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Đang cập nhật";
-                        long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
-                        String imageUrl = obj.has("imageUrl") ? obj.get("imageUrl").getAsString() : "";
-                        boolean isFollowed = followedIds.contains(auctionId);
+                        // Bộ sưu tập tạm thời chứa các Card đã dựng xong xuôi trong luồng ngầm
+                        List<VBox> cardsToRender = new ArrayList<>();
 
-                        String rawStartTime = null;
-                        if (obj.has("startTime") && !obj.get("startTime").isJsonNull()) rawStartTime = obj.get("startTime").getAsString();
-                        else if (obj.has("start_time") && !obj.get("start_time").isJsonNull()) rawStartTime = obj.get("start_time").getAsString();
+                        for (JsonElement element : auctions) {
+                            JsonObject obj = element.getAsJsonObject();
 
-                        String rawEndTime = null;
-                        if (obj.has("endTime") && !obj.get("endTime").isJsonNull()) rawEndTime = obj.get("endTime").getAsString();
-                        else if (obj.has("end_time") && !obj.get("end_time").isJsonNull()) rawEndTime = obj.get("end_time").getAsString();
+                            String itemCategory = obj.has("category") ? obj.get("category").getAsString() : "";
+                            if (!"Tất cả".equals(currentCategory) && !currentCategory.equalsIgnoreCase(itemCategory)) {
+                                continue;
+                            }
 
-                        String serverStatus = obj.has("status") ? obj.get("status").getAsString() : "RUNNING";
+                            int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
+                            String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Đang cập nhật";
+                            long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
+                            String imageUrl = obj.has("imageUrl") ? obj.get("imageUrl").getAsString() : "";
+                            boolean isFollowed = followedIds.contains(auctionId);
 
-                        // Gọi bộ tính toán giây siêu cấp
-                        AuctionSecondsState state = calculateAuctionSecondsState(rawStartTime, rawEndTime, serverStatus);
+                            String rawStartTime = null;
+                            if (obj.has("startTime") && !obj.get("startTime").isJsonNull()) rawStartTime = obj.get("startTime").getAsString();
+                            else if (obj.has("start_time") && !obj.get("start_time").isJsonNull()) rawStartTime = obj.get("start_time").getAsString();
 
-                        try {
-                            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
-                            VBox card = loader.load();
-                            ProductCardController controller = loader.getController();
+                            String rawEndTime = null;
+                            if (obj.has("endTime") && !obj.get("endTime").isJsonNull()) rawEndTime = obj.get("endTime").getAsString();
+                            else if (obj.has("end_time") && !obj.get("end_time").isJsonNull()) rawEndTime = obj.get("end_time").getAsString();
 
-                            controller.setProductData(auctionId, name, price, state.countdownSeconds, state.finalStatus, imageUrl, isFollowed);
-                            productFlowPane.getChildren().add(card);
-                        } catch (IOException e) {
-                            logger.error("Không nạp được giao diện ProductCard.fxml: {}", e.getMessage());
+                            String serverStatus = obj.has("status") ? obj.get("status").getAsString() : "RUNNING";
+
+                            AuctionSecondsState state = calculateAuctionSecondsState(rawStartTime, rawEndTime);
+
+                            try {
+                                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
+                                VBox card = loader.load();
+                                ProductCardController controller = loader.getController();
+
+                                controller.setProductData(auctionId, name, price, state.countdownSeconds, state.finalStatus, imageUrl, isFollowed);
+
+                                cardsToRender.add(card);
+                            } catch (IOException e) {
+                                logger.error("Không nạp được giao diện ProductCard.fxml: {}", e.getMessage());
+                            }
                         }
+
+                        // CHỈ DÙNG PLATFORM.RUNLATER KHI GỌI LỆNH ADDALL LÊN MÀN HÌNH CHÍNH
+                        Platform.runLater(() -> {
+                            if (productFlowPane != null) {
+                                productFlowPane.getChildren().clear();
+                                productFlowPane.getChildren().addAll(cardsToRender);
+                            }
+                        });
                     }
+                } catch (Exception ex) {
+                    logger.error("Lỗi xử lý dựng card sảnh đấu giá trong Thread phụ: ", ex);
                 }
             });
-        });
     }
 
-    private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    /**
+     * Bỏ qua Server, Client tự cầm cân nảy mực dựa vào mốc thời gian thực.
+     */
 
-    private static ZonedDateTime parseAndSyncTime(String rawTime) {
-        System.out.println("DEBUG: Server gửi về: " + rawTime);
-        if (rawTime == null || rawTime.trim().isEmpty() || "null".equalsIgnoreCase(rawTime.trim())) {
-            return null;
-        }
-
-        try {
-
-            String cleanTime = rawTime.trim().replace(" ", "T");
-
-            // Nếu server gửi UTC dạng:
-            // 2026-05-21T10:00:00Z
-            if (cleanTime.endsWith("Z")) {
-                return Instant.parse(cleanTime).atZone(VIETNAM_ZONE);
-            }
-            // Nếu server gửi có timezone:
-            // 2026-05-21T10:00:00+00:00
-            try {
-                return OffsetDateTime.parse(cleanTime).atZoneSameInstant(VIETNAM_ZONE);
-            } catch (Exception ignored) {
-            }
-            // Nếu server gửi local time:
-            // 2026-05-21T10:00:00
-            LocalDateTime localDateTime = LocalDateTime.parse(cleanTime);
-            return localDateTime.atZone(VIETNAM_ZONE);
-        } catch (Exception e) {
-            System.out.println("Parse time lỗi: " + e.getMessage());
-            return null;
-        }
-    }
     public static AuctionSecondsState calculateAuctionSecondsState(
             String rawStartTime,
-            String rawEndTime,
-            String serverStatus
+            String rawEndTime
     ) {
-
         try {
-            ZonedDateTime now = ZonedDateTime.now(VIETNAM_ZONE);
-            ZonedDateTime start = parseAndSyncTime(rawStartTime);
-            ZonedDateTime end = parseAndSyncTime(rawEndTime);
-            System.out.println("NOW   : " + now);
-            System.out.println("START : " + start);
-            System.out.println("END   : " + end);
-            if (start == null || end == null) {
-                return new AuctionSecondsState(0, "FINISHED");
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime start = parseTime(rawStartTime);
+            LocalDateTime end = parseTime(rawEndTime);
+
+            if (start != null && end != null) {
+                // Chưa bắt đầu
+                if (now.isBefore(start)) {
+                    int seconds = (int) ChronoUnit.SECONDS.between(now, start);
+                    return new AuctionSecondsState(seconds, "OPEN"
+                    );
+                }
+
+                // Đang diễn ra
+                if ((!now.isBefore(start)) && now.isBefore(end)) {
+                    int seconds = (int) ChronoUnit.SECONDS.between(now, end);
+
+                    return new AuctionSecondsState(seconds, "RUNNING"
+                    );
+                }
             }
-            if (now.isBefore(start)) {
-                long seconds = ChronoUnit.SECONDS.between(now, start);
-                return new AuctionSecondsState(
-                        (int) Math.max(seconds, 0), "OPEN");
-            }
-            if ((!now.isBefore(start)) && now.isBefore(end)) {
-                long seconds = ChronoUnit.SECONDS.between(now, end);
-                return new AuctionSecondsState(
-                        (int) Math.max(seconds, 0), "RUNNING"
-                );
-            }
-            return new AuctionSecondsState(0, "FINISHED");
+
+            return new AuctionSecondsState(
+                    0,
+                    "FINISHED"
+            );
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new AuctionSecondsState(0, "FINISHED");
+            return new AuctionSecondsState(0, "FINISHED"
+            );
+        }
+    }
+
+    private static LocalDateTime parseTime(String rawTime) {
+        if (rawTime == null || rawTime.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(
+                    rawTime.trim().replace(" ", "T"),
+                    MULTI_FORMATTER
+            );
+        } catch (Exception e) {
+            logger.error("Parse time lỗi: {}", rawTime);
+            return null;
         }
     }
 
@@ -220,6 +216,14 @@ public class AuctionListScreenController implements Initializable, com.auction.c
         public AuctionSecondsState(int countdownSeconds, String finalStatus) {
             this.countdownSeconds = countdownSeconds;
             this.finalStatus = finalStatus;
+        }
+    }
+    public void refreshData() {
+        if (productFlowPane != null) {
+            // Xóa rỗng list cũ, hiển thị trạng thái đang tải (nếu muốn)
+            productFlowPane.getChildren().clear();
+            // Gọi lại API lấy dữ liệu mới
+            loadAuctionsFromServer();
         }
     }
 }
