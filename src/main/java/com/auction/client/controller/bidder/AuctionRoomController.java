@@ -263,7 +263,7 @@ public class AuctionRoomController implements Initializable {
     }
 
     private void setExpiredUI() {
-        isAuctionStarted = false; // Đã hết hạn thì không cho bắt đầu nữa
+        isAuctionStarted = false;
         this.totalSeconds = 0;
         if (lblCountdown != null) { lblCountdown.setText("ĐÃ KẾT THÚC!"); lblCountdown.setStyle("-fx-text-fill: #888888; -fx-font-weight: bold;"); }
         if (btnPlaceBid != null) { btnPlaceBid.setDisable(true); btnPlaceBid.setText("HẾT HẠN"); }
@@ -279,6 +279,18 @@ public class AuctionRoomController implements Initializable {
 
         try {
             long bidAmount = Long.parseLong(input);
+
+            long currentPrice = Long.parseLong(lblCurrentPrice.getText().replaceAll("\\D", ""));
+            long stepPrice = Long.parseLong(lblBidIncrement.getText().replaceAll("\\D", ""));
+
+            // Giá tối thiểu = Giá hiện tại + Bước giá
+            long minValidBid = currentPrice + stepPrice;
+
+            if (bidAmount < minValidBid) {
+                showAlert("Lỗi đặt giá", "Giá tối thiểu bạn phải đặt là: " + String.format("%,d đ", minValidBid));
+                return;
+            }
+
             AuctionDTOs.BidRequest request = new AuctionDTOs.BidRequest(currentAuctionId, bidAmount, 1);
             btnPlaceBid.setDisable(true);
 
@@ -293,7 +305,6 @@ public class AuctionRoomController implements Initializable {
                         showAlert("Giá thầu không hợp lệ", msg);
                     } else {
                         checkAndApplySnipingRule();
-                        // Đồng bộ lại toàn bộ trạng thái phòng để kéo giá trị tiền và người thắng mới nhất về UI
                         refreshAuctionState();
                         txtBidAmount.clear();
                     }
@@ -311,6 +322,20 @@ public class AuctionRoomController implements Initializable {
 
         try {
             long maxPrice = Long.parseLong(txtMaxAutoBid.getText().trim());
+
+            // Lấy giá hiện tại và bước giá từ giao diện
+            long currentPrice = Long.parseLong(lblCurrentPrice.getText().replaceAll("\\D", ""));
+            long stepPrice = Long.parseLong(lblBidIncrement.getText().replaceAll("\\D", ""));
+
+            // Tính mức giá hợp lệ tiếp theo
+            long minValidBid = currentPrice + stepPrice;
+
+            // Auto-bid chỉ có ý nghĩa khi giá tối đa người dùng chịu trả >= mức giá hợp lệ tiếp theo
+            if (maxPrice < minValidBid) {
+                showAlert("Lỗi Auto-bid", "Mức giá tối đa (Max Bid) phải lớn hơn hoặc bằng mức giá hợp lệ tiếp theo (" + String.format("%,d đ", minValidBid) + ").");
+                return;
+            }
+
             JsonObject jsonRequest = new JsonObject();
             jsonRequest.addProperty("type", ActionType.REGISTER_AUTO_BID);
             jsonRequest.addProperty("auctionId", currentAuctionId);
@@ -326,6 +351,9 @@ public class AuctionRoomController implements Initializable {
                         alert.setTitle("Thành công");
                         alert.setContentText("Hệ thống Đấu giá tự động (Auto-bid) đã kích hoạt thành công!");
                         alert.showAndWait();
+                    } else {
+                        String msg = response.has("message") ? response.get("message").getAsString() : "Có lỗi xảy ra khi đăng ký Auto-bid.";
+                        showAlert("Lỗi Auto-bid", msg);
                     }
                 });
             });

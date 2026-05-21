@@ -131,13 +131,15 @@ public class AuctionManager {
                 throw new InvalidBidException("Không được tự bid sản phẩm của mình!");
 
             long giaHienTai = phien.getCurrentHighestBid();
-            // Giá tối thiểu: giá khởi điểm (nếu chưa có ai bid) hoặc giá cao nhất + bước giá
-            long giaToiThieu = (phien.getCurrentWinner() == null)
-                    ? phien.getItem().getStartingPrice()
-                    : (giaHienTai + phien.getItem().getBidIncrement());
+            long buocGia = phien.getItem().getBidIncrement();
 
-            if (giaoDich.getBidAmount() < giaToiThieu)
+            // Áp dụng đúng 1 công thức bắt buộc cho mọi lượt đặt:
+            // Giá tối thiểu = Giá cao nhất hiện tại + Bước giá
+            long giaToiThieu = giaHienTai + buocGia;
+
+            if (giaoDich.getBidAmount() < giaToiThieu) {
                 throw new InvalidBidException("Giá đặt tối thiểu: " + giaToiThieu);
+            }
 
             // Anti-sniping: nếu bid trong 30 giây cuối, gia hạn thêm 60 giây
             if (phien.getEndTime().minusSeconds(30).isBefore(LocalDateTime.now())) {
