@@ -255,10 +255,9 @@ public class AuctionController implements RequestHandler {
     private String xuLyLayPhienTheoID(JsonObject yeuCau, ClientHandler client) {
         int idPhien = yeuCau.get("auctionId").getAsInt();
 
-        // 1. Cố gắng lấy từ RAM trước (chứa thông tin realtime của các phiên ĐANG CHẠY)
+        // 1. Cố gắng lấy từ RAM trước
         Auction phien = AuctionManager.getInstance().layPhienTheoId(idPhien);
 
-        // 2.Nếu RAM không có (phiên SẮP MỞ hoặc ĐÃ KẾT THÚC), móc thẳng từ Database lên!
         if (phien == null) {
             phien = auctionDao.layPhienTheoId(idPhien);
         }
@@ -271,14 +270,32 @@ public class AuctionController implements RequestHandler {
         if (phien != null) {
             phanHoi.addProperty("type", ActionType.GET_AUCTION_BY_ID);
             phanHoi.addProperty("success", true);
-            phanHoi.add("data", gson.toJsonTree(phien));
 
-            // Dán dòng này vào ngay trước khi Server trả kết quả
-            System.out.println("DEBUG SERVER - Gửi dữ liệu: " + (phien != null ? phien.toString() : "NULL"));
+            JsonObject dataObj = gson.toJsonTree(phien).getAsJsonObject();
+
+            if (phien.getCurrentWinner() != null) {
+                JsonObject winnerObj = gson.toJsonTree(phien.getCurrentWinner()).getAsJsonObject();
+                if (winnerObj.has("bidder")) {
+                    dataObj.add("currentWinner", winnerObj.get("bidder"));
+                } else {
+                    dataObj.add("currentWinner", winnerObj);
+                }
+            }
+
+            dataObj.addProperty("currentHighestBid", phien.getCurrentHighestBid());
+            dataObj.addProperty("currentPrice", phien.getCurrentHighestBid());
+
+            User user = client.layNguoiDungHienTai();
+            if (user != null) {
+                long userMaxAutoBid = auctionDao.layGiaTranAutoBid(idPhien, user.getId());
+                if (userMaxAutoBid > 0) {
+                    dataObj.addProperty("userMaxAutoBid", userMaxAutoBid);
+                }
+            }
+            phanHoi.add("data", dataObj);
             return gson.toJson(phanHoi);
         }
 
-        // Đồng bộ hóa lỗi chuẩn mực
         phanHoi.addProperty("type", "ERROR_RESPONSE");
         phanHoi.addProperty("success", false);
         phanHoi.addProperty("message", "Phiên đấu giá không tồn tại trong Database!");

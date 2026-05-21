@@ -69,8 +69,7 @@ public class BidTransactionDao {
                     danhSach.add(new BidLine(
                             ketQua.getString("full_name"),
                             ketQua.getLong("bid_amount"),
-                            ketQua.getTimestamp("bid_time")
-                    ));
+                            ketQua.getTimestamp("bid_time").toLocalDateTime()                    ));
                 }
             }
         } catch (SQLException e) {

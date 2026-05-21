@@ -1,0 +1,48 @@
+/* Tổng thể biểu đồ */
+.chart {
+    -fx-padding: 10px;
+}
+
+/* Nền vùng vẽ đồ thị */
+.chart-plot-background {
+    -fx-background-color: #ffffff;
+}
+
+/* Lưới ngang nhạt dần */
+.chart-vertical-grid-lines {
+    -fx-stroke: transparent; /* Ẩn lưới dọc cho giống mẫu */
+}
+.chart-horizontal-grid-lines {
+    -fx-stroke: #f0f0f0;
+    -fx-stroke-dash-array: 2 2;
+}
+
+/* 1. Đường Line chính màu đỏ thẫm */
+.default-color0.chart-series-area-line {
+    -fx-stroke: #A64452;
+    -fx-stroke-width: 3px;
+    -fx-effect: dropshadow(three-pass-box, rgba(166, 68, 82, 0.3), 10, 0, 0, 3);
+}
+
+/* 2. Vùng đổ bóng (Area Fill) - Hiệu ứng Gradient */
+.default-color0.chart-series-area-fill {
+    -fx-fill: linear-gradient(to bottom, rgba(166, 68, 82, 0.2) 0%, rgba(166, 68, 82, 0.0) 100%);
+}
+
+/* 3. Điểm nút (Symbols) */
+.default-color0.chart-area-symbol {
+    -fx-background-color: #A64452, white;
+    -fx-background-insets: 0, 2;
+    -fx-background-radius: 10px;
+    -fx-padding: 5px;
+}
+
+/* Trục tọa độ */
+.axis {
+    -fx-tick-label-fill: #888888;
+    -fx-font-size: 11px;
+}
+.axis-label {
+    -fx-text-fill: #555555;
+    -fx-font-weight: bold;
+}

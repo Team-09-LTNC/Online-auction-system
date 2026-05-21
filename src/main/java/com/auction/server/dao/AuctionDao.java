@@ -16,6 +16,10 @@ import org.slf4j.LoggerFactory;
 import com.auction.common.enums.AuctionStatus;
 import com.auction.common.model.bid.Auction;
 import com.auction.common.model.bid.BidTransaction;
+// Thêm 2 import mới cho tính năng Auto-Bid
+import com.auction.common.model.bid.AutoBidConfig;
+import com.auction.common.model.user.Bidder;
+
 import com.auction.common.model.item.Art;
 import com.auction.common.model.item.Electronics;
 import com.auction.common.model.item.Item;
@@ -50,7 +54,6 @@ public class AuctionDao {
         item.setId(rs.getInt("item_id"));
         item.setName(rs.getString("name"));
 
-        // ---> CẬP NHẬT QUAN TRỌNG: ĐỌC MÔ TẢ SẢN PHẨM TỪ DATABASE <---
         try {
             item.setDescription(rs.getString("description"));
         } catch (Exception ignored) {
@@ -61,8 +64,6 @@ public class AuctionDao {
         item.setSellerId(rs.getInt("seller_id"));
         item.setCategory(loai);
 
-        // Thêm an toàn khi load image_url (vì có thể query JOIN bị trùng tên cột, nên
-        // cần cẩn thận)
         try {
             item.setImageUrl(rs.getString("image_url"));
         } catch (Exception ignored) {
@@ -75,7 +76,6 @@ public class AuctionDao {
         phien.setEndTime(rs.getObject("end_time", LocalDateTime.class));
         phien.setCurrentPrice(rs.getLong("current_price"));
 
-        // ---> CẬP NHẬT: ĐỌC DỮ LIỆU GIÁ MUA ĐỨT TỪ DATABASE <---
         long buyNowPrice = rs.getLong("buy_now_price");
         if (!rs.wasNull()) {
             phien.setBuyNowPrice(buyNowPrice);
@@ -85,7 +85,6 @@ public class AuctionDao {
     }
 
     public List<Auction> layDanhSachPhienDangChay() {
-        // Đã bổ sung i.description vào câu lệnh SQL SELECT
         return thucThiTruyVanDanhSach(
                 "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
                         +
@@ -93,7 +92,6 @@ public class AuctionDao {
     }
 
     public List<Auction> layDanhSachPhienChoMo() {
-        // Đã bổ sung i.description vào câu lệnh SQL SELECT
         return thucThiTruyVanDanhSach(
                 "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
                         +
@@ -119,8 +117,8 @@ public class AuctionDao {
     private List<Auction> thucThiTruyVanDanhSach(String sql) {
         List<Auction> danhSach = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
-                Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery(sql)) {
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 Auction phien = mapResultSetToAuction(rs);
                 if (phien != null)
@@ -189,7 +187,7 @@ public class AuctionDao {
     public boolean capNhatTrangThai(int idPhien, String trangThaiMoi) {
         String sql = "UPDATE auctions SET status = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, trangThaiMoi.toUpperCase());
             pstmt.setInt(2, idPhien);
             return pstmt.executeUpdate() > 0;
@@ -201,7 +199,7 @@ public class AuctionDao {
     public boolean capNhatThoiGianKetThuc(int idPhien, LocalDateTime thoiGianMoi) {
         String sql = "UPDATE auctions SET end_time = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setTimestamp(1, Timestamp.valueOf(thoiGianMoi));
             pstmt.setInt(2, idPhien);
             return pstmt.executeUpdate() > 0;
@@ -210,16 +208,14 @@ public class AuctionDao {
         }
     }
 
-    // TẠO PHIÊN ĐẤU GIÁ MỚI
     public boolean taoPhienDauGia(int itemId, long startingPrice, LocalDateTime startTime, LocalDateTime endTime) {
         String sql = "INSERT INTO auctions (item_id, current_price, status, start_time, end_time) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, itemId);
             pstmt.setLong(2, startingPrice);
 
-            // Nếu thời gian bắt đầu nhỏ hơn hoặc bằng hiện tại -> RUNNING, ngược lại OPEN
             String status = startTime.isBefore(LocalDateTime.now().plusSeconds(1)) ? "RUNNING" : "OPEN";
             pstmt.setString(3, status);
 
@@ -233,9 +229,7 @@ public class AuctionDao {
         }
     }
 
-    // Lấy chi tiết 1 phiên trực tiếp từ Database
     public Auction layPhienTheoId(int idPhien) {
-        // Đã bổ sung i.description vào câu lệnh SQL SELECT trực tiếp
         String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
                 +
                 "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = " + idPhien;
@@ -243,7 +237,6 @@ public class AuctionDao {
         return danhSach.isEmpty() ? null : danhSach.get(0);
     }
 
-    // TÌM KIẾM VÀ LỌC ĐỘNG (DYNAMIC SQL) DÀNH CHO TƯƠNG LAI
     public List<Auction> timKiemVaLocPhienDauGia(String keyword, String status) {
         StringBuilder sql = new StringBuilder(
                 "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
@@ -252,13 +245,11 @@ public class AuctionDao {
 
         List<Object> params = new ArrayList<>();
 
-        // Nối điều kiện tìm kiếm theo tên sản phẩm
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append("AND i.name LIKE ? ");
             params.add("%" + keyword.trim() + "%");
         }
 
-        // Nối điều kiện lọc theo trạng thái
         if (status != null && !status.equalsIgnoreCase("ALL") && !status.equalsIgnoreCase("Tất cả")) {
             sql.append("AND a.status = ? ");
             params.add(status.toUpperCase());
@@ -266,7 +257,7 @@ public class AuctionDao {
 
         List<Auction> danhSach = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+             PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
             for (int j = 0; j < params.size(); j++) {
                 pstmt.setObject(j + 1, params.get(j));
             }
@@ -281,5 +272,76 @@ public class AuctionDao {
             logger.error("Lỗi timKiemVaLocPhienDauGia: ", e);
         }
         return danhSach;
+    }
+
+    /**
+     * Lưu hoặc cập nhật cấu hình Auto-Bid của người dùng (Dùng cơ chế UPSERT của MySQL)
+     */
+    public boolean luuHoacCapNhatAutoBid(int auctionId, int bidderId, long maxAutoBid) {
+        String sql = "INSERT INTO auto_bid_settings (auction_id, bidder_id, max_auto_bid) " +
+                "VALUES (?, ?, ?) " +
+                "ON DUPLICATE KEY UPDATE max_auto_bid = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstm = conn.prepareStatement(sql)) {
+            pstm.setInt(1, auctionId);
+            pstm.setInt(2, bidderId);
+            pstm.setLong(3, maxAutoBid);
+            pstm.setLong(4, maxAutoBid); // Giá trị cập nhật nếu đã tồn tại
+            return pstm.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.error("Lỗi khi lưu/cập nhật Auto-Bid: ", e);
+            return false;
+        }
+    }
+
+    /**
+     * Lấy giá trần Auto-Bid của 1 user cụ thể trong 1 phiên (để Client gọi hiển thị lại lên UI)
+     */
+    public long layGiaTranAutoBid(int auctionId, int bidderId) {
+        String sql = "SELECT max_auto_bid FROM auto_bid_settings WHERE auction_id = ? AND bidder_id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstm = conn.prepareStatement(sql)) {
+            pstm.setInt(1, auctionId);
+            pstm.setInt(2, bidderId);
+            try (ResultSet rs = pstm.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong("max_auto_bid");
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi khi lấy giá trần Auto-Bid: ", e);
+        }
+        return -1; // Trả về -1 nếu user chưa cài đặt auto-bid
+    }
+
+    /**
+     * Lấy TOÀN BỘ cấu hình Bot của 1 phiên đấu giá
+     */
+    public List<AutoBidConfig> layDanhSachAutoBidCuaPhien(int auctionId) {
+        List<AutoBidConfig> dsBot = new ArrayList<>();
+        String sql = "SELECT a.bidder_id, a.max_auto_bid, u.username, u.full_name " +
+                "FROM auto_bid_settings a " +
+                "JOIN users u ON a.bidder_id = u.id " +
+                "WHERE a.auction_id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstm = conn.prepareStatement(sql)) {
+            pstm.setInt(1, auctionId);
+            try (ResultSet rs = pstm.executeQuery()) {
+                while (rs.next()) {
+                    // Sử dụng đúng constructor của Bidder
+                    Bidder u = new Bidder(
+                            rs.getString("username"),
+                            "",
+                            rs.getString("full_name")
+                    );
+                    u.setId(rs.getInt("bidder_id")); // Kế thừa từ class Entity
+
+                    dsBot.add(new AutoBidConfig(u, rs.getLong("max_auto_bid")));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi khi lấy danh sách Bot của phiên: ", e);
+        }
+        return dsBot;
     }
 }
