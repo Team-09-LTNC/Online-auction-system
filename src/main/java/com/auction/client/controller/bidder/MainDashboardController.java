@@ -43,8 +43,6 @@ public class MainDashboardController implements Initializable, com.auction.clien
     private static final DateTimeFormatter MULTI_FORMATTER = DateTimeFormatter.ofPattern(
             "[yyyy-MM-dd HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss.SSS]"
     );
-    private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
-
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         logger.info("Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.");
@@ -154,20 +152,16 @@ public class MainDashboardController implements Initializable, com.auction.clien
             return "OPEN".equalsIgnoreCase(status) ? 3600 : 7200;
         }
         try {
-            ZonedDateTime nowZoned = ZonedDateTime.now(VIETNAM_ZONE);
-            LocalDateTime localEnd = LocalDateTime.parse(rawEnd.trim().replace(" ", "T"), MULTI_FORMATTER);
-            ZonedDateTime endZoned = localEnd.atZone(ZoneId.of("UTC")).withZoneSameInstant(VIETNAM_ZONE);
-
-            long diff = ChronoUnit.SECONDS.between(nowZoned, endZoned);
-
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime end = LocalDateTime.parse(rawEnd.trim().replace(" ", "T"), MULTI_FORMATTER);
+            long diff = ChronoUnit.SECONDS.between(now, end);
+            // Nếu chưa mở auction
             if ("OPEN".equalsIgnoreCase(status) && rawStart != null && !rawStart.trim().isEmpty()) {
-                LocalDateTime localStart = LocalDateTime.parse(rawStart.trim().replace(" ", "T"), MULTI_FORMATTER);
-                ZonedDateTime startZoned = localStart.atZone(ZoneId.of("UTC")).withZoneSameInstant(VIETNAM_ZONE);
-                diff = ChronoUnit.SECONDS.between(nowZoned, startZoned);
+                LocalDateTime start = LocalDateTime.parse(rawStart.trim().replace(" ", "T"), MULTI_FORMATTER);
+                diff = ChronoUnit.SECONDS.between(now, start);
             }
-
             return diff > 0 ? (int) diff : 0;
-        } catch (Exception e) {
+        } catch (Exception e) {e.printStackTrace();
             return "OPEN".equalsIgnoreCase(status) ? 600 : 1200;
         }
     }

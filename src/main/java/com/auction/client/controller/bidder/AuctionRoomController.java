@@ -18,11 +18,6 @@ import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 
 import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.ResourceBundle;
 
 public class AuctionRoomController implements Initializable {
@@ -52,11 +47,6 @@ public class AuctionRoomController implements Initializable {
     private boolean isAuctionStarted = false;
     private String currentStatus = "OPEN";
     private String productImageUrl = "";
-
-    private static final DateTimeFormatter MULTI_FORMATTER = DateTimeFormatter.ofPattern(
-            "[yyyy-MM-dd HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss.SSS]"
-    );
-    private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -152,27 +142,38 @@ public class AuctionRoomController implements Initializable {
                     if (lblLeader != null) lblLeader.setText(hasWinner ? "Người dẫn đầu: " + leaderText : leaderText);
 
                     // Xử lý đồng bộ thời gian và phân luồng nút bấm
-                    currentStatus = data.has("status") ? data.get("status").getAsString() : "OPEN";
-                    String rawStartTime = data.has("startTime") && !data.get("startTime").isJsonNull() ? data.get("startTime").getAsString() : "";
-                    String rawEndTime = data.has("endTime") && !data.get("endTime").isJsonNull() ? data.get("endTime").getAsString() : "";
+                    String rawServerStatus = data.has("status") && !data.get("status").isJsonNull() ? data.get("status").getAsString() : "RUNNING";
 
-                    this.totalSeconds = calculateRealSeconds(rawStartTime, rawEndTime, currentStatus);
+                    String rawStartTime = "";
+                    if (data.has("startTime") && !data.get("startTime").isJsonNull()) rawStartTime = data.get("startTime").getAsString();
+                    else if (data.has("start_time") && !data.get("start_time").isJsonNull()) rawStartTime = data.get("start_time").getAsString();
+
+                    String rawEndTime = "";
+                    if (data.has("endTime") && !data.get("endTime").isJsonNull()) rawEndTime = data.get("endTime").getAsString();
+                    else if (data.has("end_time") && !data.get("end_time").isJsonNull()) rawEndTime = data.get("end_time").getAsString();
+
+                    // ĐỒNG BỘ: Mượn não của AuctionListScreenController để tính số giây chuẩn
+                    AuctionListScreenController.AuctionSecondsState state =
+                            AuctionListScreenController.calculateAuctionSecondsState(rawStartTime, rawEndTime, rawServerStatus);
+
+                    this.totalSeconds = state.countdownSeconds;
+                    this.currentStatus = state.finalStatus;
 
                     if ("OPEN".equalsIgnoreCase(currentStatus)) {
                         isAuctionStarted = false;
                         if (btnPlaceBid != null) { btnPlaceBid.setDisable(true); btnPlaceBid.setText("CHỜ MỞ BÁN"); }
                         if (txtBidAmount != null) txtBidAmount.setEditable(false);
                         if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(true);
+                        startCountdown();
                     } else if ("RUNNING".equalsIgnoreCase(currentStatus)) {
                         isAuctionStarted = true;
                         if (btnPlaceBid != null) { btnPlaceBid.setDisable(false); btnPlaceBid.setText("ĐẶT GIÁ"); }
                         if (txtBidAmount != null) txtBidAmount.setEditable(true);
                         if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(false);
+                        startCountdown();
                     } else {
                         setExpiredUI();
                     }
-
-                    startCountdown();
 
                     // Tự động tải lịch sử đấu giá thực tế từ Database
                     loadBidHistoryFromServer();
@@ -219,25 +220,6 @@ public class AuctionRoomController implements Initializable {
         });
     }
 
-    private int calculateRealSeconds(String rawStart, String rawEnd, String status) {
-        if (rawEnd == null || rawEnd.trim().isEmpty()) return 0;
-        try {
-            ZonedDateTime nowZoned = ZonedDateTime.now(VIETNAM_ZONE);
-            LocalDateTime localEnd = LocalDateTime.parse(rawEnd.trim().replace(" ", "T"), MULTI_FORMATTER);
-            ZonedDateTime endZoned = localEnd.atZone(ZoneId.of("UTC")).withZoneSameInstant(VIETNAM_ZONE);
-
-            long diff = ChronoUnit.SECONDS.between(nowZoned, endZoned);
-
-            if ("OPEN".equalsIgnoreCase(status) && rawStart != null && !rawStart.trim().isEmpty()) {
-                LocalDateTime localStart = LocalDateTime.parse(rawStart.trim().replace(" ", "T"), MULTI_FORMATTER);
-                ZonedDateTime startZoned = localStart.atZone(ZoneId.of("UTC")).withZoneSameInstant(VIETNAM_ZONE);
-                diff = ChronoUnit.SECONDS.between(nowZoned, startZoned);
-            }
-            return diff > 0 ? (int) diff : 0;
-        } catch (Exception e) {
-            return 0;
-        }
-    }
 
     private void startCountdown() {
         if (countdownTimeline != null) countdownTimeline.stop();
@@ -251,7 +233,13 @@ public class AuctionRoomController implements Initializable {
                 }
             } else {
                 countdownTimeline.stop();
-                refreshAuctionState();
+
+                // Nếu đang đếm ngược để mở bán, hết giờ thì gọi lại Server để tải trạng thái mới thành RUNNING
+                if ("OPEN".equalsIgnoreCase(currentStatus)) {
+                    refreshAuctionState();
+                } else {
+                    setExpiredUI();
+                }
             }
         }));
         countdownTimeline.setCycleCount(Timeline.INDEFINITE);
@@ -275,7 +263,7 @@ public class AuctionRoomController implements Initializable {
     }
 
     private void setExpiredUI() {
-        isAuctionStarted = true;
+        isAuctionStarted = false; // Đã hết hạn thì không cho bắt đầu nữa
         this.totalSeconds = 0;
         if (lblCountdown != null) { lblCountdown.setText("ĐÃ KẾT THÚC!"); lblCountdown.setStyle("-fx-text-fill: #888888; -fx-font-weight: bold;"); }
         if (btnPlaceBid != null) { btnPlaceBid.setDisable(true); btnPlaceBid.setText("HẾT HẠN"); }

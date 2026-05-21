@@ -19,14 +19,14 @@ import javafx.fxml.FXML;
 
 import java.io.IOException;
 import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 
 public class AuctionListScreenController implements Initializable, com.auction.client.interfaces.CategoryFilterListener {
 
@@ -38,18 +38,17 @@ public class AuctionListScreenController implements Initializable, com.auction.c
 
     private String currentCategory = "Tất cả";
 
-    // Bộ giải mã thời gian siêu cấp, cân mọi loại định dạng từ DB
-    private static final DateTimeFormatter MULTI_FORMATTER = DateTimeFormatter.ofPattern(
-            "[yyyy-MM-dd HH:mm:ss.SSSSSS]" +
-                    "[yyyy-MM-dd HH:mm:ss.SSS]" +
-                    "[yyyy-MM-dd HH:mm:ss.S]" +
-                    "[yyyy-MM-dd HH:mm:ss]" +
-                    "[yyyy-MM-dd'T'HH:mm:ss.SSSSSS]" +
-                    "[yyyy-MM-dd'T'HH:mm:ss.SSS]" +
-                    "[yyyy-MM-dd'T'HH:mm:ss.S]" +
-                    "[yyyy-MM-dd'T'HH:mm:ss]"
-    );
-    private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    private static final DateTimeFormatter MULTI_FORMATTER = new DateTimeFormatterBuilder()
+            .appendPattern("yyyy-MM-dd")
+            // Chấp nhận cả 'T' hoặc dấu cách
+            .optionalStart().appendLiteral('T').optionalEnd()
+            .optionalStart().appendLiteral(' ').optionalEnd()
+            .appendPattern("HH:mm")
+            // Chấp nhận có giây hoặc không
+            .optionalStart().appendPattern(":ss").optionalEnd()
+            // Chấp nhận có hoặc không có phần mili giây (.S, .SSS, .SSSSSS)
+            .optionalStart().appendFraction(ChronoField.NANO_OF_SECOND, 1, 6, true).optionalEnd()
+            .toFormatter();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -147,56 +146,70 @@ public class AuctionListScreenController implements Initializable, com.auction.c
         });
     }
 
-    /**
-     * BỘ NÃO TÍNH TOÁN THỜI GIAN CHUẨN XÁC 100%
-     * Bỏ qua Server, Client tự cầm cân nảy mực dựa vào mốc thời gian thực.
-     */
+    private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
-    public static AuctionSecondsState calculateAuctionSecondsState(String rawStartTime, String rawEndTime, String serverStatus) {
-        try {
-            ZonedDateTime now = ZonedDateTime.now(VIETNAM_ZONE);
-
-            // Hàm này t sửa để nó ép về múi giờ VN ngay khi parse xong, triệt tiêu mọi sai số
-            ZonedDateTime start = parseToVietnamZoned(rawStartTime);
-            ZonedDateTime end = parseToVietnamZoned(rawEndTime);
-
-            if (start != null && end != null) {
-                if (now.isBefore(start)) {
-                    return new AuctionSecondsState((int) ChronoUnit.SECONDS.between(now, start), "OPEN");
-                } else if (now.isAfter(start) && now.isBefore(end)) {
-                    return new AuctionSecondsState((int) ChronoUnit.SECONDS.between(now, end), "RUNNING");
-                }
-            }
-            return new AuctionSecondsState(0, "FINISHED");
-        } catch (Exception e) {
-            return new AuctionSecondsState(0, "FINISHED");
-        }
-    }
-
-
-    private static ZonedDateTime parseToVietnamZoned(String timeStr) {
-        if (timeStr == null || timeStr.isEmpty()) return null;
-        LocalDateTime ldt = LocalDateTime.parse(timeStr.replace(" ", "T"), MULTI_FORMATTER);
-        // Giả định Server gửi là giờ UTC, ép về giờ VN để tính toán
-        return ldt.atZone(ZoneId.of("UTC")).withZoneSameInstant(VIETNAM_ZONE);
-    }
-
-    /**
-     * Hàm dịch chuỗi thông minh: Tự hiểu DB đang lưu là giờ Việt Nam (GMT+7)
-     */
     private static ZonedDateTime parseAndSyncTime(String rawTime) {
+        System.out.println("DEBUG: Server gửi về: " + rawTime);
         if (rawTime == null || rawTime.trim().isEmpty() || "null".equalsIgnoreCase(rawTime.trim())) {
             return null;
         }
-        try {
-            String cleanTime = rawTime.trim().replace(" ", "T");
-            LocalDateTime localTime = LocalDateTime.parse(cleanTime, MULTI_FORMATTER);
 
-            // Xóa bỏ trò bù 7 tiếng thủ công.
-            // Nạp thẳng múi giờ VN vào chuỗi giờ thô để ép nó khớp hoàn toàn với đồng hồ máy tính!
-            return localTime.atZone(VIETNAM_ZONE);
+        try {
+
+            String cleanTime = rawTime.trim().replace(" ", "T");
+
+            // Nếu server gửi UTC dạng:
+            // 2026-05-21T10:00:00Z
+            if (cleanTime.endsWith("Z")) {
+                return Instant.parse(cleanTime).atZone(VIETNAM_ZONE);
+            }
+            // Nếu server gửi có timezone:
+            // 2026-05-21T10:00:00+00:00
+            try {
+                return OffsetDateTime.parse(cleanTime).atZoneSameInstant(VIETNAM_ZONE);
+            } catch (Exception ignored) {
+            }
+            // Nếu server gửi local time:
+            // 2026-05-21T10:00:00
+            LocalDateTime localDateTime = LocalDateTime.parse(cleanTime);
+            return localDateTime.atZone(VIETNAM_ZONE);
         } catch (Exception e) {
+            System.out.println("Parse time lỗi: " + e.getMessage());
             return null;
+        }
+    }
+    public static AuctionSecondsState calculateAuctionSecondsState(
+            String rawStartTime,
+            String rawEndTime,
+            String serverStatus
+    ) {
+
+        try {
+            ZonedDateTime now = ZonedDateTime.now(VIETNAM_ZONE);
+            ZonedDateTime start = parseAndSyncTime(rawStartTime);
+            ZonedDateTime end = parseAndSyncTime(rawEndTime);
+            System.out.println("NOW   : " + now);
+            System.out.println("START : " + start);
+            System.out.println("END   : " + end);
+            if (start == null || end == null) {
+                return new AuctionSecondsState(0, "FINISHED");
+            }
+            if (now.isBefore(start)) {
+                long seconds = ChronoUnit.SECONDS.between(now, start);
+                return new AuctionSecondsState(
+                        (int) Math.max(seconds, 0), "OPEN");
+            }
+            if ((!now.isBefore(start)) && now.isBefore(end)) {
+                long seconds = ChronoUnit.SECONDS.between(now, end);
+                return new AuctionSecondsState(
+                        (int) Math.max(seconds, 0), "RUNNING"
+                );
+            }
+            return new AuctionSecondsState(0, "FINISHED");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new AuctionSecondsState(0, "FINISHED");
         }
     }
 

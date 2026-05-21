@@ -46,8 +46,8 @@ public class AuctionDao {
         Auction phien = new Auction(item);
         phien.setId(rs.getInt("id"));
         phien.setStatus(AuctionStatus.valueOf(rs.getString("status").toUpperCase()));
-        phien.setStartTime(rs.getTimestamp("start_time").toLocalDateTime());
-        phien.setEndTime(rs.getTimestamp("end_time").toLocalDateTime());
+        phien.setStartTime(rs.getObject("start_time", LocalDateTime.class));
+        phien.setEndTime(rs.getObject("end_time", LocalDateTime.class));
         phien.setCurrentPrice(rs.getLong("current_price"));
 
         // ---> CẬP NHẬT: ĐỌC DỮ LIỆU GIÁ MUA ĐỨT TỪ DATABASE <---

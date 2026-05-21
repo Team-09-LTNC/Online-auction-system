@@ -61,21 +61,36 @@ public class FollowedAuctionsController implements Initializable {
                         int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
                         String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Sản phẩm";
                         long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
-                        String status = obj.has("status") ? obj.get("status").getAsString() : "RUNNING";
+
                         String imageUrl = obj.has("imageUrl") ? obj.get("imageUrl").getAsString() : "";
 
-                        String startTimeStr = obj.has("startTime") && !obj.get("startTime").isJsonNull() ? obj.get("startTime").getAsString() : null;
-                        String endTimeStr = obj.has("endTime") && !obj.get("endTime").isJsonNull() ? obj.get("endTime").getAsString() : null;
+                        String status = obj.has("status") && !obj.get("status").isJsonNull() ? obj.get("status").getAsString() : "RUNNING";
 
+                        String startTimeStr = null;
+                        if (obj.has("startTime") && !obj.get("startTime").isJsonNull()) startTimeStr = obj.get("startTime").getAsString();
+                        else if (obj.has("start_time") && !obj.get("start_time").isJsonNull()) startTimeStr = obj.get("start_time").getAsString();
+
+                        String endTimeStr = null;
+                        if (obj.has("endTime") && !obj.get("endTime").isJsonNull()) endTimeStr = obj.get("endTime").getAsString();
+                        else if (obj.has("end_time") && !obj.get("end_time").isJsonNull()) endTimeStr = obj.get("end_time").getAsString();
+
+                        // Đồng bộ bộ não thời gian 100% với file trung tâm
                         AuctionListScreenController.AuctionSecondsState state =
                                 AuctionListScreenController.calculateAuctionSecondsState(startTimeStr, endTimeStr, status);
+
+                        // Bẻ gãy logic đếm ngược bị khùng của Card
+                        // Nếu món đồ đã thật sự về 0, không nên vẽ Card ra nữa, hoặc phải ép nó thành FINISHED để Card hiện "Đã kết thúc"
+                        String uiStatus = state.finalStatus;
+                        if (state.countdownSeconds <= 0 && !"FINISHED".equals(uiStatus)) {
+                            uiStatus = "FINISHED"; // Ép chết trạng thái để không bị lặp đếm ngầm
+                        }
 
                         try {
                             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
                             VBox card = loader.load();
                             ProductCardController controller = loader.getController();
 
-                            controller.setProductData(auctionId, name, price, state.countdownSeconds, state.finalStatus, imageUrl, true);
+                            controller.setProductData(auctionId, name, price, state.countdownSeconds, uiStatus, imageUrl, true);
                             productFlowPane.getChildren().add(card);
                         } catch (IOException e) {
                             logger.error("Lỗi nạp Card UI trong Followed: {}", e.getMessage());

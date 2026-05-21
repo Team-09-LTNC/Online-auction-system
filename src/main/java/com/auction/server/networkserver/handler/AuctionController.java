@@ -169,7 +169,9 @@ public class AuctionController implements RequestHandler {
                     a.getItem().getName(),
                     a.getCurrentHighestBid(),
                     a.getStatus().name(),
-                    a.getItem().getImageUrl()
+                    a.getItem().getImageUrl(),
+                    a.getStartTime().toString(),
+                    a.getEndTime().toString()
             ));
         }
 
@@ -203,7 +205,9 @@ public class AuctionController implements RequestHandler {
                     a.getItem().getName(),
                     a.getCurrentHighestBid(),
                     a.getStatus().name(),
-                    a.getItem().getImageUrl()
+                    a.getItem().getImageUrl(),
+                    a.getStartTime().toString(),
+                    a.getEndTime().toString()
             ));
         }
 
@@ -230,13 +234,21 @@ public class AuctionController implements RequestHandler {
         for (Auction a : danhSachPhien) {
             if (followedIds.contains(a.getId())) {
                 summaries.add(new AuctionDTOs.AuctionSummaryDTO(
-                        a.getId(), a.getItem().getName(), a.getCurrentHighestBid(), a.getStatus().name(), a.getItem().getImageUrl()
+                        a.getId(),
+                        a.getItem().getName(),
+                        a.getCurrentHighestBid(),
+                        a.getStatus().name(),
+                        a.getItem().getImageUrl(),
+                        a.getStartTime().toString(),
+                        a.getEndTime().toString()
                 ));
             }
         }
         AuctionDTOs.AuctionListResponse response = new AuctionDTOs.AuctionListResponse(true, "Thành công", summaries);
         JsonObject jsonResponse = gson.toJsonTree(response).getAsJsonObject();
         jsonResponse.addProperty("type", "FOLLOWED_AUCTIONS_RESPONSE");
+
+        System.out.println("DEBUG SERVER - JSON danh sách theo dõi gửi về: " + jsonResponse.toString());
         return gson.toJson(jsonResponse);
     }
 
@@ -260,6 +272,9 @@ public class AuctionController implements RequestHandler {
             phanHoi.addProperty("type", ActionType.GET_AUCTION_BY_ID);
             phanHoi.addProperty("success", true);
             phanHoi.add("data", gson.toJsonTree(phien));
+
+            // Dán dòng này vào ngay trước khi Server trả kết quả
+            System.out.println("DEBUG SERVER - Gửi dữ liệu: " + (phien != null ? phien.toString() : "NULL"));
             return gson.toJson(phanHoi);
         }
 

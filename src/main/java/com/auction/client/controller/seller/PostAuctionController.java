@@ -257,6 +257,20 @@ public class PostAuctionController {
                     reqJson.addProperty("buyNowPrice", buyNow);
                     reqJson.addProperty("type", ActionType.CREATE_PRODUCT);
 
+                    LocalDateTime now = LocalDateTime.now();
+                    String determinedStatus;
+
+                    // So sánh: Nếu thời gian bắt đầu đã trôi qua hoặc chính là lúc này -> Chạy luôn
+                    if (!startTime.isAfter(now)) {
+                        determinedStatus = "RUNNING";
+                    } else {
+                        // Nếu thời gian bắt đầu ở trong tương lai -> Sắp mở
+                        determinedStatus = "OPEN";
+                    }
+
+                    // Ép trạng thái đã được tính toán thông minh vào JSON
+                    reqJson.addProperty("status", determinedStatus);
+
                     ClientSocket.getInstance().sendJsonRequest(reqJson, "CREATE_ITEM_RESPONSE", response -> {
                         Platform.runLater(() -> {
                             boolean success = response.has("success") && response.get("success").getAsBoolean();

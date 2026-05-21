@@ -18,13 +18,17 @@ public class AuctionDTOs {
         private final long currentPrice;
         private final String status; // OPEN, RUNNING, FINISHED, PAID, CANCELED
         private final String imageUrl;
+        private String startTime;
+        private String endTime;
 
-        public AuctionSummaryDTO(int auctionId, String itemName, long currentPrice, String status, String imageUrl) {
+        public AuctionSummaryDTO(int auctionId, String itemName, long currentPrice, String status, String imageUrl, String startTime, String endTime) {
             this.auctionId = auctionId;
             this.itemName = itemName;
             this.currentPrice = currentPrice;
             this.status = status;
             this.imageUrl = imageUrl;
+            this.startTime = startTime;
+            this.endTime = endTime;
         }
 
         public int getAuctionId() { return auctionId; }
