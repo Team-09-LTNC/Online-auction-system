@@ -1,5 +1,8 @@
 package com.auction.client.controller.admin;
 
+import com.auction.client.manager.AdminManager;
+
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -20,12 +23,18 @@ import java.util.ResourceBundle;
  */
 public class DashboardViewController implements Initializable {
 
-    @FXML private StackPane contentPane;
-    @FXML private Label     lblBidderCount;
-    @FXML private Label     lblSellerCount;
-    @FXML private Label     lblAuctionCount;
-    @FXML private Button    btnRefresh;
-    @FXML private TextField globalSearch;
+    @FXML
+    private StackPane contentPane;
+    @FXML
+    private Label lblBidderCount;
+    @FXML
+    private Label lblSellerCount;
+    @FXML
+    private Label lblAuctionCount;
+    @FXML
+    private Button btnRefresh;
+    @FXML
+    private TextField globalSearch;
 
     private static final Logger logger = LoggerFactory.getLogger(DashboardViewController.class);
 
@@ -38,19 +47,13 @@ public class DashboardViewController implements Initializable {
 
     private void loadStats() {
         // TODO: thay bằng lời gọi Service / DAO thực tế
-        int bidders  = fetchBidderCount();
-        int sellers  = fetchSellerCount();
-        int auctions = fetchActiveAuctionCount();
-
-        lblBidderCount.setText(String.valueOf(bidders));
-        lblSellerCount.setText(String.valueOf(sellers));
-        lblAuctionCount.setText(String.valueOf(auctions));
+        AdminManager.getInstance().layTongSoBidder(
+                count -> Platform.runLater(() -> lblBidderCount.setText(String.valueOf(count))),
+                error -> System.err.println("Lỗi: " + error));
+        AdminManager.getInstance().layTongSoSeller(
+                count -> Platform.runLater(() -> lblSellerCount.setText(String.valueOf(count))),
+                error -> System.err.println("Lỗi: " + error));
     }
-
-    // Stub — thay bằng service call
-    private int fetchBidderCount()       { return 0; }
-    private int fetchSellerCount()       { return 0; }
-    private int fetchActiveAuctionCount(){ return 0; }
 
     // ── FXML handlers ────────────────────────────────────────
 
@@ -67,6 +70,7 @@ public class DashboardViewController implements Initializable {
         lblSellerCount.setText(String.valueOf(sellers));
         lblAuctionCount.setText(String.valueOf(auctions));
     }
+
     @FXML
     private void handleGlobalSearch() {
         String query = globalSearch.getText();
