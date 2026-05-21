@@ -180,13 +180,21 @@ public class AuctionRoomController implements Initializable {
                     if (priceSeries != null) priceSeries.getData().clear();
 
                     List<XYChart.Data<String, Number>> chartPoints = new ArrayList<>();
+                    String latestLeader = null; // Biến lưu tên người dẫn đầu thực tế
 
                     for (JsonElement el : historyArray) {
                         JsonObject bidObj = el.getAsJsonObject();
-                        String name = bidObj.has("bidderName") ? bidObj.get("bidderName").getAsString() :
-                                (bidObj.has("username") ? bidObj.get("username").getAsString() : "Người dùng");
+
+                        // Quét đúng trường fullName do Database gửi về
+                        String name = bidObj.has("fullName") ? bidObj.get("fullName").getAsString() :
+                                (bidObj.has("bidderName") ? bidObj.get("bidderName").getAsString() :
+                                        (bidObj.has("username") ? bidObj.get("username").getAsString() : "Người dùng ẩn danh"));
+
                         long amount = bidObj.has("bidAmount") ? bidObj.get("bidAmount").getAsLong() :
                                 (bidObj.has("amount") ? bidObj.get("amount").getAsLong() : 0);
+
+                        // Cập nhật qua từng lượt bid, biến này sẽ lưu tên của người cuối cùng (Mới nhất)
+                        latestLeader = name;
 
                         String rawTime = bidObj.has("bidTime") ? bidObj.get("bidTime").getAsString() : LocalDateTime.now().toString();
 
@@ -197,24 +205,27 @@ public class AuctionRoomController implements Initializable {
                             chartTimeStr = dt.format(timeFormatter);
                             historyTimeStr = dt.format(historyTimeFormatter);
                         } catch (Exception e) {
-                            System.out.println("Lỗi parse time: " + rawTime);
                             chartTimeStr = LocalDateTime.now().format(timeFormatter);
                             historyTimeStr = LocalDateTime.now().format(historyTimeFormatter);
                         }
 
-                        // 1. Thêm vào Lịch sử (đẩy lên trên cùng)
+                        // Thêm vào Lịch sử (đẩy lên trên cùng)
                         lvBidHistory.getItems().add(0, "(" + historyTimeStr + ") " + name + " đã đặt: " + String.format("%,d đ", amount));
 
-                        // 2. Tạo dataPoint cho biểu đồ và gắn hiệu ứng Hover
+                        // Tạo dataPoint cho biểu đồ
                         XYChart.Data<String, Number> dataPoint = new XYChart.Data<>(chartTimeStr, amount);
                         setupHoverEffect(dataPoint);
-
                         chartPoints.add(dataPoint);
                     }
 
-                    // 3. Đưa danh sách điểm ảnh vào biểu đồ
                     if (priceSeries != null) {
                         priceSeries.getData().addAll(chartPoints);
+                    }
+
+                    if (latestLeader != null && !latestLeader.trim().isEmpty() && !latestLeader.equals("null")) {
+                        if (lblLeader != null) lblLeader.setText("Người dẫn đầu: " + latestLeader);
+                    } else {
+                        if (lblLeader != null) lblLeader.setText("Chưa có ai đặt giá");
                     }
                 }
             });
