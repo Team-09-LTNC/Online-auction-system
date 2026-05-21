@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Script cập nhật Database:
- * Tự động kiểm tra và thêm cấu trúc mới (Cột status, Chỉ mục Index)
+ * Tự động kiểm tra và thêm cấu trúc mới (Cột status, Chỉ mục Index, Bảng auto_bid_settings)
  * Đảm bảo an toàn tuyệt đối cho dữ liệu hiện tại, có thể chạy lại nhiều lần không lỗi.
  */
 public class UpdateDatabase {
@@ -60,6 +60,32 @@ public class UpdateDatabase {
                     logger.info(">>> Tạo Index tối ưu hóa truy vấn thành công!");
                 } else {
                     logger.info(">>> Chỉ mục idx_user_status đã sẵn sàng, không cần tạo lại.");
+                }
+
+                // 3. Kiểm tra xem bảng 'auto_bid_settings' đã tồn tại chưa
+                boolean tableAutoBidExists = false;
+                try (ResultSet rs = metaData.getTables(null, null, "auto_bid_settings", null)) {
+                    if (rs.next()) {
+                        tableAutoBidExists = true;
+                    }
+                }
+
+                // Nếu chưa có thì tạo bảng mới để lưu cấu hình đấu giá tự động
+                if (!tableAutoBidExists) {
+                    logger.info(">>> Đang tạo bảng 'auto_bid_settings' để lưu giá trần tự động...");
+                    String sqlCreateAutoBidTable = "CREATE TABLE auto_bid_settings (" +
+                            "auction_id INT NOT NULL, " +
+                            "bidder_id INT NOT NULL, " +
+                            "max_auto_bid BIGINT NOT NULL, " +
+                            "register_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, " +
+                            "PRIMARY KEY (auction_id, bidder_id), " + // Đảm bảo mỗi user chỉ có 1 max_bid cho 1 phiên
+                            "FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE, " +
+                            "FOREIGN KEY (bidder_id) REFERENCES users(id) ON DELETE CASCADE" +
+                            ") ENGINE=InnoDB;";
+                    stmt.execute(sqlCreateAutoBidTable);
+                    logger.info(">>> Tạo bảng 'auto_bid_settings' thành công!");
+                } else {
+                    logger.info(">>> Bảng 'auto_bid_settings' đã tồn tại.");
                 }
             }
 

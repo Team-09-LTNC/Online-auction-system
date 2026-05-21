@@ -154,6 +154,23 @@ public class AuctionRoomController implements Initializable {
                         if (btnPlaceBid != null) { btnPlaceBid.setDisable(!isAuctionStarted); btnPlaceBid.setText(isAuctionStarted ? "ĐẶT GIÁ" : "CHỜ MỞ BÁN"); }
                         if (txtBidAmount != null) txtBidAmount.setEditable(isAuctionStarted);
                         if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(!isAuctionStarted);
+                        if (data.has("userMaxAutoBid") && !data.get("userMaxAutoBid").isJsonNull()) {
+                            long savedMaxBid = data.get("userMaxAutoBid").getAsLong();
+                            if (txtMaxAutoBid != null) {
+                                txtMaxAutoBid.setText(String.valueOf(savedMaxBid));
+                            }
+                            if (btnEnableAutoBid != null) {
+                                btnEnableAutoBid.setText("CẬP NHẬT AUTO-BID");
+                            }
+                        } else {
+                            if (txtMaxAutoBid != null) {
+                                txtMaxAutoBid.clear();
+                            }
+                            if (btnEnableAutoBid != null) {
+                                btnEnableAutoBid.setText("ĐĂNG KÝ AUTO-BID");
+                            }
+                        }
+
                         startCountdown();
                     } else {
                         setExpiredUI();
@@ -177,15 +194,18 @@ public class AuctionRoomController implements Initializable {
                 if (response.has("success") && response.get("success").getAsBoolean() && response.has("data")) {
                     JsonArray historyArray = response.getAsJsonArray("data");
                     if (lvBidHistory != null) lvBidHistory.getItems().clear();
-                    if (priceSeries != null) priceSeries.getData().clear();
+                    if (priceChart != null && priceSeries != null) {
+                        priceChart.getData().remove(priceSeries);
+                    }
+                    priceSeries = new XYChart.Series<>();
+                    priceSeries.setName("Giá đấu");
 
                     List<XYChart.Data<String, Number>> chartPoints = new ArrayList<>();
-                    String latestLeader = null; // Biến lưu tên người dẫn đầu thực tế
+                    String latestLeader = null;
 
                     for (JsonElement el : historyArray) {
                         JsonObject bidObj = el.getAsJsonObject();
 
-                        // Quét đúng trường fullName do Database gửi về
                         String name = bidObj.has("fullName") ? bidObj.get("fullName").getAsString() :
                                 (bidObj.has("bidderName") ? bidObj.get("bidderName").getAsString() :
                                         (bidObj.has("username") ? bidObj.get("username").getAsString() : "Người dùng ẩn danh"));
@@ -193,7 +213,6 @@ public class AuctionRoomController implements Initializable {
                         long amount = bidObj.has("bidAmount") ? bidObj.get("bidAmount").getAsLong() :
                                 (bidObj.has("amount") ? bidObj.get("amount").getAsLong() : 0);
 
-                        // Cập nhật qua từng lượt bid, biến này sẽ lưu tên của người cuối cùng (Mới nhất)
                         latestLeader = name;
 
                         String rawTime = bidObj.has("bidTime") ? bidObj.get("bidTime").getAsString() : LocalDateTime.now().toString();
@@ -209,17 +228,19 @@ public class AuctionRoomController implements Initializable {
                             historyTimeStr = LocalDateTime.now().format(historyTimeFormatter);
                         }
 
-                        // Thêm vào Lịch sử (đẩy lên trên cùng)
                         lvBidHistory.getItems().add(0, "(" + historyTimeStr + ") " + name + " đã đặt: " + String.format("%,d đ", amount));
 
-                        // Tạo dataPoint cho biểu đồ
                         XYChart.Data<String, Number> dataPoint = new XYChart.Data<>(chartTimeStr, amount);
                         setupHoverEffect(dataPoint);
                         chartPoints.add(dataPoint);
                     }
 
-                    if (priceSeries != null) {
-                        priceSeries.getData().addAll(chartPoints);
+                    // Đổ toàn bộ điểm ảnh vào Series mới
+                    priceSeries.getData().addAll(chartPoints);
+
+                    // Gắn lại Series mới vào Chart
+                    if (priceChart != null) {
+                        priceChart.getData().add(priceSeries);
                     }
 
                     if (latestLeader != null && !latestLeader.trim().isEmpty() && !latestLeader.equals("null")) {

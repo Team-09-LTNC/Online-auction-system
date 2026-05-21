@@ -255,7 +255,7 @@ public class AuctionController implements RequestHandler {
     private String xuLyLayPhienTheoID(JsonObject yeuCau, ClientHandler client) {
         int idPhien = yeuCau.get("auctionId").getAsInt();
 
-        // 1. Cố gắng lấy từ RAM trước (chứa thông tin realtime của các phiên ĐANG CHẠY)
+        // 1. Cố gắng lấy từ RAM trước
         Auction phien = AuctionManager.getInstance().layPhienTheoId(idPhien);
 
         if (phien == null) {
@@ -275,7 +275,6 @@ public class AuctionController implements RequestHandler {
 
             if (phien.getCurrentWinner() != null) {
                 JsonObject winnerObj = gson.toJsonTree(phien.getCurrentWinner()).getAsJsonObject();
-                // Nếu hàm getCurrentWinner trả về BidTransaction thì lấy lõi 'bidder', nếu là User thì lấy thẳng
                 if (winnerObj.has("bidder")) {
                     dataObj.add("currentWinner", winnerObj.get("bidder"));
                 } else {
@@ -285,13 +284,18 @@ public class AuctionController implements RequestHandler {
 
             dataObj.addProperty("currentHighestBid", phien.getCurrentHighestBid());
             dataObj.addProperty("currentPrice", phien.getCurrentHighestBid());
-            // ---------------------------------------------------------------
 
+            User user = client.layNguoiDungHienTai();
+            if (user != null) {
+                long userMaxAutoBid = auctionDao.layGiaTranAutoBid(idPhien, user.getId());
+                if (userMaxAutoBid > 0) {
+                    dataObj.addProperty("userMaxAutoBid", userMaxAutoBid);
+                }
+            }
             phanHoi.add("data", dataObj);
-
-            System.out.println("DEBUG SERVER - Gửi dữ liệu: " + dataObj.toString());
             return gson.toJson(phanHoi);
         }
+
         phanHoi.addProperty("type", "ERROR_RESPONSE");
         phanHoi.addProperty("success", false);
         phanHoi.addProperty("message", "Phiên đấu giá không tồn tại trong Database!");
