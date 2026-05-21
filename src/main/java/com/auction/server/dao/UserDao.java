@@ -28,7 +28,8 @@ public class UserDao {
      * Lấy thông tin User để phục vụ Đăng nhập.
      */
     public Optional<User> timTheoTenDangNhap(String tenDangNhap) {
-        String sql = "SELECT id, username, password, full_name, role, balance FROM users WHERE username = ?";
+        // TỐI ƯU: Thêm cột status vào câu truy vấn duy nhất
+        String sql = "SELECT id, username, password, full_name, role, balance, status FROM users WHERE username = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -40,6 +41,7 @@ public class UserDao {
                     String matKhau = rs.getString("password");
                     String hoTen = rs.getString("full_name");
                     long soDu = rs.getLong("balance");
+                    String trangThai = rs.getString("status"); // Đọc trạng thái
 
                     User user;
                     switch (vaiTro) {
@@ -57,7 +59,8 @@ public class UserDao {
                         default:
                             throw new IllegalStateException("Unknown role: " + vaiTro);
                     }
-                    user.setId(rs.getInt("id"));
+                    user.setId(id);
+                    user.setStatus(trangThai != null ? trangThai : "ACTIVE");
                     return Optional.of(user);
                 }
             }
@@ -125,51 +128,38 @@ public class UserDao {
     return list;
 }
 
-public List<User> layTatCaSeller() {
-    List<User> list = new ArrayList<>();
-    String sql = "SELECT * FROM users WHERE role = 'SELLER'";
-    try (Connection conn = DatabaseConnection.getInstance().getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql);
-         ResultSet rs = ps.executeQuery()) {
-        while (rs.next()) {
-            Seller s = new Seller(
-                rs.getString("username"),
-                rs.getString("password"),
-                rs.getString("full_name")
-            );
-            s.setStatus(rs.getString("status") != null ? rs.getString("status") : "ACTIVE"); // ← THÊM
-            list.add(s);
+    public List<User> layTatCaSeller() {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT * FROM users WHERE role = 'SELLER'";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Seller s = new Seller(
+                    rs.getString("username"),
+                    rs.getString("password"),
+                    rs.getString("full_name")
+                );
+                s.setStatus(rs.getString("status") != null ? rs.getString("status") : "ACTIVE"); // ← THÊM
+                list.add(s);
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi lấy danh sách seller: {}", e.getMessage());
         }
-    } catch (SQLException e) {
-        logger.error("Lỗi lấy danh sách seller: {}", e.getMessage());
+        return list;
     }
-    return list;
-}
 
 // Admin có thể khóa tài khoản người dùng (đổi status thành ACTIVE hoặc LOCKED), không xóa hẳn để giữ lịch sử giao dịch.
-public boolean capNhatTrangThai(String username, String status) {
-    String sql = "UPDATE users SET status = ? WHERE username = ?";
-    try (Connection conn = DatabaseConnection.getInstance().getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
-        ps.setString(1, status);
-        ps.setString(2, username);
-        return ps.executeUpdate() > 0;
-    } catch (SQLException e) {
-        logger.error("Lỗi cập nhật trạng thái user: {}", e.getMessage());
-        return false;
+    public boolean capNhatTrangThai(String username, String status) {
+        String sql = "UPDATE users SET status = ? WHERE username = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setString(2, username);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.error("Lỗi cập nhật trạng thái user: {}", e.getMessage());
+            return false;
+        }
     }
-}
-// Lấy trạng thái của user (ACTIVE, LOCKED) để kiểm tra khi đăng nhập hoặc thực hiện hành động nào đó.
-public String layTrangThai(String username) {
-    String sql = "SELECT status FROM users WHERE username = ?";
-    try (Connection conn = DatabaseConnection.getInstance().getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
-        ps.setString(1, username);
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) return rs.getString("status");
-    } catch (SQLException e) {
-        logger.error("Lỗi lấy trạng thái user: {}", e.getMessage());
-    }
-    return "ACTIVE";
-}
 }

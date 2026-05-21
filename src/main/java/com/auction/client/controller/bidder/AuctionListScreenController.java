@@ -89,66 +89,76 @@ public class AuctionListScreenController implements Initializable, com.auction.c
         request.addProperty("category", currentCategory);
 
         ClientSocket.getInstance().sendJsonRequest(request, "AUCTION_LIST_RESPONSE", response -> {
-            Platform.runLater(() -> {
-                if (response.has("auctions")) {
-                    JsonArray auctions = response.getAsJsonArray("auctions");
-
-                    if (productFlowPane != null) {
-                        productFlowPane.getChildren().clear();
-                    }
-
-                    List<Integer> followedIds = new ArrayList<>();
-                    if (response.has("followedIds")) {
-                        for (JsonElement el : response.getAsJsonArray("followedIds")) {
-                            followedIds.add(el.getAsInt());
-                        }
-                    }
-
-                    for (JsonElement element : auctions) {
-                        JsonObject obj = element.getAsJsonObject();
-
-                        String itemCategory = obj.has("category") ? obj.get("category").getAsString() : "";
-                        if (!"Tất cả".equals(currentCategory) && !currentCategory.equalsIgnoreCase(itemCategory)) {
-                            continue;
+            // ĐẨY VÒNG LẶP VÀO THREAD RIÊNG THEO ĐÚNG YÊU CẦU
+            new Thread(() -> {
+                try {
+                    if (response.has("auctions")) {
+                        JsonArray auctions = response.getAsJsonArray("auctions");
+                        List<Integer> followedIds = new ArrayList<>();
+                        if (response.has("followedIds")) {
+                            for (JsonElement el : response.getAsJsonArray("followedIds")) {
+                                followedIds.add(el.getAsInt());
+                            }
                         }
 
-                        int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
-                        String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Đang cập nhật";
-                        long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
-                        String imageUrl = obj.has("imageUrl") ? obj.get("imageUrl").getAsString() : "";
-                        boolean isFollowed = followedIds.contains(auctionId);
+                        // Bộ sưu tập tạm thời chứa các Card đã dựng xong xuôi trong luồng ngầm
+                        List<VBox> cardsToRender = new ArrayList<>();
 
-                        String rawStartTime = null;
-                        if (obj.has("startTime") && !obj.get("startTime").isJsonNull()) rawStartTime = obj.get("startTime").getAsString();
-                        else if (obj.has("start_time") && !obj.get("start_time").isJsonNull()) rawStartTime = obj.get("start_time").getAsString();
+                        for (JsonElement element : auctions) {
+                            JsonObject obj = element.getAsJsonObject();
 
-                        String rawEndTime = null;
-                        if (obj.has("endTime") && !obj.get("endTime").isJsonNull()) rawEndTime = obj.get("endTime").getAsString();
-                        else if (obj.has("end_time") && !obj.get("end_time").isJsonNull()) rawEndTime = obj.get("end_time").getAsString();
+                            String itemCategory = obj.has("category") ? obj.get("category").getAsString() : "";
+                            if (!"Tất cả".equals(currentCategory) && !currentCategory.equalsIgnoreCase(itemCategory)) {
+                                continue;
+                            }
 
-                        String serverStatus = obj.has("status") ? obj.get("status").getAsString() : "RUNNING";
+                            int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
+                            String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Đang cập nhật";
+                            long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
+                            String imageUrl = obj.has("imageUrl") ? obj.get("imageUrl").getAsString() : "";
+                            boolean isFollowed = followedIds.contains(auctionId);
 
-                        // Gọi bộ tính toán giây siêu cấp
-                        AuctionSecondsState state = calculateAuctionSecondsState(rawStartTime, rawEndTime, serverStatus);
+                            String rawStartTime = null;
+                            if (obj.has("startTime") && !obj.get("startTime").isJsonNull()) rawStartTime = obj.get("startTime").getAsString();
+                            else if (obj.has("start_time") && !obj.get("start_time").isJsonNull()) rawStartTime = obj.get("start_time").getAsString();
 
-                        try {
-                            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
-                            VBox card = loader.load();
-                            ProductCardController controller = loader.getController();
+                            String rawEndTime = null;
+                            if (obj.has("endTime") && !obj.get("endTime").isJsonNull()) rawEndTime = obj.get("endTime").getAsString();
+                            else if (obj.has("end_time") && !obj.get("end_time").isJsonNull()) rawEndTime = obj.get("end_time").getAsString();
 
-                            controller.setProductData(auctionId, name, price, state.countdownSeconds, state.finalStatus, imageUrl, isFollowed);
-                            productFlowPane.getChildren().add(card);
-                        } catch (IOException e) {
-                            logger.error("Không nạp được giao diện ProductCard.fxml: {}", e.getMessage());
+                            String serverStatus = obj.has("status") ? obj.get("status").getAsString() : "RUNNING";
+
+                            AuctionSecondsState state = calculateAuctionSecondsState(rawStartTime, rawEndTime, serverStatus);
+
+                            try {
+                                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
+                                VBox card = loader.load();
+                                ProductCardController controller = loader.getController();
+
+                                controller.setProductData(auctionId, name, price, state.countdownSeconds, state.finalStatus, imageUrl, isFollowed);
+
+                                cardsToRender.add(card);
+                            } catch (IOException e) {
+                                logger.error("Không nạp được giao diện ProductCard.fxml: {}", e.getMessage());
+                            }
                         }
+
+                        // CHỈ DÙNG PLATFORM.RUNLATER KHI GỌI LỆNH ADDALL LÊN MÀN HÌNH CHÍNH
+                        Platform.runLater(() -> {
+                            if (productFlowPane != null) {
+                                productFlowPane.getChildren().clear();
+                                productFlowPane.getChildren().addAll(cardsToRender);
+                            }
+                        });
                     }
+                } catch (Exception ex) {
+                    logger.error("Lỗi xử lý dựng card sảnh đấu giá trong Thread phụ: ", ex);
                 }
-            });
+            }).start();
         });
     }
 
     /**
-     * BỘ NÃO TÍNH TOÁN THỜI GIAN CHUẨN XÁC 100%
      * Bỏ qua Server, Client tự cầm cân nảy mực dựa vào mốc thời gian thực.
      */
 
@@ -207,6 +217,14 @@ public class AuctionListScreenController implements Initializable, com.auction.c
         public AuctionSecondsState(int countdownSeconds, String finalStatus) {
             this.countdownSeconds = countdownSeconds;
             this.finalStatus = finalStatus;
+        }
+    }
+    public void refreshData() {
+        if (productFlowPane != null) {
+            // Xóa rỗng list cũ, hiển thị trạng thái đang tải (nếu muốn)
+            productFlowPane.getChildren().clear();
+            // Gọi lại API lấy dữ liệu mới
+            loadAuctionsFromServer();
         }
     }
 }
