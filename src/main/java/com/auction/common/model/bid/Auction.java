@@ -64,6 +64,12 @@ public class Auction extends Entity {
     public void setCurrentWinner(Bidder winner) { this.currentWinner = winner; }
 
     public AuctionStatus getStatus() {
+        if (status == AuctionStatus.FINISHED
+                || status == AuctionStatus.PAID
+                || status == AuctionStatus.CANCELED) {
+            return status;
+        }
+
         LocalDateTime now = LocalDateTime.now();
         if (startTime != null && now.isBefore(startTime)) {
             return AuctionStatus.OPEN; // Chưa đến giờ bắt đầu
@@ -73,6 +79,7 @@ public class Auction extends Entity {
         }
         return AuctionStatus.RUNNING; // Nằm trong khoảng thời gian diễn ra
     }
+    public AuctionStatus getStoredStatus() { return status; }
     public void setStatus(AuctionStatus status) { this.status = status; }
 
     public LocalDateTime getStartTime() { return startTime; }

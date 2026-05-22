@@ -1,0 +1,41 @@
+package com.auction.server.manager;
+
+import com.auction.server.dao.SystemNotificationDao;
+import com.google.gson.JsonObject;
+
+/**
+ * Lưu notification trước khi đẩy realtime cho user đang online.
+ */
+public class SystemNotificationManager {
+    private static volatile SystemNotificationManager instance;
+    private final SystemNotificationDao notificationDao = new SystemNotificationDao();
+
+    private SystemNotificationManager() {
+    }
+
+    public static SystemNotificationManager getInstance() {
+        if (instance == null) {
+            synchronized (SystemNotificationManager.class) {
+                if (instance == null) {
+                    instance = new SystemNotificationManager();
+                }
+            }
+        }
+        return instance;
+    }
+
+    public void guiThongBaoRieng(int auctionId, int recipientId, String message, boolean paymentRequired) {
+        long notificationId = notificationDao.luuThongBao(auctionId, recipientId, message, paymentRequired);
+        if (notificationId <= 0) {
+            return;
+        }
+
+        JsonObject payload = new JsonObject();
+        payload.addProperty("notificationId", notificationId);
+        payload.addProperty("targetUserId", recipientId);
+        payload.addProperty("auctionId", auctionId);
+        payload.addProperty("message", message);
+        payload.addProperty("paymentRequired", paymentRequired);
+        UserManager.getInstance().guiThongBaoHeThong(recipientId, payload);
+    }
+}

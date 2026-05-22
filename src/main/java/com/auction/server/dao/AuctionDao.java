@@ -9,6 +9,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +34,33 @@ import com.auction.server.db.DatabaseConnection;
 public class AuctionDao {
     private static final Logger logger = LoggerFactory.getLogger(AuctionDao.class);
 
+    public static class AuctionNotificationTargets {
+        public final int auctionId;
+        public final int sellerId;
+        public final Integer winnerId;
+        public final String itemName;
+        public final String winnerName;
+
+        public AuctionNotificationTargets(
+                int auctionId,
+                int sellerId,
+                Integer winnerId,
+                String itemName,
+                String winnerName
+        ) {
+            this.auctionId = auctionId;
+            this.sellerId = sellerId;
+            this.winnerId = winnerId;
+            this.itemName = itemName;
+            this.winnerName = winnerName;
+        }
+    }
+
     private Auction mapResultSetToAuction(ResultSet rs) throws SQLException {
-        String loai = rs.getString("category").toUpperCase();
+        String rawCategory = rs.getString("category");
+        String loai = rawCategory == null || rawCategory.trim().isEmpty()
+                ? "OTHER"
+                : rawCategory.trim().toUpperCase(Locale.ROOT);
         Item item;
         switch (loai) {
             case "ELECTRONICS":
@@ -71,7 +97,7 @@ public class AuctionDao {
 
         Auction phien = new Auction(item);
         phien.setId(rs.getInt("id"));
-        phien.setStatus(AuctionStatus.valueOf(rs.getString("status").toUpperCase()));
+        phien.setStatus(parseAuctionStatus(rs.getString("status")));
         phien.setStartTime(rs.getObject("start_time", LocalDateTime.class));
         phien.setEndTime(rs.getObject("end_time", LocalDateTime.class));
         phien.setCurrentPrice(rs.getLong("current_price"));
@@ -82,6 +108,24 @@ public class AuctionDao {
         }
 
         return phien;
+    }
+
+    private AuctionStatus parseAuctionStatus(String rawStatus) {
+        if (rawStatus == null || rawStatus.trim().isEmpty()) {
+            return AuctionStatus.OPEN;
+        }
+
+        String normalizedStatus = rawStatus.trim().toUpperCase(Locale.ROOT);
+        if ("CANCELLED".equals(normalizedStatus)) {
+            return AuctionStatus.CANCELED;
+        }
+
+        try {
+            return AuctionStatus.valueOf(normalizedStatus);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Trạng thái phiên đấu giá không hợp lệ trong DB: '{}'. Dùng OPEN.", rawStatus);
+            return AuctionStatus.OPEN;
+        }
     }
 
     public List<Auction> layDanhSachPhienDangChay() {
@@ -96,6 +140,34 @@ public class AuctionDao {
                 "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
                         +
                         "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = 'OPEN'");
+    }
+
+    public List<Auction> layDanhSachTatCaPhien() {
+        return thucThiTruyVanDanhSach(
+                "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
+                        +
+                        "FROM auctions a JOIN items i ON a.item_id = i.id ORDER BY a.start_time DESC, a.id DESC");
+    }
+
+    public List<Auction> laySauPhienDangChayNhieuBidNhat() {
+        return thucThiTruyVanDanhSach(
+                "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url, "
+                        +
+                        "COUNT(b.id) AS bid_count "
+                        +
+                        "FROM auctions a "
+                        +
+                        "JOIN items i ON a.item_id = i.id "
+                        +
+                        "LEFT JOIN bid_history b ON a.id = b.auction_id "
+                        +
+                        "WHERE a.status = 'RUNNING' AND a.start_time <= NOW() AND a.end_time > NOW() "
+                        +
+                        "GROUP BY a.id, i.id "
+                        +
+                        "ORDER BY bid_count DESC, a.id DESC "
+                        +
+                        "LIMIT 6");
     }
 
     // Lấy danh sách các phiên mà User đã tham gia đặt giá (hoặc là người bán)
@@ -128,6 +200,45 @@ public class AuctionDao {
             logger.error("Lỗi truy vấn danh sách: ", e);
         }
         return danhSach;
+    }
+
+    public int demPhienDangChay() {
+        return demTheoSql(
+                "SELECT COUNT(*) FROM auctions WHERE status = 'RUNNING' AND start_time <= NOW() AND end_time > NOW()");
+    }
+
+    public int demPhienSapKetThuc() {
+        return demTheoSql(
+                "SELECT COUNT(*) FROM auctions "
+                        +
+                        "WHERE status = 'RUNNING' AND start_time <= NOW() "
+                        +
+                        "AND end_time > NOW() AND end_time <= DATE_ADD(NOW(), INTERVAL 1 HOUR)");
+    }
+
+    public int demPhienBidderDaThamGia(int bidderId) {
+        String sql = "SELECT COUNT(DISTINCT auction_id) FROM bid_history WHERE bidder_id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, bidderId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi đếm phiên bidder đã tham gia: ", e);
+            return 0;
+        }
+    }
+
+    private int demTheoSql(String sql) {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            return rs.next() ? rs.getInt(1) : 0;
+        } catch (SQLException e) {
+            logger.error("Lỗi truy vấn số lượng phiên đấu giá: ", e);
+            return 0;
+        }
     }
 
     public boolean thucHienGiaoDichDatGia(int idPhien, BidTransaction tx) {
@@ -235,6 +346,36 @@ public class AuctionDao {
                 "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = " + idPhien;
         List<Auction> danhSach = thucThiTruyVanDanhSach(sql);
         return danhSach.isEmpty() ? null : danhSach.get(0);
+    }
+
+    public AuctionNotificationTargets layNguoiNhanThongBaoKetThuc(int auctionId) {
+        String sql = "SELECT a.id, a.highest_bidder_id, i.seller_id, i.name, u.full_name "
+                + "FROM auctions a "
+                + "JOIN items i ON i.id = a.item_id "
+                + "LEFT JOIN users u ON u.id = a.highest_bidder_id "
+                + "WHERE a.id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, auctionId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+
+                int rawWinnerId = rs.getInt("highest_bidder_id");
+                Integer winnerId = rs.wasNull() ? null : rawWinnerId;
+                return new AuctionNotificationTargets(
+                        rs.getInt("id"),
+                        rs.getInt("seller_id"),
+                        winnerId,
+                        rs.getString("name"),
+                        rs.getString("full_name")
+                );
+            }
+        } catch (SQLException e) {
+            logger.error("Không lấy được người nhận thông báo kết thúc phiên {}.", auctionId, e);
+            return null;
+        }
     }
 
     public List<Auction> timKiemVaLocPhienDauGia(String keyword, String status) {

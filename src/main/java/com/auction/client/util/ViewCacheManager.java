@@ -20,4 +20,8 @@ public class ViewCacheManager {
         }
         return viewCache.get(fxmlPath);
     }
+
+    public static void clear() {
+        viewCache.clear();
+    }
 }

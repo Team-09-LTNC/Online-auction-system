@@ -28,18 +28,19 @@ public class ProductCardController {
     @FXML private Button btnBid;
     @FXML private Button btnFollow;
 
-    private long endTimeMillis;
+    private long deadlineMillis;
     private Timeline timeline;
     private int auctionId = -1;
     private String imageUrl = "";
     private boolean isFollowed = false;
+    private boolean followRequestPending = false;
     private String currentStatus = "";
 
     public void setProductData(
             int auctionId,
             String name,
             double price,
-            long endTimeMillis,
+            long countdownSeconds,
             String status,
             String imageUrl,
             boolean isFollowed
@@ -50,7 +51,7 @@ public class ProductCardController {
         this.imageUrl = imageUrl;
         this.isFollowed = isFollowed;
         this.currentStatus = status;
-        this.endTimeMillis = endTimeMillis;
+        this.deadlineMillis = System.currentTimeMillis() + Math.max(0, countdownSeconds) * 1000L;
 
         lblProductName.setText(name);
         lblCurrentPrice.setText(String.format("%,.0f đ", price));
@@ -59,11 +60,11 @@ public class ProductCardController {
         updateHeartUI();
         setupStatusUI(status);
 
-        updateCountdown();
-
-        if (endTimeMillis > System.currentTimeMillis()
-                && !"FINISHED".equalsIgnoreCase(status)) {
+        if (countdownSeconds > 0 && isTimedStatus(status)) {
+            updateCountdown();
             startCountdown();
+        } else {
+            lblTimeRemaining.setText("00:00:00");
         }
     }
 
@@ -71,18 +72,18 @@ public class ProductCardController {
             int auctionId,
             String name,
             double price,
-            long endTimeMillis,
+            long countdownSeconds,
             String status,
             String imageUrl
     ) {
-        setProductData(auctionId, name, price, endTimeMillis, status, imageUrl, false);
+        setProductData(auctionId, name, price, countdownSeconds, status, imageUrl, false);
     }
 
     private void loadImage() {
         if (imgProduct == null) return;
         try {
             imgProduct.setImage(
-                    com.auction.client.util.ImageCacheManager.getImage(imageUrl)
+                    com.auction.client.util.ImageCacheManager.getPreviewImage(imageUrl)
             );
         } catch (Exception e) {
             logger.error("Lỗi load ảnh", e);
@@ -99,9 +100,17 @@ public class ProductCardController {
             lblStatus.setText("Đang diễn ra");
             btnBid.setDisable(false);
             btnBid.setText("Vào phòng");
+        } else if ("PAID".equalsIgnoreCase(status)) {
+            setClosedUI("Đã thanh toán", "Đã thanh toán");
+        } else if ("CANCELED".equalsIgnoreCase(status)) {
+            setClosedUI("Đã hủy", "Đã hủy");
         } else {
             setExpiredUI();
         }
+    }
+
+    private boolean isTimedStatus(String status) {
+        return "OPEN".equalsIgnoreCase(status) || "RUNNING".equalsIgnoreCase(status);
     }
 
     private void startCountdown() {
@@ -114,10 +123,14 @@ public class ProductCardController {
 
     private void updateCountdown() {
         long now = System.currentTimeMillis();
-        long remaining = (endTimeMillis - now) / 1000;
+        long remaining = (deadlineMillis - now) / 1000;
 
         if (remaining <= 0) {
-            setExpiredUI();
+            if ("OPEN".equalsIgnoreCase(currentStatus)) {
+                setRunningUI();
+            } else {
+                setExpiredUI();
+            }
             return;
         }
 
@@ -129,14 +142,27 @@ public class ProductCardController {
     }
 
     private void setExpiredUI() {
-        stopTimer();
         currentStatus = "FINISHED";
+        setClosedUI("Đã kết thúc", "Hết hạn");
+    }
+
+    private void setRunningUI() {
+        stopTimer();
+        currentStatus = "RUNNING";
+        lblTimeRemaining.setText("Đang mở");
+        lblStatus.setText("Đang diễn ra");
+        btnBid.setDisable(false);
+        btnBid.setText("Vào phòng");
+    }
+
+    private void setClosedUI(String statusText, String buttonText) {
+        stopTimer();
 
         lblTimeRemaining.setText("00:00:00");
-        lblStatus.setText("Đã kết thúc");
+        lblStatus.setText(statusText);
 
         btnBid.setDisable(true);
-        btnBid.setText("Hết hạn");
+        btnBid.setText(buttonText);
     }
 
     public void stopTimer() {
@@ -181,24 +207,33 @@ public class ProductCardController {
 
     @FXML
     private void handleFollowAction(ActionEvent event) {
-        if (auctionId == -1) return;
+        if (auctionId == -1 || followRequestPending) return;
 
+        boolean previousFollowState = isFollowed;
         isFollowed = !isFollowed;
+        followRequestPending = true;
         updateHeartUI();
+        btnFollow.setDisable(true);
 
         JsonObject req = new JsonObject();
         req.addProperty("type",
                 isFollowed ? ActionType.FOLLOW_AUCTION : ActionType.UNFOLLOW_AUCTION);
         req.addProperty("auctionId", auctionId);
+        req.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
         ClientSocket.getInstance().sendJsonRequest(
                 req,
-                "FOLLOW_RESPONSE",
+                null,
                 response -> Platform.runLater(() -> {
-                    if (!(response.has("success") && response.get("success").getAsBoolean())) {
-                        isFollowed = !isFollowed;
-                        updateHeartUI();
+                    followRequestPending = false;
+                    btnFollow.setDisable(false);
+
+                    if (response.has("isFollowed") && !response.get("isFollowed").isJsonNull()) {
+                        isFollowed = response.get("isFollowed").getAsBoolean();
+                    } else if (!(response.has("success") && response.get("success").getAsBoolean())) {
+                        isFollowed = previousFollowState;
                     }
+                    updateHeartUI();
                 })
         );
     }
