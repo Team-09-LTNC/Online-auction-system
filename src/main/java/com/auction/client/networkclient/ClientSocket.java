@@ -140,6 +140,7 @@ public class ClientSocket {
     private boolean isPushEvent(String type) {
         return com.auction.common.enums.ActionType.AUCTION_BID_UPDATE.equals(type) ||
                 com.auction.common.enums.ActionType.AUCTION_RESULT.equals(type) ||
-                com.auction.common.enums.ActionType.RECEIVE_CHAT_MESSAGE.equals(type);
+                com.auction.common.enums.ActionType.RECEIVE_CHAT_MESSAGE.equals(type) ||
+                "SYSTEM_NOTIFICATION".equals(type);
     }
 }

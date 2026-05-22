@@ -151,8 +151,10 @@ public class ProductCardController {
 
         if (isFollowed) {
             btnFollow.setText("♥");
+            btnFollow.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: #FF0000; -fx-padding: 0;");
         } else {
             btnFollow.setText("♡");
+            btnFollow.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: #888888; -fx-padding: 0;");
         }
     }
 
