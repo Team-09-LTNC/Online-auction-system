@@ -3,6 +3,7 @@ package com.auction.client.controller.bidder;
 import com.auction.client.controller.auth.UserSession;
 import com.auction.client.controller.components.ProductCardController;
 import com.auction.client.networkclient.ClientSocket;
+import com.auction.client.util.AuctionTimeUtil;
 import com.auction.common.enums.ActionType;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -17,12 +18,11 @@ import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URL;
-import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
-public class MainDashboardController implements Initializable, com.auction.client.interfaces.CategoryFilterListener {
+public class MainDashboardController implements Initializable,
+        com.auction.client.interfaces.CategoryFilterListener {
 
     private static final Logger logger = LoggerFactory.getLogger(MainDashboardController.class);
 
@@ -36,30 +36,39 @@ public class MainDashboardController implements Initializable, com.auction.clien
     @FXML private Label lblFollowedAuctions;
     @FXML private Label lblMyBidsCount;
 
-    private static final DateTimeFormatter MULTI_FORMATTER = DateTimeFormatter.ofPattern(
-            "[yyyy-MM-dd HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss.SSS]"
-    );
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         logger.info("Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.");
+
         if (productFlowPane != null) {
             productFlowPane.getChildren().clear();
-            loadProductsFromServer();
+            loadProductsFromServer("ALL");
         }
+
         updateDashboardUserInfo();
         updateStatistics();
     }
 
     private void updateDashboardUserInfo() {
         try {
-            String currentUserName = UserSession.getUsername() != null ? UserSession.getUsername() : "Người dùng";
-            String currentUserRole = UserSession.getCurrentRole() != null ? UserSession.getCurrentRole() : "BIDDER";
+            String currentUserName = UserSession.getUsername() != null
+                    ? UserSession.getUsername()
+                    : "Người dùng";
 
-            if (lblHeaderName != null) lblHeaderName.setText("Chào, " + currentUserName);
-            if (lblBannerWelcome != null) lblBannerWelcome.setText("Chào mừng trở lại, " + currentUserName + "! 👋");
+            String currentUserRole = UserSession.getCurrentRole() != null
+                    ? UserSession.getCurrentRole()
+                    : "BIDDER";
+
+            if (lblHeaderName != null)
+                lblHeaderName.setText("Chào, " + currentUserName);
+
+            if (lblBannerWelcome != null)
+                lblBannerWelcome.setText("Chào mừng trở lại, " + currentUserName + "! 👋");
 
             if (lblHeaderRole != null) {
-                lblHeaderRole.setText("SELLER".equalsIgnoreCase(currentUserRole) ? "Seller" : "Bidder");
+                lblHeaderRole.setText(
+                        "SELLER".equalsIgnoreCase(currentUserRole) ? "Seller" : "Bidder"
+                );
             }
         } catch (Exception e) {
             logger.error("Lỗi khi load thông tin User lên Header: {}", e.getMessage());
@@ -70,91 +79,131 @@ public class MainDashboardController implements Initializable, com.auction.clien
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.GET_DASHBOARD_STATS);
 
-        ClientSocket.getInstance().sendJsonRequest(request, "DASHBOARD_STATS_RESPONSE", response -> {
-            Platform.runLater(() -> {
-                if (response.has("success") && response.get("success").getAsBoolean() && response.has("data")) {
+        ClientSocket.getInstance().sendJsonRequest(
+                request,
+                "DASHBOARD_STATS_RESPONSE",
+                response -> Platform.runLater(() -> {
+
+                    if (!(response.has("success")
+                            && response.get("success").getAsBoolean()
+                            && response.has("data"))) {
+                        return;
+                    }
+
                     JsonObject data = response.getAsJsonObject("data");
 
-                    int activeCount = data.has("activeCount") ? data.get("activeCount").getAsInt() : 0;
-                    int endingSoonCount = data.has("endingSoonCount") ? data.get("endingSoonCount").getAsInt() : 0;
-                    int followedCount = data.has("followedCount") ? data.get("followedCount").getAsInt() : 0;
-                    int myBidsCount = data.has("myBidsCount") ? data.get("myBidsCount").getAsInt() : 0;
+                    if (lblActiveAuctions != null)
+                        lblActiveAuctions.setText(String.valueOf(
+                                data.has("activeCount") ? data.get("activeCount").getAsInt() : 0
+                        ));
 
-                    if (lblActiveAuctions != null) lblActiveAuctions.setText(String.valueOf(activeCount));
-                    if (lblEndingSoonAuctions != null) lblEndingSoonAuctions.setText(String.valueOf(endingSoonCount));
-                    if (lblFollowedAuctions != null) lblFollowedAuctions.setText(String.valueOf(followedCount));
-                    if (lblMyBidsCount != null) lblMyBidsCount.setText(String.valueOf(myBidsCount));
+                    if (lblEndingSoonAuctions != null)
+                        lblEndingSoonAuctions.setText(String.valueOf(
+                                data.has("endingSoonCount") ? data.get("endingSoonCount").getAsInt() : 0
+                        ));
 
-                    logger.info("Đã đồng bộ thành công số liệu thống kê lên Dashboard từ Server.");
-                }
-            });
-        });
+                    if (lblFollowedAuctions != null)
+                        lblFollowedAuctions.setText(String.valueOf(
+                                data.has("followedCount") ? data.get("followedCount").getAsInt() : 0
+                        ));
+
+                    if (lblMyBidsCount != null)
+                        lblMyBidsCount.setText(String.valueOf(
+                                data.has("myBidsCount") ? data.get("myBidsCount").getAsInt() : 0
+                        ));
+                })
+        );
     }
 
-    private void loadProductsFromServer() {
+    private void loadProductsFromServer(String category) {
+
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.GET_ALL_AUCTIONS);
+        request.addProperty("category", category);
 
-        ClientSocket.getInstance().sendJsonRequest(request, "AUCTION_LIST_RESPONSE", response -> {
-            // 1. Phân tích JSON ở Background Thread (KHÔNG ĐẶT TRONG runLater)
-            if (response.has("success") && response.get("success").getAsBoolean() && response.has("auctions")) {
-                JsonArray auctions = response.getAsJsonArray("auctions");
+        ClientSocket.getInstance().sendJsonRequest(
+                request,
+                "AUCTION_LIST_RESPONSE",
+                response -> {
 
-                // Chuẩn bị danh sách các Card (Vẫn ở Background Thread)
-                java.util.List<VBox> preparedCards = new java.util.ArrayList<>();
+                    if (!(response.has("success")
+                            && response.get("success").getAsBoolean()
+                            && response.has("auctions"))) {
+                        return;
+                    }
 
-                int count = 0;
-                for (JsonElement element : auctions) {
-                    if (count >= 6) break;
-                    JsonObject obj = element.getAsJsonObject();
+                    JsonArray auctions = response.getAsJsonArray("auctions");
 
-                    // Lấy dữ liệu...
-                    int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
-                    String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Sản phẩm";
-                    long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
-                    String status = obj.has("status") ? obj.get("status").getAsString() : "N/A";
-                    String imageUrl = obj.has("imageUrl") ? obj.get("imageUrl").getAsString() : "";
+                    java.util.List<VBox> preparedCards = new java.util.ArrayList<>();
 
-                    String rawStartTime = obj.has("startTime") && !obj.get("startTime").isJsonNull() ? obj.get("startTime").getAsString() : "";
-                    String rawEndTime = obj.has("endTime") && !obj.get("endTime").isJsonNull() ? obj.get("endTime").getAsString() : "";
+                    int count = 0;
 
-                    AuctionListScreenController.AuctionSecondsState state =
-                            AuctionListScreenController.calculateAuctionSecondsState(
-                                    rawStartTime,
-                                    rawEndTime
+                    for (JsonElement element : auctions) {
+                        if (count >= 6) break;
+
+                        JsonObject obj = element.getAsJsonObject();
+
+                        int auctionId = obj.has("auctionId")
+                                ? obj.get("auctionId").getAsInt()
+                                : -1;
+
+                        String name = obj.has("itemName")
+                                ? obj.get("itemName").getAsString()
+                                : "Sản phẩm";
+
+                        long price = obj.has("currentPrice")
+                                ? obj.get("currentPrice").getAsLong()
+                                : 0;
+
+                        String imageUrl = obj.has("imageUrl")
+                                ? obj.get("imageUrl").getAsString()
+                                : "";
+
+                        String rawStartTime = obj.has("startTime") && !obj.get("startTime").isJsonNull()
+                                ? obj.get("startTime").getAsString()
+                                : null;
+
+                        String rawEndTime = obj.has("endTime") && !obj.get("endTime").isJsonNull()
+                                ? obj.get("endTime").getAsString()
+                                : null;
+
+                        AuctionTimeUtil.AuctionState state = AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, null);
+                        try {
+                            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
+                            VBox card = loader.load();
+                            ProductCardController controller = loader.getController();
+                            controller.setProductData(
+                                    auctionId,
+                                    name,
+                                    price,
+                                    state.countdownSeconds,
+                                    state.finalStatus,
+                                    imageUrl
                             );
 
-                    try {
-                        // Vẫn tải FXML ngầm (JavaFX cho phép điều này nếu Node chưa gắn vào Scene)
-                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
-                        VBox card = loader.load();
-                        ProductCardController controller = loader.getController();
+                            preparedCards.add(card);
+                            count++;
 
-                        controller.setProductData(auctionId, name, price, state.countdownSeconds, state.finalStatus, imageUrl);
-                        preparedCards.add(card);
-                        count++;
-                    } catch (IOException e) {
-                        logger.error("Không nạp được ProductCard.fxml: {}", e.getMessage());
+                        } catch (Exception e) {
+                            logger.error("Load ProductCard lỗi", e);
+                        }
                     }
+
+                    Platform.runLater(() -> {
+                        if (productFlowPane != null) {
+                            productFlowPane.getChildren().clear();
+                            productFlowPane.getChildren().addAll(preparedCards);
+                        }
+                    });
                 }
-
-                // 2. CHỈ ĐẨY PHẦN HIỂN THỊ LÊN LUỒNG UI
-                Platform.runLater(() -> {
-                    if (productFlowPane != null) {
-                        productFlowPane.getChildren().clear();
-                        productFlowPane.getChildren().addAll(preparedCards); // Thêm tất cả cùng lúc (Batch Update)
-                    }
-                });
-            }
-        });
+        );
     }
-
 
     @Override
     public void onCategorySelected(String category) {
         if (productFlowPane != null) {
             productFlowPane.getChildren().clear();
-            loadProductsFromServer();
+            loadProductsFromServer(category);
         }
     }
 }

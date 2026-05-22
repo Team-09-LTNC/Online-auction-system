@@ -203,4 +203,33 @@ public class AuctionDao {
         List<Auction> danhSach = thucThiTruyVanDanhSach(sql);
         return danhSach.isEmpty() ? null : danhSach.get(0);
     }
+
+    public List<Auction> layDanhSachTheoCategory(String category) {
+        String sql =
+                "SELECT a.*, i.name, i.description, i.category, " +
+                        "i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
+                        "FROM auctions a " +
+                        "JOIN items i ON a.item_id = i.id " +
+                        "WHERE i.category = ?";
+
+        List<Auction> danhSach = new ArrayList<>();
+
+        try (
+                Connection conn = DatabaseConnection.getInstance().getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)
+        ) {
+            pstmt.setString(1, category);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Auction auction = mapResultSetToAuction(rs);
+                if (auction != null) {
+                    danhSach.add(auction);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi lọc category", e);
+        }
+
+        return danhSach;
+    }
 }

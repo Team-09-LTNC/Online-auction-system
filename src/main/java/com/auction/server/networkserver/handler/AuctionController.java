@@ -124,6 +124,11 @@ public class AuctionController implements RequestHandler {
 
     private String xuLyLayDanhSachDauGia(JsonObject yeuCau, ClientHandler client) {
         List<Auction> danhSachPhien = auctionDao.layDanhSachPhienDangChay();
+        String categoryFilter = yeuCau.has("category")
+                ? yeuCau.get("category").getAsString()
+                : "ALL";
+        System.out.println("CATEGORY FILTER = " + categoryFilter);
+
         if (danhSachPhien == null) {
             danhSachPhien = new ArrayList<>();
         }
@@ -143,22 +148,13 @@ public class AuctionController implements RequestHandler {
                 }
             }
         }
+        if (!"ALL".equalsIgnoreCase(categoryFilter)) {
 
-        String categoryFilter = yeuCau.has("category") ? yeuCau.get("category").getAsString() : "Tất cả";
-        if (!"Tất cả".equals(categoryFilter)) {
             danhSachPhien.removeIf(phien -> {
-                com.auction.common.model.item.Item item = phien.getItem();
-                if ("Điện tử".equalsIgnoreCase(categoryFilter) && !(item instanceof com.auction.common.model.item.Electronics)) return true;
-                if ("Xe cộ".equalsIgnoreCase(categoryFilter) && !(item instanceof com.auction.common.model.item.Vehicle)) return true;
-                if ("Nghệ thuật".equalsIgnoreCase(categoryFilter) && !(item instanceof com.auction.common.model.item.Art)) return true;
-                if ("Khác".equalsIgnoreCase(categoryFilter)) {
-                    if (item instanceof com.auction.common.model.item.Electronics ||
-                            item instanceof com.auction.common.model.item.Vehicle ||
-                            item instanceof com.auction.common.model.item.Art) {
-                        return true;
-                    }
-                }
-                return false;
+                String itemCategory = phien.getItem().getCategory();
+
+                return itemCategory == null
+                        || !itemCategory.equalsIgnoreCase(categoryFilter);
             });
         }
 
@@ -171,7 +167,8 @@ public class AuctionController implements RequestHandler {
                     a.getStatus().name(),
                     a.getItem().getImageUrl(),
                     a.getStartTime().toString(),
-                    a.getEndTime().toString()
+                    a.getEndTime().toString(),
+                    a.getItem().getCategory()
             ));
         }
 
@@ -207,7 +204,8 @@ public class AuctionController implements RequestHandler {
                     a.getStatus().name(),
                     a.getItem().getImageUrl(),
                     a.getStartTime().toString(),
-                    a.getEndTime().toString()
+                    a.getEndTime().toString(),
+                    a.getItem().getCategory()
             ));
         }
 
@@ -233,14 +231,16 @@ public class AuctionController implements RequestHandler {
         List<AuctionDTOs.AuctionSummaryDTO> summaries = new ArrayList<>();
         for (Auction a : danhSachPhien) {
             if (followedIds.contains(a.getId())) {
-                summaries.add(new AuctionDTOs.AuctionSummaryDTO(
+                summaries.add(
+                        new AuctionDTOs.AuctionSummaryDTO(
                         a.getId(),
                         a.getItem().getName(),
                         a.getCurrentHighestBid(),
                         a.getStatus().name(),
                         a.getItem().getImageUrl(),
                         a.getStartTime().toString(),
-                        a.getEndTime().toString()
+                        a.getEndTime().toString(),
+                        a.getItem().getCategory()
                 ));
             }
         }
