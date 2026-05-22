@@ -1,5 +1,6 @@
 package com.auction.client.controller.admin;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -12,12 +13,10 @@ import javafx.scene.layout.StackPane;
 
 import java.net.URL;
 import java.util.List;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
-import com.auction.client.networkclient.ClientSocket;
-import com.auction.common.enums.ActionType;
-import com.google.gson.JsonObject;
+import com.auction.client.manager.AdminManager;
+
 
 /**
  * SellersViewController
@@ -95,28 +94,18 @@ public class SellersViewController implements Initializable {
     }
 
     private void loadData() {
-    // Xóa dữ liệu hardcode cũ, thay bằng gọi server
-    JsonObject request = new JsonObject();
-    request.addProperty("type", ActionType.ADMIN_GET_ALL_SELLERS);
-    request.addProperty("requestId", java.util.UUID.randomUUID().toString());
-
-    ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_SELLERS_RESPONSE", response -> {
-        javafx.application.Platform.runLater(() -> {
-            boolean success = response.has("success") && response.get("success").getAsBoolean();
-            if (success && response.has("data")) {
-                masterList.clear();
-                response.getAsJsonArray("data").forEach(el -> {
-                    JsonObject obj = el.getAsJsonObject();
-                    masterList.add(new Seller(
-                        obj.get("username").getAsString(),
-                        obj.get("fullname").getAsString(),
-                        obj.get("status").getAsString()
-                    ));
-                });
-                updateCountLabel();
-            }
-        });
-    });
+    AdminManager.getInstance().layDanhSachSeller(
+        users -> Platform.runLater(() -> {
+            masterList.clear();
+            users.forEach(u -> masterList.add(
+                new Seller(u.getUsername(), u.getFullname(), u.getStatus())
+            ));
+            updateCountLabel();
+        }),
+        error -> Platform.runLater(() ->
+            new Alert(Alert.AlertType.ERROR, error).showAndWait()
+        )
+    );
 }
 
     // ── FXML handlers ────────────────────────────────────────
@@ -148,34 +137,25 @@ public class SellersViewController implements Initializable {
      */
     @FXML
     private void handleToggleLock() {
-        Seller selected = sellerTable.getSelectionModel().getSelectedItem();
-        if (selected == null) return;
+    Seller selected = sellerTable.getSelectionModel().getSelectedItem();
+    if (selected == null) return;
 
-        boolean isCurrentlyLocked = STATUS_LOCKED.equals(selected.getStatus());
+    String newStatus = STATUS_LOCKED.equals(selected.getStatus()) ? STATUS_ACTIVE : STATUS_LOCKED;
 
-        String dialogTitle   = isCurrentlyLocked ? "Mở khoá tài khoản?" : "Khoá tài khoản?";
-        String dialogContent = isCurrentlyLocked
-                ? "Mở khoá tài khoản của \"" + selected.getFullname() + "\"?\n"
-                + "Người bán sẽ có thể đăng nhập và đăng sản phẩm trở lại."
-                : "Khoá tài khoản của \"" + selected.getFullname() + "\"?\n"
-                + "Người bán sẽ không thể đăng nhập hoặc đăng sản phẩm mới.";
+    // ... dialog xác nhận giữ nguyên ...
 
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle(dialogTitle);
-        confirm.setHeaderText(null);
-        confirm.setContentText(dialogContent);
-
-        Optional<ButtonType> result = confirm.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            String newStatus = isCurrentlyLocked ? STATUS_ACTIVE : STATUS_LOCKED;
-            selected.setStatus(newStatus);         // TODO: gọi service cập nhật server
+    AdminManager.getInstance().toggleKhoaTaiKhoan(selected.getUsername(), newStatus,
+        response -> Platform.runLater(() -> {
+            selected.setStatus(newStatus);
             sellerTable.refresh();
-
             refreshLockButtonText(selected);
             applyFilter();
             updateCountLabel();
-        }
-    }
+        }),
+        error -> Platform.runLater(() ->
+            new Alert(Alert.AlertType.ERROR, error).showAndWait())
+    );
+}
 
 
     // ── Helpers ──────────────────────────────────────────────

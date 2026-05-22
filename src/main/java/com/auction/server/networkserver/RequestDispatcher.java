@@ -17,6 +17,7 @@ public class RequestDispatcher {
         AuthController authController = new AuthController();
         AuctionController auctionController = new AuctionController();
         ProductController productController = new ProductController();
+        AdminController adminController = new AdminController();
 
         // Nhóm Auth & User
         danhSachTrinhXuLy.put(ActionType.LOGIN, authController);
@@ -54,6 +55,9 @@ public class RequestDispatcher {
         danhSachTrinhXuLy.put(ActionType.SEARCH_PRODUCT, productController);
         danhSachTrinhXuLy.put(ActionType.UPDATE_PRODUCT, productController);
         danhSachTrinhXuLy.put(ActionType.GET_MY_PRODUCTS, productController);
+
+        // Nhóm Admin
+        danhSachTrinhXuLy.put(ActionType.ADMIN_GET_ALL_AUCTIONS, adminController);
     }
 
     public static RequestDispatcher layInstance() {

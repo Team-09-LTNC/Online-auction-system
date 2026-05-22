@@ -13,7 +13,6 @@ import com.auction.server.dao.AuctionDao;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -29,15 +28,27 @@ public class AuctionManager {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
     private final ExecutorService notifierPool = Executors.newFixedThreadPool(50);
 
-    //tải phiên từ DB và lên lịch khi khởi động
+    // Tải phiên từ DB và lên lịch khi khởi động
     private AuctionManager() {
         // Khôi phục các phiên đang chạy
         for (Auction a : auctionDao.layDanhSachPhienDangChay()) {
+            // ---> PHỤC HỒI BOT TỪ DATABASE LÊN RAM
+            List<AutoBidConfig> bots = auctionDao.layDanhSachAutoBidCuaPhien(a.getId());
+            for(AutoBidConfig bot : bots) {
+                a.addAutoBidConfig(bot);
+            }
+
             dsPhienDangChay.put(a.getId(), a);
             henGioDongPhien(a);
         }
         // Lên lịch mở các phiên đang chờ
         for (Auction a : auctionDao.layDanhSachPhienChoMo()) {
+            // ---> PHỤC HỒI BOT TỪ DATABASE LÊN RAM (Dành cho phiên chưa mở nhưng đã có người đặt Bot trước)
+            List<AutoBidConfig> bots = auctionDao.layDanhSachAutoBidCuaPhien(a.getId());
+            for(AutoBidConfig bot : bots) {
+                a.addAutoBidConfig(bot);
+            }
+
             henGioMoPhien(a);
         }
     }
@@ -52,7 +63,7 @@ public class AuctionManager {
         return instance;
     }
 
-    // Lên lịch mở phiên vào thời điểm startTime (Chính xác đến mili-giây)
+    // Lên lịch mở phiên vào thời điểm startTime
     public void henGioMoPhien(Auction phien) {
         ScheduledFuture<?> taskCu = tasksMoPhien.get(phien.getId());
         if (taskCu != null && !taskCu.isDone()) taskCu.cancel(false);
@@ -63,7 +74,7 @@ public class AuctionManager {
             thucThiMoPhien(phien);
         } else {
             ScheduledFuture<?> taskMoi = scheduler.schedule(() -> thucThiMoPhien(phien), delay, TimeUnit.MILLISECONDS);
-            tasksMoPhien.put(phien.getId(), taskMoi); // Lưu lại thẻ quản lý
+            tasksMoPhien.put(phien.getId(), taskMoi);
         }
     }
 
@@ -88,8 +99,6 @@ public class AuctionManager {
             taskCu.cancel(false);
         }
 
-        // BẢN VÁ LỖI CỰC KỲ QUAN TRỌNG:
-        // Thay getStartTime() thành getEndTime() để tính toán chính xác thời gian đóng phiên.
         long delay = java.time.Duration.between(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")), phien.getEndTime()).toMillis();
 
         if (delay <= 0) {
@@ -131,13 +140,14 @@ public class AuctionManager {
                 throw new InvalidBidException("Không được tự bid sản phẩm của mình!");
 
             long giaHienTai = phien.getCurrentHighestBid();
-            // Giá tối thiểu: giá khởi điểm (nếu chưa có ai bid) hoặc giá cao nhất + bước giá
-            long giaToiThieu = (phien.getCurrentWinner() == null)
-                    ? phien.getItem().getStartingPrice()
-                    : (giaHienTai + phien.getItem().getBidIncrement());
+            long buocGia = phien.getItem().getBidIncrement();
 
-            if (giaoDich.getBidAmount() < giaToiThieu)
+            // Áp dụng đúng 1 công thức bắt buộc cho mọi lượt đặt:
+            long giaToiThieu = giaHienTai + buocGia;
+
+            if (giaoDich.getBidAmount() < giaToiThieu) {
                 throw new InvalidBidException("Giá đặt tối thiểu: " + giaToiThieu);
+            }
 
             // Anti-sniping: nếu bid trong 30 giây cuối, gia hạn thêm 60 giây
             if (phien.getEndTime().minusSeconds(30).isBefore(LocalDateTime.now())) {
@@ -167,8 +177,18 @@ public class AuctionManager {
             if (bidder.getId() == phien.getItem().getSellerId()) {
                 throw new Exception("Seller không thể đăng ký Auto-bid cho sản phẩm của mình!");
             }
+
+            Queue<AutoBidConfig> queue = phien.getAutoBidders();
+            queue.removeIf(bot -> bot.getBidder().getId() == bidder.getId());
+
             phien.addAutoBidConfig(new AutoBidConfig(bidder, maxBid));
-            kichHoatAutoBid(phien); // Kích hoạt ngay để cạnh tranh với giá hiện tại
+
+            boolean luuThanhCong = auctionDao.luuHoacCapNhatAutoBid(idPhien, bidder.getId(), maxBid);
+            if (!luuThanhCong) {
+                System.err.println("[Auto-Bid] Lỗi: Không thể lưu giá trần xuống Database cho User ID: " + bidder.getId());
+            }
+
+            kichHoatAutoBid(phien);
         }
     }
 
@@ -177,7 +197,6 @@ public class AuctionManager {
         Queue<AutoBidConfig> queue = phien.getAutoBidders();
         while (!queue.isEmpty()) {
             AutoBidConfig topBot = queue.peek();
-            // Nếu bot đang dẫn đầu, dừng lại (không tự đấu với chính mình)
             if (phien.getCurrentWinner() != null &&
                     topBot.getBidder().getId() == phien.getCurrentWinner().getId()) {
                 break;
@@ -221,7 +240,6 @@ public class AuctionManager {
         }
     }
 
-
     // Gửi tin nhắn chat đến tất cả observer trong phiên
     public void broadcastChatMessage(int idPhien, String senderName, String message, boolean isSystem) {
         notifierPool.execute(() -> {
@@ -243,12 +261,16 @@ public class AuctionManager {
     public Auction layPhienTheoId(int idPhien) {
         Auction phien = dsPhienDangChay.get(idPhien);
 
-        //Nếu RAM không có, móc xuống Database tìm lại
         if (phien == null) {
             for (Auction a : auctionDao.layDanhSachPhienDangChay()) {
                 if (a.getId() == idPhien) {
-                    dsPhienDangChay.put(a.getId(), a); // Nạp lại vào RAM
-                    henGioDongPhien(a); // Lên dây cót đếm ngược luôn
+                    List<AutoBidConfig> bots = auctionDao.layDanhSachAutoBidCuaPhien(a.getId());
+                    for(AutoBidConfig bot : bots) {
+                        a.addAutoBidConfig(bot);
+                    }
+
+                    dsPhienDangChay.put(a.getId(), a);
+                    henGioDongPhien(a);
                     return a;
                 }
             }

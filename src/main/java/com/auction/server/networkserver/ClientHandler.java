@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import com.google.gson.GsonBuilder;
+import com.auction.common.util.LocalDateTimeAdapter;
+import java.time.LocalDateTime;
 
 /**
  * ClientHandler: Quản lý vòng đời kết nối của một Client trên Server.
@@ -21,7 +24,9 @@ import java.nio.charset.StandardCharsets;
 public class ClientHandler implements Runnable, AuctionObserver {
     private static final Logger logger = LoggerFactory.getLogger(ClientHandler.class);
     private final Socket socketClient;
-    private final Gson gson = new Gson();
+    Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .create();
     private PrintWriter out;
     private User nguoiDungHienTai;
 

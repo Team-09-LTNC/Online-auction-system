@@ -18,11 +18,11 @@ import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class MainDashboardController implements Initializable,
-        com.auction.client.interfaces.CategoryFilterListener {
+public class MainDashboardController implements Initializable, com.auction.client.interfaces.CategoryFilterListener {
 
     private static final Logger logger = LoggerFactory.getLogger(MainDashboardController.class);
 
@@ -39,36 +39,24 @@ public class MainDashboardController implements Initializable,
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         logger.info("Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.");
-
         if (productFlowPane != null) {
             productFlowPane.getChildren().clear();
-            loadProductsFromServer("ALL");
+            loadProductsFromServer(null);
         }
-
         updateDashboardUserInfo();
         updateStatistics();
     }
 
     private void updateDashboardUserInfo() {
         try {
-            String currentUserName = UserSession.getUsername() != null
-                    ? UserSession.getUsername()
-                    : "Người dùng";
+            String currentUserName = UserSession.getUsername() != null ? UserSession.getUsername() : "Người dùng";
+            String currentUserRole = UserSession.getCurrentRole() != null ? UserSession.getCurrentRole() : "BIDDER";
 
-            String currentUserRole = UserSession.getCurrentRole() != null
-                    ? UserSession.getCurrentRole()
-                    : "BIDDER";
-
-            if (lblHeaderName != null)
-                lblHeaderName.setText("Chào, " + currentUserName);
-
-            if (lblBannerWelcome != null)
-                lblBannerWelcome.setText("Chào mừng trở lại, " + currentUserName + "! 👋");
+            if (lblHeaderName != null) lblHeaderName.setText("Chào, " + currentUserName);
+            if (lblBannerWelcome != null) lblBannerWelcome.setText("Chào mừng trở lại, " + currentUserName + "! 👋");
 
             if (lblHeaderRole != null) {
-                lblHeaderRole.setText(
-                        "SELLER".equalsIgnoreCase(currentUserRole) ? "Seller" : "Bidder"
-                );
+                lblHeaderRole.setText("SELLER".equalsIgnoreCase(currentUserRole) ? "Seller" : "Bidder");
             }
         } catch (Exception e) {
             logger.error("Lỗi khi load thông tin User lên Header: {}", e.getMessage());
@@ -84,33 +72,31 @@ public class MainDashboardController implements Initializable,
                 "DASHBOARD_STATS_RESPONSE",
                 response -> Platform.runLater(() -> {
 
-                    if (!(response.has("success")
+                    if (response.has("success")
                             && response.get("success").getAsBoolean()
-                            && response.has("data"))) {
-                        return;
+                            && response.has("data")) {
+
+                        JsonObject data = response.getAsJsonObject("data");
+
+                        int activeCount = data.has("activeCount") ? data.get("activeCount").getAsInt() : 0;
+                        int endingSoonCount = data.has("endingSoonCount") ? data.get("endingSoonCount").getAsInt() : 0;
+                        int followedCount = data.has("followedCount") ? data.get("followedCount").getAsInt() : 0;
+                        int myBidsCount = data.has("myBidsCount") ? data.get("myBidsCount").getAsInt() : 0;
+
+                        if (lblActiveAuctions != null)
+                            lblActiveAuctions.setText(String.valueOf(activeCount));
+
+                        if (lblEndingSoonAuctions != null)
+                            lblEndingSoonAuctions.setText(String.valueOf(endingSoonCount));
+
+                        if (lblFollowedAuctions != null)
+                            lblFollowedAuctions.setText(String.valueOf(followedCount));
+
+                        if (lblMyBidsCount != null)
+                            lblMyBidsCount.setText(String.valueOf(myBidsCount));
+
+                        logger.info("Đã đồng bộ thành công số liệu thống kê lên Dashboard từ Server.");
                     }
-
-                    JsonObject data = response.getAsJsonObject("data");
-
-                    if (lblActiveAuctions != null)
-                        lblActiveAuctions.setText(String.valueOf(
-                                data.has("activeCount") ? data.get("activeCount").getAsInt() : 0
-                        ));
-
-                    if (lblEndingSoonAuctions != null)
-                        lblEndingSoonAuctions.setText(String.valueOf(
-                                data.has("endingSoonCount") ? data.get("endingSoonCount").getAsInt() : 0
-                        ));
-
-                    if (lblFollowedAuctions != null)
-                        lblFollowedAuctions.setText(String.valueOf(
-                                data.has("followedCount") ? data.get("followedCount").getAsInt() : 0
-                        ));
-
-                    if (lblMyBidsCount != null)
-                        lblMyBidsCount.setText(String.valueOf(
-                                data.has("myBidsCount") ? data.get("myBidsCount").getAsInt() : 0
-                        ));
                 })
         );
     }
@@ -119,7 +105,9 @@ public class MainDashboardController implements Initializable,
 
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.GET_ALL_AUCTIONS);
-        request.addProperty("category", category);
+        if (category != null) {
+            request.addProperty("category", category);
+        }
 
         ClientSocket.getInstance().sendJsonRequest(
                 request,
@@ -198,6 +186,7 @@ public class MainDashboardController implements Initializable,
                 }
         );
     }
+
 
     @Override
     public void onCategorySelected(String category) {

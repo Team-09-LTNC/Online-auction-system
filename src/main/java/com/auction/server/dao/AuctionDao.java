@@ -1,17 +1,31 @@
 package com.auction.server.dao;
 
-import com.auction.common.enums.AuctionStatus;
-import com.auction.common.model.bid.Auction;
-import com.auction.common.model.bid.BidTransaction;
-import com.auction.common.model.item.*;
-import com.auction.server.db.DatabaseConnection;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.auction.common.enums.AuctionStatus;
+import com.auction.common.model.bid.Auction;
+import com.auction.common.model.bid.BidTransaction;
+// Thêm 2 import mới cho tính năng Auto-Bid
+import com.auction.common.model.bid.AutoBidConfig;
+import com.auction.common.model.user.Bidder;
+
+import com.auction.common.model.item.Art;
+import com.auction.common.model.item.Electronics;
+import com.auction.common.model.item.Item;
+import com.auction.common.model.item.OtherItem;
+import com.auction.common.model.item.Vehicle;
+import com.auction.server.db.DatabaseConnection;
 
 /**
  * Tầng quản lý truy cập dữ liệu (DAO) cho các phiên đấu giá.
@@ -23,25 +37,37 @@ public class AuctionDao {
         String loai = rs.getString("category").toUpperCase();
         Item item;
         switch (loai) {
-            case "ELECTRONICS": item = new Electronics(); break;
-            case "ART":         item = new Art(); break;
-            case "VEHICLE":     item = new Vehicle(); break;
-            default:            item = new OtherItem(); break;
+            case "ELECTRONICS":
+                item = new Electronics();
+                break;
+            case "ART":
+                item = new Art();
+                break;
+            case "VEHICLE":
+                item = new Vehicle();
+                break;
+            default:
+                item = new OtherItem();
+                break;
         }
 
         item.setId(rs.getInt("item_id"));
         item.setName(rs.getString("name"));
 
-        // ---> CẬP NHẬT QUAN TRỌNG: ĐỌC MÔ TẢ SẢN PHẨM TỪ DATABASE <---
-        try { item.setDescription(rs.getString("description")); } catch (Exception ignored) {}
+        try {
+            item.setDescription(rs.getString("description"));
+        } catch (Exception ignored) {
+        }
 
         item.setStartingPrice(rs.getLong("starting_price"));
         item.setBidIncrement(rs.getLong("bid_increment"));
         item.setSellerId(rs.getInt("seller_id"));
         item.setCategory(loai);
 
-        // Thêm an toàn khi load image_url (vì có thể query JOIN bị trùng tên cột, nên cần cẩn thận)
-        try { item.setImageUrl(rs.getString("image_url")); } catch (Exception ignored) {}
+        try {
+            item.setImageUrl(rs.getString("image_url"));
+        } catch (Exception ignored) {
+        }
 
         Auction phien = new Auction(item);
         phien.setId(rs.getInt("id"));
@@ -50,7 +76,6 @@ public class AuctionDao {
         phien.setEndTime(rs.getObject("end_time", LocalDateTime.class));
         phien.setCurrentPrice(rs.getLong("current_price"));
 
-        // ---> CẬP NHẬT: ĐỌC DỮ LIỆU GIÁ MUA ĐỨT TỪ DATABASE <---
         long buyNowPrice = rs.getLong("buy_now_price");
         if (!rs.wasNull()) {
             phien.setBuyNowPrice(buyNowPrice);
@@ -60,25 +85,29 @@ public class AuctionDao {
     }
 
     public List<Auction> layDanhSachPhienDangChay() {
-        // Đã bổ sung i.description vào câu lệnh SQL SELECT
-        return thucThiTruyVanDanhSach("SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
-                "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = 'RUNNING' OR a.status = 'OPEN'");
+        return thucThiTruyVanDanhSach(
+                "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
+                        +
+                        "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = 'RUNNING' OR a.status = 'OPEN'");
     }
 
     public List<Auction> layDanhSachPhienChoMo() {
-        // Đã bổ sung i.description vào câu lệnh SQL SELECT
-        return thucThiTruyVanDanhSach("SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
-                "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = 'OPEN'");
+        return thucThiTruyVanDanhSach(
+                "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
+                        +
+                        "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = 'OPEN'");
     }
 
     // Lấy danh sách các phiên mà User đã tham gia đặt giá (hoặc là người bán)
     public List<Auction> layDanhSachPhienThamGia(int userId, String role) {
         String sql;
         if ("SELLER".equals(role)) {
-            sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
+            sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
+                    +
                     "FROM auctions a JOIN items i ON a.item_id = i.id WHERE i.seller_id = " + userId;
         } else {
-            sql = "SELECT DISTINCT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
+            sql = "SELECT DISTINCT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
+                    +
                     "FROM auctions a JOIN items i ON a.item_id = i.id " +
                     "JOIN bid_history b ON a.id = b.auction_id WHERE b.bidder_id = " + userId;
         }
@@ -92,9 +121,12 @@ public class AuctionDao {
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 Auction phien = mapResultSetToAuction(rs);
-                if (phien != null) danhSach.add(phien);
+                if (phien != null)
+                    danhSach.add(phien);
             }
-        } catch (SQLException e) { logger.error("Lỗi truy vấn danh sách: ", e); }
+        } catch (SQLException e) {
+            logger.error("Lỗi truy vấn danh sách: ", e);
+        }
         return danhSach;
     }
 
@@ -159,7 +191,9 @@ public class AuctionDao {
             pstmt.setString(1, trangThaiMoi.toUpperCase());
             pstmt.setInt(2, idPhien);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { return false; }
+        } catch (SQLException e) {
+            return false;
+        }
     }
 
     public boolean capNhatThoiGianKetThuc(int idPhien, LocalDateTime thoiGianMoi) {
@@ -169,10 +203,11 @@ public class AuctionDao {
             pstmt.setTimestamp(1, Timestamp.valueOf(thoiGianMoi));
             pstmt.setInt(2, idPhien);
             return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { return false; }
+        } catch (SQLException e) {
+            return false;
+        }
     }
 
-    // TẠO PHIÊN ĐẤU GIÁ MỚI
     public boolean taoPhienDauGia(int itemId, long startingPrice, LocalDateTime startTime, LocalDateTime endTime) {
         String sql = "INSERT INTO auctions (item_id, current_price, status, start_time, end_time) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -181,7 +216,6 @@ public class AuctionDao {
             pstmt.setInt(1, itemId);
             pstmt.setLong(2, startingPrice);
 
-            // Nếu thời gian bắt đầu nhỏ hơn hoặc bằng hiện tại -> RUNNING, ngược lại OPEN
             String status = startTime.isBefore(LocalDateTime.now().plusSeconds(1)) ? "RUNNING" : "OPEN";
             pstmt.setString(3, status);
 
@@ -195,41 +229,119 @@ public class AuctionDao {
         }
     }
 
-    //Lấy chi tiết 1 phiên trực tiếp từ Database
     public Auction layPhienTheoId(int idPhien) {
-        // Đã bổ sung i.description vào câu lệnh SQL SELECT trực tiếp
-        String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
+        String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
+                +
                 "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = " + idPhien;
         List<Auction> danhSach = thucThiTruyVanDanhSach(sql);
         return danhSach.isEmpty() ? null : danhSach.get(0);
     }
 
-    public List<Auction> layDanhSachTheoCategory(String category) {
-        String sql =
-                "SELECT a.*, i.name, i.description, i.category, " +
-                        "i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
-                        "FROM auctions a " +
-                        "JOIN items i ON a.item_id = i.id " +
-                        "WHERE i.category = ?";
+    public List<Auction> timKiemVaLocPhienDauGia(String keyword, String status) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
+                        +
+                        "FROM auctions a JOIN items i ON a.item_id = i.id WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND i.name LIKE ? ");
+            params.add("%" + keyword.trim() + "%");
+        }
+
+        if (status != null && !status.equalsIgnoreCase("ALL") && !status.equalsIgnoreCase("Tất cả")) {
+            sql.append("AND a.status = ? ");
+            params.add(status.toUpperCase());
+        }
 
         List<Auction> danhSach = new ArrayList<>();
-
-        try (
-                Connection conn = DatabaseConnection.getInstance().getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql)
-        ) {
-            pstmt.setString(1, category);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                Auction auction = mapResultSetToAuction(rs);
-                if (auction != null) {
-                    danhSach.add(auction);
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+            for (int j = 0; j < params.size(); j++) {
+                pstmt.setObject(j + 1, params.get(j));
+            }
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Auction phien = mapResultSetToAuction(rs);
+                    if (phien != null)
+                        danhSach.add(phien);
                 }
             }
         } catch (SQLException e) {
-            logger.error("Lỗi lọc category", e);
+            logger.error("Lỗi timKiemVaLocPhienDauGia: ", e);
         }
-
         return danhSach;
+    }
+
+    /**
+     * Lưu hoặc cập nhật cấu hình Auto-Bid của người dùng (Dùng cơ chế UPSERT của MySQL)
+     */
+    public boolean luuHoacCapNhatAutoBid(int auctionId, int bidderId, long maxAutoBid) {
+        String sql = "INSERT INTO auto_bid_settings (auction_id, bidder_id, max_auto_bid) " +
+                "VALUES (?, ?, ?) " +
+                "ON DUPLICATE KEY UPDATE max_auto_bid = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstm = conn.prepareStatement(sql)) {
+            pstm.setInt(1, auctionId);
+            pstm.setInt(2, bidderId);
+            pstm.setLong(3, maxAutoBid);
+            pstm.setLong(4, maxAutoBid); // Giá trị cập nhật nếu đã tồn tại
+            return pstm.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.error("Lỗi khi lưu/cập nhật Auto-Bid: ", e);
+            return false;
+        }
+    }
+
+    /**
+     * Lấy giá trần Auto-Bid của 1 user cụ thể trong 1 phiên (để Client gọi hiển thị lại lên UI)
+     */
+    public long layGiaTranAutoBid(int auctionId, int bidderId) {
+        String sql = "SELECT max_auto_bid FROM auto_bid_settings WHERE auction_id = ? AND bidder_id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstm = conn.prepareStatement(sql)) {
+            pstm.setInt(1, auctionId);
+            pstm.setInt(2, bidderId);
+            try (ResultSet rs = pstm.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong("max_auto_bid");
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi khi lấy giá trần Auto-Bid: ", e);
+        }
+        return -1; // Trả về -1 nếu user chưa cài đặt auto-bid
+    }
+
+    /**
+     * Lấy TOÀN BỘ cấu hình Bot của 1 phiên đấu giá
+     */
+    public List<AutoBidConfig> layDanhSachAutoBidCuaPhien(int auctionId) {
+        List<AutoBidConfig> dsBot = new ArrayList<>();
+        String sql = "SELECT a.bidder_id, a.max_auto_bid, u.username, u.full_name " +
+                "FROM auto_bid_settings a " +
+                "JOIN users u ON a.bidder_id = u.id " +
+                "WHERE a.auction_id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstm = conn.prepareStatement(sql)) {
+            pstm.setInt(1, auctionId);
+            try (ResultSet rs = pstm.executeQuery()) {
+                while (rs.next()) {
+                    // Sử dụng đúng constructor của Bidder
+                    Bidder u = new Bidder(
+                            rs.getString("username"),
+                            "",
+                            rs.getString("full_name")
+                    );
+                    u.setId(rs.getInt("bidder_id")); // Kế thừa từ class Entity
+
+                    dsBot.add(new AutoBidConfig(u, rs.getLong("max_auto_bid")));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi khi lấy danh sách Bot của phiên: ", e);
+        }
+        return dsBot;
     }
 }

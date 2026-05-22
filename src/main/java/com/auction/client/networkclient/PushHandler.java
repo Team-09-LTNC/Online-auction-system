@@ -1,11 +1,13 @@
 package com.auction.client.networkclient;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.auction.common.enums.ActionType;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+
 import javafx.application.Platform;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Xử lý các gói tin server tự gửi về (không kèm requestId)
@@ -34,7 +36,8 @@ public class PushHandler {
 
             JsonObject bidder = transaction.getAsJsonObject("bidder");
             String bidderName = (bidder != null && bidder.has("username"))
-                    ? bidder.get("username").getAsString() : "Unknown";
+                    ? bidder.get("username").getAsString()
+                    : "Unknown";
 
             Platform.runLater(() -> {
                 logger.info("[Push] Giá mới: {} đ bởi {}", newBidAmount, bidderName);
@@ -67,7 +70,8 @@ public class PushHandler {
 
             Platform.runLater(() -> {
                 if (com.auction.client.controller.components.ChatController.instance != null) {
-                    com.auction.client.controller.components.ChatController.instance.receiveIncomingMessage(senderName, message, isSystem);
+                    com.auction.client.controller.components.ChatController.instance.receiveIncomingMessage(senderName,
+                            message, isSystem);
                 }
             });
         } catch (Exception e) {

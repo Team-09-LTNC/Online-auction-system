@@ -1,5 +1,6 @@
 package com.auction.client.controller.admin;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,6 +15,8 @@ import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+
+import com.auction.client.manager.AdminManager;
 
 /**
  * AuctionsViewController
@@ -30,6 +33,7 @@ public class AuctionsViewController implements Initializable {
     @FXML private TableColumn<Auction, String>   colStartTime;
     @FXML private TableColumn<Auction, String>   colEndTime;
     @FXML private TableColumn<Auction, String>   colStatus;
+    @FXML private TableColumn<Auction, String>   colImageUrl;
     @FXML private Label                          lblAuctionCount;
     @FXML private TextField                      tfSearch;
     @FXML private ComboBox<String>               cbStatusFilter;
@@ -58,6 +62,7 @@ public class AuctionsViewController implements Initializable {
         colStartTime.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStartTime()));
         colEndTime  .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEndTime()));
         colStatus   .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStatus()));
+        colImageUrl .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getImageUrl()));
     }
 
     private void setupStatusFilter() {
@@ -72,13 +77,14 @@ public class AuctionsViewController implements Initializable {
     }
 
     private void loadData() {
-        // TODO: thay bằng service call, chỉ lấy UPCOMING + ONGOING
-        masterList.setAll(
-                new Auction("SP-001", "2025-05-10 09:00", "2025-05-10 12:00", "ONGOING"),
-                new Auction("SP-002", "2025-05-11 14:00", "2025-05-11 18:00", "UPCOMING"),
-                new Auction("SP-003", "2025-05-12 08:00", "2025-05-12 10:00", "UPCOMING")
-        );
-        updateCountLabel();
+        AdminManager.getInstance().layDanhSachAuction(
+                auctions -> Platform.runLater(() -> {
+                    masterList.clear();
+                    auctions.forEach(a -> masterList.add(
+                            new Auction(a.getItemName(), a.getStartTime(), a.getEndTime(), a.getStatus(), a.getImageUrl())));
+                    updateCountLabel();
+                }),
+                error -> Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, error).showAndWait()));
     }
 
     // ── FXML handlers ────────────────────────────────────────
@@ -149,22 +155,26 @@ public class AuctionsViewController implements Initializable {
         private final SimpleStringProperty startTime;
         private final SimpleStringProperty endTime;
         private final SimpleStringProperty status;
+        private final SimpleStringProperty imageUrl;
 
-        public Auction(String productId, String startTime, String endTime, String status) {
+        public Auction(String productId, String startTime, String endTime, String status, String imageUrl) {
             this.productId = new SimpleStringProperty(productId);
             this.startTime = new SimpleStringProperty(startTime);
             this.endTime   = new SimpleStringProperty(endTime);
             this.status    = new SimpleStringProperty(status);
+            this.imageUrl  = new SimpleStringProperty(imageUrl);
         }
 
         public String getProductId() { return productId.get(); }
         public String getStartTime() { return startTime.get(); }
         public String getEndTime()   { return endTime.get(); }
         public String getStatus()    { return status.get(); }
+        public String getImageUrl()  { return imageUrl.get(); }
 
         public SimpleStringProperty productIdProperty() { return productId; }
         public SimpleStringProperty startTimeProperty() { return startTime; }
         public SimpleStringProperty endTimeProperty()   { return endTime;   }
         public SimpleStringProperty statusProperty()    { return status;    }
+        public SimpleStringProperty imageUrlProperty()  { return imageUrl;  }
     }
 }
