@@ -24,7 +24,7 @@ public class PushHandler {
         switch (type) {
             case ActionType.AUCTION_BID_UPDATE -> onBidUpdate(payload);
             case ActionType.AUCTION_RESULT -> onAuctionResult(payload);
-            case ActionType.RECEIVE_CHAT_MESSAGE -> onReceiveChatMessage(payload);
+            case "SYSTEM_NOTIFICATION" -> onSystemNotification(payload);
             default -> logger.error("[PushHandler] Unknown push type: {}", type);
         }
     }
@@ -61,21 +61,17 @@ public class PushHandler {
             logger.error("[PushHandler] Lỗi bóc tách dữ liệu AUCTION_RESULT: {}", e.getMessage());
         }
     }
+    private static void onSystemNotification(JsonObject payload) {
+        String message = payload.has("message") ? payload.get("message").getAsString() : "";
+        String targetRole = payload.has("targetRole") ? payload.get("targetRole").getAsString() : "ALL";
+        String myRole = com.auction.client.controller.auth.UserSession.getCurrentRole();
 
-    private static void onReceiveChatMessage(JsonObject payload) {
-        try {
-            String senderName = payload.has("senderName") ? payload.get("senderName").getAsString() : "Ẩn danh";
-            String message = payload.has("message") ? payload.get("message").getAsString() : "";
-            boolean isSystem = payload.has("isSystem") && payload.get("isSystem").getAsBoolean();
-
+        if ("ALL".equalsIgnoreCase(targetRole) || (myRole != null && myRole.equalsIgnoreCase(targetRole))) {
             Platform.runLater(() -> {
                 if (com.auction.client.controller.components.ChatController.instance != null) {
-                    com.auction.client.controller.components.ChatController.instance.receiveIncomingMessage(senderName,
-                            message, isSystem);
+                    com.auction.client.controller.components.ChatController.instance.receiveNotification(message);
                 }
             });
-        } catch (Exception e) {
-            logger.error("[PushHandler] Lỗi bóc tách dữ liệu RECEIVE_CHAT_MESSAGE: {}", e.getMessage());
         }
     }
 }

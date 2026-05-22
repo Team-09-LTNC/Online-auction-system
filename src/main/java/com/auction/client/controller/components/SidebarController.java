@@ -1,7 +1,6 @@
 package com.auction.client.controller.components;
 
 import com.auction.client.controller.MainController;
-import com.auction.client.controller.bidder.MainDashboardController;
 import com.auction.client.controller.auth.UserSession;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -9,13 +8,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import java.util.List;
 
+
 public class SidebarController {
 
     // Biến static công khai để LoginController có thể bốc và điều khiển từ xa!
     public static SidebarController instance;
-
     @FXML private Button btnDashboard, btnAuctions, btnMyAuctions, btnMyProducts, btnFollowed, btnPostAuction, btnChat;
-
     // Khai báo thêm biến nút Ví tiền kết nối với file FXML
     @FXML private Button btnWallet;
 
@@ -99,11 +97,21 @@ public class SidebarController {
     // HÀM LỌC DANH MỤC
     @FXML
     private void handleFilterCategory(ActionEvent event) {
+        System.out.println("CLICK CATEGORY BUTTON");
         Button clickedBtn = (Button) event.getSource();
-        String category = clickedBtn.getText().trim(); // Lấy chữ "Điện tử", "Xe cộ", "Nghệ thuật"...
-
         // 1. Đổi màu nút đang được bấm
         setButtonActive(clickedBtn);
+
+        String buttonText = clickedBtn.getText().trim();
+
+        String category;
+        System.out.println("BUTTON TEXT = " + buttonText);
+        if (buttonText.equals("Điện tử")) category = "ELECTRONICS";
+        else if (buttonText.equals("Xe cộ")) category = "VEHICLE";
+        else if (buttonText.equals("Nghệ thuật")) category = "ART";
+        else if (buttonText.equals("Khác")) category = "OTHER";
+        else category = "ALL";
+        System.out.println("CATEGORY SEND = " + category);
 
         // 2. Ép hệ thống chuyển hướng sang màn hình "Tất cả phiên"
         MainController.instance.setCenterContent("/fxml/bidder/AuctionListScreen.fxml");

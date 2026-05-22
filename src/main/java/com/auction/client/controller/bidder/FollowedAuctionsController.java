@@ -3,6 +3,7 @@ package com.auction.client.controller.bidder;
 import com.auction.client.controller.auth.UserSession;
 import com.auction.client.controller.components.ProductCardController;
 import com.auction.client.networkclient.ClientSocket;
+import com.auction.client.util.AuctionTimeUtil;
 import com.auction.common.enums.ActionType;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -17,13 +18,13 @@ import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
 public class FollowedAuctionsController implements Initializable {
+
     private static final Logger logger = LoggerFactory.getLogger(FollowedAuctionsController.class);
 
     @FXML private FlowPane productFlowPane;
@@ -33,84 +34,79 @@ public class FollowedAuctionsController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         updateHeaderUserInfo();
-        if (productFlowPane != null) {
-            productFlowPane.getChildren().clear();
-            loadFollowedAuctionsFromServer();
-        }
+        productFlowPane.getChildren().clear();
+        loadFollowedAuctionsFromServer();
     }
 
     private void updateHeaderUserInfo() {
-        try {
-            String currentUserName = UserSession.getUsername() != null ? UserSession.getUsername() : "Người dùng";
-            String currentUserRole = UserSession.getCurrentRole() != null ? UserSession.getCurrentRole() : "BIDDER";
-            if (lblHeaderName != null) lblHeaderName.setText("Chào, " + currentUserName);
-            if (lblHeaderRole != null) lblHeaderRole.setText(currentUserRole.substring(0, 1).toUpperCase() + currentUserRole.substring(1).toLowerCase() + " ˅");
-        } catch (Exception e) {
-            logger.error("Lỗi cập nhật Header FollowedAuctions: ", e);
-             }
+        String name = UserSession.getUsername() != null ? UserSession.getUsername() : "Người dùng";
+        String role = UserSession.getCurrentRole() != null ? UserSession.getCurrentRole() : "BIDDER";
+
+        lblHeaderName.setText("Chào, " + name);
+        lblHeaderRole.setText(role.substring(0,1).toUpperCase() + role.substring(1).toLowerCase());
     }
 
     private void loadFollowedAuctionsFromServer() {
+
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.GET_FOLLOWED_AUCTIONS);
-        ClientSocket.getInstance().sendJsonRequest(request, "FOLLOWED_AUCTIONS_RESPONSE", response -> {
-            new Thread(() -> {
-                try {
-                    if (response.has("success") && response.get("success").getAsBoolean() && response.has("auctions")) {
+
+        ClientSocket.getInstance().sendJsonRequest(
+                request,
+                "FOLLOWED_AUCTIONS_RESPONSE",
+                response -> {
+
+                    try {
+                        if (!response.has("auctions")) return;
+
                         JsonArray auctions = response.getAsJsonArray("auctions");
-                        List<VBox> cardsToRender = new ArrayList<>();
-                        for (JsonElement element : auctions) {
-                            JsonObject obj = element.getAsJsonObject();
-                            int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
-                            String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Sản phẩm";
+                        String serverNow = response.has("serverNow")
+                                ? response.get("serverNow").getAsString()
+                                : null;
 
-                            long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
-                            String imageUrl = obj.has("imageUrl") ? obj.get("imageUrl").getAsString() : "";
+                        List<VBox> cards = new ArrayList<>();
 
-                            String startTimeStr = null;
-                            if (obj.has("startTime") && !obj.get("startTime").isJsonNull()) {
-                                startTimeStr = obj.get("startTime").getAsString();
-                            } else if (obj.has("start_time") && !obj.get("start_time").isJsonNull()) {
-                                startTimeStr = obj.get("start_time").getAsString();
-                            }
+                        for (JsonElement el : auctions) {
 
-                            String endTimeStr = null;
-                            if (obj.has("endTime") && !obj.get("endTime").isJsonNull()) {
-                                endTimeStr = obj.get("endTime").getAsString();
-                            } else if (obj.has("end_time") && !obj.get("end_time").isJsonNull()) {
-                                endTimeStr = obj.get("end_time").getAsString();
-                            }
-                            AuctionListScreenController.AuctionSecondsState state =
-                                    AuctionListScreenController.calculateAuctionSecondsState(startTimeStr, endTimeStr);
+                            JsonObject obj = el.getAsJsonObject();
 
-                            try {
-                                FXMLLoader loader = new FXMLLoader(
-                                        getClass().getResource("/fxml/components/ProductCard.fxml")
-                                );
-                                VBox card = loader.load();
-                                ProductCardController controller = loader.getController();
-                                controller.setProductData(auctionId, name, price, state.countdownSeconds, state.finalStatus, imageUrl, true);
-                                cardsToRender.add(card);
+                            int id = obj.get("auctionId").getAsInt();
+                            String name = obj.get("itemName").getAsString();
+                            long price = obj.get("currentPrice").getAsLong();
+                            String img = obj.get("imageUrl").getAsString();
 
-                            } catch (IOException e) {
-                                logger.error("Lỗi nạp Card UI trong Followed: {}", e.getMessage());
-                            }
+                            String start = obj.has("startTime") ? obj.get("startTime").getAsString() : null;
+                            String end = obj.has("endTime") ? obj.get("endTime").getAsString() : null;
+
+                            AuctionTimeUtil.AuctionState state =
+                                    AuctionTimeUtil.calculateState(start, end, serverNow);
+
+                            FXMLLoader loader = new FXMLLoader(
+                                    getClass().getResource("/fxml/components/ProductCard.fxml")
+                            );
+
+                            VBox card = loader.load();
+                            ProductCardController controller = loader.getController();
+
+                            controller.setProductData(
+                                    id, name, price,
+                                    state.countdownSeconds,
+                                    state.finalStatus,
+                                    img,
+                                    true
+                            );
+
+                            cards.add(card);
                         }
 
-                        // CHỈ UPDATE UI 1 LẦN
                         Platform.runLater(() -> {
-                            if (productFlowPane != null) {
-                                productFlowPane.getChildren().clear();
-                                productFlowPane.getChildren().addAll(cardsToRender);
-                            }
+                            productFlowPane.getChildren().setAll(cards);
                         });
+
+                    } catch (Exception e) {
+                        logger.error("Followed load error", e);
                     }
-
-                } catch (Exception e) {
-                    logger.error("Lỗi load followed auctions", e);
                 }
-
-            }).start();
-        });
+        );
     }
 }

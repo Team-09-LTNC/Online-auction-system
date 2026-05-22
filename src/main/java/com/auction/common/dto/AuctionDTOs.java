@@ -20,8 +20,9 @@ public class AuctionDTOs {
         private final String imageUrl;
         private String startTime;
         private String endTime;
+        private String category;
 
-        public AuctionSummaryDTO(int auctionId, String itemName, long currentPrice, String status, String imageUrl, String startTime, String endTime) {
+        public AuctionSummaryDTO(int auctionId, String itemName, long currentPrice, String status, String imageUrl, String startTime, String endTime, String category) {
             this.auctionId = auctionId;
             this.itemName = itemName;
             this.currentPrice = currentPrice;
@@ -29,6 +30,7 @@ public class AuctionDTOs {
             this.imageUrl = imageUrl;
             this.startTime = startTime;
             this.endTime = endTime;
+            this.category = category;
         }
 
         public int getAuctionId() { return auctionId; }
