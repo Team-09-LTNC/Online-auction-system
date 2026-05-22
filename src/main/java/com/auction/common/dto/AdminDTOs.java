@@ -42,4 +42,38 @@ public static class AuctionSummaryDTO {
         public String getStatus() { return status; }
         public String getImageUrl() { return imageUrl; }
     }
+
+    public static class PendingAuctionDTO {
+        private final int id;
+        private final String itemName;
+        private final int sellerId;
+        private final String description;
+        private final long startingPrice;
+        private final String category;
+        private final String startTime;
+        private final String endTime;
+        private final String imageUrl;
+
+        public PendingAuctionDTO(int id, String itemName, int sellerId, String description, long startingPrice, String category, String startTime, String endTime, String imageUrl) {
+            this.id = id;
+            this.itemName = itemName;
+            this.sellerId = sellerId;
+            this.description = description;
+            this.startingPrice = startingPrice;
+            this.category = category;
+            this.startTime = startTime;
+            this.endTime = endTime;
+            this.imageUrl = imageUrl; // Placeholder, cần sửa lại sau
+        }
+
+        public int getId() { return id; }
+        public String getItemName() { return itemName; }
+        public int getSellerId() { return sellerId; }
+        public String getDescription() { return description; }
+        public long getStartingPrice() { return startingPrice; }
+        public String getCategory() { return category; }
+        public String getStartTime() { return startTime; }
+        public String getEndTime() { return endTime; }
+        public String getImageUrl() { return imageUrl; }
+    }
 }

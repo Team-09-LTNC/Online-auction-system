@@ -19,6 +19,16 @@ public abstract class Item extends Entity {
         this.startingPrice = startingPrice;
     }
 
+    /**
+     * Constructor tạo item để hiển thị lên trang duyệt của admin.
+     */
+    public Item(String name, int sellerId, String description, long startingPrice) {
+        this.name = name;
+        this.description = description;
+        this.startingPrice = startingPrice;
+        this.sellerId = sellerId;
+    }
+
     public abstract String getItemCategory();
 
     public String getName() { return name; }

@@ -13,7 +13,14 @@ public class OtherItem extends Item {
     public OtherItem(String name, String imageUrl) {
         super(name, "", 0);
         this.imageUrl = imageUrl;
-    }       
+    }
+    
+    public OtherItem(String name, int sellerId, String description, long startingPrice, String customCategoryName, String imageUrl) {
+        super(name, description, startingPrice);
+        this.customCategoryName = customCategoryName;
+        this.imageUrl = imageUrl;
+        this.sellerId = sellerId;
+    }
 
     public String getCustomCategoryName() { return customCategoryName; }
     public void setCustomCategoryName(String customCategoryName) { this.customCategoryName = customCategoryName; }
