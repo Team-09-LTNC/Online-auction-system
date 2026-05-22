@@ -5,6 +5,9 @@ import com.auction.server.networkserver.handler.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,6 +15,8 @@ public class RequestDispatcher {
     private static volatile RequestDispatcher instance;
     private final Map<String, RequestHandler> danhSachTrinhXuLy = new HashMap<>();
     private final Gson gson = new Gson();
+
+    private static final Logger logger = LoggerFactory.getLogger(RequestDispatcher.class);
 
     private RequestDispatcher() {
         AuthController authController = new AuthController();
@@ -75,9 +80,12 @@ public class RequestDispatcher {
     public String dieuPhoi(String loaiYeuCau, JsonObject yeuCau, ClientHandler client) {
         RequestHandler trinhXuLy = danhSachTrinhXuLy.get(loaiYeuCau);
         if (trinhXuLy != null) {
+            logger.info("Đang xử lý yêu cầu '{}' thành công bởi Controller: {}", loaiYeuCau, trinhXuLy.getClass().getSimpleName());
             return trinhXuLy.xuLy(yeuCau, client);
         }
 
+        logger.warn("Không tìm thấy Controller xử lý cho yêu cầu '{}'.", loaiYeuCau);
+        
         JsonObject loi = new JsonObject();
         loi.addProperty("success", false);
         loi.addProperty("errorCode", "ERR_UNKNOWN");

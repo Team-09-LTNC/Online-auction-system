@@ -8,12 +8,17 @@ import com.auction.common.dto.AdminDTOs.AuctionSummaryDTO;
 import com.auction.common.dto.AdminDTOs.UserSummaryDTO;
 import com.auction.common.dto.AdminDTOs.PendingAuctionDTO;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
 public class AdminManager {
+
+    private static final Logger logger = LoggerFactory.getLogger(AdminManager.class);
 
     private static AdminManager instance;
 
@@ -165,6 +170,134 @@ public class AdminManager {
                 onError);
     }
 
+    private void xuLyDanhSachAuctionResponse(JsonObject response, String expectedType,
+            Consumer<List<AuctionSummaryDTO>> onSuccess, Consumer<String> onError) {
+        boolean ok = response.has("success") && response.get("success").getAsBoolean();
+        if (!ok) {
+            String msg = response.has("message") ? response.get("message").getAsString() : "Lỗi không xác định";
+            onError.accept(msg);
+            return;
+        }
+
+        List<AuctionSummaryDTO> list = new ArrayList<>();
+        JsonArray data = response.getAsJsonArray("data");
+        if (data != null) {
+            data.forEach(el -> {
+                JsonObject obj = el.getAsJsonObject();
+                list.add(new AuctionSummaryDTO(
+                        obj.get("itemname").getAsString(),
+                        obj.get("starttime").getAsString(),
+                        obj.get("endtime").getAsString(),
+                        obj.has("status") ? obj.get("status").getAsString() : "OPEN",
+                        obj.has("imageurl") ? obj.get("imageurl").getAsString() : null));
+            });
+        }
+        onSuccess.accept(list);
+    }
+
+    public void layDanhSachChoDuyet(Consumer<List<PendingAuctionDTO>> onSuccess, Consumer<String> onError) {
+        JsonObject request = buildRequest(ActionType.ADMIN_GET_PENDING_AUCTIONS);
+        ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_GET_PENDING_AUCTIONS_RESPONSE", response -> {
+            boolean ok = response.has("success") && response.get("success").getAsBoolean();
+            if (!ok) {
+                String msg = response.has("message") ? response.get("message").getAsString() : "Lỗi không xác định";
+                onError.accept(msg);
+                return;
+            }
+            try {
+                List<PendingAuctionDTO> list = new ArrayList<>();
+                JsonArray data = response.getAsJsonArray("data");
+                if (data != null) {
+                    data.forEach(el -> {
+                        JsonObject obj = el.getAsJsonObject();
+                        list.add(new PendingAuctionDTO(
+                                safeGetInt(obj, "id", -1),
+                                safeGetString(obj, "itemName", ""),
+                                safeGetInt(obj, "sellerId", -1),
+                                safeGetString(obj, "description", ""),
+                                safeGetLong(obj, "startingPrice", 0L),
+                                safeGetString(obj, "category", ""),
+                                safeGetString(obj, "startTime", ""),
+                                safeGetString(obj, "endTime", ""),
+                                safeGetString(obj, "imageUrl", null)));
+                    });
+                    onSuccess.accept(list);
+                    logger.info(
+                            "Đã lấy danh sách phiên đấu giá chờ duyệt từ server trong AdminManager layDanhSachChoDuyet");
+                }
+            } catch (NullPointerException e) {
+                onError.accept("Dữ liệu phản hồi không hợp lệ, layDanhSachChoDuyet thất bại");
+                logger.error("Dữ liệu phản hồi không hợp lệ, layDanhSachChoDuyet thất bại: ", e);
+                return;
+            } catch (Exception e) {
+                onError.accept("Lỗi không xác định, layDanhSachChoDuyet thất bại");
+                logger.error("Lỗi không xác định khi xử lý phản hồi, layDanhSachChoDuyet thất bại: ", e);
+                return;
+            }
+        });
+    }
+
+    public void duyetAuction(int auctionId, Consumer<String> onSuccess, Consumer<String> onError) {
+        JsonObject request = buildRequest(ActionType.ADMIN_APPROVE_AUCTION);
+        request.addProperty("auctionId", auctionId);
+        ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_APPROVE_AUCTION_RESPONSE", response -> {
+            boolean ok = response.has("success") && response.get("success").getAsBoolean();
+            String msg = response.has("message") ? response.get("message").getAsString() : "";
+            if (ok)
+                onSuccess.accept(msg);
+            else
+                onError.accept(msg);
+        });
+    }
+
+    public void tuChoiAuction(int auctionId, Consumer<String> onSuccess, Consumer<String> onError) {
+        JsonObject request = buildRequest(ActionType.ADMIN_REJECT_AUCTION);
+        request.addProperty("auctionId", auctionId);
+        ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_REJECT_AUCTION_RESPONSE", response -> {
+            boolean ok = response.has("success") && response.get("success").getAsBoolean();
+            String msg = response.has("message") ? response.get("message").getAsString() : "";
+            if (ok)
+                onSuccess.accept(msg);
+            else
+                onError.accept(msg);
+        });
+    }
+
+    // Model
+    // public static class AuctionInfo {
+    // private final int id;
+    // private final String itemName, startTime, endTime, status;
+
+    // public AuctionInfo(int id, String itemName, String startTime, String endTime,
+    // String status) {
+    // this.id = id;
+    // this.itemName = itemName;
+    // this.startTime = startTime;
+    // this.endTime = endTime;
+    // this.status = status;
+    // }
+
+    // public int getId() {
+    // return id;
+    // }
+
+    // public String getItemName() {
+    // return itemName;
+    // }
+
+    // public String getStartTime() {
+    // return startTime;
+    // }
+
+    // public String getEndTime() {
+    // return endTime;
+    // }
+
+    // public String getStatus() {
+    // return status;
+    // }
+    // }
+
     // ── Helpers ───────────────────────────────────────────────
 
     private JsonObject buildRequest(String type) {
@@ -197,115 +330,15 @@ public class AdminManager {
         onSuccess.accept(list);
     }
 
-    private void xuLyDanhSachAuctionResponse(JsonObject response, String expectedType,
-            Consumer<List<AuctionSummaryDTO>> onSuccess, Consumer<String> onError) {
-        boolean ok = response.has("success") && response.get("success").getAsBoolean();
-        if (!ok) {
-            String msg = response.has("message") ? response.get("message").getAsString() : "Lỗi không xác định";
-            onError.accept(msg);
-            return;
-        }
-
-        List<AuctionSummaryDTO> list = new ArrayList<>();
-        JsonArray data = response.getAsJsonArray("data");
-        if (data != null) {
-            data.forEach(el -> {
-                JsonObject obj = el.getAsJsonObject();
-                list.add(new AuctionSummaryDTO(
-                        obj.get("itemname").getAsString(),
-                        obj.get("starttime").getAsString(),
-                        obj.get("endtime").getAsString(),
-                        obj.has("status") ? obj.get("status").getAsString() : "OPEN",
-                        obj.has("imageurl") ? obj.get("imageurl").getAsString() : null));
-            });
-        }
-        onSuccess.accept(list);
+    private String safeGetString(JsonObject obj, String key, String defaultValue) {
+        return (obj.has(key) && !obj.get(key).isJsonNull()) ? obj.get(key).getAsString() : defaultValue;
     }
 
-    public void layDanhSachChoDuyet(Consumer<List<PendingAuctionDTO>> onSuccess, Consumer<String> onError) {
-        JsonObject request = buildRequest(ActionType.ADMIN_GET_PENDING_AUCTIONS);
-        ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_GET_PENDING_AUCTIONS_RESPONSE", response -> {
-            boolean ok = response.has("success") && response.get("success").getAsBoolean();
-            if (!ok) {
-                onError.accept(response.get("message").getAsString());
-                return;
-            }
-
-            List<PendingAuctionDTO> list = new ArrayList<>();
-            response.getAsJsonArray("data").forEach(el -> {
-                JsonObject obj = el.getAsJsonObject();
-                list.add(new PendingAuctionDTO(
-                        obj.get("id").getAsInt(),
-                        obj.get("itemName").getAsString(),
-                        obj.get("sellerId").getAsInt(),
-                        obj.get("description").getAsString(),
-                        obj.get("startingPrice").getAsLong(),
-                        obj.get("category").getAsString(),
-                        obj.get("startTime").getAsString(),
-                        obj.get("endTime").getAsString(),
-                        obj.has("imageUrl") ? obj.get("imageUrl").getAsString() : null));
-            });
-            onSuccess.accept(list);
-        });
+    private int safeGetInt(JsonObject obj, String key, int defaultValue) {
+        return (obj.has(key) && !obj.get(key).isJsonNull()) ? obj.get(key).getAsInt() : defaultValue;
     }
 
-    public void duyetAuction(int auctionId, Consumer<String> onSuccess, Consumer<String> onError) {
-        JsonObject request = buildRequest(ActionType.ADMIN_APPROVE_AUCTION);
-        request.addProperty("auctionId", auctionId);
-        ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_APPROVE_AUCTION_RESPONSE", response -> {
-            boolean ok = response.has("success") && response.get("success").getAsBoolean();
-            String msg = response.has("message") ? response.get("message").getAsString() : "";
-            if (ok)
-                onSuccess.accept(msg);
-            else
-                onError.accept(msg);
-        });
+    private long safeGetLong(JsonObject obj, String key, long defaultValue) {
+        return (obj.has(key) && !obj.get(key).isJsonNull()) ? obj.get(key).getAsLong() : defaultValue;
     }
-
-    public void tuChoiAuction(int auctionId, Consumer<String> onSuccess, Consumer<String> onError) {
-        JsonObject request = buildRequest(ActionType.ADMIN_REJECT_AUCTION);
-        request.addProperty("auctionId", auctionId);
-        ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_REJECT_AUCTION_RESPONSE", response -> {
-            boolean ok = response.has("success") && response.get("success").getAsBoolean();
-            String msg = response.has("message") ? response.get("message").getAsString() : "";
-            if (ok)
-                onSuccess.accept(msg);
-            else
-                onError.accept(msg);
-        });
-    }
-
-    // Model
-    // public static class AuctionInfo {
-    //     private final int id;
-    //     private final String itemName, startTime, endTime, status;
-
-    //     public AuctionInfo(int id, String itemName, String startTime, String endTime, String status) {
-    //         this.id = id;
-    //         this.itemName = itemName;
-    //         this.startTime = startTime;
-    //         this.endTime = endTime;
-    //         this.status = status;
-    //     }
-
-    //     public int getId() {
-    //         return id;
-    //     }
-
-    //     public String getItemName() {
-    //         return itemName;
-    //     }
-
-    //     public String getStartTime() {
-    //         return startTime;
-    //     }
-
-    //     public String getEndTime() {
-    //         return endTime;
-    //     }
-
-    //     public String getStatus() {
-    //         return status;
-    //     }
-    // }
 }

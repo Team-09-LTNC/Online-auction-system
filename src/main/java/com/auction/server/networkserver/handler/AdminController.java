@@ -10,10 +10,15 @@ import com.google.gson.JsonArray;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.auction.common.enums.ActionType;
 import com.auction.common.model.bid.Auction;
 
 public class AdminController implements RequestHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
     private final Gson gson = GsonConfig.getInstance();
     private final AdminDao adminDao = new AdminDao();
@@ -82,6 +87,9 @@ public class AdminController implements RequestHandler {
         res.addProperty("type", "ADMIN_GET_PENDING_AUCTIONS_RESPONSE");
         res.addProperty("success", true);
         res.add("data", array);
+
+        logger.info("Đã lấy danh sách phiên đấu giá chờ duyệt trong AdminController");
+
         if (reqId != null)
             res.addProperty("requestId", reqId);
         return gson.toJson(res);

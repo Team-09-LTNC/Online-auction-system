@@ -64,7 +64,7 @@ public class AdminDao {
     // Lấy danh sách phiên chờ duyệt
     public List<Auction> layDanhSachChoDuyet() {
         List<Auction> auctions = new ArrayList<>();
-        String sql = "SELECT a.id, i.seller_id, i.name AS item_name, i.category, " +
+        String sql = "SELECT a.id, a.status, i.seller_id, i.name AS item_name, i.category, " +
              "i.starting_price, i.description, i.image_url, " +
              "a.start_time, a.end_time " +
              "FROM auctions a JOIN items i ON a.item_id = i.id " +
@@ -97,6 +97,8 @@ public class AdminDao {
                 auction.setStatus(status);
                 auctions.add(auction);
             }
+
+            logger.info("Đã lấy danh sách phiên đấu giá chờ duyệt từ database trong AdminDao");
         } catch (SQLException e) {
             logger.error("Lỗi layDanhSachChoDuyet: ", e);
         }
