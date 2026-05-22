@@ -3,8 +3,11 @@ package com.auction.server.manager;
 import com.auction.common.model.user.User;
 import com.auction.server.dao.UserDao;
 import com.auction.common.exception.AuthenticationException;
+import com.auction.server.networkserver.ClientHandler;
+import com.google.gson.JsonObject;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -17,6 +20,7 @@ public class UserManager {
 
     // Lưu trữ danh sách người dùng đang kết nối để gửi dữ liệu Real-time
     private final Map<Integer, User> onlineUsers = new ConcurrentHashMap<>();
+    private final Map<Integer, Set<ClientHandler>> onlineConnections = new ConcurrentHashMap<>();
 
     private UserManager() {
         this.userDao = new UserDao();
@@ -79,6 +83,33 @@ public class UserManager {
      */
     public void dangXuat(int idNguoiDung) {
         onlineUsers.remove(idNguoiDung);
+    }
+
+    public void dangKyKetNoi(int userId, ClientHandler client) {
+        onlineConnections
+                .computeIfAbsent(userId, ignored -> ConcurrentHashMap.newKeySet())
+                .add(client);
+    }
+
+    public void huyKetNoi(int userId, ClientHandler client) {
+        Set<ClientHandler> connections = onlineConnections.get(userId);
+        if (connections == null) {
+            return;
+        }
+        connections.remove(client);
+        if (connections.isEmpty()) {
+            onlineConnections.remove(userId);
+        }
+    }
+
+    public void guiThongBaoHeThong(int userId, JsonObject payload) {
+        Set<ClientHandler> connections = onlineConnections.get(userId);
+        if (connections == null) {
+            return;
+        }
+        for (ClientHandler client : connections) {
+            client.guiThongBaoHeThong(payload.deepCopy());
+        }
     }
 
     /**

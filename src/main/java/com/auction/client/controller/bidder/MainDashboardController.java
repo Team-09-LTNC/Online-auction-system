@@ -2,6 +2,7 @@ package com.auction.client.controller.bidder;
 
 import com.auction.client.controller.auth.UserSession;
 import com.auction.client.controller.components.ProductCardController;
+import com.auction.client.interfaces.RefreshableCenterContent;
 import com.auction.client.networkclient.ClientSocket;
 import com.auction.client.util.AuctionTimeUtil;
 import com.auction.common.enums.ActionType;
@@ -18,11 +19,10 @@ import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class MainDashboardController implements Initializable, com.auction.client.interfaces.CategoryFilterListener {
+public class MainDashboardController implements Initializable, RefreshableCenterContent {
 
     private static final Logger logger = LoggerFactory.getLogger(MainDashboardController.class);
 
@@ -41,7 +41,7 @@ public class MainDashboardController implements Initializable, com.auction.clien
         logger.info("Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.");
         if (productFlowPane != null) {
             productFlowPane.getChildren().clear();
-            loadProductsFromServer(null);
+            loadFeaturedAuctionsFromServer();
         }
         updateDashboardUserInfo();
         updateStatistics();
@@ -101,13 +101,12 @@ public class MainDashboardController implements Initializable, com.auction.clien
         );
     }
 
-    private void loadProductsFromServer(String category) {
+    private void loadFeaturedAuctionsFromServer() {
 
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.GET_ALL_AUCTIONS);
-        if (category != null) {
-            request.addProperty("category", category);
-        }
+        request.addProperty("featuredRunning", true);
+        request.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
         ClientSocket.getInstance().sendJsonRequest(
                 request,
@@ -121,14 +120,17 @@ public class MainDashboardController implements Initializable, com.auction.clien
                     }
 
                     JsonArray auctions = response.getAsJsonArray("auctions");
+                    String serverNow = getString(response, "serverNow", null);
+                    java.util.List<Integer> followedIds = new java.util.ArrayList<>();
+                    if (response.has("followedIds") && response.get("followedIds").isJsonArray()) {
+                        for (JsonElement id : response.getAsJsonArray("followedIds")) {
+                            followedIds.add(id.getAsInt());
+                        }
+                    }
 
                     java.util.List<VBox> preparedCards = new java.util.ArrayList<>();
 
-                    int count = 0;
-
                     for (JsonElement element : auctions) {
-                        if (count >= 6) break;
-
                         JsonObject obj = element.getAsJsonObject();
 
                         int auctionId = obj.has("auctionId")
@@ -147,6 +149,13 @@ public class MainDashboardController implements Initializable, com.auction.clien
                                 ? obj.get("imageUrl").getAsString()
                                 : "";
 
+                        String serverStatus = getString(obj, "status", "");
+                        if (!"RUNNING".equalsIgnoreCase(serverStatus)) {
+                            continue;
+                        }
+
+                        com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageUrl);
+
                         String rawStartTime = obj.has("startTime") && !obj.get("startTime").isJsonNull()
                                 ? obj.get("startTime").getAsString()
                                 : null;
@@ -155,7 +164,12 @@ public class MainDashboardController implements Initializable, com.auction.clien
                                 ? obj.get("endTime").getAsString()
                                 : null;
 
-                        AuctionTimeUtil.AuctionState state = AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, null);
+                        AuctionTimeUtil.AuctionState state =
+                                AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, serverNow);
+                        if (!"RUNNING".equalsIgnoreCase(state.finalStatus) || state.countdownSeconds <= 0) {
+                            logger.warn("Bỏ qua phiên nổi bật không còn RUNNING theo thời gian DB: {}", auctionId);
+                            continue;
+                        }
                         try {
                             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
                             VBox card = loader.load();
@@ -165,12 +179,12 @@ public class MainDashboardController implements Initializable, com.auction.clien
                                     name,
                                     price,
                                     state.countdownSeconds,
-                                    state.finalStatus,
-                                    imageUrl
+                                    serverStatus,
+                                    imageUrl,
+                                    followedIds.contains(auctionId)
                             );
 
                             preparedCards.add(card);
-                            count++;
 
                         } catch (Exception e) {
                             logger.error("Load ProductCard lỗi", e);
@@ -187,12 +201,16 @@ public class MainDashboardController implements Initializable, com.auction.clien
         );
     }
 
-
     @Override
-    public void onCategorySelected(String category) {
-        if (productFlowPane != null) {
-            productFlowPane.getChildren().clear();
-            loadProductsFromServer(category);
-        }
+    public void refreshContent() {
+        loadFeaturedAuctionsFromServer();
+        updateStatistics();
     }
+
+    private String getString(JsonObject obj, String key, String fallback) {
+        return obj.has(key) && !obj.get(key).isJsonNull()
+                ? obj.get(key).getAsString()
+                : fallback;
+    }
+
 }

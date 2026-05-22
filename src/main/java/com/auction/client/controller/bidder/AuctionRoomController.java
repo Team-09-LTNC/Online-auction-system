@@ -1,6 +1,7 @@
 package com.auction.client.controller.bidder;
 
 import com.auction.client.networkclient.ClientSocket;
+import com.auction.client.util.AuctionTimeUtil;
 import com.auction.common.dto.AuctionDTOs;
 import com.auction.common.enums.ActionType;
 import com.google.gson.Gson;
@@ -14,7 +15,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.chart.*;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 import javafx.animation.ScaleTransition;
@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import javafx.scene.control.Tooltip;
+import java.util.Optional;
 
 public class AuctionRoomController implements Initializable {
 
@@ -62,6 +63,7 @@ public class AuctionRoomController implements Initializable {
     private int currentAuctionId = -1;
     private boolean isAuctionStarted = false;
     private String currentStatus = "OPEN";
+    private Long currentBuyNowPrice;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -120,8 +122,10 @@ public class AuctionRoomController implements Initializable {
                     if (lblStartingPrice != null) lblStartingPrice.setText(String.format("%,d đ", startingPrice));
                     if (lblBidIncrement != null) lblBidIncrement.setText(String.format("%,d đ", bidIncrement));
                     if (lblBuyNowPrice != null) {
-                        lblBuyNowPrice.setText(data.has("buyNowPrice") && !data.get("buyNowPrice").isJsonNull()
-                                ? String.format("%,d đ", data.get("buyNowPrice").getAsLong()) : "Không hỗ trợ");
+                        currentBuyNowPrice = data.has("buyNowPrice") && !data.get("buyNowPrice").isJsonNull()
+                                ? data.get("buyNowPrice").getAsLong() : null;
+                        lblBuyNowPrice.setText(currentBuyNowPrice != null
+                                ? String.format("%,d đ", currentBuyNowPrice) : "Không hỗ trợ");
                     }
 
                     long displayPrice = data.has("currentHighestBid") && !data.get("currentHighestBid").isJsonNull()
@@ -145,7 +149,8 @@ public class AuctionRoomController implements Initializable {
                     // Timeline
                     String rawStartTime = data.has("startTime") && !data.get("startTime").isJsonNull() ? data.get("startTime").getAsString() : "";
                     String rawEndTime = data.has("endTime") && !data.get("endTime").isJsonNull() ? data.get("endTime").getAsString() : "";
-                    AuctionListScreenController.AuctionSecondsState state = AuctionListScreenController.calculateAuctionSecondsState(rawStartTime, rawEndTime);
+                    AuctionTimeUtil.AuctionState state =
+                            AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, null);
                     this.totalSeconds = state.countdownSeconds;
                     this.currentStatus = state.finalStatus;
 
@@ -312,6 +317,12 @@ public class AuctionRoomController implements Initializable {
                 showAlert("Lỗi đặt giá", "Giá tối thiểu: " + String.format("%,d đ", minValidBid));
                 return;
             }
+            if (currentBuyNowPrice != null && currentBuyNowPrice > 0 && bidAmount >= currentBuyNowPrice) {
+                if (xacNhanMuaDut()) {
+                    guiXacNhanMuaDut();
+                }
+                return;
+            }
 
             AuctionDTOs.BidRequest request = new AuctionDTOs.BidRequest(currentAuctionId, bidAmount, 1);
             btnPlaceBid.setDisable(true);
@@ -331,6 +342,79 @@ public class AuctionRoomController implements Initializable {
                 });
             });
         } catch (NumberFormatException e) { showAlert("Lỗi", "Số tiền không hợp lệ."); }
+    }
+
+    private boolean xacNhanMuaDut() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Xác nhận mua đứt");
+        dialog.setHeaderText(null);
+
+        ButtonType cancelButton = new ButtonType("Hủy", ButtonBar.ButtonData.CANCEL_CLOSE);
+        ButtonType confirmButton = new ButtonType("Xác nhận", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().setAll(cancelButton, confirmButton);
+
+        Label message = new Label(
+                "Bạn đã đặt giá vượt quá giá mua đứt của sản phẩm.\n\n"
+                        + "Xác nhận nếu bạn muốn sở hữu sản phẩm này ngay lập tức.\n\n"
+                        + "Hủy nếu bạn muốn đặt một mức giá thấp hơn."
+        );
+        message.setWrapText(true);
+        message.setStyle("-fx-font-size: 14px; -fx-text-fill: #342724; -fx-line-spacing: 2px;");
+        dialog.getDialogPane().setContent(message);
+        dialog.getDialogPane().setPrefWidth(450);
+        dialog.getDialogPane().setStyle("-fx-background-color: #FFFDFC; -fx-padding: 14px;");
+
+        Button cancel = (Button) dialog.getDialogPane().lookupButton(cancelButton);
+        cancel.setStyle("-fx-background-color: #F0ECE8; -fx-text-fill: #3E2723; "
+                + "-fx-font-weight: bold; -fx-background-radius: 7; -fx-padding: 9 20;");
+        Button confirm = (Button) dialog.getDialogPane().lookupButton(confirmButton);
+        confirm.setStyle("-fx-background-color: #B32638; -fx-text-fill: white; "
+                + "-fx-font-weight: bold; -fx-background-radius: 7; -fx-padding: 9 20;");
+
+        Optional<ButtonType> selected = dialog.showAndWait();
+        return selected.isPresent() && selected.get() == confirmButton;
+    }
+
+    private void guiXacNhanMuaDut() {
+        JsonObject request = new JsonObject();
+        request.addProperty("type", ActionType.CONFIRM_BUY_NOW);
+        request.addProperty("auctionId", currentAuctionId);
+        request.addProperty("requestId", java.util.UUID.randomUUID().toString());
+
+        if (btnPlaceBid != null) {
+            btnPlaceBid.setDisable(true);
+        }
+
+        ClientSocket.getInstance().sendJsonRequest(request, "BUY_NOW_RESPONSE", response -> {
+            Platform.runLater(() -> {
+                if (btnPlaceBid != null) {
+                    btnPlaceBid.setDisable(false);
+                }
+                if (!(response.has("success") && response.get("success").getAsBoolean())) {
+                    showAlert("Không thể mua đứt",
+                            response.has("message") ? response.get("message").getAsString() : "Mua đứt thất bại.");
+                    return;
+                }
+
+                showBuyNowWinnerDialog();
+                if (txtBidAmount != null) {
+                    txtBidAmount.clear();
+                }
+                refreshAuctionState();
+            });
+        });
+    }
+
+    private void showBuyNowWinnerDialog() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Chiến thắng phiên đấu giá");
+        alert.setHeaderText("Chúc mừng! Bạn đã là người chiến thắng ở phiên đấu giá này.");
+        alert.setContentText(
+                "Vui lòng thanh toán để chính thức sở hữu sản phẩm.\n\n"
+                        + "Nếu hủy thanh toán, bạn sẽ chịu phạt 10% tiền đặt giá."
+        );
+        alert.getDialogPane().setStyle("-fx-background-color: #FFFDFC; -fx-font-size: 13px;");
+        alert.showAndWait();
     }
 
     @FXML
@@ -398,7 +482,20 @@ public class AuctionRoomController implements Initializable {
 
     public void loadProductImage(String urlString) {
         if (imgProduct == null || urlString == null || urlString.trim().isEmpty()) return;
-        try { imgProduct.setImage(new Image(urlString, true)); } catch (Exception e) { imgProduct.setImage(null); }
+        try {
+            imgProduct.setImage(com.auction.client.util.ImageCacheManager.getPreviewImage(urlString));
+        } catch (Exception e) {
+            imgProduct.setImage(null);
+        }
+    }
+
+    public void updateRealtimeStatus(String newStatus) {
+        currentStatus = newStatus;
+        if ("FINISHED".equalsIgnoreCase(newStatus)
+                || "PAID".equalsIgnoreCase(newStatus)
+                || "CANCELED".equalsIgnoreCase(newStatus)) {
+            setExpiredUI();
+        }
     }
 
     private void showAlert(String title, String content) {

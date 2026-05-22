@@ -77,10 +77,13 @@ public class SetupDatabase {
                 "id INT AUTO_INCREMENT PRIMARY KEY, " +
                 "auction_id INT NOT NULL, " +
                 "sender_id INT NOT NULL, " +
+                "recipient_id INT, " +
                 "message TEXT NOT NULL, " +
+                "payment_required BOOLEAN NOT NULL DEFAULT FALSE, " +
                 "send_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
                 "FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE, " +
-                "FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE" +
+                "FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE, " +
+                "FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE" +
                 ") ENGINE=InnoDB;";
 
         // Bảng 7: Wallet Transactions (Lịch sử biến động số dư)

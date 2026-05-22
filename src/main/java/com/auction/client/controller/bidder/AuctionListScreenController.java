@@ -2,25 +2,27 @@ package com.auction.client.controller.bidder;
 
 import java.io.IOException;
 import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.auction.client.controller.auth.UserSession;
 import com.auction.client.controller.components.ProductCardController;
+import com.auction.client.interfaces.RefreshableCenterContent;
 import com.auction.client.networkclient.ClientSocket;
+import com.auction.client.util.AuctionTimeUtil;
 import com.auction.common.enums.ActionType;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import javafx.application.Platform;
+import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -29,11 +31,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 
 public class AuctionListScreenController
-        implements Initializable, com.auction.client.interfaces.CategoryFilterListener {
+        implements Initializable, com.auction.client.interfaces.CategoryFilterListener, RefreshableCenterContent {
 
     private static final Logger logger = LoggerFactory.getLogger(AuctionListScreenController.class);
+    private static final int CARD_BATCH_SIZE = 10;
 
     @FXML
     private FlowPane productFlowPane;
@@ -46,46 +50,33 @@ public class AuctionListScreenController
     @FXML
     private ComboBox<String> cbStatus;
 
-    private String currentCategory = "Tất cả";
+    private String currentCategory = "ALL";
 
-    // --- THÊM BIẾN LƯU TRỮ TRẠNG THÁI BỘ LỌC ---
     private String currentKeyword = "";
-    private String currentStatus = "Tất cả"; // OPEN, RUNNING, FINISHED, PAID, CANCELLED
+    private String currentStatus = "Tất cả"; // OPEN, RUNNING, FINISHED, PAID, CANCELED
 
     private JsonArray allLoadedAuctions = new JsonArray();
     private List<Integer> loadedFollowedIds = new ArrayList<>();
-
-    // Bộ giải mã thời gian siêu cấp, cân mọi loại định dạng từ DB
-    private static final DateTimeFormatter MULTI_FORMATTER = DateTimeFormatter.ofPattern(
-            "[yyyy-MM-dd HH:mm:ss.SSSSSS]" +
-                    "[yyyy-MM-dd HH:mm:ss.SSS]" +
-                    "[yyyy-MM-dd HH:mm:ss.S]" +
-                    "[yyyy-MM-dd HH:mm:ss]" +
-                    "[yyyy-MM-dd'T'HH:mm:ss.SSSSSS]" +
-                    "[yyyy-MM-dd'T'HH:mm:ss.SSS]" +
-                    "[yyyy-MM-dd'T'HH:mm:ss.S]" +
-                    "[yyyy-MM-dd'T'HH:mm:ss]");
+    private String loadedServerNow;
+    private final PauseTransition searchDebounce = new PauseTransition(Duration.millis(180));
+    private final AtomicInteger renderVersion = new AtomicInteger();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         updateHeaderUserInfo();
 
-        // --- KHỞI TẠO COMBOBOX TRẠNG THÁI (LỌC) ---
         if (cbStatus != null) {
-            // Nạp các lựa chọn vào ComboBox
-            cbStatus.getItems().addAll("Tất cả", "OPEN", "RUNNING", "FINISHED", "PAID", "CANCELLED");
-            cbStatus.setValue("Tất cả"); // Giá trị mặc định
+            cbStatus.getItems().addAll("Tất cả", "OPEN", "RUNNING", "FINISHED", "PAID", "CANCELED");
+            cbStatus.setValue("Tất cả");
 
-            // Lắng nghe sự kiện khi người dùng chọn 1 trạng thái mới
             cbStatus.valueProperty().addListener((obs, oldVal, newVal) -> {
                 onStatusFilterChanged(newVal);
             });
         }
 
-        // --- LẮNG NGHE SỰ KIỆN GÕ PHÍM TRÊN THANH TÌM KIẾM ---
         if (txtSearch != null) {
             txtSearch.textProperty().addListener((obs, oldVal, newVal) -> {
-                onSearchKeywordChanged(newVal); // Vừa gõ là giao diện vừa tự động lọc
+                onSearchKeywordChanged(newVal);
             });
         }
 
@@ -113,23 +104,20 @@ public class AuctionListScreenController
 
     @Override
     public void onCategorySelected(String category) {
-        this.currentCategory = category;
-        if (productFlowPane != null) {
-            productFlowPane.getChildren().clear();
-            loadAuctionsFromServer();
-        }
+        this.currentCategory = isBlank(category) ? "ALL" : category;
+        applyFiltersAndRender();
     }
 
     private void loadAuctionsFromServer() {
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.GET_ALL_AUCTIONS);
-        request.addProperty("category", currentCategory);
+        request.addProperty("category", "ALL");
+        request.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
         ClientSocket.getInstance().sendJsonRequest(request, "AUCTION_LIST_RESPONSE", response -> {
-            if (response.has("auctions")) {
-                // Lưu toàn bộ dữ liệu gốc vào biến toàn cục để tái sử dụng khi người dùng
-                // Filter/Search
+            if (response.has("auctions") && response.get("auctions").isJsonArray()) {
                 allLoadedAuctions = response.getAsJsonArray("auctions");
+                loadedServerNow = getString(response, "serverNow", null);
 
                 loadedFollowedIds.clear();
                 if (response.has("followedIds")) {
@@ -138,7 +126,6 @@ public class AuctionListScreenController
                     }
                 }
 
-                // Gọi hàm lọc và hiển thị
                 applyFiltersAndRender();
             }
         });
@@ -149,173 +136,127 @@ public class AuctionListScreenController
      * Client
      */
     private void applyFiltersAndRender() {
-        // Chạy trong luồng phụ để không làm đơ giao diện
+        int currentRenderVersion = renderVersion.incrementAndGet();
+        String selectedCategory = currentCategory;
+        String selectedKeyword = currentKeyword.trim().toLowerCase(Locale.ROOT);
+        String selectedStatus = currentStatus;
+        String selectedServerNow = loadedServerNow;
+        JsonArray auctionsToFilter = allLoadedAuctions.deepCopy();
+        List<Integer> followedIds = new ArrayList<>(loadedFollowedIds);
+
         new Thread(() -> {
             try {
                 List<VBox> cardsToRender = new ArrayList<>();
+                boolean cardsPublished = false;
 
-                for (JsonElement element : allLoadedAuctions) {
+                for (JsonElement element : auctionsToFilter) {
                     JsonObject obj = element.getAsJsonObject();
 
-                    // 1. Lọc theo Danh mục (Category)
-                    String itemCategory = obj.has("category") ? obj.get("category").getAsString() : "";
-                    if (!"Tất cả".equals(currentCategory) && !currentCategory.equalsIgnoreCase(itemCategory)) {
+                    String itemCategory = getString(obj, "category", "");
+                    if (!"ALL".equalsIgnoreCase(selectedCategory)
+                            && !selectedCategory.equalsIgnoreCase(itemCategory)) {
                         continue;
                     }
 
-                    // 2. Lọc theo Từ khóa Tìm kiếm (Keyword)
-                    String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Đang cập nhật";
-                    if (!currentKeyword.trim().isEmpty()
-                            && !name.toLowerCase().contains(currentKeyword.trim().toLowerCase())) {
+                    String name = getString(obj, "itemName", "Đang cập nhật");
+                    if (!selectedKeyword.isEmpty()
+                            && !name.toLowerCase(Locale.ROOT).contains(selectedKeyword)) {
                         continue;
                     }
 
-                    // Tính toán trạng thái thực tế
-                    String rawStartTime = null;
-                    if (obj.has("startTime") && !obj.get("startTime").isJsonNull())
-                        rawStartTime = obj.get("startTime").getAsString();
-                    else if (obj.has("start_time") && !obj.get("start_time").isJsonNull())
-                        rawStartTime = obj.get("start_time").getAsString();
+                    String rawStartTime = getTime(obj, "startTime", "start_time");
+                    String rawEndTime = getTime(obj, "endTime", "end_time");
 
-                    String rawEndTime = null;
-                    if (obj.has("endTime") && !obj.get("endTime").isJsonNull())
-                        rawEndTime = obj.get("endTime").getAsString();
-                    else if (obj.has("end_time") && !obj.get("end_time").isJsonNull())
-                        rawEndTime = obj.get("end_time").getAsString();
+                    AuctionTimeUtil.AuctionState state =
+                            AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, selectedServerNow);
 
-                    AuctionSecondsState state = calculateAuctionSecondsState(rawStartTime, rawEndTime);
-
-                    // Server có thể cung cấp trạng thái như PAID/CANCELLED trực tiếp
-                    String serverStatus = obj.has("status") ? obj.get("status").getAsString() : state.finalStatus;
-                    String effectiveStatus = (serverStatus.equals("PAID") || serverStatus.equals("CANCELLED"))
-                            ? serverStatus
-                            : state.finalStatus;
-
-                    // 3. Lọc theo Trạng thái (Status: OPEN, RUNNING, FINISHED, vv..)
-                    if (!"Tất cả".equals(currentStatus) && !currentStatus.equalsIgnoreCase(effectiveStatus)) {
+                    String serverStatus = getString(obj, "status", state.finalStatus);
+                    if (!"Tất cả".equals(selectedStatus) && !selectedStatus.equalsIgnoreCase(serverStatus)) {
                         continue;
                     }
 
-                    // Dựng Card nếu thỏa mãn toàn bộ bộ lọc
                     int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
                     long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
-                    String imageUrl = obj.has("imageUrl") ? obj.get("imageUrl").getAsString() : "";
-                    boolean isFollowed = loadedFollowedIds.contains(auctionId);
+                    String imageUrl = getString(obj, "imageUrl", "");
+                    boolean isFollowed = followedIds.contains(auctionId);
+                    com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageUrl);
 
                     try {
                         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
                         VBox card = loader.load();
                         ProductCardController controller = loader.getController();
 
-                        controller.setProductData(auctionId, name, price, state.countdownSeconds, effectiveStatus,
+                        controller.setProductData(auctionId, name, price, state.countdownSeconds, serverStatus,
                                 imageUrl, isFollowed);
 
                         cardsToRender.add(card);
+                        if (cardsToRender.size() >= CARD_BATCH_SIZE) {
+                            publishCardBatch(currentRenderVersion, cardsToRender, !cardsPublished);
+                            cardsPublished = true;
+                            cardsToRender = new ArrayList<>();
+                        }
                     } catch (IOException e) {
                         logger.error("Không nạp được giao diện ProductCard.fxml: {}", e.getMessage());
                     }
                 }
 
-                // Cập nhật lên UI
-                Platform.runLater(() -> {
-                    if (productFlowPane != null) {
-                        productFlowPane.getChildren().clear();
-                        productFlowPane.getChildren().addAll(cardsToRender);
-                    }
-                });
+                publishCardBatch(currentRenderVersion, cardsToRender, !cardsPublished);
             } catch (Exception ex) {
                 logger.error("Lỗi xử lý dựng card sảnh đấu giá trong Thread phụ: ", ex);
             }
         }).start();
     }
 
-    /**
-     * Bỏ qua Server, Client tự cầm cân nảy mực dựa vào mốc thời gian thực.
-     */
-
-    public static AuctionSecondsState calculateAuctionSecondsState(
-            String rawStartTime,
-            String rawEndTime) {
-        try {
-            LocalDateTime now = LocalDateTime.now();
-            LocalDateTime start = parseTime(rawStartTime);
-            LocalDateTime end = parseTime(rawEndTime);
-
-            if (start != null && end != null) {
-                // Chưa bắt đầu
-                if (now.isBefore(start)) {
-                    int seconds = (int) ChronoUnit.SECONDS.between(now, start);
-                    return new AuctionSecondsState(seconds, "OPEN");
-                }
-
-                // Đang diễn ra
-                if ((!now.isBefore(start)) && now.isBefore(end)) {
-                    int seconds = (int) ChronoUnit.SECONDS.between(now, end);
-
-                    return new AuctionSecondsState(seconds, "RUNNING");
-                }
-            }
-
-            return new AuctionSecondsState(
-                    0,
-                    "FINISHED");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new AuctionSecondsState(0, "FINISHED");
-        }
-    }
-
-    private static LocalDateTime parseTime(String rawTime) {
-        if (rawTime == null || rawTime.trim().isEmpty()) {
-            return null;
-        }
-        try {
-            return LocalDateTime.parse(
-                    rawTime.trim().replace(" ", "T"),
-                    MULTI_FORMATTER);
-        } catch (Exception e) {
-            logger.error("Parse time lỗi: {}", rawTime);
-            return null;
-        }
-    }
-
-    public static class AuctionSecondsState {
-        public final int countdownSeconds;
-        public final String finalStatus;
-
-        public AuctionSecondsState(int countdownSeconds, String finalStatus) {
-            this.countdownSeconds = countdownSeconds;
-            this.finalStatus = finalStatus;
-        }
-    }
-
     public void refreshData() {
         if (productFlowPane != null) {
-            // Xóa rỗng list cũ, hiển thị trạng thái đang tải (nếu muốn)
-            productFlowPane.getChildren().clear();
-            // Gọi lại API lấy dữ liệu mới
             loadAuctionsFromServer();
         }
     }
 
-    // =========================================================================
-    // CÁC HÀM CÔNG KHAI ĐỂ UI (TEXTFIELD, COMBOBOX) GỌI VÀO KHI TƯƠNG TÁC
-    // =========================================================================
-
-    /**
-     * Gọi hàm này từ sự kiện onKeyTyped của ô tìm kiếm
-     */
-    public void onSearchKeywordChanged(String newKeyword) {
-        this.currentKeyword = newKeyword;
-        applyFiltersAndRender(); // Lọc lại trên dữ liệu hiện có
+    @Override
+    public void refreshContent() {
+        refreshData();
     }
 
-    /**
-     * Gọi hàm này từ sự kiện onAction của ComboBox trạng thái
-     */
+    public void onSearchKeywordChanged(String newKeyword) {
+        this.currentKeyword = newKeyword == null ? "" : newKeyword;
+        searchDebounce.stop();
+        searchDebounce.setOnFinished(event -> applyFiltersAndRender());
+        searchDebounce.playFromStart();
+    }
+
     public void onStatusFilterChanged(String newStatus) {
-        this.currentStatus = newStatus;
-        applyFiltersAndRender(); // Lọc lại trên dữ liệu hiện có
+        this.currentStatus = isBlank(newStatus) ? "Tất cả" : newStatus;
+        applyFiltersAndRender();
+    }
+
+    private String getTime(JsonObject obj, String primaryKey, String fallbackKey) {
+        String raw = getString(obj, primaryKey, null);
+        return raw != null ? raw : getString(obj, fallbackKey, null);
+    }
+
+    private String getString(JsonObject obj, String key, String fallback) {
+        return obj.has(key) && !obj.get(key).isJsonNull()
+                ? obj.get(key).getAsString()
+                : fallback;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private void publishCardBatch(int currentRenderVersion, List<VBox> cards, boolean replaceExisting) {
+        List<VBox> batch = new ArrayList<>(cards);
+        Platform.runLater(() -> {
+            if (productFlowPane == null || renderVersion.get() != currentRenderVersion) {
+                return;
+            }
+
+            if (replaceExisting) {
+                productFlowPane.getChildren().setAll(batch);
+            } else if (!batch.isEmpty()) {
+                productFlowPane.getChildren().addAll(batch);
+            }
+        });
     }
 }

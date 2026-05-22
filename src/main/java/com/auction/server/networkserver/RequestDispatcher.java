@@ -33,6 +33,8 @@ public class RequestDispatcher {
         // Nhóm Auction
         danhSachTrinhXuLy.put(ActionType.JOIN_AUCTION, auctionController);
         danhSachTrinhXuLy.put(ActionType.PLACE_BID, auctionController);
+        danhSachTrinhXuLy.put(ActionType.CONFIRM_BUY_NOW, auctionController);
+        danhSachTrinhXuLy.put(ActionType.SETTLE_BUY_NOW, auctionController);
         danhSachTrinhXuLy.put(ActionType.CREATE_AUCTION, auctionController);
         danhSachTrinhXuLy.put(ActionType.GET_ALL_AUCTIONS, auctionController);
         danhSachTrinhXuLy.put(ActionType.GET_JOINED_AUCTIONS, auctionController);
@@ -46,6 +48,7 @@ public class RequestDispatcher {
         danhSachTrinhXuLy.put(ActionType.UNFOLLOW_AUCTION, auctionController);
         danhSachTrinhXuLy.put(ActionType.GET_FOLLOWED_AUCTIONS, auctionController);
         danhSachTrinhXuLy.put(ActionType.SEND_CHAT_MESSAGE, auctionController);
+        danhSachTrinhXuLy.put(ActionType.GET_SYSTEM_NOTIFICATIONS, auctionController);
         danhSachTrinhXuLy.put("GET_WALLET_HISTORY", authController);
 
         // Nhóm Product

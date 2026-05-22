@@ -35,7 +35,15 @@ public class ClientHandler implements Runnable, AuctionObserver {
     }
 
     /** Thiết lập thông tin người dùng cho phiên kết nối này. */
-    public void datNguoiDungHienTai(User user) { this.nguoiDungHienTai = user; }
+    public void datNguoiDungHienTai(User user) {
+        if (this.nguoiDungHienTai != null) {
+            UserManager.getInstance().huyKetNoi(this.nguoiDungHienTai.getId(), this);
+        }
+        this.nguoiDungHienTai = user;
+        if (user != null) {
+            UserManager.getInstance().dangKyKetNoi(user.getId(), this);
+        }
+    }
 
     /** Truy xuất người dùng hiện tại đang đăng nhập. */
     public User layNguoiDungHienTai() { return nguoiDungHienTai; }
@@ -57,13 +65,19 @@ public class ClientHandler implements Runnable, AuctionObserver {
             while ((chuoiJson = in.readLine()) != null) {
                 logger.debug("Dữ liệu nhận từ {}: {}", socketClient.getInetAddress(), chuoiJson);
 
-                JsonObject yeuCau = JsonParser.parseString(chuoiJson).getAsJsonObject();
-                String loaiYeuCau = yeuCau.get("type").getAsString();
+                JsonObject yeuCau = null;
+                try {
+                    yeuCau = JsonParser.parseString(chuoiJson).getAsJsonObject();
+                    String loaiYeuCau = yeuCau.get("type").getAsString();
 
-                // Chuyển giao xử lý cho bộ điều phối
-                String phanHoi = RequestDispatcher.layInstance().dieuPhoi(loaiYeuCau, yeuCau, this);
-                if (phanHoi != null) {
-                    out.println(phanHoi);
+                    // Chuyển giao xử lý cho bộ điều phối
+                    String phanHoi = RequestDispatcher.layInstance().dieuPhoi(loaiYeuCau, yeuCau, this);
+                    if (phanHoi != null) {
+                        out.println(phanHoi);
+                    }
+                } catch (RuntimeException e) {
+                    logger.error("Lỗi xử lý request từ client {}: {}", socketClient.getInetAddress(), chuoiJson, e);
+                    out.println(taoPhanHoiLoi(yeuCau));
                 }
             }
         } catch (IOException e) {
@@ -76,10 +90,22 @@ public class ClientHandler implements Runnable, AuctionObserver {
     /** Xóa trạng thái Online khi ngắt kết nối. */
     private void donDepKetNoi() {
         if (nguoiDungHienTai != null) {
+            UserManager.getInstance().huyKetNoi(nguoiDungHienTai.getId(), this);
             UserManager.getInstance().dangXuat(nguoiDungHienTai.getId());
             logger.info("Người dùng {} đã thoát hệ thống.", nguoiDungHienTai.getUsername());
         }
         try { socketClient.close(); } catch (IOException ignored) {}
+    }
+
+    private String taoPhanHoiLoi(JsonObject yeuCau) {
+        JsonObject loi = new JsonObject();
+        loi.addProperty("type", "ERROR_RESPONSE");
+        loi.addProperty("success", false);
+        loi.addProperty("message", "Server không xử lý được yêu cầu.");
+        if (yeuCau != null && yeuCau.has("requestId") && !yeuCau.get("requestId").isJsonNull()) {
+            loi.addProperty("requestId", yeuCau.get("requestId").getAsString());
+        }
+        return gson.toJson(loi);
     }
 
     /** Gửi thông báo giá mới (Real-time) cho Client qua Observer Pattern. */
@@ -122,6 +148,14 @@ public class ClientHandler implements Runnable, AuctionObserver {
             update.addProperty("isSystem", isSystem);
 
             out.println(gson.toJson(update));
+        }
+    }
+
+    /** Gửi thông báo riêng cho client đang giữ socket này. */
+    public void guiThongBaoHeThong(JsonObject payload) {
+        if (out != null) {
+            payload.addProperty("type", "SYSTEM_NOTIFICATION");
+            out.println(gson.toJson(payload));
         }
     }
 }

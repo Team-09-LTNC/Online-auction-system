@@ -61,10 +61,15 @@ public class AuctionTimeUtil {
     public static LocalDateTime parse(String raw) {
         if (raw == null || raw.isBlank()) return null;
 
+        String normalized = raw.trim().replace(" ", "T");
         try {
-            return LocalDateTime.parse(raw.replace(" ", "T"), MULTI_FORMATTER);
+            return LocalDateTime.parse(normalized, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         } catch (Exception e) {
-            return null;
+            try {
+                return LocalDateTime.parse(normalized, MULTI_FORMATTER);
+            } catch (Exception ignored) {
+                return null;
+            }
         }
     }
 

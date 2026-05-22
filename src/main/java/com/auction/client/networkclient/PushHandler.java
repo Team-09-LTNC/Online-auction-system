@@ -8,6 +8,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import javafx.application.Platform;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Xử lý các gói tin server tự gửi về (không kèm requestId)
@@ -17,6 +19,7 @@ public class PushHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PushHandler.class);
     private static final Gson gson = new Gson();
+    private static final List<JsonObject> pendingNotifications = new CopyOnWriteArrayList<>();
 
     public static com.auction.client.controller.bidder.AuctionRoomController currentRoomController;
 
@@ -55,7 +58,9 @@ public class PushHandler {
             String newStatus = payload.get("newStatus").getAsString();
             Platform.runLater(() -> {
                 logger.info("[Push] Phiên kết thúc! Trạng thái mới: {}", newStatus);
-                // Cài đặt hàm kết thúc phiên tại AuctionRoomController nếu cần
+                if (currentRoomController != null) {
+                    currentRoomController.updateRealtimeStatus(newStatus);
+                }
             });
         } catch (Exception e) {
             logger.error("[PushHandler] Lỗi bóc tách dữ liệu AUCTION_RESULT: {}", e.getMessage());
@@ -65,13 +70,38 @@ public class PushHandler {
         String message = payload.has("message") ? payload.get("message").getAsString() : "";
         String targetRole = payload.has("targetRole") ? payload.get("targetRole").getAsString() : "ALL";
         String myRole = com.auction.client.controller.auth.UserSession.getCurrentRole();
+        int myUserId = com.auction.client.controller.auth.UserSession.getUserId();
+        if (payload.has("targetUserId")
+                && !payload.get("targetUserId").isJsonNull()
+                && payload.get("targetUserId").getAsInt() != myUserId) {
+            return;
+        }
 
         if ("ALL".equalsIgnoreCase(targetRole) || (myRole != null && myRole.equalsIgnoreCase(targetRole))) {
             Platform.runLater(() -> {
+                boolean notificationTabVisible = com.auction.client.controller.MainController.instance != null
+                        && com.auction.client.controller.MainController.instance.getCurrentCenterController()
+                        instanceof com.auction.client.controller.components.ChatController;
+                if (!notificationTabVisible) {
+                    com.auction.client.controller.components.SidebarController.recordUnreadNotification();
+                }
                 if (com.auction.client.controller.components.ChatController.instance != null) {
-                    com.auction.client.controller.components.ChatController.instance.receiveNotification(message);
+                    com.auction.client.controller.components.ChatController.instance.receiveNotification(payload);
+                } else {
+                    pendingNotifications.add(payload.deepCopy());
                 }
             });
         }
+    }
+
+    public static void flushNotifications(com.auction.client.controller.components.ChatController chatController) {
+        for (JsonObject payload : pendingNotifications) {
+            chatController.receiveNotification(payload);
+            pendingNotifications.remove(payload);
+        }
+    }
+
+    public static void clearNotifications() {
+        pendingNotifications.clear();
     }
 }
