@@ -1,13 +1,17 @@
 package com.auction.server.networkserver.handler;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
 import com.auction.common.dto.BaseDTOs;
 import com.auction.common.dto.ItemDTOs;
 import com.auction.common.enums.ActionType;
 import com.auction.common.enums.ErrorCode;
 import com.auction.common.enums.StatusCode;
+import com.auction.common.model.bid.Auction;
 import com.auction.common.model.item.Item;
 import com.auction.common.model.item.ItemAttributes;
-import com.auction.common.model.bid.Auction;
 import com.auction.common.model.user.User;
 import com.auction.server.dao.AuctionDao;
 import com.auction.server.manager.ProductManager;
@@ -15,10 +19,6 @@ import com.auction.server.networkserver.ClientHandler;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 public class ProductController implements RequestHandler {
     private final Gson gson = new Gson();
@@ -50,7 +50,8 @@ public class ProductController implements RequestHandler {
                 return xuLyLaySanPhamCuaToi(yeuCau, client);
             default:
                 return buildResponse(yeuCau, "ERROR_RESPONSE",
-                        new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Action khong duoc ho tro.", ErrorCode.BAD_REQUEST));
+                        new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Action khong duoc ho tro.",
+                                ErrorCode.BAD_REQUEST));
         }
     }
 
@@ -69,15 +70,17 @@ public class ProductController implements RequestHandler {
     private String xuLyLaySanPhamCuaToi(JsonObject yeuCau, ClientHandler client) {
         // LUÔN lấy thông tin người dùng đang đăng nhập trên hệ thống Server
         User nguoiDung = client.layNguoiDungHienTai();
-        
+
         if (nguoiDung == null) {
             logger.warn("xuLyLaySanPhamCuaToi: Người dùng chưa đăng nhập!");
-            return buildResponse(yeuCau, ActionType.GET_MY_PRODUCTS, new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Vui lòng đăng nhập!", ErrorCode.UNAUTHORIZED));
+            return buildResponse(yeuCau, ActionType.GET_MY_PRODUCTS,
+                    new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Vui lòng đăng nhập!", ErrorCode.UNAUTHORIZED));
         }
 
         if (!"SELLER".equalsIgnoreCase(nguoiDung.getRoleName())) {
             return buildResponse(yeuCau, ActionType.GET_MY_PRODUCTS,
-                    new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Chỉ Seller mới xem được sản phẩm của tôi.", ErrorCode.FORBIDDEN));
+                    new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Chỉ Seller mới xem được sản phẩm của tôi.",
+                            ErrorCode.FORBIDDEN));
         }
 
         int sellerId = nguoiDung.getId();
@@ -121,8 +124,10 @@ public class ProductController implements RequestHandler {
         User nguoiDung = client.layNguoiDungHienTai();
 
         if (nguoiDung == null || !"SELLER".equals(nguoiDung.getRoleName())) {
-            logger.warn("xuLyThemSanPham: Thất bại - User null hoặc không phải SELLER. User: {}", nguoiDung != null ? nguoiDung.getUsername() : "null");
-            return buildResponse(yeuCau, "CREATE_ITEM_RESPONSE", new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Chỉ Seller mới có quyền đăng sản phẩm!", ErrorCode.UNAUTHORIZED));
+            logger.warn("xuLyThemSanPham: Thất bại - User null hoặc không phải SELLER. User: {}",
+                    nguoiDung != null ? nguoiDung.getUsername() : "null");
+            return buildResponse(yeuCau, ActionType.CREATE_PRODUCT, new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN,
+                    "Chỉ Seller mới có quyền đăng sản phẩm!", ErrorCode.UNAUTHORIZED));
         }
 
         ItemAttributes thuocTinh = new ItemAttributes();
@@ -133,7 +138,8 @@ public class ProductController implements RequestHandler {
         Item sanPhamMoi = ProductManager.getInstance().taoSanPham(request.getCategory(), thuocTinh);
         if (sanPhamMoi == null) {
             logger.warn("xuLyThemSanPham: Thất bại - Không tạo được đối tượng Item từ Factory");
-            return buildResponse(yeuCau, "CREATE_ITEM_RESPONSE", new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Loại sản phẩm không hợp lệ!", ErrorCode.ITEM_NOT_FOUND));
+            return buildResponse(yeuCau, ActionType.CREATE_PRODUCT, new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST,
+                    "Loại sản phẩm không hợp lệ!", ErrorCode.ITEM_NOT_FOUND));
         }
 
         sanPhamMoi.setCategory(request.getCategory());
@@ -160,15 +166,17 @@ public class ProductController implements RequestHandler {
                 sanPhamMoi,
                 startTime,
                 endTime,
-                buyNowPrice > 0 ? buyNowPrice : null
-        );
+                buyNowPrice > 0 ? buyNowPrice : null);
 
         if (thanhCong) {
-            logger.info("xuLyThemSanPham: Thành công - Sản phẩm ID = {} đã được đăng bởi sellerId = {}", sanPhamMoi.getId(), nguoiDung.getId());
-            return buildResponse(yeuCau, ActionType.CREATE_PRODUCT, new ItemDTOs.CreateItemResponse(true, "Đăng sản phẩm thành công!", sanPhamMoi.getId()));
+            logger.info("xuLyThemSanPham: Thành công - Sản phẩm ID = {} đã được đăng bởi sellerId = {}",
+                    sanPhamMoi.getId(), nguoiDung.getId());
+            return buildResponse(yeuCau, ActionType.CREATE_PRODUCT,
+                    new ItemDTOs.CreateItemResponse(true, "Đăng sản phẩm thành công!", sanPhamMoi.getId()));
         } else {
             logger.error("xuLyThemSanPham: Thất bại - Lỗi khi lưu xuống DB hoặc tạo phiên đấu giá");
-            return buildResponse(yeuCau, ActionType.CREATE_PRODUCT, new BaseDTOs.ErrorResponse(StatusCode.SERVER_ERROR, "Lỗi hệ thống khi lưu sản phẩm.", ErrorCode.INTERNAL_SERVER_ERROR));
+            return buildResponse(yeuCau, ActionType.CREATE_PRODUCT, new BaseDTOs.ErrorResponse(StatusCode.SERVER_ERROR,
+                    "Lỗi hệ thống khi lưu sản phẩm.", ErrorCode.INTERNAL_SERVER_ERROR));
         }
     }
 
@@ -188,23 +196,27 @@ public class ProductController implements RequestHandler {
         }
         User nguoiDung = client.layNguoiDungHienTai();
         if (nguoiDung == null) {
-            return buildResponse(yeuCau, ActionType.DELETE_PRODUCT, new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Vui lòng đăng nhập!", ErrorCode.UNAUTHORIZED));
+            return buildResponse(yeuCau, ActionType.DELETE_PRODUCT,
+                    new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Vui lòng đăng nhập!", ErrorCode.UNAUTHORIZED));
         }
 
         if (!"SELLER".equalsIgnoreCase(nguoiDung.getRoleName())) {
             return buildResponse(yeuCau, ActionType.DELETE_PRODUCT,
-                    new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Chỉ Seller mới được xóa sản phẩm.", ErrorCode.FORBIDDEN));
+                    new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Chỉ Seller mới được xóa sản phẩm.",
+                            ErrorCode.FORBIDDEN));
         }
 
         Item sanPham = ProductManager.getInstance().laySanPhamTheoId(idSanPham);
         if (sanPham == null) {
             return buildResponse(yeuCau, ActionType.DELETE_PRODUCT,
-                    new BaseDTOs.ErrorResponse(StatusCode.NOT_FOUND, "Không tìm thấy sản phẩm để xóa.", ErrorCode.ITEM_NOT_FOUND));
+                    new BaseDTOs.ErrorResponse(StatusCode.NOT_FOUND, "Không tìm thấy sản phẩm để xóa.",
+                            ErrorCode.ITEM_NOT_FOUND));
         }
 
         if (sanPham.getSellerId() != nguoiDung.getId()) {
             return buildResponse(yeuCau, ActionType.DELETE_PRODUCT,
-                    new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Không có quyền xóa sản phẩm này.", ErrorCode.FORBIDDEN));
+                    new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Không có quyền xóa sản phẩm này.",
+                            ErrorCode.FORBIDDEN));
         }
 
         if (ProductManager.getInstance().xoaSanPhamDangChoMo(idSanPham, nguoiDung.getId())) {
@@ -240,7 +252,8 @@ public class ProductController implements RequestHandler {
             int itemId = layItemId(yeuCau);
             if (itemId <= 0) {
                 return buildResponse(yeuCau, ActionType.GET_PRODUCT_BY_ID,
-                        new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu itemId hop le.", ErrorCode.BAD_REQUEST));
+                        new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu itemId hop le.",
+                                ErrorCode.BAD_REQUEST));
             }
             Item sanPham = ProductManager.getInstance().laySanPhamTheoId(itemId);
             if (sanPham != null) {
@@ -249,9 +262,11 @@ public class ProductController implements RequestHandler {
                 dataPayload.add("data", gson.toJsonTree(sanPham));
                 return buildResponse(yeuCau, ActionType.GET_PRODUCT_BY_ID, dataPayload);
             }
-            return buildResponse(yeuCau, ActionType.GET_PRODUCT_BY_ID, new BaseDTOs.ErrorResponse(StatusCode.NOT_FOUND, "Không tìm thấy sản phẩm", ErrorCode.ITEM_NOT_FOUND));
+            return buildResponse(yeuCau, ActionType.GET_PRODUCT_BY_ID, new BaseDTOs.ErrorResponse(StatusCode.NOT_FOUND,
+                    "Không tìm thấy sản phẩm", ErrorCode.ITEM_NOT_FOUND));
         } catch (Exception e) {
-            return buildResponse(yeuCau, ActionType.GET_PRODUCT_BY_ID, new BaseDTOs.ErrorResponse(StatusCode.SERVER_ERROR, "Lỗi hệ thống.", ErrorCode.INTERNAL_SERVER_ERROR));
+            return buildResponse(yeuCau, ActionType.GET_PRODUCT_BY_ID, new BaseDTOs.ErrorResponse(
+                    StatusCode.SERVER_ERROR, "Lỗi hệ thống.", ErrorCode.INTERNAL_SERVER_ERROR));
         }
     }
 
@@ -259,26 +274,38 @@ public class ProductController implements RequestHandler {
         try {
             User nguoiDung = client.layNguoiDungHienTai();
             if (nguoiDung == null || !"SELLER".equals(nguoiDung.getRoleName())) {
-                return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT, new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Chỉ Seller mới được cập nhật!", ErrorCode.UNAUTHORIZED));
+                return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT, new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN,
+                        "Chỉ Seller mới được cập nhật!", ErrorCode.UNAUTHORIZED));
             }
 
             int itemId = layItemId(yeuCau);
             if (itemId <= 0) {
-                return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT, new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu itemId hop le.", ErrorCode.BAD_REQUEST));
+                return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT, new BaseDTOs.ErrorResponse(
+                        StatusCode.BAD_REQUEST, "Thieu itemId hop le.", ErrorCode.BAD_REQUEST));
             }
             Item sanPham = ProductManager.getInstance().laySanPhamTheoId(itemId);
-            if (sanPham == null) return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT, new BaseDTOs.ErrorResponse(StatusCode.NOT_FOUND, "Không tìm thấy", ErrorCode.ITEM_NOT_FOUND));
-            if (sanPham.getSellerId() != nguoiDung.getId()) return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT, new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Không có quyền", ErrorCode.FORBIDDEN));
+            if (sanPham == null)
+                return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT,
+                        new BaseDTOs.ErrorResponse(StatusCode.NOT_FOUND, "Không tìm thấy", ErrorCode.ITEM_NOT_FOUND));
+            if (sanPham.getSellerId() != nguoiDung.getId())
+                return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT,
+                        new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Không có quyền", ErrorCode.FORBIDDEN));
 
-            if (yeuCau.has("name")) sanPham.setName(yeuCau.get("name").getAsString().trim());
-            if (yeuCau.has("description")) sanPham.setDescription(yeuCau.get("description").getAsString().trim());
-            if (yeuCau.has("startingPrice")) sanPham.setStartingPrice(yeuCau.get("startingPrice").getAsLong());
-            if (yeuCau.has("category")) sanPham.setCategory(yeuCau.get("category").getAsString().trim().toUpperCase());
-            if (yeuCau.has("imageUrl")) sanPham.setImageUrl(yeuCau.get("imageUrl").getAsString().trim());
+            if (yeuCau.has("name"))
+                sanPham.setName(yeuCau.get("name").getAsString().trim());
+            if (yeuCau.has("description"))
+                sanPham.setDescription(yeuCau.get("description").getAsString().trim());
+            if (yeuCau.has("startingPrice"))
+                sanPham.setStartingPrice(yeuCau.get("startingPrice").getAsLong());
+            if (yeuCau.has("category"))
+                sanPham.setCategory(yeuCau.get("category").getAsString().trim().toUpperCase());
+            if (yeuCau.has("imageUrl"))
+                sanPham.setImageUrl(yeuCau.get("imageUrl").getAsString().trim());
 
             if (sanPham.getName() == null || sanPham.getName().isBlank() || sanPham.getStartingPrice() <= 0) {
                 return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT,
-                        new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Tên và giá khởi điểm không hợp lệ.", ErrorCode.BAD_REQUEST));
+                        new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Tên và giá khởi điểm không hợp lệ.",
+                                ErrorCode.BAD_REQUEST));
             }
 
             LocalDateTime startTime = yeuCau.has("startTime") && !yeuCau.get("startTime").isJsonNull()
@@ -303,8 +330,7 @@ public class ProductController implements RequestHandler {
                     sanPham,
                     nguoiDung.getId(),
                     startTime,
-                    endTime
-            )) {
+                    endTime)) {
                 JsonObject successPayload = new JsonObject();
                 successPayload.addProperty("success", true);
                 successPayload.addProperty("message", "Cập nhật sản phẩm thành công!");
@@ -314,9 +340,11 @@ public class ProductController implements RequestHandler {
                     new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN,
                             "Chỉ có thể sửa sản phẩm khi phiên còn OPEN và chưa mở.", ErrorCode.FORBIDDEN));
         } catch (Exception e) {
-            return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT, new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Lỗi định dạng", ErrorCode.BAD_REQUEST));
+            return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT,
+                    new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Lỗi định dạng", ErrorCode.BAD_REQUEST));
         }
     }
+
     private int layItemId(JsonObject yeuCau) {
         if (yeuCau == null || !yeuCau.has("itemId") || yeuCau.get("itemId").isJsonNull()) {
             return -1;
