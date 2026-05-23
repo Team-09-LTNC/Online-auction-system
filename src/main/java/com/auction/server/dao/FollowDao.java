@@ -78,4 +78,33 @@ public class FollowDao {
         }
         return list;
     }
+
+    public boolean isFollowing(int userId, int auctionId) {
+        String sql = "SELECT 1 FROM follows WHERE user_id = ? AND auction_id = ? LIMIT 1";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, userId);
+            pstmt.setInt(2, auctionId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi kiểm tra trạng thái theo dõi: ", e);
+            return false;
+        }
+    }
+
+    public int countFollowedAuctions(int userId) {
+        String sql = "SELECT COUNT(*) FROM follows WHERE user_id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, userId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi đếm danh sách theo dõi: ", e);
+            return 0;
+        }
+    }
 }

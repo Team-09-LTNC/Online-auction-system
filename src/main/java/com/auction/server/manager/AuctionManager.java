@@ -114,10 +114,17 @@ public class AuctionManager {
         Auction p = dsPhienDangChay.get(idPhien);
         if (p != null) {
             synchronized (p) {
+                AuctionDao.AuctionNotificationTargets targets =
+                        auctionDao.layNguoiNhanThongBaoKetThuc(idPhien);
                 // Có người thắng -> FINISHED, không có -> CANCELED
-                AuctionStatus statusMoi = (p.getCurrentWinner() != null) ? AuctionStatus.FINISHED : AuctionStatus.CANCELED;
+                AuctionStatus statusMoi = targets != null && targets.winnerId != null
+                        ? AuctionStatus.FINISHED
+                        : AuctionStatus.CANCELED;
                 p.setStatus(statusMoi);
                 auctionDao.capNhatTrangThai(idPhien, statusMoi.name());
+                if (statusMoi == AuctionStatus.FINISHED) {
+                    guiThongBaoKetThucPhien(targets);
+                }
 
                 // Xóa phiên khỏi bộ nhớ và dọn dẹp tài nguyên liên quan
                 dsPhienDangChay.remove(idPhien);
@@ -148,6 +155,9 @@ public class AuctionManager {
             if (giaoDich.getBidAmount() < giaToiThieu) {
                 throw new InvalidBidException("Giá đặt tối thiểu: " + giaToiThieu);
             }
+            if (coDatGiaDatMuaDut(phien, giaoDich.getBidAmount())) {
+                throw new InvalidBidException("Mức giá này đạt giá mua đứt. Hãy xác nhận mua ngay.");
+            }
 
             // Anti-sniping: nếu bid trong 30 giây cuối, gia hạn thêm 60 giây
             if (phien.getEndTime().minusSeconds(30).isBefore(LocalDateTime.now())) {
@@ -164,6 +174,45 @@ public class AuctionManager {
                 return true;
             }
             return false;
+        }
+    }
+
+    /** Mua đứt luôn chốt ở giá mua đứt trong DB, không lấy số tiền từ client. */
+    public BidTransaction xuLyMuaDut(int idPhien, Bidder bidder)
+            throws InvalidBidException, AuctionClosedException {
+        Auction phien = dsPhienDangChay.get(idPhien);
+        if (phien == null) {
+            throw new InvalidBidException("Phiên không khả dụng!");
+        }
+
+        synchronized (phien) {
+            if (!phien.isAcceptingBids()) {
+                throw new AuctionClosedException("Phiên đã kết thúc!");
+            }
+            if (bidder.getId() == phien.getItem().getSellerId()) {
+                throw new InvalidBidException("Không được mua sản phẩm của chính mình!");
+            }
+            if (phien.getBuyNowPrice() == null || phien.getBuyNowPrice() <= 0) {
+                throw new InvalidBidException("Phiên này không hỗ trợ mua đứt.");
+            }
+
+            long giaMuaDut = phien.getBuyNowPrice();
+            if (giaMuaDut < phien.getCurrentHighestBid() + phien.getItem().getBidIncrement()) {
+                throw new InvalidBidException("Giá mua đứt không còn hợp lệ ở thời điểm hiện tại.");
+            }
+
+            BidTransaction giaoDich = new BidTransaction(idPhien, bidder, giaMuaDut, LocalDateTime.now());
+            if (!auctionDao.thucHienGiaoDichDatGia(idPhien, giaoDich)) {
+                throw new InvalidBidException("Đã có người trả giá cao hơn.");
+            }
+
+            phien.updateWinner(giaoDich);
+            phien.setStatus(AuctionStatus.FINISHED);
+            auctionDao.capNhatTrangThai(idPhien, AuctionStatus.FINISHED.name());
+            huyLichDongPhien(idPhien);
+            notifierPool.execute(() -> thongBaoGiaMoi(idPhien, giaoDich));
+            thongBaoTrangThai(idPhien, AuctionStatus.FINISHED);
+            return giaoDich;
         }
     }
 
@@ -203,6 +252,9 @@ public class AuctionManager {
             }
 
             long giaTiepTheo = phien.getCurrentHighestBid() + phien.getItem().getBidIncrement();
+            if (coDatGiaDatMuaDut(phien, giaTiepTheo)) {
+                break;
+            }
 
             // Bot không đủ tiền theo bước giá tiếp theo -> loại bỏ
             if (giaTiepTheo > topBot.getMaxBid()) {
@@ -238,6 +290,68 @@ public class AuctionManager {
         if (observers != null) {
             for (AuctionObserver obs : observers) obs.onNewBid(tx);
         }
+    }
+
+    public void capNhatTrangThaiSauThanhToan(int idPhien, AuctionStatus status) {
+        Auction phien = layPhienTheoId(idPhien);
+        if (phien != null) {
+            synchronized (phien) {
+                phien.setStatus(status);
+                huyLichDongPhien(idPhien);
+                thongBaoTrangThai(idPhien, status);
+            }
+        }
+    }
+
+    private boolean coDatGiaDatMuaDut(Auction phien, long giaDat) {
+        return phien.getBuyNowPrice() != null
+                && phien.getBuyNowPrice() > 0
+                && giaDat >= phien.getBuyNowPrice();
+    }
+
+    private void thongBaoTrangThai(int idPhien, AuctionStatus status) {
+        List<AuctionObserver> observers = dsNguoiTheoDoi.get(idPhien);
+        if (observers != null) {
+            for (AuctionObserver obs : observers) {
+                obs.onStatusChanged(status);
+            }
+        }
+    }
+
+    private void guiThongBaoKetThucPhien(AuctionDao.AuctionNotificationTargets targets) {
+        String itemName = targets.itemName == null ? "sản phẩm" : targets.itemName;
+        String winnerName = targets.winnerName == null ? "người thắng phiên" : targets.winnerName;
+        SystemNotificationManager.getInstance().guiThongBaoRieng(
+                targets.auctionId,
+                targets.winnerId,
+                taoNoiDungThongBaoThanhToan(itemName),
+                true
+        );
+        SystemNotificationManager.getInstance().guiThongBaoRieng(
+                targets.auctionId,
+                targets.sellerId,
+                taoNoiDungThongBaoSeller(itemName, targets.auctionId, winnerName),
+                false
+        );
+    }
+
+    private String taoNoiDungThongBaoThanhToan(String itemName) {
+        return "Chúc mừng bạn đã chiến thắng phiên đấu giá " + itemName + ".\n"
+                + "Xác nhận thanh toán để chính thức sở hữu sản phẩm.\n\n"
+                + "Nếu hủy thanh toán, bạn sẽ chịu phạt 10% tiền đặt giá.";
+    }
+
+    private String taoNoiDungThongBaoSeller(String itemName, int auctionId, String winnerName) {
+        return "Chúc mừng sản phẩm " + itemName + " phiên " + auctionId
+                + " đã được bán thành công, người chiến thắng là " + winnerName + ".";
+    }
+
+    private void huyLichDongPhien(int idPhien) {
+        ScheduledFuture<?> taskDong = tasksDongPhien.remove(idPhien);
+        if (taskDong != null && !taskDong.isDone()) {
+            taskDong.cancel(false);
+        }
+        dsPhienDangChay.remove(idPhien);
     }
 
     // Gửi tin nhắn chat đến tất cả observer trong phiên

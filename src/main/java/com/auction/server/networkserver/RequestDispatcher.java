@@ -5,6 +5,9 @@ import com.auction.server.networkserver.handler.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,6 +15,8 @@ public class RequestDispatcher {
     private static volatile RequestDispatcher instance;
     private final Map<String, RequestHandler> danhSachTrinhXuLy = new HashMap<>();
     private final Gson gson = new Gson();
+
+    private static final Logger logger = LoggerFactory.getLogger(RequestDispatcher.class);
 
     private RequestDispatcher() {
         AuthController authController = new AuthController();
@@ -33,6 +38,8 @@ public class RequestDispatcher {
         // Nhóm Auction
         danhSachTrinhXuLy.put(ActionType.JOIN_AUCTION, auctionController);
         danhSachTrinhXuLy.put(ActionType.PLACE_BID, auctionController);
+        danhSachTrinhXuLy.put(ActionType.CONFIRM_BUY_NOW, auctionController);
+        danhSachTrinhXuLy.put(ActionType.SETTLE_BUY_NOW, auctionController);
         danhSachTrinhXuLy.put(ActionType.CREATE_AUCTION, auctionController);
         danhSachTrinhXuLy.put(ActionType.GET_ALL_AUCTIONS, auctionController);
         danhSachTrinhXuLy.put(ActionType.GET_JOINED_AUCTIONS, auctionController);
@@ -46,6 +53,7 @@ public class RequestDispatcher {
         danhSachTrinhXuLy.put(ActionType.UNFOLLOW_AUCTION, auctionController);
         danhSachTrinhXuLy.put(ActionType.GET_FOLLOWED_AUCTIONS, auctionController);
         danhSachTrinhXuLy.put(ActionType.SEND_CHAT_MESSAGE, auctionController);
+        danhSachTrinhXuLy.put(ActionType.GET_SYSTEM_NOTIFICATIONS, auctionController);
         danhSachTrinhXuLy.put("GET_WALLET_HISTORY", authController);
 
         // Nhóm Product
@@ -58,6 +66,9 @@ public class RequestDispatcher {
 
         // Nhóm Admin
         danhSachTrinhXuLy.put(ActionType.ADMIN_GET_ALL_AUCTIONS, adminController);
+        danhSachTrinhXuLy.put(ActionType.ADMIN_GET_PENDING_AUCTIONS, adminController);
+        danhSachTrinhXuLy.put(ActionType.ADMIN_APPROVE_AUCTION, adminController);
+        danhSachTrinhXuLy.put(ActionType.ADMIN_REJECT_AUCTION, adminController);
     }
 
     public static RequestDispatcher layInstance() {
@@ -72,9 +83,12 @@ public class RequestDispatcher {
     public String dieuPhoi(String loaiYeuCau, JsonObject yeuCau, ClientHandler client) {
         RequestHandler trinhXuLy = danhSachTrinhXuLy.get(loaiYeuCau);
         if (trinhXuLy != null) {
+            logger.info("Đang xử lý yêu cầu '{}' thành công bởi Controller: {}", loaiYeuCau, trinhXuLy.getClass().getSimpleName());
             return trinhXuLy.xuLy(yeuCau, client);
         }
 
+        logger.warn("Không tìm thấy Controller xử lý cho yêu cầu '{}'.", loaiYeuCau);
+        
         JsonObject loi = new JsonObject();
         loi.addProperty("success", false);
         loi.addProperty("errorCode", "ERR_UNKNOWN");

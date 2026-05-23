@@ -50,6 +50,33 @@
     -fx-effect: dropshadow(three-pass-box, rgba(166, 68, 82, 0.2), 10, 0, 0, 4);
 }
 
+.notification-badge {
+    -fx-min-width: 28;
+    -fx-min-height: 28;
+    -fx-pref-width: 28;
+    -fx-pref-height: 28;
+    -fx-background-color: #E84D43;
+    -fx-background-radius: 999;
+    -fx-border-color: #FFF6F4;
+    -fx-border-radius: 999;
+    -fx-border-width: 2;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(three-pass-box, rgba(62,39,35,0.28), 5, 0, 1, 2);
+}
+
+.notification-list {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 2;
+}
+
+.notification-list .virtual-flow,
+.notification-list .viewport {
+    -fx-background-color: transparent;
+}
+
 /* ==========================================================
    PHẦN 3: THẺ SẢN PHẨM (PRODUCT CARD - TRANG HOME)
    ========================================================== */

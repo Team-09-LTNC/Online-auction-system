@@ -6,6 +6,7 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import java.util.List;
 
 
@@ -13,7 +14,9 @@ public class SidebarController {
 
     // Biến static công khai để LoginController có thể bốc và điều khiển từ xa!
     public static SidebarController instance;
+    private static int unreadNotifications;
     @FXML private Button btnDashboard, btnAuctions, btnMyAuctions, btnMyProducts, btnFollowed, btnPostAuction, btnChat;
+    @FXML private Label lblNotificationBadge;
     // Khai báo thêm biến nút Ví tiền kết nối với file FXML
     @FXML private Button btnWallet;
 
@@ -27,6 +30,7 @@ public class SidebarController {
 
         // Kích nổ hàm áp dụng phân quyền ngay khi nạp giao diện ban đầu
         applyRolePermissions();
+        updateNotificationBadge();
     }
 
     /**
@@ -114,7 +118,12 @@ public class SidebarController {
         System.out.println("CATEGORY SEND = " + category);
 
         // 2. Ép hệ thống chuyển hướng sang màn hình "Tất cả phiên"
-        MainController.instance.setCenterContent("/fxml/bidder/AuctionListScreen.fxml");
+        boolean alreadyShowingAuctionList = MainController.instance.getCurrentCenterController()
+                instanceof com.auction.client.controller.bidder.AuctionListScreenController;
+        MainController.instance.setCenterContent(
+                "/fxml/bidder/AuctionListScreen.fxml",
+                !alreadyShowingAuctionList
+        );
 
         // 3. Lấy ra Controller của màn hình vừa được load lên
         Object currentCtrl = MainController.instance.getCurrentCenterController();
@@ -134,10 +143,6 @@ public class SidebarController {
     private void handleOpenAuctions(ActionEvent event) {
         setButtonActive(btnAuctions);
         MainController.instance.setCenterContent("/fxml/bidder/AuctionListScreen.fxml");
-        Object currentCtrl = MainController.instance.getCurrentCenterController();
-        if (currentCtrl instanceof com.auction.client.controller.bidder.AuctionListScreenController) {
-            ((com.auction.client.controller.bidder.AuctionListScreenController) currentCtrl).refreshData();
-        }
     }
 
     @FXML
@@ -174,6 +179,32 @@ public class SidebarController {
     private void handleOpenChat(ActionEvent event) {
         setButtonActive(btnChat); // Đã đồng bộ sang nút biến vừa khai báo
         MainController.instance.setCenterContent("/fxml/components/Chat.fxml");
+        clearUnreadNotifications();
+    }
+
+    public static void recordUnreadNotification() {
+        unreadNotifications++;
+        if (instance != null) {
+            Platform.runLater(instance::updateNotificationBadge);
+        }
+    }
+
+    public static void clearUnreadNotifications() {
+        unreadNotifications = 0;
+        if (instance != null) {
+            Platform.runLater(instance::updateNotificationBadge);
+        }
+    }
+
+    private void updateNotificationBadge() {
+        if (lblNotificationBadge == null) {
+            return;
+        }
+
+        boolean hasUnread = unreadNotifications > 0;
+        lblNotificationBadge.setManaged(hasUnread);
+        lblNotificationBadge.setVisible(hasUnread);
+        lblNotificationBadge.setText(unreadNotifications > 99 ? "99+" : String.valueOf(unreadNotifications));
     }
 
     // =========================================================================
@@ -185,6 +216,10 @@ public class SidebarController {
 
         //  Xóa sạch dấu vết Session cũ để bảo mật, tránh xung đột quyền tài khoản sau!
         UserSession.clear();
+        clearUnreadNotifications();
+        ChatController.instance = null;
+        com.auction.client.networkclient.PushHandler.clearNotifications();
+        com.auction.client.util.ViewCacheManager.clear();
 
         try {
             // 1. Tải file giao diện Đăng nhập gốc

@@ -73,10 +73,25 @@
                             <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="💳" /></graphic>
                         </Button>
 
-                        <Button fx:id="btnChat" onAction="#handleOpenChat" alignment="BASELINE_LEFT" prefHeight="45.0" prefWidth="210.0"
-                                styleClass="nav-button" text="Tin nhắn">
-                            <graphic><Label alignment="CENTER" prefWidth="30.0" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;" text="💬" /></graphic>
-                        </Button>
+                        <StackPane prefHeight="45.0" prefWidth="210.0">
+                            <Button fx:id="btnChat" onAction="#handleOpenChat" alignment="BASELINE_LEFT"
+                                    maxWidth="1.7976931348623157E308" prefHeight="45.0" prefWidth="210.0"
+                                    styleClass="nav-button" text="Thông báo">
+                                <graphic>
+                                    <Label alignment="CENTER" prefWidth="30.0"
+                                           style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 16;"
+                                           text="💬" />
+                                </graphic>
+                            </Button>
+                            <Label fx:id="lblNotificationBadge" alignment="CENTER" managed="false"
+                                   mouseTransparent="true" text="0" visible="false"
+                                   StackPane.alignment="CENTER_RIGHT"
+                                   styleClass="notification-badge">
+                                <StackPane.margin>
+                                    <Insets right="13.0" />
+                                </StackPane.margin>
+                            </Label>
+                        </StackPane>
                     </VBox>
 
                     <Region minHeight="1.0" prefHeight="1.0" style="-fx-background-color: #E5E5E5;" />

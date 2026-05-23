@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
+import com.auction.client.manager.AdminManager;
+
 /**
  * ProductsCensorController
  * ─────────────────────────────────────────────────────────────
@@ -26,27 +28,46 @@ import java.util.ResourceBundle;
 public class ProductsCensorController implements Initializable {
 
     // ── FXML injections ──────────────────────────────────────
-    @FXML private StackPane                        contentPane;
-    @FXML private TableView<Product>               productTable;
-    @FXML private TableColumn<Product, String>     colProductId;
-    @FXML private TableColumn<Product, String>     colSellerId;
-    @FXML private TableColumn<Product, String>     colName;
-    @FXML private TableColumn<Product, String>     colDescription;
-    @FXML private TableColumn<Product, String>     colCategory;
-    @FXML private TableColumn<Product, String>     colStartPrice;
-    @FXML private TableColumn<Product, String>     colImage;
-    @FXML private Label                            lblProductCount;
-    @FXML private TextField                        tfSearch;
-    @FXML private ComboBox<String>                 cbCategory;
-    @FXML private Button                           btnApprove;
-    @FXML private Button                           btnDelete;
+    @FXML
+    private StackPane contentPane;
+    @FXML
+    private TableView<Product> productTable;
+    @FXML
+    private TableColumn<Product, String> colProductId;
+    @FXML
+    private TableColumn<Product, String> colProductName;
+    @FXML
+    private TableColumn<Product, String> colSellerId;
+
+    @FXML
+    private TableColumn<Product, String> colDescription;
+    @FXML
+    private TableColumn<Product, String> colStartPrice;
+    @FXML
+    private TableColumn<Product, String> colCategory;
+    @FXML
+    private TableColumn<Product, String> colStartTime;
+    @FXML
+    private TableColumn<Product, String> colEndTime;
+    @FXML
+    private TableColumn<Product, String> colImage;
+    @FXML
+    private Label lblProductCount;
+    @FXML
+    private TextField tfSearch;
+    @FXML
+    private ComboBox<String> cbCategory;
+    @FXML
+    private Button btnApprove;
+    @FXML
+    private Button btnDelete;
 
     // ── Data ─────────────────────────────────────────────────
-    private final ObservableList<Product> masterList   = FXCollections.observableArrayList();
-    private       FilteredList<Product>  filteredList;
+    private final ObservableList<Product> masterList = FXCollections.observableArrayList();
+    private FilteredList<Product> filteredList;
 
-    private static final List<String> CATEGORY_OPTIONS =
-            List.of("Tất cả", "Điện tử", "Thời trang", "Đồ cổ", "Trang sức", "Xe cộ", "Khác");
+    private static final List<String> CATEGORY_OPTIONS = List.of("Tất cả", "Điện tử", "Thời trang", "Đồ cổ",
+            "Trang sức", "Xe cộ", "Khác");
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -59,12 +80,15 @@ public class ProductsCensorController implements Initializable {
     // ── Setup ────────────────────────────────────────────────
 
     private void setupColumns() {
-        colProductId  .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getProductId()));
-        colSellerId   .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getSellerId()));
-        colName       .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getName()));
+        colProductId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getProductId()));
+        colProductName.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getName()));
+        colSellerId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getSellerId()));
         colDescription.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDescription()));
-        colCategory   .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCategory()));
-        colStartPrice .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStartPrice()));
+        colStartPrice.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStartPrice()));
+        colCategory.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCategory()));
+        colStartTime.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStartTime()));
+        colEndTime.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEndTime()));
+        colImage.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getImageUrl()));
 
         // Cột hình ảnh: hiển thị thumbnail nếu có URL, fallback về text
         colImage.setCellFactory(col -> new TableCell<>() {
@@ -108,19 +132,23 @@ public class ProductsCensorController implements Initializable {
     }
 
     private void loadData() {
-        // TODO: thay bằng service call — chỉ lấy sản phẩm có status = PENDING
-        masterList.setAll(
-                new Product("SP-001", "SELLER-01", "Đồng hồ Rolex vintage",
-                        "Đồng hồ cơ học năm 1972, còn mới 95%",
-                        "Đồ cổ", "350.000.000", ""),
-                new Product("SP-002", "SELLER-02", "iPhone 15 Pro Max 256GB",
-                        "Máy mới 100%, còn bảo hành 11 tháng",
-                        "Điện tử", "28.500.000", ""),
-                new Product("SP-003", "SELLER-01", "Áo dài thêu tay",
-                        "Chất liệu lụa Hà Đông, thêu tay truyền thống",
-                        "Thời trang", "4.200.000", "")
-        );
-        updateCountLabel();
+        AdminManager.getInstance().layDanhSachChoDuyet(
+                auctions -> javafx.application.Platform.runLater(() -> {
+                    masterList.clear();
+                    auctions.forEach(a -> masterList.add(new Product(
+                            String.valueOf(a.getId()),
+                            a.getItemName(),
+                            String.valueOf(a.getSellerId()),
+                            a.getDescription(),
+                            a.getCategory(),
+                            String.valueOf(a.getStartingPrice()),
+                            a.getStartTime(),
+                            a.getEndTime(),
+                            a.getImageUrl() != null ? a.getImageUrl() : "")));
+                    updateCountLabel();
+                }),
+                error -> javafx.application.Platform
+                        .runLater(() -> showInfo("Lỗi", "Không thể tải dữ liệu: " + error)));
     }
 
     // ── FXML handlers ────────────────────────────────────────
@@ -146,19 +174,25 @@ public class ProductsCensorController implements Initializable {
     @FXML
     private void handleApprove() {
         Product selected = productTable.getSelectionModel().getSelectedItem();
-        if (selected == null) return;
+        if (selected == null)
+            return;
 
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Xác nhận duyệt");
-        confirm.setHeaderText("Duyệt sản phẩm?");
-        confirm.setContentText("Duyệt \"" + selected.getName() + "\" của seller " + selected.getSellerId() + "?");
+        confirm.setHeaderText(null);
+        confirm.setContentText("Duyệt phiên \"" + selected.getName() + "\" của seller " + selected.getSellerId() + "?");
 
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            masterList.remove(selected); // TODO: gọi service cập nhật status → APPROVED
-            resetButtons();
-            updateCountLabel();
-            showInfo("Đã duyệt", "Sản phẩm \"" + selected.getName() + "\" đã được duyệt thành công.");
+            AdminManager.getInstance().duyetAuction(
+                    Integer.parseInt(selected.getProductId()),
+                    msg -> javafx.application.Platform.runLater(() -> {
+                        masterList.remove(selected);
+                        resetButtons();
+                        updateCountLabel();
+                        showInfo("Đã duyệt", msg);
+                    }),
+                    error -> javafx.application.Platform.runLater(() -> showInfo("Lỗi", error)));
         }
     }
 
@@ -166,25 +200,32 @@ public class ProductsCensorController implements Initializable {
     @FXML
     private void handleDelete() {
         Product selected = productTable.getSelectionModel().getSelectedItem();
-        if (selected == null) return;
+        if (selected == null)
+            return;
 
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Xác nhận xoá");
-        confirm.setHeaderText("Xoá sản phẩm?");
-        confirm.setContentText("Xoá \"" + selected.getName() + "\"? Hành động này không thể hoàn tác.");
+        confirm.setTitle("Xác nhận từ chối");
+        confirm.setHeaderText(null);
+        confirm.setContentText("Từ chối phiên \"" + selected.getName() + "\"?");
 
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            masterList.remove(selected); // TODO: gọi service xoá
-            resetButtons();
-            updateCountLabel();
+            AdminManager.getInstance().tuChoiAuction(
+                    Integer.parseInt(selected.getProductId()),
+                    msg -> javafx.application.Platform.runLater(() -> {
+                        masterList.remove(selected);
+                        resetButtons();
+                        updateCountLabel();
+                        showInfo("Đã từ chối", msg);
+                    }),
+                    error -> javafx.application.Platform.runLater(() -> showInfo("Lỗi", error)));
         }
     }
 
     // ── Helpers ──────────────────────────────────────────────
 
     private void applyFilter() {
-        String kw  = tfSearch.getText().trim().toLowerCase();
+        String kw = tfSearch.getText().trim().toLowerCase();
         String cat = cbCategory.getValue();
 
         filteredList.setPredicate(p -> {
@@ -226,39 +267,98 @@ public class ProductsCensorController implements Initializable {
 
     public static class Product {
         private final SimpleStringProperty productId;
-        private final SimpleStringProperty sellerId;
         private final SimpleStringProperty name;
+        private final SimpleStringProperty sellerId;
         private final SimpleStringProperty description;
-        private final SimpleStringProperty category;
         private final SimpleStringProperty startPrice;
+        private final SimpleStringProperty category;
+        private final SimpleStringProperty startTime;
+        private final SimpleStringProperty endTime;
         private final SimpleStringProperty imageUrl;
 
-        public Product(String productId, String sellerId, String name,
-                       String description, String category,
-                       String startPrice, String imageUrl) {
-            this.productId   = new SimpleStringProperty(productId);
-            this.sellerId    = new SimpleStringProperty(sellerId);
-            this.name        = new SimpleStringProperty(name);
+        public Product(String productId, String name, String sellerId, String description, String category,
+                String startPrice, String startTime, String endTime, String imageUrl) {
+            this.productId = new SimpleStringProperty(productId);
+            this.name = new SimpleStringProperty(name);
+            this.sellerId = new SimpleStringProperty(sellerId);
             this.description = new SimpleStringProperty(description);
-            this.category    = new SimpleStringProperty(category);
-            this.startPrice  = new SimpleStringProperty(startPrice);
-            this.imageUrl    = new SimpleStringProperty(imageUrl);
+            this.category = new SimpleStringProperty(category);
+            this.startPrice = new SimpleStringProperty(startPrice);
+            this.startTime = new SimpleStringProperty(startTime);
+            this.endTime = new SimpleStringProperty(endTime);
+            this.imageUrl = new SimpleStringProperty(imageUrl);
         }
 
-        public String getProductId()   { return productId.get();   }
-        public String getSellerId()    { return sellerId.get();     }
-        public String getName()        { return name.get();         }
-        public String getDescription() { return description.get();  }
-        public String getCategory()    { return category.get();     }
-        public String getStartPrice()  { return startPrice.get();   }
-        public String getImageUrl()    { return imageUrl.get();     }
+        public String getProductId() {
+            return productId.get();
+        }
 
-        public SimpleStringProperty productIdProperty()   { return productId;   }
-        public SimpleStringProperty sellerIdProperty()    { return sellerId;    }
-        public SimpleStringProperty nameProperty()        { return name;        }
-        public SimpleStringProperty descriptionProperty() { return description; }
-        public SimpleStringProperty categoryProperty()    { return category;    }
-        public SimpleStringProperty startPriceProperty()  { return startPrice;  }
-        public SimpleStringProperty imageUrlProperty()    { return imageUrl;    }
+        public String getName() {
+            return name.get();
+        }
+
+        public String getSellerId() {
+            return sellerId.get();
+        }
+
+        public String getDescription() {
+            return description.get();
+        }
+
+        public String getStartPrice() {
+            return startPrice.get();
+        }
+
+        public String getCategory() {
+            return category.get();
+        }
+
+        public String getStartTime() {
+            return startTime.get();
+        }
+
+        public String getEndTime() {
+            return endTime.get();
+        }
+
+        public String getImageUrl() {
+            return imageUrl.get();
+        }
+
+        public SimpleStringProperty productIdProperty() {
+            return productId;
+        }
+
+        public SimpleStringProperty sellerIdProperty() {
+            return sellerId;
+        }
+
+        public SimpleStringProperty nameProperty() {
+            return name;
+        }
+
+        public SimpleStringProperty descriptionProperty() {
+            return description;
+        }
+
+        public SimpleStringProperty categoryProperty() {
+            return category;
+        }
+
+        public SimpleStringProperty startPriceProperty() {
+            return startPrice;
+        }
+
+        public SimpleStringProperty startTimeProperty() {
+            return startTime;
+        }
+
+        public SimpleStringProperty endTimeProperty() {
+            return endTime;
+        }
+
+        public SimpleStringProperty imageUrlProperty() {
+            return imageUrl;
+        }
     }
 }

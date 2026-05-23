@@ -1,169 +1,239 @@
 package com.auction.client.controller.components;
 
 import com.auction.client.networkclient.ClientSocket;
-import com.auction.client.controller.auth.UserSession;
 import com.auction.common.enums.ActionType;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ChatController {
-
-    private static final Logger logger = LoggerFactory.getLogger(ChatController.class);
-
-    @FXML private HBox hboxSellerTarget;
-    @FXML private ComboBox<String> comboChatTarget;
-    @FXML private ListView<String> lvChatMessages;
-    @FXML private TextField txtMessageInput;
-    @FXML private Button btnSendMessage;
-    @FXML private ListView<String> lvChatRooms;
-    @FXML private VBox chatArea;
-    @FXML private Label lblRoomName;
-
     public static ChatController instance;
-    private int currentAuctionId = -1; 
-    
-    // Lưu tạm danh sách ID phòng chat tương ứng với item trong ListView
-    private final java.util.Map<String, Integer> roomMap = new java.util.HashMap<>();
+    private final Set<Long> renderedNotificationIds = new HashSet<>();
+
+    @FXML private ListView<Node> lvChatMessages;
+    @FXML private Label lblNotificationCount;
+    @FXML private VBox emptyNotificationState;
 
     @FXML
     public void initialize() {
         instance = this;
-        chatArea.setVisible(false); // Ẩn vùng chat đi cho đến khi chọn phòng
-        
-        if (comboChatTarget != null) {
-            comboChatTarget.setItems(FXCollections.observableArrayList("Gửi tất cả mọi người", "Chỉ gửi người đang theo dõi"));
-            comboChatTarget.setValue("Gửi tất cả mọi người");
-        }
-
-        String role = UserSession.getCurrentRole();
-        if (role != null) {
-            if (!"SELLER".equalsIgnoreCase(role)) {
-                if (hboxSellerTarget != null) {
-                    hboxSellerTarget.setVisible(false);
-                    hboxSellerTarget.setManaged(false);
-                }
-            }
-        }
-
-        // Sự kiện khi click vào một phòng trong ListView
-        if (lvChatRooms != null) {
-            lvChatRooms.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-                if (newValue != null && roomMap.containsKey(newValue)) {
-                    openChatRoom(roomMap.get(newValue), newValue);
-                }
-            });
-        }
-
-        fetchJoinedRooms();
+        cauHinhDanhSachThongBao();
+        capNhatTongThongBao();
+        taiThongBaoDaLuu();
+        com.auction.client.networkclient.PushHandler.flushNotifications(this);
     }
 
-    private void fetchJoinedRooms() {
-        JsonObject request = new JsonObject();
-        request.addProperty("type", ActionType.GET_JOINED_AUCTIONS);
-
-        ClientSocket.getInstance().sendJsonRequest(request, "JOINED_AUCTIONS_RESPONSE", response -> {
-            Platform.runLater(() -> {
-                if (response.has("success") && response.get("success").getAsBoolean() && response.has("auctions")) {
-                    JsonArray auctions = response.getAsJsonArray("auctions");
-                    lvChatRooms.getItems().clear();
-                    roomMap.clear();
-                    
-                    for (JsonElement element : auctions) {
-                        JsonObject obj = element.getAsJsonObject();
-                        int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
-                        String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Phiên Đấu Giá";
-                        
-                        if (auctionId != -1) {
-                            String displayTxt = "💬 " + name;
-                            roomMap.put(displayTxt, auctionId);
-                            lvChatRooms.getItems().add(displayTxt);
-                        }
-                    }
-                    if (lvChatRooms.getItems().isEmpty()) {
-                        lvChatRooms.getItems().add("Chưa tham gia phiên nào");
-                        lvChatRooms.setDisable(true);
-                    } else {
-                        lvChatRooms.setDisable(false);
-                    }
-                }
-            });
-        });
-    }
-
-    private void openChatRoom(int auctionId, String roomName) {
-        this.currentAuctionId = auctionId;
-        chatArea.setVisible(true);
-        lblRoomName.setText(roomName.replace("💬 ", ""));
-        
-        lvChatMessages.getItems().clear();
-        lvChatMessages.getItems().add("[Hệ thống]: Chào mừng bạn tham gia phòng trao đổi trực tuyến của " + lblRoomName.getText());
-
-        // Gửi lệnh tham gia phòng để Server add vào Observer (nếu chưa)
-        JsonObject joinReq = new JsonObject();
-        joinReq.addProperty("type", ActionType.JOIN_AUCTION);
-        joinReq.addProperty("auctionId", auctionId);
-        ClientSocket.getInstance().sendJsonRequest(joinReq, null, null);
-    }
-
-    public void setAuctionId(int auctionId) {
-        this.currentAuctionId = auctionId;
-    }
-
-    @FXML
-    private void handleSendMessage(ActionEvent event) {
-        if (currentAuctionId == -1) return;
-        
-        String message = txtMessageInput.getText().trim();
-        if (message.isEmpty()) return;
-
-        JsonObject jsonRequest = new JsonObject();
-        jsonRequest.addProperty("type", ActionType.SEND_CHAT_MESSAGE);
-        jsonRequest.addProperty("auctionId", currentAuctionId);
-        jsonRequest.addProperty("message", message);
-
-        if (btnSendMessage != null) btnSendMessage.setDisable(true);
-
-        ClientSocket.getInstance().sendJsonRequest(jsonRequest, "CHAT_SEND_RESPONSE", response -> {
-            Platform.runLater(() -> {
-                if (btnSendMessage != null) btnSendMessage.setDisable(false);
-
-                boolean success = response.has("success") && response.get("success").getAsBoolean();
-                if (success) {
-                    if (txtMessageInput != null) txtMessageInput.clear();
-                } else {
-                    Alert alert = new Alert(Alert.AlertType.WARNING, "Không thể gửi tin nhắn!");
-                    alert.showAndWait();
-                }
-            });
-        });
-    }
-
-    public void receiveIncomingMessage(String senderName, String msgContent, boolean isSystem) {
-        if (lvChatMessages == null) return;
-
+    /**
+     * Phương thức này được PushHandler gọi trực tiếp khi có SYSTEM_NOTIFICATION
+     */
+    public void receiveNotification(String content) {
         Platform.runLater(() -> {
-            String logEntry;
-            if (isSystem) {
-                logEntry = String.format("[Hệ thống]: %s", msgContent);
-            } else {
-                logEntry = String.format("%s: %s", senderName, msgContent);
+            if (lvChatMessages != null) {
+                themThongBao(taoThongBaoThuong(content));
             }
-            lvChatMessages.getItems().add(logEntry);
-            lvChatMessages.scrollTo(lvChatMessages.getItems().size() - 1);
         });
     }
 
-    public static void shutdown() {
+    public void receiveNotification(JsonObject payload) {
+        Platform.runLater(() -> {
+            hienThiThongBao(payload);
+        });
+    }
+
+    private void hienThiThongBao(JsonObject payload) {
+        if (lvChatMessages == null || daHienThi(payload)) {
+            return;
+        }
+
+        boolean paymentRequired = payload.has("paymentRequired")
+                && payload.get("paymentRequired").getAsBoolean();
+        String message = payload.has("message") ? payload.get("message").getAsString() : "";
+        if (paymentRequired && payload.has("auctionId")) {
+            themThongBao(taoThongBaoThanhToan(payload.get("auctionId").getAsInt(), message));
+        } else {
+            themThongBao(taoThongBaoThuong(message));
+        }
+    }
+
+    private boolean daHienThi(JsonObject payload) {
+        if (!payload.has("notificationId") || payload.get("notificationId").isJsonNull()) {
+            return false;
+        }
+        return !renderedNotificationIds.add(payload.get("notificationId").getAsLong());
+    }
+
+    private Node taoThongBaoThuong(String content) {
+        Label title = new Label("Thông báo hệ thống");
+        title.setStyle("-fx-text-fill: #7A1B28; -fx-font-size: 13px; -fx-font-weight: bold;");
+
+        Label label = new Label(content);
+        label.setWrapText(true);
+        label.setMaxWidth(Double.MAX_VALUE);
+        label.setStyle("-fx-text-fill: #3E2723; -fx-font-size: 13px; -fx-line-spacing: 2px;");
+
+        VBox card = taoKhungThongBao();
+        card.getChildren().addAll(title, label);
+        return bocThongBao("!", card);
+    }
+
+    private Node taoThongBaoThanhToan(int auctionId, String content) {
+        Label title = new Label("Thông báo chiến thắng");
+        title.setStyle("-fx-text-fill: #7A1B28; -fx-font-size: 14px; -fx-font-weight: bold;");
+
+        Label body = new Label(content);
+        body.setWrapText(true);
+        body.setMaxWidth(Double.MAX_VALUE);
+        body.setStyle("-fx-text-fill: #3E2723; -fx-font-size: 13px; -fx-line-spacing: 2px;");
+
+        Button cancel = new Button("Hủy thanh toán");
+        cancel.setStyle("-fx-background-color: #F0ECE8; -fx-text-fill: #3E2723; "
+                + "-fx-font-weight: bold; -fx-background-radius: 7; -fx-cursor: hand;");
+        Button confirm = new Button("Xác nhận thanh toán");
+        confirm.setStyle("-fx-background-color: #B32638; -fx-text-fill: white; "
+                + "-fx-font-weight: bold; -fx-background-radius: 7; -fx-cursor: hand;");
+
+        Label result = new Label();
+        result.setWrapText(true);
+        result.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+
+        cancel.setOnAction(event -> guiQuyetToan(auctionId, "CANCEL", cancel, confirm, result));
+        confirm.setOnAction(event -> guiQuyetToan(auctionId, "CONFIRM", cancel, confirm, result));
+
+        HBox actions = new HBox(10, cancel, confirm);
+        actions.setAlignment(Pos.CENTER_RIGHT);
+
+        VBox card = taoKhungThongBao();
+        card.getChildren().addAll(title, body, result, actions);
+        return bocThongBao("✓", card);
+    }
+
+    private VBox taoKhungThongBao() {
+        VBox card = new VBox(10);
+        card.setPadding(new Insets(12));
+        card.setMaxWidth(Double.MAX_VALUE);
+        card.setStyle("-fx-background-color: #FFFDFC; -fx-background-radius: 8; "
+                + "-fx-border-color: #E8DDD5; -fx-border-radius: 8;");
+        return card;
+    }
+
+    private Node bocThongBao(String icon, VBox content) {
+        Label marker = new Label(icon);
+        marker.setAlignment(Pos.CENTER);
+        marker.setMinSize(30, 30);
+        marker.setPrefSize(30, 30);
+        marker.setStyle("-fx-background-color: #F4DDE0; -fx-background-radius: 99; "
+                + "-fx-text-fill: #A64452; -fx-font-size: 15px; -fx-font-weight: bold;");
+
+        HBox row = new HBox(12, marker, content);
+        row.setAlignment(Pos.TOP_LEFT);
+        row.setFillHeight(true);
+        HBox.setHgrow(content, javafx.scene.layout.Priority.ALWAYS);
+        return row;
+    }
+
+    private void cauHinhDanhSachThongBao() {
+        if (lvChatMessages == null) {
+            return;
+        }
+        lvChatMessages.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(Node item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(null);
+                setGraphic(empty ? null : item);
+                setPadding(new Insets(7, 5, 7, 5));
+                setStyle("-fx-background-color: transparent;");
+            }
+        });
+        lvChatMessages.getItems().addListener(
+                (javafx.collections.ListChangeListener<Node>) change -> capNhatTongThongBao()
+        );
+    }
+
+    private void themThongBao(Node notification) {
+        lvChatMessages.getItems().add(0, notification);
+        capNhatTongThongBao();
+    }
+
+    private void capNhatTongThongBao() {
+        int tong = lvChatMessages == null ? 0 : lvChatMessages.getItems().size();
+        if (lblNotificationCount != null) {
+            lblNotificationCount.setText(tong + " thông báo");
+        }
+        if (emptyNotificationState != null) {
+            emptyNotificationState.setManaged(tong == 0);
+            emptyNotificationState.setVisible(tong == 0);
+        }
+    }
+
+    private void taiThongBaoDaLuu() {
+        JsonObject request = new JsonObject();
+        request.addProperty("type", ActionType.GET_SYSTEM_NOTIFICATIONS);
+        request.addProperty("requestId", java.util.UUID.randomUUID().toString());
+
+        ClientSocket.getInstance().sendJsonRequest(request, "SYSTEM_NOTIFICATIONS_RESPONSE", response -> {
+            Platform.runLater(() -> {
+                if (!response.has("success") || !response.get("success").getAsBoolean()
+                        || !response.has("data") || !response.get("data").isJsonArray()) {
+                    return;
+                }
+
+                com.google.gson.JsonArray notifications = response.getAsJsonArray("data");
+                for (int i = notifications.size() - 1; i >= 0; i--) {
+                    hienThiThongBao(notifications.get(i).getAsJsonObject());
+                }
+            });
+        });
+    }
+
+    private void guiQuyetToan(int auctionId, String decision, Button cancel, Button confirm, Label result) {
+        cancel.setDisable(true);
+        confirm.setDisable(true);
+
+        JsonObject request = new JsonObject();
+        request.addProperty("type", ActionType.SETTLE_BUY_NOW);
+        request.addProperty("auctionId", auctionId);
+        request.addProperty("decision", decision);
+        request.addProperty("requestId", java.util.UUID.randomUUID().toString());
+
+        ClientSocket.getInstance().sendJsonRequest(request, "BUY_NOW_SETTLEMENT_RESPONSE", response -> {
+            Platform.runLater(() -> {
+                boolean success = response.has("success") && response.get("success").getAsBoolean();
+                String message = response.has("message") ? response.get("message").getAsString() : "Không xử lý được.";
+                result.setText(message);
+                result.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: "
+                        + (success ? "#1E8449;" : "#A64452;"));
+                if (!success) {
+                    cancel.setDisable(false);
+                    confirm.setDisable(false);
+                } else {
+                    hienThiKetQua(message);
+                }
+            });
+        });
+    }
+
+    private void hienThiKetQua(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Quyết toán phiên đấu giá");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    public void shutdown() {
         instance = null;
     }
 }

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -41,6 +42,8 @@ public class ServerManager {
                 ClientHandler trinhXuLyClient = new ClientHandler(clientSocket);
                 danhSachLuongClient.execute(trinhXuLyClient);
             }
+        } catch (BindException e) {
+            logger.warn("Không mở server mới được vì cổng {} đang được sử dụng.", port);
         } catch (IOException e) {
             logger.error("Lỗi nghiêm trọng khi mở cổng kết nối mạng: ", e);
         } finally {

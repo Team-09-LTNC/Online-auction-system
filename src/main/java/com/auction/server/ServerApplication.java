@@ -36,6 +36,10 @@ public class ServerApplication {
     }
     // ----------------------------------------
 
+    public static int getPort() {
+        return PORT;
+    }
+
     public static void main(String[] args) {
         logger.info("==================================================");
         logger.info("   HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   ");

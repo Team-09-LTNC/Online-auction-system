@@ -8,6 +8,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import javafx.application.Platform;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Xử lý các gói tin server tự gửi về (không kèm requestId)
@@ -17,6 +19,7 @@ public class PushHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PushHandler.class);
     private static final Gson gson = new Gson();
+    private static final List<JsonObject> pendingNotifications = new CopyOnWriteArrayList<>();
 
     public static com.auction.client.controller.bidder.AuctionRoomController currentRoomController;
 
@@ -24,7 +27,7 @@ public class PushHandler {
         switch (type) {
             case ActionType.AUCTION_BID_UPDATE -> onBidUpdate(payload);
             case ActionType.AUCTION_RESULT -> onAuctionResult(payload);
-            case ActionType.RECEIVE_CHAT_MESSAGE -> onReceiveChatMessage(payload);
+            case "SYSTEM_NOTIFICATION" -> onSystemNotification(payload);
             default -> logger.error("[PushHandler] Unknown push type: {}", type);
         }
     }
@@ -55,27 +58,50 @@ public class PushHandler {
             String newStatus = payload.get("newStatus").getAsString();
             Platform.runLater(() -> {
                 logger.info("[Push] Phiên kết thúc! Trạng thái mới: {}", newStatus);
-                // Cài đặt hàm kết thúc phiên tại AuctionRoomController nếu cần
+                if (currentRoomController != null) {
+                    currentRoomController.updateRealtimeStatus(newStatus);
+                }
             });
         } catch (Exception e) {
             logger.error("[PushHandler] Lỗi bóc tách dữ liệu AUCTION_RESULT: {}", e.getMessage());
         }
     }
+    private static void onSystemNotification(JsonObject payload) {
+        String message = payload.has("message") ? payload.get("message").getAsString() : "";
+        String targetRole = payload.has("targetRole") ? payload.get("targetRole").getAsString() : "ALL";
+        String myRole = com.auction.client.controller.auth.UserSession.getCurrentRole();
+        int myUserId = com.auction.client.controller.auth.UserSession.getUserId();
+        if (payload.has("targetUserId")
+                && !payload.get("targetUserId").isJsonNull()
+                && payload.get("targetUserId").getAsInt() != myUserId) {
+            return;
+        }
 
-    private static void onReceiveChatMessage(JsonObject payload) {
-        try {
-            String senderName = payload.has("senderName") ? payload.get("senderName").getAsString() : "Ẩn danh";
-            String message = payload.has("message") ? payload.get("message").getAsString() : "";
-            boolean isSystem = payload.has("isSystem") && payload.get("isSystem").getAsBoolean();
-
+        if ("ALL".equalsIgnoreCase(targetRole) || (myRole != null && myRole.equalsIgnoreCase(targetRole))) {
             Platform.runLater(() -> {
+                boolean notificationTabVisible = com.auction.client.controller.MainController.instance != null
+                        && com.auction.client.controller.MainController.instance.getCurrentCenterController()
+                        instanceof com.auction.client.controller.components.ChatController;
+                if (!notificationTabVisible) {
+                    com.auction.client.controller.components.SidebarController.recordUnreadNotification();
+                }
                 if (com.auction.client.controller.components.ChatController.instance != null) {
-                    com.auction.client.controller.components.ChatController.instance.receiveIncomingMessage(senderName,
-                            message, isSystem);
+                    com.auction.client.controller.components.ChatController.instance.receiveNotification(payload);
+                } else {
+                    pendingNotifications.add(payload.deepCopy());
                 }
             });
-        } catch (Exception e) {
-            logger.error("[PushHandler] Lỗi bóc tách dữ liệu RECEIVE_CHAT_MESSAGE: {}", e.getMessage());
         }
+    }
+
+    public static void flushNotifications(com.auction.client.controller.components.ChatController chatController) {
+        for (JsonObject payload : pendingNotifications) {
+            chatController.receiveNotification(payload);
+            pendingNotifications.remove(payload);
+        }
+    }
+
+    public static void clearNotifications() {
+        pendingNotifications.clear();
     }
 }

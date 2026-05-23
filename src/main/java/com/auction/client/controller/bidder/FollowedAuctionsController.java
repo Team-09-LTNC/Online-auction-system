@@ -2,6 +2,7 @@ package com.auction.client.controller.bidder;
 
 import com.auction.client.controller.auth.UserSession;
 import com.auction.client.controller.components.ProductCardController;
+import com.auction.client.interfaces.RefreshableCenterContent;
 import com.auction.client.networkclient.ClientSocket;
 import com.auction.client.util.AuctionTimeUtil;
 import com.auction.common.enums.ActionType;
@@ -23,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class FollowedAuctionsController implements Initializable {
+public class FollowedAuctionsController implements Initializable, RefreshableCenterContent {
 
     private static final Logger logger = LoggerFactory.getLogger(FollowedAuctionsController.class);
 
@@ -74,6 +75,7 @@ public class FollowedAuctionsController implements Initializable {
                             String name = obj.get("itemName").getAsString();
                             long price = obj.get("currentPrice").getAsLong();
                             String img = obj.get("imageUrl").getAsString();
+                            com.auction.client.util.ImageCacheManager.preloadPreviewImage(img);
 
                             String start = obj.has("startTime") ? obj.get("startTime").getAsString() : null;
                             String end = obj.has("endTime") ? obj.get("endTime").getAsString() : null;
@@ -108,5 +110,10 @@ public class FollowedAuctionsController implements Initializable {
                     }
                 }
         );
+    }
+
+    @Override
+    public void refreshContent() {
+        loadFollowedAuctionsFromServer();
     }
 }

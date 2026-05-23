@@ -10,11 +10,15 @@ import com.google.gson.JsonArray;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.auction.common.enums.ActionType;
 import com.auction.common.model.bid.Auction;
 
-
 public class AdminController implements RequestHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
     private final Gson gson = GsonConfig.getInstance();
     private final AdminDao adminDao = new AdminDao();
@@ -31,6 +35,12 @@ public class AdminController implements RequestHandler {
         switch (loaiYeuCau) {
             case ActionType.ADMIN_GET_ALL_AUCTIONS:
                 return xuLyLayDanhSachAuction(yeuCau, reqId);
+            case ActionType.ADMIN_GET_PENDING_AUCTIONS:
+                return xuLyLayDanhSachChoDuyet(reqId);
+            case ActionType.ADMIN_APPROVE_AUCTION:
+                return xuLyDuyetAuction(yeuCau, reqId);
+            case ActionType.ADMIN_REJECT_AUCTION:
+                return xuLyTuChoiAuction(yeuCau, reqId);
             default:
                 return null;
         }
@@ -52,6 +62,60 @@ public class AdminController implements RequestHandler {
         res.addProperty("type", "GET_ALL_AUCTIONS_RESPONSE");
         res.addProperty("success", true);
         res.add("data", array);
+        if (reqId != null)
+            res.addProperty("requestId", reqId);
+        return gson.toJson(res);
+    }
+
+    private String xuLyLayDanhSachChoDuyet(String reqId) {
+        List<Auction> auctions = adminDao.layDanhSachChoDuyet();
+        JsonArray array = new JsonArray();
+        for (Auction a : auctions) {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("id", a.getId());
+            obj.addProperty("itemName", a.getItem().getName());
+            obj.addProperty("sellerId", a.getItem().getSellerId());
+            obj.addProperty("description", a.getItem().getDescription());
+            obj.addProperty("startingPrice", a.getItem().getStartingPrice());
+            obj.addProperty("category", a.getItem().getCategory());
+            obj.addProperty("startTime", a.getStartTime().toString());
+            obj.addProperty("endTime", a.getEndTime().toString());
+            obj.addProperty("imageUrl", a.getItem().getImageUrl());
+            array.add(obj);
+        }
+        JsonObject res = new JsonObject();
+        res.addProperty("type", "ADMIN_GET_PENDING_AUCTIONS_RESPONSE");
+        res.addProperty("success", true);
+        res.add("data", array);
+
+        logger.info("Đã lấy danh sách phiên đấu giá chờ duyệt trong AdminController");
+
+        if (reqId != null)
+            res.addProperty("requestId", reqId);
+        return gson.toJson(res);
+    }
+
+    private String xuLyDuyetAuction(JsonObject yeuCau, String reqId) {
+        int auctionId = yeuCau.get("auctionId").getAsInt();
+        boolean ok = adminDao.duyetAuction(auctionId, "OPEN");
+
+        JsonObject res = new JsonObject();
+        res.addProperty("type", "ADMIN_APPROVE_AUCTION_RESPONSE");
+        res.addProperty("success", ok);
+        res.addProperty("message", ok ? "Đã duyệt phiên đấu giá!" : "Duyệt thất bại!");
+        if (reqId != null)
+            res.addProperty("requestId", reqId);
+        return gson.toJson(res);
+    }
+
+    private String xuLyTuChoiAuction(JsonObject yeuCau, String reqId) {
+        int auctionId = yeuCau.get("auctionId").getAsInt();
+        boolean ok = adminDao.duyetAuction(auctionId, "REJECTED");
+
+        JsonObject res = new JsonObject();
+        res.addProperty("type", "ADMIN_REJECT_AUCTION_RESPONSE");
+        res.addProperty("success", ok);
+        res.addProperty("message", ok ? "Đã từ chối phiên đấu giá!" : "Từ chối thất bại!");
         if (reqId != null)
             res.addProperty("requestId", reqId);
         return gson.toJson(res);

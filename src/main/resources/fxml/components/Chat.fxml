@@ -1,46 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
 
-<HBox prefHeight="700.0" prefWidth="1000.0" spacing="15.0" style="-fx-background-color: #FDFBF9; -fx-padding: 20;"
-      xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+<VBox prefHeight="700.0" prefWidth="800.0" spacing="18.0"
+      style="-fx-background-color: #FDFBF9; -fx-padding: 24;"
+      stylesheets="@../../css/style.css"
+      xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.auction.client.controller.components.ChatController">
 
-    <!-- PAN TRÁI: DANH SÁCH PHÒNG CHAT -->
-    <VBox prefWidth="300.0" spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #EEEEEE;">
-        <Label text="LỊCH SỬ THAM GIA" textFill="#7A1B28" style="-fx-font-weight: bold; -fx-font-size: 16;" />
-        <Label text="Chọn một phiên để nhắn tin" textFill="#888888" style="-fx-font-size: 12;" />
-
-        <ListView fx:id="lvChatRooms" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-control-inner-background: transparent;" />
-    </VBox>
-
-    <!-- PAN PHẢI: KHU VỰC CHAT -->
-    <VBox fx:id="chatArea" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS" spacing="15.0">
-        <HBox alignment="CENTER_LEFT" spacing="15.0">
-            <VBox spacing="2.0" HBox.hgrow="ALWAYS">
-                <Label fx:id="lblRoomName" text="CHƯA CHỌN PHÒNG CHAT" textFill="#3E2723" style="-fx-font-weight: bold; -fx-font-size: 18;" />
-                <Label text="Trao đổi trực tiếp trong phiên đấu giá và nhận thông báo từ người bán." textFill="#888888" style="-fx-font-size: 12;" />
-            </VBox>
-
-            <HBox fx:id="hboxSellerTarget" alignment="CENTER_RIGHT" spacing="10.0" style="-fx-background-color: #F5EBEB; -fx-padding: 8 15; -fx-background-radius: 10; -fx-border-color: #E8DFD8;">
-                <Label text="🎯 Gửi:" style="-fx-font-size: 12; -fx-font-weight: bold;" textFill="#7A1B28" />
-                <ComboBox fx:id="comboChatTarget" prefWidth="150.0" style="-fx-background-radius: 5;" />
-            </HBox>
-        </HBox>
-
-        <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #EEEEEE; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.02), 10, 0, 0, 5);">
-            <ListView fx:id="lvChatMessages" VBox.vgrow="ALWAYS" style="-fx-background-radius: 10; -fx-background-color: transparent;" />
+    <HBox alignment="CENTER_LEFT" spacing="12.0">
+        <VBox spacing="4.0">
+            <Label text="Thông báo" style="-fx-font-weight: bold; -fx-font-size: 26;" textFill="#3E2723" />
+            <Label text="Các cập nhật phiên đấu giá và thanh toán của bạn."
+                   style="-fx-font-size: 13;" textFill="#7D6E6A" />
         </VBox>
+        <Region HBox.hgrow="ALWAYS" />
+        <Label fx:id="lblNotificationCount" text="0 thông báo"
+               style="-fx-background-color: #F2E8E4; -fx-background-radius: 20; -fx-padding: 8 13; -fx-font-weight: bold;"
+               textFill="#7A1B28" />
+    </HBox>
 
-        <HBox spacing="15.0" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #EEEEEE;">
-            <TextField fx:id="txtMessageInput" prefHeight="45.0" promptText="Nhập nội dung tin nhắn của bạn tại đây..." HBox.hgrow="ALWAYS"
-                       style="-fx-background-radius: 10; -fx-font-size: 14; -fx-padding: 0 15;" />
-            <Button fx:id="btnSendMessage" onAction="#handleSendMessage" prefHeight="45.0" prefWidth="120.0"
-                    text="GỬI ĐI 🚀"
-                    style="-fx-background-color: #7A1B28; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-cursor: hand;" />
-        </HBox>
-    </VBox>
-</HBox>
+    <StackPane VBox.vgrow="ALWAYS"
+               style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 12; -fx-border-color: #EEE5DE; -fx-border-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(62,39,35,0.06), 16, 0, 0, 5);">
+        <ListView fx:id="lvChatMessages" styleClass="notification-list" />
+        <VBox fx:id="emptyNotificationState" alignment="CENTER" mouseTransparent="true" spacing="10.0">
+            <padding>
+                <Insets bottom="28.0" left="28.0" right="28.0" top="28.0" />
+            </padding>
+            <Label text="💬" style="-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 34;" />
+            <Label text="Chưa có thông báo mới"
+                   style="-fx-font-size: 17; -fx-font-weight: bold;" textFill="#3E2723" />
+            <Label text="Thông báo chiến thắng, thanh toán và cập nhật bán hàng sẽ xuất hiện tại đây."
+                   maxWidth="420.0" style="-fx-font-size: 13; -fx-text-alignment: center;"
+                   textFill="#7D6E6A" wrapText="true" />
+        </VBox>
+    </StackPane>
+
+</VBox>
