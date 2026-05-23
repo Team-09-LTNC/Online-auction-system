@@ -66,6 +66,7 @@ jobs:
           db.name=auction_db
           db.user=root
           db.password=root
+          db.ssl=false
           EOF
 
       - name: Checkstyle

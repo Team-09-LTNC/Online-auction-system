@@ -133,6 +133,9 @@
                 <version>${maven.surefire.plugin.version}</version>
                 <configuration>
                     <argLine>-Dfile.encoding=UTF-8</argLine>
+                    <systemPropertyVariables>
+                        <db.config.file>application-test.properties</db.config.file>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
 

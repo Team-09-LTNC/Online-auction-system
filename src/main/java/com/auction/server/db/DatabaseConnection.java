@@ -23,11 +23,12 @@ public class DatabaseConnection implements ConnectionProvider {
     private DatabaseConnection() {
         logger.info("Đang khởi tạo Connection Pool (HikariCP)...");
         try {
-            // 1. Tải cấu hình từ file application.properties
+            // 1. Tải cấu hình từ file properties (mặc định application.properties)
+            String configFile = System.getProperty("db.config.file", "application.properties");
             Properties props = new Properties();
-            try (InputStream input = getClass().getClassLoader().getResourceAsStream("application.properties")) {
+            try (InputStream input = getClass().getClassLoader().getResourceAsStream(configFile)) {
                 if (input == null) {
-                    throw new RuntimeException("CRITICAL: Không tìm thấy file application.properties trong thư mục resources!");
+                    throw new RuntimeException("CRITICAL: Không tìm thấy file cấu hình DB: " + configFile);
                 }
                 props.load(input);
             }
@@ -39,8 +40,13 @@ public class DatabaseConnection implements ConnectionProvider {
             String user = props.getProperty("db.user");
             String pass = props.getProperty("db.password");
 
-            String url = "jdbc:mysql://" + host + ":" + port + "/" + dbName +
-                    "?useSSL=true&requireSSL=true&trustServerCertificate=true&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true";
+            boolean defaultSsl = !("localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host));
+            boolean useSsl = Boolean.parseBoolean(props.getProperty("db.ssl", String.valueOf(defaultSsl)));
+            String url = "jdbc:mysql://" + host + ":" + port + "/" + dbName
+                    + (useSsl
+                    ? "?useSSL=true&requireSSL=true&trustServerCertificate=true"
+                    : "?useSSL=false")
+                    + "&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true";
 
             // 4. Thiết lập HikariConfig
             HikariConfig config = new HikariConfig();

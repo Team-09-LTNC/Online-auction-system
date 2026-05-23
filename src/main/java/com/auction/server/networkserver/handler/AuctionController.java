@@ -555,7 +555,7 @@ public class AuctionController implements RequestHandler {
     }
 
     private void copyRequestId(JsonObject yeuCau, JsonObject phanHoi) {
-        if (yeuCau.has("requestId") && !yeuCau.get("requestId").isJsonNull()) {
+        if (yeuCau != null && yeuCau.has("requestId") && !yeuCau.get("requestId").isJsonNull()) {
             phanHoi.addProperty("requestId", yeuCau.get("requestId").getAsString());
         }
     }
