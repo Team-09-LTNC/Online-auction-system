@@ -156,6 +156,26 @@ public class ProductController implements RequestHandler {
         LocalDateTime startTime = LocalDateTime.parse(request.getStartTime(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         LocalDateTime endTime = LocalDateTime.parse(request.getEndTime(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
+        if (sanPhamMoi.getStartingPrice() <= 0) {
+            return buildResponse(yeuCau, ActionType.CREATE_PRODUCT,
+                    new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST,
+                            "Giá khởi điểm phải lớn hơn 0.", ErrorCode.BAD_REQUEST));
+        }
+        if (bidIncrement <= 0) {
+            return buildResponse(yeuCau, ActionType.CREATE_PRODUCT,
+                    new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST,
+                            "Bước giá phải lớn hơn 0.", ErrorCode.BAD_REQUEST));
+        }
+        if (startTime.isBefore(LocalDateTime.now())) {
+            return buildResponse(yeuCau, ActionType.CREATE_PRODUCT,
+                    new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST,
+                            "Thời gian bắt đầu không được ở quá khứ.", ErrorCode.BAD_REQUEST));
+        }
+        if (!endTime.isAfter(startTime)) {
+            return buildResponse(yeuCau, ActionType.CREATE_PRODUCT,
+                    new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST,
+                            "Thời gian kết thúc phải lớn hơn thời gian bắt đầu.", ErrorCode.BAD_REQUEST));
+        }
         if (buyNowPrice > 0 && buyNowPrice <= sanPhamMoi.getStartingPrice()) {
             return buildResponse(yeuCau, ActionType.CREATE_PRODUCT,
                     new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST,

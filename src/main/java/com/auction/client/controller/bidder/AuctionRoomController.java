@@ -153,10 +153,17 @@ public class AuctionRoomController implements Initializable {
                     String rawServerNow = response.has("serverNow") && !response.get("serverNow").isJsonNull()
                             ? response.get("serverNow").getAsString()
                             : null;
+                    String statusFromServer = data.has("status") && !data.get("status").isJsonNull()
+                            ? data.get("status").getAsString()
+                            : (data.has("storedStatus") && !data.get("storedStatus").isJsonNull()
+                            ? data.get("storedStatus").getAsString()
+                            : null);
                     AuctionTimeUtil.AuctionState state =
                             AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, rawServerNow);
                     this.totalSeconds = state.countdownSeconds;
-                    this.currentStatus = state.finalStatus;
+                    this.currentStatus = (statusFromServer != null && !statusFromServer.isBlank())
+                            ? statusFromServer
+                            : state.finalStatus;
 
                     if ("OPEN".equalsIgnoreCase(currentStatus) || "RUNNING".equalsIgnoreCase(currentStatus)) {
                         isAuctionStarted = "RUNNING".equalsIgnoreCase(currentStatus);
