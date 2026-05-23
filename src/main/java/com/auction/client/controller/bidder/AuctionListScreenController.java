@@ -16,6 +16,7 @@ import com.auction.client.controller.auth.UserSession;
 import com.auction.client.controller.components.ProductCardController;
 import com.auction.client.networkclient.ClientSocket;
 import com.auction.common.enums.ActionType;
+import com.auction.client.util.AuctionTimeUtil;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -46,7 +47,7 @@ public class AuctionListScreenController
     @FXML
     private ComboBox<String> cbStatus;
 
-    private String currentCategory = "Tất cả";
+    private String currentCategory = "ALL";
 
     // --- THÊM BIẾN LƯU TRỮ TRẠNG THÁI BỘ LỌC ---
     private String currentKeyword = "";
@@ -54,17 +55,8 @@ public class AuctionListScreenController
 
     private JsonArray allLoadedAuctions = new JsonArray();
     private List<Integer> loadedFollowedIds = new ArrayList<>();
+    private String serverNow;
 
-    // Bộ giải mã thời gian siêu cấp, cân mọi loại định dạng từ DB
-    private static final DateTimeFormatter MULTI_FORMATTER = DateTimeFormatter.ofPattern(
-            "[yyyy-MM-dd HH:mm:ss.SSSSSS]" +
-                    "[yyyy-MM-dd HH:mm:ss.SSS]" +
-                    "[yyyy-MM-dd HH:mm:ss.S]" +
-                    "[yyyy-MM-dd HH:mm:ss]" +
-                    "[yyyy-MM-dd'T'HH:mm:ss.SSSSSS]" +
-                    "[yyyy-MM-dd'T'HH:mm:ss.SSS]" +
-                    "[yyyy-MM-dd'T'HH:mm:ss.S]" +
-                    "[yyyy-MM-dd'T'HH:mm:ss]");
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -127,6 +119,9 @@ public class AuctionListScreenController
 
         ClientSocket.getInstance().sendJsonRequest(request, "AUCTION_LIST_RESPONSE", response -> {
             if (response.has("auctions")) {
+                serverNow = response.has("serverNow")
+                        ? response.get("serverNow").getAsString()
+                        : null;
                 // Lưu toàn bộ dữ liệu gốc vào biến toàn cục để tái sử dụng khi người dùng
                 // Filter/Search
                 allLoadedAuctions = response.getAsJsonArray("auctions");
@@ -157,9 +152,11 @@ public class AuctionListScreenController
                 for (JsonElement element : allLoadedAuctions) {
                     JsonObject obj = element.getAsJsonObject();
 
+                    System.out.println("CỤC JSON THẬT TỪ SERVER: " + obj.toString());
+
                     // 1. Lọc theo Danh mục (Category)
                     String itemCategory = obj.has("category") ? obj.get("category").getAsString() : "";
-                    if (!"Tất cả".equals(currentCategory) && !currentCategory.equalsIgnoreCase(itemCategory)) {
+                    if (!"ALL".equals(currentCategory) && !currentCategory.equalsIgnoreCase(itemCategory)) {
                         continue;
                     }
 
@@ -183,13 +180,17 @@ public class AuctionListScreenController
                     else if (obj.has("end_time") && !obj.get("end_time").isJsonNull())
                         rawEndTime = obj.get("end_time").getAsString();
 
-                    AuctionSecondsState state = calculateAuctionSecondsState(rawStartTime, rawEndTime);
+                    AuctionTimeUtil.AuctionState state =
+                            AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, serverNow);
 
-                    // Server có thể cung cấp trạng thái như PAID/CANCELLED trực tiếp
-                    String serverStatus = obj.has("status") ? obj.get("status").getAsString() : state.finalStatus;
-                    String effectiveStatus = (serverStatus.equals("PAID") || serverStatus.equals("CANCELLED"))
-                            ? serverStatus
+                    String serverStatus = obj.has("status")
+                            ? obj.get("status").getAsString()
                             : state.finalStatus;
+
+                    String effectiveStatus =
+                            (serverStatus.equals("PAID") || serverStatus.equals("CANCELLED"))
+                                    ? serverStatus
+                                    : state.finalStatus;
 
                     // 3. Lọc theo Trạng thái (Status: OPEN, RUNNING, FINISHED, vv..)
                     if (!"Tất cả".equals(currentStatus) && !currentStatus.equalsIgnoreCase(effectiveStatus)) {
@@ -229,67 +230,6 @@ public class AuctionListScreenController
         }).start();
     }
 
-    /**
-     * Bỏ qua Server, Client tự cầm cân nảy mực dựa vào mốc thời gian thực.
-     */
-
-    public static AuctionSecondsState calculateAuctionSecondsState(
-            String rawStartTime,
-            String rawEndTime) {
-        try {
-            LocalDateTime now = LocalDateTime.now();
-            LocalDateTime start = parseTime(rawStartTime);
-            LocalDateTime end = parseTime(rawEndTime);
-
-            if (start != null && end != null) {
-                // Chưa bắt đầu
-                if (now.isBefore(start)) {
-                    int seconds = (int) ChronoUnit.SECONDS.between(now, start);
-                    return new AuctionSecondsState(seconds, "OPEN");
-                }
-
-                // Đang diễn ra
-                if ((!now.isBefore(start)) && now.isBefore(end)) {
-                    int seconds = (int) ChronoUnit.SECONDS.between(now, end);
-
-                    return new AuctionSecondsState(seconds, "RUNNING");
-                }
-            }
-
-            return new AuctionSecondsState(
-                    0,
-                    "FINISHED");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new AuctionSecondsState(0, "FINISHED");
-        }
-    }
-
-    private static LocalDateTime parseTime(String rawTime) {
-        if (rawTime == null || rawTime.trim().isEmpty()) {
-            return null;
-        }
-        try {
-            return LocalDateTime.parse(
-                    rawTime.trim().replace(" ", "T"),
-                    MULTI_FORMATTER);
-        } catch (Exception e) {
-            logger.error("Parse time lỗi: {}", rawTime);
-            return null;
-        }
-    }
-
-    public static class AuctionSecondsState {
-        public final int countdownSeconds;
-        public final String finalStatus;
-
-        public AuctionSecondsState(int countdownSeconds, String finalStatus) {
-            this.countdownSeconds = countdownSeconds;
-            this.finalStatus = finalStatus;
-        }
-    }
-
     public void refreshData() {
         if (productFlowPane != null) {
             // Xóa rỗng list cũ, hiển thị trạng thái đang tải (nếu muốn)
@@ -299,9 +239,6 @@ public class AuctionListScreenController
         }
     }
 
-    // =========================================================================
-    // CÁC HÀM CÔNG KHAI ĐỂ UI (TEXTFIELD, COMBOBOX) GỌI VÀO KHI TƯƠNG TÁC
-    // =========================================================================
 
     /**
      * Gọi hàm này từ sự kiện onKeyTyped của ô tìm kiếm

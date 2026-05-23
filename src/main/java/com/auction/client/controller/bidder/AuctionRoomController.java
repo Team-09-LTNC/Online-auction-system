@@ -1,6 +1,7 @@
 package com.auction.client.controller.bidder;
 
 import com.auction.client.networkclient.ClientSocket;
+import com.auction.client.util.AuctionTimeUtil;
 import com.auction.common.dto.AuctionDTOs;
 import com.auction.common.enums.ActionType;
 import com.google.gson.Gson;
@@ -19,7 +20,6 @@ import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 import javafx.animation.ScaleTransition;
 import javafx.animation.Interpolator;
-import javafx.util.Duration;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -57,11 +57,14 @@ public class AuctionRoomController implements Initializable {
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm-dd"); // Cho Chart
     private final DateTimeFormatter historyTimeFormatter = DateTimeFormatter.ofPattern("dd HH:mm:ss"); // Cho Lịch sử
 
-    private int totalSeconds = 0;
+    private long startTimeMillis = 0;
+    private long endTimeMillis = 0;
     private Timeline countdownTimeline;
     private int currentAuctionId = -1;
     private boolean isAuctionStarted = false;
     private String currentStatus = "OPEN";
+    private boolean snipingExtended = false;
+    private long currentPriceValue = 0;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -119,13 +122,15 @@ public class AuctionRoomController implements Initializable {
 
                     if (lblStartingPrice != null) lblStartingPrice.setText(String.format("%,d đ", startingPrice));
                     if (lblBidIncrement != null) lblBidIncrement.setText(String.format("%,d đ", bidIncrement));
-                    if (lblBuyNowPrice != null) {
-                        lblBuyNowPrice.setText(data.has("buyNowPrice") && !data.get("buyNowPrice").isJsonNull()
-                                ? String.format("%,d đ", data.get("buyNowPrice").getAsLong()) : "Không hỗ trợ");
-                    }
-
                     long displayPrice = data.has("currentHighestBid") && !data.get("currentHighestBid").isJsonNull()
-                            ? data.get("currentHighestBid").getAsLong() : startingPrice;
+                            ? data.get("currentHighestBid").getAsLong()
+                            : startingPrice;
+
+                    currentPriceValue = displayPrice;
+
+                    if (lblCurrentPrice != null) {
+                        lblCurrentPrice.setText(String.format("%,d đ", displayPrice));
+                    }
 
                     // Tìm người dẫn đầu
                     String leaderText = "Chưa có ai đặt giá";
@@ -145,9 +150,20 @@ public class AuctionRoomController implements Initializable {
                     // Timeline
                     String rawStartTime = data.has("startTime") && !data.get("startTime").isJsonNull() ? data.get("startTime").getAsString() : "";
                     String rawEndTime = data.has("endTime") && !data.get("endTime").isJsonNull() ? data.get("endTime").getAsString() : "";
-                    AuctionListScreenController.AuctionSecondsState state = AuctionListScreenController.calculateAuctionSecondsState(rawStartTime, rawEndTime);
-                    this.totalSeconds = state.countdownSeconds;
-                    this.currentStatus = state.finalStatus;
+                    AuctionTimeUtil.AuctionState state =
+                            AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, null);
+
+                    this.currentStatus = state.finalStatus != null ? state.finalStatus.toUpperCase() : "OPEN";
+
+                    boolean isOpen = "OPEN".equalsIgnoreCase(currentStatus);
+                    boolean isRunning = "RUNNING".equalsIgnoreCase(currentStatus);
+
+                    isAuctionStarted = isOpen || isRunning;
+
+                    this.startTimeMillis = AuctionTimeUtil.parseToMillis(rawStartTime);
+                    this.endTimeMillis = AuctionTimeUtil.parseToMillis(rawEndTime);
+
+                    snipingExtended = false;
 
                     if ("OPEN".equalsIgnoreCase(currentStatus) || "RUNNING".equalsIgnoreCase(currentStatus)) {
                         isAuctionStarted = "RUNNING".equalsIgnoreCase(currentStatus);
@@ -194,11 +210,10 @@ public class AuctionRoomController implements Initializable {
                 if (response.has("success") && response.get("success").getAsBoolean() && response.has("data")) {
                     JsonArray historyArray = response.getAsJsonArray("data");
                     if (lvBidHistory != null) lvBidHistory.getItems().clear();
-                    if (priceChart != null && priceSeries != null) {
-                        priceChart.getData().remove(priceSeries);
+
+                    if (priceSeries != null) {
+                        priceSeries.getData().clear();
                     }
-                    priceSeries = new XYChart.Series<>();
-                    priceSeries.setName("Giá đấu");
 
                     List<XYChart.Data<String, Number>> chartPoints = new ArrayList<>();
                     String latestLeader = null;
@@ -214,7 +229,6 @@ public class AuctionRoomController implements Initializable {
                                 (bidObj.has("amount") ? bidObj.get("amount").getAsLong() : 0);
 
                         latestLeader = name;
-
                         String rawTime = bidObj.has("bidTime") ? bidObj.get("bidTime").getAsString() : LocalDateTime.now().toString();
 
                         String chartTimeStr;
@@ -235,11 +249,10 @@ public class AuctionRoomController implements Initializable {
                         chartPoints.add(dataPoint);
                     }
 
-                    // Đổ toàn bộ điểm ảnh vào Series mới
+                    priceSeries.getData().clear();
                     priceSeries.getData().addAll(chartPoints);
 
-                    // Gắn lại Series mới vào Chart
-                    if (priceChart != null) {
+                    if (!priceChart.getData().contains(priceSeries)) {
                         priceChart.getData().add(priceSeries);
                     }
 
@@ -254,29 +267,44 @@ public class AuctionRoomController implements Initializable {
     }
 
     private void startCountdown() {
-        if (countdownTimeline != null) countdownTimeline.stop();
 
-        countdownTimeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
-            if (totalSeconds > 0) {
-                totalSeconds--;
-                updateCountdownLabel();
-                if (isAuctionStarted && totalSeconds <= 30 && lblCountdown != null) {
-                    lblCountdown.setStyle("-fx-text-fill: #A64452; -fx-font-weight: bold;");
-                }
-            } else {
-                countdownTimeline.stop();
-                if ("OPEN".equalsIgnoreCase(currentStatus)) refreshAuctionState();
-                else setExpiredUI();
-            }
-        }));
+        if (countdownTimeline != null) {
+            countdownTimeline.stop();
+        }
+
+        countdownTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), e -> {
+
+                    long now = System.currentTimeMillis();
+                    long remaining;
+
+                    if (isAuctionStarted) {
+                        remaining = (endTimeMillis - now) / 1000;
+                    } else {
+                        remaining = (startTimeMillis - now) / 1000;
+                    }
+
+                    if (remaining <= 0) {
+                        countdownTimeline.stop();
+                        refreshAuctionState();
+                        return;
+                    }
+
+                    updateCountdownLabel((int) remaining);
+
+                    if (isAuctionStarted && remaining <= 30) {
+                        lblCountdown.setStyle("-fx-text-fill:#A64452;-fx-font-weight:bold;");
+                    }
+                })
+        );
+
         countdownTimeline.setCycleCount(Timeline.INDEFINITE);
         countdownTimeline.play();
-        updateCountdownLabel();
     }
 
-    private void updateCountdownLabel() {
+    private void updateCountdownLabel(int sec) {
         if (lblCountdown == null) return;
-        int h = totalSeconds / 3600, m = (totalSeconds % 3600) / 60, s = totalSeconds % 60;
+        int h = sec / 3600, m = (sec % 3600) / 60, s = sec % 60;
 
         if (!isAuctionStarted) {
             lblCountdown.setText(String.format("Sắp mở: %02d:%02d:%02d", h, m, s));
@@ -289,7 +317,6 @@ public class AuctionRoomController implements Initializable {
 
     private void setExpiredUI() {
         isAuctionStarted = false;
-        this.totalSeconds = 0;
         if (lblCountdown != null) { lblCountdown.setText("ĐÃ KẾT THÚC!"); lblCountdown.setStyle("-fx-text-fill: #888888; -fx-font-weight: bold;"); }
         if (btnPlaceBid != null) { btnPlaceBid.setDisable(true); btnPlaceBid.setText("HẾT HẠN"); }
         if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(true);
@@ -304,7 +331,7 @@ public class AuctionRoomController implements Initializable {
 
         try {
             long bidAmount = Long.parseLong(input);
-            long currentPrice = Long.parseLong(lblCurrentPrice.getText().replaceAll("\\D", ""));
+            long currentPrice = currentPriceValue;
             long stepPrice = Long.parseLong(lblBidIncrement.getText().replaceAll("\\D", ""));
             long minValidBid = currentPrice + stepPrice;
 
@@ -339,7 +366,7 @@ public class AuctionRoomController implements Initializable {
 
         try {
             long maxPrice = Long.parseLong(txtMaxAutoBid.getText().trim());
-            long currentPrice = Long.parseLong(lblCurrentPrice.getText().replaceAll("\\D", ""));
+            long currentPrice = currentPriceValue;
             long minValidBid = currentPrice + Long.parseLong(lblBidIncrement.getText().replaceAll("\\D", ""));
 
             if (maxPrice < minValidBid) {
@@ -368,14 +395,17 @@ public class AuctionRoomController implements Initializable {
     }
 
     private void checkAndApplySnipingRule() {
-        if (isAuctionStarted && totalSeconds > 0 && totalSeconds <= 30) {
-            totalSeconds += 60;
-            updateCountdownLabel();
+        long remaining = (endTimeMillis - System.currentTimeMillis()) / 1000;
+        if (isAuctionStarted && remaining > 0 && remaining <= 30 && !snipingExtended) {
+            endTimeMillis += 60000;
+            snipingExtended = true;
+            refreshAuctionState();
         }
     }
 
     // UPDATE REALTIME BID
     public void updateRealtimeBid(long newPrice, String bidderName) {
+        currentPriceValue = newPrice;
         if (lblCurrentPrice != null) lblCurrentPrice.setText(String.format("%,d đ", newPrice));
         if (lblLeader != null) lblLeader.setText("Người dẫn đầu: " + bidderName);
 

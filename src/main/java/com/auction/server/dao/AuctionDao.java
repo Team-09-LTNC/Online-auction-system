@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.auction.common.enums.AuctionStatus;
 import com.auction.common.model.bid.Auction;
 import com.auction.common.model.bid.BidTransaction;
-// Thêm 2 import mới cho tính năng Auto-Bid
+
 import com.auction.common.model.bid.AutoBidConfig;
 import com.auction.common.model.user.Bidder;
 
@@ -88,7 +88,8 @@ public class AuctionDao {
         return thucThiTruyVanDanhSach(
                 "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
                         +
-                        "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.status = 'RUNNING' OR a.status = 'OPEN'");
+                        "FROM auctions a JOIN items i ON a.item_id = i.id " +
+                        "WHERE (a.status = 'RUNNING' OR a.status = 'OPEN')");
     }
 
     public List<Auction> layDanhSachPhienChoMo() {
@@ -192,6 +193,7 @@ public class AuctionDao {
             pstmt.setInt(2, idPhien);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
+            logger.error("Lỗi cập nhật thời gian kết thúc", e);
             return false;
         }
     }
@@ -204,6 +206,7 @@ public class AuctionDao {
             pstmt.setInt(2, idPhien);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
+            logger.error("Lỗi cập nhật trạng thái", e);
             return false;
         }
     }
@@ -230,11 +233,30 @@ public class AuctionDao {
     }
 
     public Auction layPhienTheoId(int idPhien) {
-        String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
-                +
-                "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = " + idPhien;
-        List<Auction> danhSach = thucThiTruyVanDanhSach(sql);
-        return danhSach.isEmpty() ? null : danhSach.get(0);
+        String sql =
+                "SELECT a.*, i.name, i.description, i.category, " +
+                        "i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
+                        "FROM auctions a " +
+                        "JOIN items i ON a.item_id = i.id " +
+                        "WHERE a.id = ?";
+
+        try (
+                Connection conn = DatabaseConnection.getInstance().getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)
+        ) {
+            pstmt.setInt(1, idPhien);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return mapResultSetToAuction(rs);
+            }
+
+        } catch (SQLException e) {
+            logger.error("Lỗi layPhienTheoId", e);
+        }
+
+        return null;
     }
 
     public List<Auction> timKiemVaLocPhienDauGia(String keyword, String status) {
@@ -343,5 +365,37 @@ public class AuctionDao {
             logger.error("Lỗi khi lấy danh sách Bot của phiên: ", e);
         }
         return dsBot;
+    }
+    public List<Auction> layDanhSachTheoCategory(String category) {
+        String sql =
+                "SELECT a.*, i.name, i.description, i.category, " +
+                        "i.starting_price, i.bid_increment, i.seller_id, i.image_url " +
+                        "FROM auctions a " +
+                        "JOIN items i ON a.item_id = i.id " +
+                        "WHERE i.category = ?";
+
+        List<Auction> danhSach = new ArrayList<>();
+
+        try (
+                Connection conn = DatabaseConnection.getInstance().getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)
+        ) {
+            pstmt.setString(1, category);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Auction auction = mapResultSetToAuction(rs);
+
+                if (auction != null) {
+                    danhSach.add(auction);
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Lỗi lọc category", e);
+        }
+
+        return danhSach;
     }
 }

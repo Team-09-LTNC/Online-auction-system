@@ -38,6 +38,12 @@ public class AuctionDTOs {
         public long getCurrentPrice() { return currentPrice; }
         public String getStatus() { return status; }
         public String getImageUrl() { return imageUrl; }
+        public String getStartTime() { return startTime; }
+        public void setStartTime(String startTime) { this.startTime = startTime; }
+        public String getEndTime() { return endTime; }
+        public void setEndTime(String endTime) { this.endTime = endTime; }
+        public String getCategory() { return category; }
+        public void setCategory(String category) { this.category = category; }
     }
 
     public static class AuctionListResponse extends BaseDTOs.Response {

@@ -184,6 +184,7 @@ public class AuctionController implements RequestHandler {
         }
         jsonResponse.add("followedIds", followedArray);
 
+        System.out.println("DEBUG SERVER - JSON GỬI VỀ CLIENT: " + jsonResponse.toString());
         return gson.toJson(jsonResponse);
     }
 

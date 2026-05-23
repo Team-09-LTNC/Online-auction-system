@@ -1,5 +1,6 @@
 package com.auction.server.networkserver.handler;
 
+import com.auction.common.dto.AuctionDTOs;
 import com.auction.common.dto.BaseDTOs;
 import com.auction.common.dto.ItemDTOs;
 import com.auction.common.enums.ActionType;
@@ -51,29 +52,43 @@ public class ProductController implements RequestHandler {
 
         if (request != null && request.has("requestId")) {
             response.addProperty("requestId", request.get("requestId").getAsString());
-        }
+        }else {
+            // NẾU VÀO ĐÂY LÀ MẤT requestId
+            logger.error("CẢNH BÁO: Request không có requestId!");}
+
         return gson.toJson(response);
     }
 
     // --- CÁC HÀM XỬ LÝ NGHIỆP VỤ ---
 
     private String xuLyLaySanPhamCuaToi(JsonObject yeuCau, ClientHandler client) {
-        // LUÔN lấy thông tin người dùng đang đăng nhập trên hệ thống Server
         User nguoiDung = client.layNguoiDungHienTai();
-        
         if (nguoiDung == null) {
-            logger.warn("xuLyLaySanPhamCuaToi: Người dùng chưa đăng nhập!");
-            return buildResponse(yeuCau, ActionType.GET_MY_PRODUCTS, new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Vui lòng đăng nhập!", ErrorCode.UNAUTHORIZED));
+            return buildResponse(yeuCau, ActionType.GET_MY_PRODUCTS,
+                    new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Vui lòng đăng nhập!", ErrorCode.UNAUTHORIZED));
         }
 
         int sellerId = nguoiDung.getId();
-        logger.info("xuLyLaySanPhamCuaToi: Lấy sản phẩm cho sellerId = {}", sellerId);
         List<Item> danhSach = ProductManager.getInstance().laySanPhamTheoSellerId(sellerId);
-        logger.info("xuLyLaySanPhamCuaToi: Tìm thấy {} sản phẩm", danhSach.size());
+
+        // BƯỚC QUAN TRỌNG: Map từ Item sang AuctionSummaryDTO
+        List<AuctionDTOs.AuctionSummaryDTO> dtoList = danhSach.stream().map(item -> {
+            return new AuctionDTOs.AuctionSummaryDTO(
+                    item.getId(),
+                    item.getName(),
+                    (long)item.getStartingPrice(),
+                    "RUNNING",
+                    item.getImageUrl(),
+                    item.getStartTime(), // CHỖ NÀY PHẢI CÓ DỮ LIỆU
+                    item.getEndTime(),   // CHỖ NÀY PHẢI CÓ DỮ LIỆU
+                    item.getCategory()
+            );
+        }).collect(java.util.stream.Collectors.toList());
 
         JsonObject dataPayload = new JsonObject();
         dataPayload.addProperty("success", true);
-        dataPayload.add("data", gson.toJsonTree(danhSach));
+        // Gửi list DTO thay vì List Item
+        dataPayload.add("data", gson.toJsonTree(dtoList));
 
         return buildResponse(yeuCau, ActionType.GET_MY_PRODUCTS, dataPayload);
     }

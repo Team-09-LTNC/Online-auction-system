@@ -3,6 +3,7 @@ package com.auction.client.controller.seller;
 import com.auction.client.controller.auth.UserSession;
 import com.auction.client.controller.components.ProductCardController;
 import com.auction.client.networkclient.ClientSocket;
+import com.auction.client.util.AuctionTimeUtil; // IMPORT CÁI NÀY
 import com.auction.common.enums.ActionType;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -19,8 +20,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.ResourceBundle;
 
 public class MyProductsController implements Initializable {
@@ -31,18 +30,12 @@ public class MyProductsController implements Initializable {
     @FXML private Label lblHeaderRole;
     @FXML private Label lblBannerWelcome;
 
-    // Bộ formatter Lazy-Load chấp hết mọi định dạng lỗi chuỗi nano của MySQL
-    private static final DateTimeFormatter MYSQL_LAZY_FORMATTER = DateTimeFormatter.ofPattern(
-            "[yyyy-MM-dd HH:mm:ss[.S]][yyyy-MM-dd HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss[.SSS]]"
-    );
+    private String serverNow; // Cần biến này để đồng bộ thời gian từ Server
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        logger.info("Người bán đang xem danh sách sản phẩm của chính mình.");
         updateDashboardUserInfo();
-
         if (productFlowPane != null) {
-            productFlowPane.getChildren().clear();
             loadMyPostedProducts();
         }
     }
@@ -54,7 +47,6 @@ public class MyProductsController implements Initializable {
 
             if (lblHeaderName != null) lblHeaderName.setText("Chào, " + currentUserName);
             if (lblBannerWelcome != null) lblBannerWelcome.setText("Chào mừng trở lại, " + currentUserName + "! 👋");
-
             if (lblHeaderRole != null) {
                 lblHeaderRole.setText(currentUserRole.substring(0, 1).toUpperCase() + currentUserRole.substring(1).toLowerCase());
             }
@@ -65,92 +57,64 @@ public class MyProductsController implements Initializable {
 
     private void loadMyPostedProducts() {
         productFlowPane.getChildren().clear();
-        Label loadingLabel = new Label("Đang lấy dữ liệu sản phẩm từ máy chủ...");
-        loadingLabel.setStyle("-fx-text-fill: #888888; -fx-font-size: 14px; -fx-padding: 20px;");
-        productFlowPane.getChildren().add(loadingLabel);
 
         JsonObject reqJson = new JsonObject();
         reqJson.addProperty("type", ActionType.GET_MY_PRODUCTS);
-        reqJson.addProperty("requestId", java.util.UUID.randomUUID().toString());
+        reqJson.addProperty("requestId", System.currentTimeMillis());
 
         ClientSocket.getInstance().sendJsonRequest(reqJson, ActionType.GET_MY_PRODUCTS, response -> {
+            System.out.println("DEBUG JSON SELLER: " + response.toString());
             try {
-                boolean success = response.has("success") && response.get("success").getAsBoolean();
-                if (success && response.has("data")) {
+                // Lấy serverNow từ server để tính toán thời gian chính xác
+                serverNow = response.has("serverNow") ? response.get("serverNow").getAsString() : LocalDateTime.now().toString();
+
+                if (response.has("success") && response.get("success").getAsBoolean() && response.has("data")) {
                     Gson gson = new Gson();
                     JsonObject[] items = gson.fromJson(response.get("data"), JsonObject[].class);
 
                     Platform.runLater(() -> {
                         productFlowPane.getChildren().clear();
-
-                        if (items.length == 0) {
-                            productFlowPane.getChildren().add(new Label("Bạn chưa đăng sản phẩm nào."));
-                            return;
-                        }
-
                         for (JsonObject itemObj : items) {
-                            try {
-                                int id = itemObj.has("id") ? itemObj.get("id").getAsInt() : -1;
-                                String name = itemObj.has("name") ? itemObj.get("name").getAsString() : "Sản phẩm không tên";
-                                double startingPrice = itemObj.has("startingPrice") ? itemObj.get("startingPrice").getAsDouble() : 0.0;
-                                String imageUrl = itemObj.has("imageUrl") ? itemObj.get("imageUrl").getAsString() : "";
-
-                                // Đọc trạng thái từ Server trả về
-                                String status = itemObj.has("status") ? itemObj.get("status").getAsString() : "RUNNING";
-
-                                // Bốc tách đồng bộ chuỗi an toàn
-                                String startTimeStr = itemObj.has("startTime") && !itemObj.get("startTime").isJsonNull() ? itemObj.get("startTime").getAsString() : null;
-                                String endTimeStr = itemObj.has("endTime") && !itemObj.get("endTime").isJsonNull() ? itemObj.get("endTime").getAsString() : null;
-
-                                if (endTimeStr == null && itemObj.has("endTimeStr") && !itemObj.get("endTimeStr").isJsonNull()) {
-                                    endTimeStr = itemObj.get("endTimeStr").getAsString();
-                                }
-
-                                int countdownSeconds = calculateCountdownSeconds(startTimeStr, endTimeStr, status);
-
-                                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
-                                VBox card = loader.load();
-                                ProductCardController controller = loader.getController();
-
-                                controller.setProductData(id, name, startingPrice, countdownSeconds, status, imageUrl, false);
-
-                                productFlowPane.getChildren().add(card);
-                            } catch (IOException e) {
-                                logger.error("Lỗi vẽ thẻ sản phẩm: {}", e.getMessage());
-                            }
+                            renderCard(itemObj);
                         }
-                    });
-                } else {
-                    Platform.runLater(() -> {
-                        productFlowPane.getChildren().clear();
-                        productFlowPane.getChildren().add(new Label("Lỗi: Không thể tải dữ liệu từ Server."));
                     });
                 }
             } catch (Exception ex) {
-                logger.error("Lỗi phân tích dữ liệu JSON mạng: ", ex);
+                logger.error("Lỗi load sản phẩm: ", ex);
             }
         });
     }
 
-    private int calculateCountdownSeconds(String startTimeRaw, String endTimeRaw, String status) {
+    private void renderCard(JsonObject itemObj) {
         try {
-            LocalDateTime now = LocalDateTime.now();
+            System.out.println("DEBUG KEYS: " + itemObj.keySet());
+            int id = itemObj.has("auctionId") ? itemObj.get("auctionId").getAsInt() : -1;
+            String name = itemObj.has("itemName") ? itemObj.get("itemName").getAsString() : "Sản phẩm không tên";
+            double startingPrice = itemObj.has("currentPrice") ? itemObj.get("currentPrice").getAsDouble() : 0.0;
+            String imageUrl = itemObj.has("imageUrl") ? itemObj.get("imageUrl").getAsString() : "";
 
-            if ("OPEN".equalsIgnoreCase(status) && startTimeRaw != null && !startTimeRaw.trim().isEmpty()) {
-                String cleanStart = startTimeRaw.trim().replace("T", " ");
-                LocalDateTime start = LocalDateTime.parse(cleanStart, MYSQL_LAZY_FORMATTER);
-                long diff = ChronoUnit.SECONDS.between(now, start);
-                return diff > 0 ? (int) diff : 0;
+            // --- LOGIC ĐỒNG BỘ ---
+            String startTime = itemObj.has("startTime") ? itemObj.get("startTime").getAsString() : null;
+            String endTime = itemObj.has("endTime") ? itemObj.get("endTime").getAsString() : null;
+            String serverStatus = itemObj.has("status") ? itemObj.get("status").getAsString() : "OPEN";
 
-            } else if (endTimeRaw != null && !endTimeRaw.trim().isEmpty()) {
-                String cleanEnd = endTimeRaw.trim().replace("T", " ");
-                LocalDateTime end = LocalDateTime.parse(cleanEnd, MYSQL_LAZY_FORMATTER);
-                long diff = ChronoUnit.SECONDS.between(now, end);
-                return diff > 0 ? (int) diff : 0;
-            }
-        } catch (Exception e) {
-            logger.error("❌ Lỗi xử lý ngày tháng: " + e.getMessage());
+            // Gọi bộ não AuctionTimeUtil
+            AuctionTimeUtil.AuctionState state = AuctionTimeUtil.calculateState(startTime, endTime, serverNow);
+
+            // Xử lý status ưu tiên
+            String effectiveStatus = (serverStatus.equals("PAID") || serverStatus.equals("CANCELLED"))
+                    ? serverStatus : state.finalStatus;
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
+            VBox card = loader.load();
+            ProductCardController controller = loader.getController();
+
+            // Truyền số giây và status sang Card
+            controller.setProductData(id, name, (long)startingPrice, state.countdownSeconds, effectiveStatus, imageUrl, false);
+
+            productFlowPane.getChildren().add(card);
+        } catch (IOException e) {
+            logger.error("Lỗi vẽ thẻ: {}", e.getMessage());
         }
-        return "OPEN".equalsIgnoreCase(status) ? 300 : 1800; // Trả về fallback nếu lỗi nặng phá hủy luồng
     }
 }

@@ -39,7 +39,7 @@ public class ProductCardController {
             int auctionId,
             String name,
             double price,
-            long endTimeMillis,
+            long countdownSeconds,
             String status,
             String imageUrl,
             boolean isFollowed
@@ -50,7 +50,8 @@ public class ProductCardController {
         this.imageUrl = imageUrl;
         this.isFollowed = isFollowed;
         this.currentStatus = status;
-        this.endTimeMillis = endTimeMillis;
+
+        this.endTimeMillis = System.currentTimeMillis() + (countdownSeconds * 1000);
 
         lblProductName.setText(name);
         lblCurrentPrice.setText(String.format("%,.0f đ", price));

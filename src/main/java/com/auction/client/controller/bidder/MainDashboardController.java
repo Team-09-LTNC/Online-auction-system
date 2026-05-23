@@ -120,6 +120,11 @@ public class MainDashboardController implements Initializable, com.auction.clien
                         return;
                     }
 
+                    // 1. LẤY GIỜ SERVER CHUẨN (Bên ngoài vòng lặp)
+                    String serverNow = response.has("serverNow") && !response.get("serverNow").isJsonNull()
+                            ? response.get("serverNow").getAsString()
+                            : null;
+
                     JsonArray auctions = response.getAsJsonArray("auctions");
 
                     java.util.List<VBox> preparedCards = new java.util.ArrayList<>();
@@ -128,34 +133,23 @@ public class MainDashboardController implements Initializable, com.auction.clien
 
                     for (JsonElement element : auctions) {
                         if (count >= 6) break;
-
                         JsonObject obj = element.getAsJsonObject();
+                        System.out.println("DEBUG JSON TOÀN BỘ: " + obj.toString());
 
-                        int auctionId = obj.has("auctionId")
-                                ? obj.get("auctionId").getAsInt()
-                                : -1;
+                        int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
+                        String name = obj.has("itemName") ? obj.get("itemName").getAsString() : "Sản phẩm";
+                        long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
+                        String imageUrl = obj.has("imageUrl") ? obj.get("imageUrl").getAsString() : "";
 
-                        String name = obj.has("itemName")
-                                ? obj.get("itemName").getAsString()
-                                : "Sản phẩm";
+                        // BẮT BUỘC: Lấy startTime/endTime từ JSON
+                        String rawStartTime = obj.has("startTime") ? obj.get("startTime").getAsString() : null;
+                        String rawEndTime = obj.has("endTime") ? obj.get("endTime").getAsString() : null;
 
-                        long price = obj.has("currentPrice")
-                                ? obj.get("currentPrice").getAsLong()
-                                : 0;
-
-                        String imageUrl = obj.has("imageUrl")
-                                ? obj.get("imageUrl").getAsString()
-                                : "";
-
-                        String rawStartTime = obj.has("startTime") && !obj.get("startTime").isJsonNull()
-                                ? obj.get("startTime").getAsString()
-                                : null;
-
-                        String rawEndTime = obj.has("endTime") && !obj.get("endTime").isJsonNull()
-                                ? obj.get("endTime").getAsString()
-                                : null;
-
+                        // GỌI HÀM TÍNH TOÁN VỚI LOG KIỂM CHỨNG
                         AuctionTimeUtil.AuctionState state = AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, null);
+
+                        System.out.println("CHECK -> ID: " + auctionId + " | START: " + rawStartTime + " | STATE: " + state.finalStatus);
+
                         try {
                             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
                             VBox card = loader.load();
@@ -171,7 +165,6 @@ public class MainDashboardController implements Initializable, com.auction.clien
 
                             preparedCards.add(card);
                             count++;
-
                         } catch (Exception e) {
                             logger.error("Load ProductCard lỗi", e);
                         }

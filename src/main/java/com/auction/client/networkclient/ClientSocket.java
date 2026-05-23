@@ -69,6 +69,10 @@ public class ClientSocket {
             String requestId = jsonObject.has("requestId") && !jsonObject.get("requestId").isJsonNull()
                     ? jsonObject.get("requestId").getAsString() : null;
 
+            if (!jsonObject.has("requestId") || jsonObject.get("requestId").isJsonNull()) {
+                logger.error("Gửi request phải thêm requestId !");
+                return;
+            }
             if (onResponse != null) {
                 if (requestId != null) {
                     responseCallbacks.put(requestId, onResponse);
