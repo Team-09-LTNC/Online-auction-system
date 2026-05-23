@@ -93,6 +93,7 @@ public class AuctionController implements RequestHandler {
 
         if (nguoiDung == null || !"BIDDER".equals(nguoiDung.getRoleName())) {
             JsonObject errorRes = gson.toJsonTree(new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Chỉ người mua (Bidder) mới được đặt giá.", ErrorCode.UNAUTHORIZED)).getAsJsonObject();
+            errorRes.addProperty("type", "BID_RESPONSE");
             if (requestId != null) errorRes.addProperty("requestId", requestId);
             return gson.toJson(errorRes);
         }
@@ -110,10 +111,12 @@ public class AuctionController implements RequestHandler {
             }
 
             JsonObject failRes = gson.toJsonTree(new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Đã có người trả giá cao hơn.", ErrorCode.CONCURRENT_CONFLICT)).getAsJsonObject();
+            failRes.addProperty("type", "BID_RESPONSE");
             if (requestId != null) failRes.addProperty("requestId", requestId);
             return gson.toJson(failRes);
         } catch (Exception e) {
             JsonObject errRes = gson.toJsonTree(new BaseDTOs.ErrorResponse(StatusCode.SERVER_ERROR, e.getMessage(), ErrorCode.INTERNAL_SERVER_ERROR)).getAsJsonObject();
+            errRes.addProperty("type", "BID_RESPONSE");
             if (requestId != null) errRes.addProperty("requestId", requestId);
             return gson.toJson(errRes);
         }
