@@ -22,12 +22,10 @@ public class ActionType {
     public static final String GET_ALL_AUCTIONS = "AUCTION_GET_ALL";
     public static final String GET_JOINED_AUCTIONS = "AUCTION_GET_JOINED";
     public static final String GET_AUCTION_BY_ID = "AUCTION_GET_BY_ID";
-    public static final String JOIN_AUCTION      = "AUCTION_JOIN";
-    public static final String LEAVE_AUCTION     = "AUCTION_LEAVE";
-    public static final String CLOSE_AUCTION     = "AUCTION_CLOSE";
-    public static final String PLACE_BID         = "AUCTION_BID_PLACE";
-    public static final String CONFIRM_BUY_NOW   = "AUCTION_BUY_NOW_CONFIRM";
-    public static final String SETTLE_BUY_NOW    = "AUCTION_BUY_NOW_SETTLE";
+    public static final String JOIN_AUCTION = "AUCTION_JOIN";
+    public static final String LEAVE_AUCTION = "AUCTION_LEAVE";
+    public static final String CLOSE_AUCTION = "AUCTION_CLOSE";
+    public static final String PLACE_BID = "AUCTION_BID_PLACE";
     public static final String REGISTER_AUTO_BID = "AUCTION_REGISTER_AUTO_BID";
     public static final String GET_BID_HISTORY = "AUCTION_BID_HISTORY";
     public static final String GET_DASHBOARD_STATS = "USER_DASHBOARD_STATS";
@@ -39,7 +37,6 @@ public class ActionType {
 
     // --- CHAT REAL-TIME ---
     public static final String SEND_CHAT_MESSAGE = "CHAT_SEND_MESSAGE";
-    public static final String GET_SYSTEM_NOTIFICATIONS = "CHAT_GET_SYSTEM_NOTIFICATIONS";
 
     // --- SERVER PUSH (server chủ động gửi, không có requestId) ---
     public static final String AUCTION_BID_UPDATE = "AUCTION_BID_UPDATE";
@@ -50,4 +47,7 @@ public class ActionType {
     public static final String ADMIN_GET_ALL_SELLERS = "ADMIN_GET_ALL_SELLERS";
     public static final String ADMIN_GET_ALL_AUCTIONS = "ADMIN_GET_ALL_AUCTIONS";
     public static final String ADMIN_TOGGLE_LOCK_USER = "ADMIN_TOGGLE_LOCK_USER";
+    public static final String ADMIN_GET_PENDING_AUCTIONS = "ADMIN_GET_PENDING_AUCTIONS";
+    public static final String ADMIN_APPROVE_AUCTION = "ADMIN_APPROVE_AUCTION";
+    public static final String ADMIN_REJECT_AUCTION = "ADMIN_REJECT_AUCTION";
 }

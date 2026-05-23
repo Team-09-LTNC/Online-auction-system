@@ -28,6 +28,7 @@ public class AdminLayoutController implements Initializable {
     // --- Sidebar Buttons ---
     @FXML private Button btnDashboard;
     @FXML private Button btnAuctions;
+    @FXML private Button btnProducts;
     @FXML private Button btnBidders;
     @FXML private Button btnSellers;
     @FXML private Button btnTransactions;
@@ -73,6 +74,9 @@ public class AdminLayoutController implements Initializable {
             case "btnAuctions":
                 loadView("/fxml/admin/AuctionsView.fxml", "Phiên đấu giá");
                 break;
+            case "btnProducts":
+                loadView("/fxml/admin/ProductsCensorView.fxml", "Duyệt sản phẩm");
+                break;
             case "btnBidders":
                 loadView("/fxml/admin/BiddersView.fxml", "Quản lý Bidder");
                 break;
@@ -113,6 +117,7 @@ public class AdminLayoutController implements Initializable {
     private void resetNavStyles() {
         btnDashboard.getStyleClass().remove("admin-nav-item-active");
         btnAuctions.getStyleClass().remove("admin-nav-item-active");
+        btnProducts.getStyleClass().remove("admin-nav-item-active");
         btnBidders.getStyleClass().remove("admin-nav-item-active");
         btnSellers.getStyleClass().remove("admin-nav-item-active");
         btnTransactions.getStyleClass().remove("admin-nav-item-active");
