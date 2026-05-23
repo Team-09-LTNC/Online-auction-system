@@ -1,9 +1,11 @@
 package com.auction.server.networkserver;
 
 import com.auction.common.enums.ActionType;
+import com.auction.common.model.bid.Auction;
 import com.auction.common.model.bid.BidTransaction;
 import com.auction.common.model.user.User;
 import com.auction.common.observer.AuctionObserver;
+import com.auction.server.manager.AuctionManager;
 import com.auction.server.manager.UserManager;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -115,6 +117,14 @@ public class ClientHandler implements Runnable, AuctionObserver {
             JsonObject update = new JsonObject();
             update.addProperty("type", ActionType.AUCTION_BID_UPDATE);
             update.add("transaction", gson.toJsonTree(giaodich));
+            update.addProperty("serverNow", LocalDateTime.now().toString());
+
+            Auction phien = AuctionManager.getInstance().layPhienTheoId(giaodich.getAuctionId());
+            if (phien != null) {
+                update.addProperty("auctionId", phien.getId());
+                update.addProperty("status", phien.getStatus().name());
+                update.addProperty("endTime", phien.getEndTime() != null ? phien.getEndTime().toString() : null);
+            }
 
             out.println(gson.toJson(update));
         }

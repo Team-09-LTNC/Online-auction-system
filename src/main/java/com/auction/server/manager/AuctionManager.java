@@ -159,16 +159,10 @@ public class AuctionManager {
                 throw new InvalidBidException("Mức giá này đạt giá mua đứt. Hãy xác nhận mua ngay.");
             }
 
-            // Anti-sniping: nếu bid trong 30 giây cuối, gia hạn thêm 60 giây
-            if (phien.getEndTime().minusSeconds(30).isBefore(LocalDateTime.now())) {
-                phien.extendEndTime(60);
-                auctionDao.capNhatThoiGianKetThuc(phien.getId(), phien.getEndTime());
-                henGioDongPhien(phien); // Cập nhật lại lịch đóng với thời gian mới
-            }
-
             // Lưu giao dịch vào DB và cập nhật người thắng hiện tại
             if (auctionDao.thucHienGiaoDichDatGia(idPhien, giaoDich)) {
                 phien.updateWinner(giaoDich);
+                giaHanNeuDatGiaCuoiPhien(phien);
                 notifierPool.execute(() -> thongBaoGiaMoi(idPhien, giaoDich)); // Gửi thông báo bất đồng bộ
                 kichHoatAutoBid(phien); // Kích hoạt auto-bid để đáp trả nếu cần
                 return true;
@@ -272,6 +266,7 @@ public class AuctionManager {
 
             if (auctionDao.thucHienGiaoDichDatGia(phien.getId(), autoTx)) {
                 phien.updateWinner(autoTx);
+                giaHanNeuDatGiaCuoiPhien(phien);
                 notifierPool.execute(() -> thongBaoGiaMoi(phien.getId(), autoTx));
             } else {
                 break;
@@ -307,6 +302,21 @@ public class AuctionManager {
         return phien.getBuyNowPrice() != null
                 && phien.getBuyNowPrice() > 0
                 && giaDat >= phien.getBuyNowPrice();
+    }
+
+    private void giaHanNeuDatGiaCuoiPhien(Auction phien) {
+        LocalDateTime endTime = phien.getEndTime();
+        LocalDateTime now = LocalDateTime.now();
+        if (endTime == null || now.isBefore(endTime.minusSeconds(30)) || !now.isBefore(endTime)) {
+            return;
+        }
+
+        phien.setEndTime(endTime.plusSeconds(60));
+        if (!auctionDao.capNhatThoiGianKetThuc(phien.getId(), phien.getEndTime())) {
+            phien.setEndTime(endTime);
+            return;
+        }
+        henGioDongPhien(phien);
     }
 
     private void thongBaoTrangThai(int idPhien, AuctionStatus status) {

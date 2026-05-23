@@ -66,6 +66,7 @@ public class MainDashboardController implements Initializable, RefreshableCenter
     private void updateStatistics() {
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.GET_DASHBOARD_STATS);
+        request.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
         ClientSocket.getInstance().sendJsonRequest(
                 request,
@@ -79,7 +80,9 @@ public class MainDashboardController implements Initializable, RefreshableCenter
                         JsonObject data = response.getAsJsonObject("data");
 
                         int activeCount = data.has("activeCount") ? data.get("activeCount").getAsInt() : 0;
-                        int endingSoonCount = data.has("endingSoonCount") ? data.get("endingSoonCount").getAsInt() : 0;
+                        int joinedActiveCount = data.has("joinedActiveCount")
+                                ? data.get("joinedActiveCount").getAsInt()
+                                : data.has("endingSoonCount") ? data.get("endingSoonCount").getAsInt() : 0;
                         int followedCount = data.has("followedCount") ? data.get("followedCount").getAsInt() : 0;
                         int myBidsCount = data.has("myBidsCount") ? data.get("myBidsCount").getAsInt() : 0;
 
@@ -87,7 +90,7 @@ public class MainDashboardController implements Initializable, RefreshableCenter
                             lblActiveAuctions.setText(String.valueOf(activeCount));
 
                         if (lblEndingSoonAuctions != null)
-                            lblEndingSoonAuctions.setText(String.valueOf(endingSoonCount));
+                            lblEndingSoonAuctions.setText(String.valueOf(joinedActiveCount));
 
                         if (lblFollowedAuctions != null)
                             lblFollowedAuctions.setText(String.valueOf(followedCount));

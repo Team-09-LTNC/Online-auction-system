@@ -13,6 +13,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,9 @@ public class ProductCardController {
     @FXML private Label lblStatus;
     @FXML private Button btnBid;
     @FXML private Button btnFollow;
+    @FXML private HBox sellerActions;
+    @FXML private Button btnEdit;
+    @FXML private Button btnDelete;
 
     private long deadlineMillis;
     private Timeline timeline;
@@ -35,6 +39,8 @@ public class ProductCardController {
     private boolean isFollowed = false;
     private boolean followRequestPending = false;
     private String currentStatus = "";
+    private Runnable editAction;
+    private Runnable deleteAction;
 
     public void setProductData(
             int auctionId,
@@ -77,6 +83,21 @@ public class ProductCardController {
             String imageUrl
     ) {
         setProductData(auctionId, name, price, countdownSeconds, status, imageUrl, false);
+    }
+
+    public void configureSellerActions(boolean editable, Runnable editAction, Runnable deleteAction) {
+        this.editAction = editable ? editAction : null;
+        this.deleteAction = editable ? deleteAction : null;
+
+        if (btnFollow != null) {
+            btnFollow.setVisible(false);
+            btnFollow.setManaged(false);
+        }
+
+        if (sellerActions != null) {
+            sellerActions.setVisible(editable);
+            sellerActions.setManaged(editable);
+        }
     }
 
     private void loadImage() {
@@ -153,6 +174,7 @@ public class ProductCardController {
         lblStatus.setText("Đang diễn ra");
         btnBid.setDisable(false);
         btnBid.setText("Vào phòng");
+        hideSellerActions();
     }
 
     private void setClosedUI(String statusText, String buttonText) {
@@ -163,6 +185,16 @@ public class ProductCardController {
 
         btnBid.setDisable(true);
         btnBid.setText(buttonText);
+        hideSellerActions();
+    }
+
+    private void hideSellerActions() {
+        editAction = null;
+        deleteAction = null;
+        if (sellerActions != null) {
+            sellerActions.setVisible(false);
+            sellerActions.setManaged(false);
+        }
     }
 
     public void stopTimer() {
@@ -238,6 +270,20 @@ public class ProductCardController {
         );
     }
 
+    @FXML
+    private void handleEditAction(ActionEvent event) {
+        if (editAction != null) {
+            editAction.run();
+        }
+    }
+
+    @FXML
+    private void handleDeleteAction(ActionEvent event) {
+        if (deleteAction != null) {
+            deleteAction.run();
+        }
+    }
+
     private String formatTime(int totalSeconds) {
         int h = totalSeconds / 3600;
         int m = (totalSeconds % 3600) / 60;
@@ -255,6 +301,11 @@ public class ProductCardController {
 
     @FXML
     private void initialize() {
+        if (sellerActions != null) {
+            sellerActions.setVisible(false);
+            sellerActions.setManaged(false);
+        }
+
         if (lblProductName != null) {
             lblProductName.sceneProperty().addListener((obs, oldScene, newScene) -> {
                 if (newScene == null) stopTimer();

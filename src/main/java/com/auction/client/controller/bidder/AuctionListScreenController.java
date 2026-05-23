@@ -170,8 +170,8 @@ public class AuctionListScreenController
                     AuctionTimeUtil.AuctionState state =
                             AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, selectedServerNow);
 
-                    String serverStatus = getString(obj, "status", state.finalStatus);
-                    if (!"Tất cả".equals(selectedStatus) && !selectedStatus.equalsIgnoreCase(serverStatus)) {
+                    String statusForUi = resolveDisplayStatus(getString(obj, "status", null), state.finalStatus);
+                    if (!"Tất cả".equals(selectedStatus) && !selectedStatus.equalsIgnoreCase(statusForUi)) {
                         continue;
                     }
 
@@ -186,7 +186,7 @@ public class AuctionListScreenController
                         VBox card = loader.load();
                         ProductCardController controller = loader.getController();
 
-                        controller.setProductData(auctionId, name, price, state.countdownSeconds, serverStatus,
+                        controller.setProductData(auctionId, name, price, state.countdownSeconds, statusForUi,
                                 imageUrl, isFollowed);
 
                         cardsToRender.add(card);
@@ -243,6 +243,25 @@ public class AuctionListScreenController
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private String resolveDisplayStatus(String storedStatus, String timeStatus) {
+        if (storedStatus == null || storedStatus.isBlank()) {
+            return timeStatus;
+        }
+
+        String normalized = storedStatus.trim().toUpperCase(Locale.ROOT);
+        switch (normalized) {
+            case "PAID":
+            case "CANCELED":
+            case "FINISHED":
+                return normalized;
+            case "OPEN":
+            case "RUNNING":
+                return timeStatus;
+            default:
+                return normalized;
+        }
     }
 
     private void publishCardBatch(int currentRenderVersion, List<VBox> cards, boolean replaceExisting) {

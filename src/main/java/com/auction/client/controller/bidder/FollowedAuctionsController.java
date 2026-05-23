@@ -51,6 +51,7 @@ public class FollowedAuctionsController implements Initializable, RefreshableCen
 
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.GET_FOLLOWED_AUCTIONS);
+        request.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
         ClientSocket.getInstance().sendJsonRequest(
                 request,
@@ -82,6 +83,9 @@ public class FollowedAuctionsController implements Initializable, RefreshableCen
 
                             AuctionTimeUtil.AuctionState state =
                                     AuctionTimeUtil.calculateState(start, end, serverNow);
+                            String storedStatus = obj.has("status") && !obj.get("status").isJsonNull()
+                                    ? obj.get("status").getAsString()
+                                    : null;
 
                             FXMLLoader loader = new FXMLLoader(
                                     getClass().getResource("/fxml/components/ProductCard.fxml")
@@ -93,7 +97,7 @@ public class FollowedAuctionsController implements Initializable, RefreshableCen
                             controller.setProductData(
                                     id, name, price,
                                     state.countdownSeconds,
-                                    state.finalStatus,
+                                    resolveDisplayStatus(storedStatus, state.finalStatus),
                                     img,
                                     true
                             );
@@ -115,5 +119,24 @@ public class FollowedAuctionsController implements Initializable, RefreshableCen
     @Override
     public void refreshContent() {
         loadFollowedAuctionsFromServer();
+    }
+
+    private String resolveDisplayStatus(String storedStatus, String timeStatus) {
+        if (storedStatus == null || storedStatus.isBlank()) {
+            return timeStatus;
+        }
+
+        String normalized = storedStatus.trim().toUpperCase(java.util.Locale.ROOT);
+        switch (normalized) {
+            case "PAID":
+            case "CANCELED":
+            case "FINISHED":
+                return normalized;
+            case "OPEN":
+            case "RUNNING":
+                return timeStatus;
+            default:
+                return normalized;
+        }
     }
 }

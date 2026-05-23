@@ -135,8 +135,8 @@ public class MyAuctionsController implements Initializable, RefreshableCenterCon
                     String endTime = getTime(obj, "endTime", "end_time");
                     AuctionTimeUtil.AuctionState state =
                             AuctionTimeUtil.calculateState(startTime, endTime, selectedServerNow);
-                    String serverStatus = getString(obj, "status", state.finalStatus);
-                    if (!"Tất cả".equals(selectedStatus) && !selectedStatus.equalsIgnoreCase(serverStatus)) {
+                    String statusForUi = resolveDisplayStatus(getString(obj, "status", null), state.finalStatus);
+                    if (!"Tất cả".equals(selectedStatus) && !selectedStatus.equalsIgnoreCase(statusForUi)) {
                         continue;
                     }
 
@@ -154,7 +154,7 @@ public class MyAuctionsController implements Initializable, RefreshableCenterCon
                                 name,
                                 price,
                                 state.countdownSeconds,
-                                serverStatus,
+                                statusForUi,
                                 imageUrl,
                                 followedIds.contains(auctionId)
                         );
@@ -201,6 +201,25 @@ public class MyAuctionsController implements Initializable, RefreshableCenterCon
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private String resolveDisplayStatus(String storedStatus, String timeStatus) {
+        if (storedStatus == null || storedStatus.isBlank()) {
+            return timeStatus;
+        }
+
+        String normalized = storedStatus.trim().toUpperCase(Locale.ROOT);
+        switch (normalized) {
+            case "PAID":
+            case "CANCELED":
+            case "FINISHED":
+                return normalized;
+            case "OPEN":
+            case "RUNNING":
+                return timeStatus;
+            default:
+                return normalized;
+        }
     }
 
     private void publishCardBatch(int currentRenderVersion, List<VBox> cards, boolean replaceExisting) {

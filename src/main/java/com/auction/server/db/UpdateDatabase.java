@@ -88,25 +88,35 @@ public class UpdateDatabase {
                     logger.info(">>> Bảng 'auto_bid_settings' đã tồn tại.");
                 }
 
-                // 4. Kiểm tra enum status của bảng auctions có chứa PENDING chưa
-                boolean hasPending = false;
+                // 4. Đảm bảo enum status của bảng auctions không còn trạng thái duyệt.
+                boolean hasCurrentAuctionStatuses = false;
                 try (ResultSet rs = conn.createStatement().executeQuery(
                         "SELECT COLUMN_TYPE FROM information_schema.COLUMNS " +
                                 "WHERE TABLE_NAME = 'auctions' AND COLUMN_NAME = 'status'")) {
                     if (rs.next()) {
                         String columnType = rs.getString("COLUMN_TYPE");
-                        hasPending = columnType.contains("PENDING");
+                        hasCurrentAuctionStatuses = columnType.contains("'OPEN'")
+                                && columnType.contains("'RUNNING'")
+                                && columnType.contains("'FINISHED'")
+                                && columnType.contains("'PAID'")
+                                && columnType.contains("'CANCELED'")
+                                && !columnType.contains("PENDING")
+                                && !columnType.contains("REJECTED");
                     }
                 }
 
-                if (!hasPending) {
+                if (!hasCurrentAuctionStatuses) {
                     logger.info(">>> Đang cập nhật enum status cho bảng 'auctions'...");
+                    stmt.execute("UPDATE auctions SET status = 'OPEN' WHERE status = 'PENDING'");
+                    stmt.execute("UPDATE auctions SET status = 'CANCELED' WHERE status = 'REJECTED'");
                     stmt.execute("ALTER TABLE auctions MODIFY COLUMN status " +
-                            "ENUM('PENDING', 'OPEN', 'RUNNING', 'FINISHED', 'PAID', 'CANCELED', 'REJECTED') " +
-                            "DEFAULT 'PENDING'");
+                            "ENUM('OPEN', 'RUNNING', 'FINISHED', 'PAID', 'CANCELED') " +
+                            "DEFAULT 'OPEN'");
                     logger.info(">>> Cập nhật enum status thành công!");
                 } else {
-                    logger.info(">>> Enum status bảng 'auctions' đã có PENDING. Bỏ qua.");
+                    logger.info(">>> Enum status bảng 'auctions' đã đúng. Bỏ qua.");
+                }
+
                 // 4. Đảm bảo phiên seed mua đứt chạy được trên database cũ
                 if (!cotTonTai(metaData, "auctions", "buy_now_price")) {
                     logger.info(">>> Đang bổ sung cột 'buy_now_price' vào bảng 'auctions'...");
@@ -152,12 +162,7 @@ public class UpdateDatabase {
         } catch (Exception e) {
             logger.error(">>> Lỗi nghiêm trọng khi cập nhật cấu trúc Database!", e);
         }
-    } catch (SQLException e) {
-        logger.error(">>> Lỗi kết nối hoặc truy vấn Database trong UpdateDatabase!", e);
-    } catch (Exception e) {
-        logger.error(">>> Lỗi không xác định trong UpdateDatabase!", e);
     }
-}
 
     private static boolean cotTonTai(DatabaseMetaData metaData, String tableName, String columnName)
             throws SQLException {

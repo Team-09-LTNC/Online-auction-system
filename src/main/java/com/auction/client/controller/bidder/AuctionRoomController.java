@@ -23,6 +23,7 @@ import javafx.util.Duration;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -149,8 +150,11 @@ public class AuctionRoomController implements Initializable {
                     // Timeline
                     String rawStartTime = data.has("startTime") && !data.get("startTime").isJsonNull() ? data.get("startTime").getAsString() : "";
                     String rawEndTime = data.has("endTime") && !data.get("endTime").isJsonNull() ? data.get("endTime").getAsString() : "";
+                    String rawServerNow = response.has("serverNow") && !response.get("serverNow").isJsonNull()
+                            ? response.get("serverNow").getAsString()
+                            : null;
                     AuctionTimeUtil.AuctionState state =
-                            AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, null);
+                            AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, rawServerNow);
                     this.totalSeconds = state.countdownSeconds;
                     this.currentStatus = state.finalStatus;
 
@@ -335,7 +339,6 @@ public class AuctionRoomController implements Initializable {
                     if (!(response.has("success") && response.get("success").getAsBoolean())) {
                         showAlert("Lỗi", response.has("message") ? response.get("message").getAsString() : "Lỗi đặt giá.");
                     } else {
-                        checkAndApplySnipingRule();
                         refreshAuctionState();
                         txtBidAmount.clear();
                     }
@@ -451,15 +454,18 @@ public class AuctionRoomController implements Initializable {
         } catch (Exception e) { e.printStackTrace(); }
     }
 
-    private void checkAndApplySnipingRule() {
-        if (isAuctionStarted && totalSeconds > 0 && totalSeconds <= 30) {
-            totalSeconds += 60;
-            updateCountdownLabel();
-        }
-    }
-
     // UPDATE REALTIME BID
     public void updateRealtimeBid(long newPrice, String bidderName) {
+        updateRealtimeBid(newPrice, bidderName, null, null, null);
+    }
+
+    public void updateRealtimeBid(
+            long newPrice,
+            String bidderName,
+            String endTime,
+            String serverNow,
+            String status
+    ) {
         if (lblCurrentPrice != null) lblCurrentPrice.setText(String.format("%,d đ", newPrice));
         if (lblLeader != null) lblLeader.setText("Người dẫn đầu: " + bidderName);
 
@@ -468,7 +474,7 @@ public class AuctionRoomController implements Initializable {
             lvBidHistory.getItems().add(0, "(" + now.format(historyTimeFormatter) + ") " + bidderName + " đã đặt: " + String.format("%,d đ", newPrice));
         }
 
-        checkAndApplySnipingRule();
+        applyServerCountdown(endTime, serverNow, status);
 
         if (priceSeries != null) {
             XYChart.Data<String, Number> dataPoint = new XYChart.Data<>(now.format(timeFormatter), newPrice);
@@ -478,6 +484,42 @@ public class AuctionRoomController implements Initializable {
 
             if (priceSeries.getData().size() > 30) priceSeries.getData().remove(0);
         }
+    }
+
+    private void applyServerCountdown(String endTime, String serverNow, String status) {
+        if (endTime == null || endTime.isBlank()) {
+            refreshAuctionState();
+            return;
+        }
+
+        LocalDateTime serverTime = AuctionTimeUtil.parse(serverNow);
+        LocalDateTime serverEndTime = AuctionTimeUtil.parse(endTime);
+        if (serverTime == null || serverEndTime == null) {
+            refreshAuctionState();
+            return;
+        }
+
+        int newTotalSeconds = (int) Math.max(0, ChronoUnit.SECONDS.between(serverTime, serverEndTime));
+        this.totalSeconds = newTotalSeconds;
+        this.currentStatus = status == null || status.isBlank() ? "RUNNING" : status;
+        this.isAuctionStarted = "RUNNING".equalsIgnoreCase(this.currentStatus);
+
+        if (newTotalSeconds <= 0 || !"RUNNING".equalsIgnoreCase(this.currentStatus)) {
+            setExpiredUI();
+            return;
+        }
+
+        if (btnPlaceBid != null) {
+            btnPlaceBid.setDisable(false);
+            btnPlaceBid.setText("ĐẶT GIÁ");
+        }
+        if (txtBidAmount != null) {
+            txtBidAmount.setEditable(true);
+        }
+        if (btnEnableAutoBid != null) {
+            btnEnableAutoBid.setDisable(false);
+        }
+        startCountdown();
     }
 
     public void loadProductImage(String urlString) {

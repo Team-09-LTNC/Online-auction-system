@@ -41,17 +41,10 @@ public class Auction extends Entity {
     public void addAutoBidConfig(AutoBidConfig config) { autoBidders.offer(config); }
     public Queue<AutoBidConfig> getAutoBidders() { return autoBidders; }
 
-    /**
-     * [TỐI ƯU KIẾN TRÚC - ANTI-SNIPING]
-     * Ngăn chặn hành vi cộng dồn thời gian vô cực.
-     * Chỉ gia hạn tính từ thời điểm HIỆN TẠI (LocalDateTime.now()).
-     */
     public void extendEndTime(int extraSeconds) {
-        LocalDateTime newEnd = LocalDateTime.now().plusSeconds(extraSeconds);
-        // Chỉ kéo dài nếu thời gian mới thực sự muộn hơn thời gian kết thúc hiện tại
-        if (this.endTime == null || newEnd.isAfter(this.endTime)) {
-            this.endTime = newEnd;
-        }
+        this.endTime = this.endTime == null
+                ? LocalDateTime.now().plusSeconds(extraSeconds)
+                : this.endTime.plusSeconds(extraSeconds);
     }
 
     // --- Getters & Setters ---

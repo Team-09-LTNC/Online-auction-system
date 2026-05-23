@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="350.0" prefWidth="250.0" spacing="10.0" styleClass="product-card" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.components.ProductCardController">
+<VBox prefHeight="385.0" prefWidth="250.0" spacing="10.0" styleClass="product-card" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.components.ProductCardController">
 
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
@@ -46,6 +46,11 @@
         <Label style="-fx-text-fill: #888888; -fx-font-size: 12px;" text="Giá hiện tại" />
         <Label fx:id="lblCurrentPrice" styleClass="product-price" text="0 đ" />
     </VBox>
+
+    <HBox fx:id="sellerActions" alignment="CENTER_LEFT" managed="false" spacing="8.0" visible="false">
+        <Button fx:id="btnEdit" mnemonicParsing="false" onAction="#handleEditAction" prefWidth="88.0" style="-fx-background-color: #FFFFFF; -fx-border-color: #7A1B28; -fx-border-radius: 6; -fx-background-radius: 6; -fx-text-fill: #7A1B28; -fx-cursor: hand;" text="Sửa" />
+        <Button fx:id="btnDelete" mnemonicParsing="false" onAction="#handleDeleteAction" prefWidth="88.0" style="-fx-background-color: #7A1B28; -fx-background-radius: 6; -fx-text-fill: #FFFFFF; -fx-cursor: hand;" text="Xóa" />
+    </HBox>
 
     <Region VBox.vgrow="ALWAYS" />
 

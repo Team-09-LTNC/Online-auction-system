@@ -187,7 +187,7 @@ public class AuctionController implements RequestHandler {
 
     private String xuLyLayDanhSachPhienThamGia(JsonObject yeuCau, ClientHandler client) {
         User nguoiDung = client.layNguoiDungHienTai();
-        if (nguoiDung == null) {
+        if (nguoiDung == null || !"BIDDER".equalsIgnoreCase(nguoiDung.getRoleName())) {
             return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Chưa đăng nhập!", ErrorCode.UNAUTHORIZED));
         }
 
@@ -334,12 +334,7 @@ public class AuctionController implements RequestHandler {
         if (user == null) return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Chưa đăng nhập", ErrorCode.UNAUTHORIZED));
 
         List<Integer> followedIds = new com.auction.server.dao.FollowDao().getFollowedAuctionIds(user.getId());
-        List<Auction> danhSachPhien = auctionDao.layDanhSachPhienDangChay();
-
-        List<Auction> danhSachChoMo = auctionDao.layDanhSachPhienChoMo();
-        if (danhSachChoMo != null) {
-            danhSachPhien.addAll(danhSachChoMo);
-        }
+        List<Auction> danhSachPhien = auctionDao.layDanhSachTatCaPhien();
 
         List<AuctionDTOs.AuctionSummaryDTO> summaries = new ArrayList<>();
         for (Auction a : danhSachPhien) {
@@ -360,9 +355,8 @@ public class AuctionController implements RequestHandler {
         AuctionDTOs.AuctionListResponse response = new AuctionDTOs.AuctionListResponse(true, "Thành công", summaries);
         JsonObject jsonResponse = gson.toJsonTree(response).getAsJsonObject();
         jsonResponse.addProperty("type", "FOLLOWED_AUCTIONS_RESPONSE");
+        copyRequestId(yeuCau, jsonResponse);
         jsonResponse.addProperty("serverNow", LocalDateTime.now().toString());
-
-        System.out.println("DEBUG SERVER - JSON danh sách theo dõi gửi về: " + jsonResponse.toString());
         return gson.toJson(jsonResponse);
     }
 
@@ -398,6 +392,7 @@ public class AuctionController implements RequestHandler {
 
             dataObj.addProperty("currentHighestBid", phien.getCurrentHighestBid());
             dataObj.addProperty("currentPrice", phien.getCurrentHighestBid());
+            phanHoi.addProperty("serverNow", LocalDateTime.now().toString());
 
             User user = client.layNguoiDungHienTai();
             if (user != null) {
@@ -469,24 +464,27 @@ public class AuctionController implements RequestHandler {
 
     private String xuLyLayThongKeDashboard(JsonObject yeuCau, ClientHandler client) {
         int activeCount = auctionDao.demPhienDangChay();
-        int endingSoonCount = auctionDao.demPhienSapKetThuc();
+        int joinedActiveCount = 0;
         int followedCount = 0;
         int myBidsCount = 0;
         User user = client.layNguoiDungHienTai();
-        if (user != null) {
+        if (user != null && "BIDDER".equalsIgnoreCase(user.getRoleName())) {
             followedCount = new com.auction.server.dao.FollowDao().countFollowedAuctions(user.getId());
             myBidsCount = auctionDao.demPhienBidderDaThamGia(user.getId());
+            joinedActiveCount = auctionDao.demPhienBidderDangThamGia(user.getId());
         }
 
         JsonObject data = new JsonObject();
         data.addProperty("activeCount", activeCount);
-        data.addProperty("endingSoonCount", endingSoonCount);
+        data.addProperty("joinedActiveCount", joinedActiveCount);
+        data.addProperty("endingSoonCount", joinedActiveCount);
         data.addProperty("followedCount", followedCount);
         data.addProperty("myBidsCount", myBidsCount);
 
         JsonObject phanHoi = new JsonObject();
         phanHoi.addProperty("type", "DASHBOARD_STATS_RESPONSE");
         phanHoi.addProperty("success", true);
+        copyRequestId(yeuCau, phanHoi);
         phanHoi.add("data", data);
 
         return gson.toJson(phanHoi);

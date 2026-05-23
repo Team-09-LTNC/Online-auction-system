@@ -103,7 +103,6 @@
                                 <DatePicker fx:id="dpEndDate" promptText="25/05/2024" HBox.hgrow="ALWAYS" styleClass="modern-date" maxWidth="Infinity"/>
                                 <TextField fx:id="txtEndTime" promptText="14:30" prefWidth="80" styleClass="modern-input" alignment="CENTER"/>
                             </HBox>
-                            <Label text="(Tối thiểu 15 phút, tối đa 30 ngày)" style="-fx-text-fill: #888888; -fx-font-size: 11px;"/>
                         </VBox>
                     </HBox>
                     <VBox spacing="2">

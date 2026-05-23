@@ -54,7 +54,6 @@
 
                     <Label styleClass="admin-nav-section" text="ĐẤU GIÁ" />
                     <Button fx:id="btnAuctions" onAction="#navigate" styleClass="admin-nav-item" text="🔨  Phiên đấu giá" />
-                    <Button fx:id="btnProducts" onAction="#navigate" styleClass="admin-nav-item" text="📦  Duyệt sản phẩm" />
 
                     <Region style="-fx-pref-height:6px;" />
                     <Region styleClass="admin-sidebar-divider" />
