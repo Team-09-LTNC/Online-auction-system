@@ -41,6 +41,8 @@ public class AdminController implements RequestHandler {
                 return xuLyDuyetAuction(yeuCau, reqId);
             case ActionType.ADMIN_REJECT_AUCTION:
                 return xuLyTuChoiAuction(yeuCau, reqId);
+            case ActionType.ADMIN_GET_INVOICES:
+                return xuLyLayDanhSachHoaDon(reqId);
             default:
                 return null;
         }
@@ -116,6 +118,36 @@ public class AdminController implements RequestHandler {
         res.addProperty("type", "ADMIN_REJECT_AUCTION_RESPONSE");
         res.addProperty("success", ok);
         res.addProperty("message", ok ? "Đã từ chối phiên đấu giá!" : "Từ chối thất bại!");
+        if (reqId != null)
+            res.addProperty("requestId", reqId);
+        return gson.toJson(res);
+    }
+
+    /*
+     * Xử lý yêu cầu lấy danh sách hóa đơn
+     */
+    private String xuLyLayDanhSachHoaDon(String reqId) {
+        List<com.auction.common.dto.AdminDTOs.InvoiceDTO> invoices = adminDao.layDanhSachHoaDon();
+        JsonArray array = new JsonArray();
+        long tongDoanhThu = 0;
+
+        for (com.auction.common.dto.AdminDTOs.InvoiceDTO inv : invoices) {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("auctionId", inv.getAuctionId());
+            obj.addProperty("itemId", inv.getItemId());
+            obj.addProperty("itemName", inv.getItemName());
+            obj.addProperty("sellerId", inv.getSellerId());
+            obj.addProperty("winnerId", inv.getWinnerId());
+            obj.addProperty("highestBid", inv.getHighestBid());
+            array.add(obj);
+            tongDoanhThu += inv.getHighestBid();
+        }
+
+        JsonObject res = new JsonObject();
+        res.addProperty("type", "ADMIN_GET_INVOICES_RESPONSE");
+        res.addProperty("success", true);
+        res.addProperty("tongDoanhThu", tongDoanhThu); // ← tổng doanh thu tính sẵn trên server
+        res.add("data", array);
         if (reqId != null)
             res.addProperty("requestId", reqId);
         return gson.toJson(res);

@@ -32,7 +32,7 @@
         <!-- Toolbar -->
         <HBox spacing="10" alignment="CENTER_LEFT">
             <TextField fx:id="tfSearch"
-                       promptText="🔍  Tìm theo ID sản phẩm hoặc trạng thái..."
+                       promptText="🔍  Tìm theo sản phẩm hoặc trạng thái..."
                        onKeyReleased="#handleSearch"
                        style="-fx-background-color: #F0EAE4;
                               -fx-border-color: #C8AFA0; -fx-border-width: 1px;
@@ -66,11 +66,10 @@
                           -fx-border-color: #C8AFA0; -fx-border-width: 1px;
                           -fx-border-radius: 10px; -fx-background-radius: 10px;">
             <columns>
-                <TableColumn fx:id="colProductId" text="ID Sản phẩm" prefWidth="140"/>
+                <TableColumn fx:id="colProductId" text="Sản phẩm" prefWidth="140"/>
                 <TableColumn fx:id="colStartTime" text="Thời gian bắt đầu" prefWidth="180"/>
                 <TableColumn fx:id="colEndTime"   text="Thời gian kết thúc" prefWidth="180"/>
                 <TableColumn fx:id="colStatus"    text="Trạng thái"   prefWidth="140"/>
-                <TableColumn fx:id="colImageUrl"    text="URLHình ảnh"   prefWidth="140"/>
             </columns>
             <placeholder>
                 <Label text="Không có phiên đấu giá nào"

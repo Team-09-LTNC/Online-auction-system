@@ -65,11 +65,11 @@ public class AdminDao {
     public List<Auction> layDanhSachChoDuyet() {
         List<Auction> auctions = new ArrayList<>();
         String sql = "SELECT a.id, a.status, i.seller_id, i.name AS item_name, i.category, " +
-             "i.starting_price, i.description, i.image_url, " +
-             "a.start_time, a.end_time " +
-             "FROM auctions a JOIN items i ON a.item_id = i.id " +
-             "WHERE a.status = 'PENDING' " +
-             "ORDER BY a.start_time ASC"; // Phiên sắp diễn ra hiện lên trước
+                "i.starting_price, i.description, i.image_url, " +
+                "a.start_time, a.end_time " +
+                "FROM auctions a JOIN items i ON a.item_id = i.id " +
+                "WHERE a.status = 'PENDING' " +
+                "ORDER BY a.start_time ASC"; // Phiên sắp diễn ra hiện lên trước
 
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
                 Statement stmt = conn.createStatement();
@@ -117,5 +117,38 @@ public class AdminDao {
             logger.error("Lỗi duyetAuction: ", e);
             return false;
         }
+    }
+
+    /*
+     * Lấy danh sách hóa đơn đã thanh toán, bao gồm thông tin về phiên đấu giá, sản
+     * phẩm, người bán, người mua và giá cuối cùng.
+     */
+    public List<com.auction.common.dto.AdminDTOs.InvoiceDTO> layDanhSachHoaDon() {
+        List<com.auction.common.dto.AdminDTOs.InvoiceDTO> list = new ArrayList<>();
+        String sql = "SELECT a.id AS auction_id, a.item_id, i.name AS item_name, " +
+                "       i.seller_id, a.highest_bidder_id AS winner_id, " +
+                "       a.current_price AS final_price " +
+                "FROM auctions a " +
+                "JOIN items i ON a.item_id = i.id " +
+                "WHERE a.status = 'PAID' " +
+                "ORDER BY a.id DESC";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                list.add(new com.auction.common.dto.AdminDTOs.InvoiceDTO(
+                        rs.getInt("auction_id"),
+                        rs.getInt("item_id"),
+                        rs.getString("item_name"),
+                        rs.getInt("seller_id"), // ← lấy từ items
+                        rs.getInt("winner_id"),
+                        rs.getLong("final_price")));
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi layDanhSachHoaDon: ", e);
+        }
+        return list;
     }
 }

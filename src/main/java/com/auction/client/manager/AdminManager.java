@@ -4,6 +4,7 @@ import com.auction.client.networkclient.ClientSocket;
 import com.auction.common.enums.ActionType;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.auction.common.dto.AdminDTOs;
 import com.auction.common.dto.AdminDTOs.AuctionSummaryDTO;
 import com.auction.common.dto.AdminDTOs.UserSummaryDTO;
 import com.auction.common.dto.AdminDTOs.PendingAuctionDTO;
@@ -30,69 +31,6 @@ public class AdminManager {
             instance = new AdminManager();
         return instance;
     }
-
-    // ── Model nội bộ ──────────────────────────────────────────
-
-    // public static class UserInfo {
-    // private final String username;
-    // private final String fullname;
-    // private String status;
-
-    // public UserInfo(String username, String fullname, String status) {
-    // this.username = username;
-    // this.fullname = fullname;
-    // this.status = status;
-    // }
-
-    // public String getUsername() {
-    // return username;
-    // }
-
-    // public String getFullname() {
-    // return fullname;
-    // }
-
-    // public String getStatus() {
-    // return status;
-    // }
-
-    // public void setStatus(String status) {
-    // this.status = status;
-    // }
-    // }
-
-    // public static class AuctionInfo {
-    // private final String auctionId;
-    // private final String startTime;
-    // private final String endTime;
-    // private final String status;
-
-    // public AuctionInfo(String auctionId, String startTime, String endTime, String
-    // status) {
-    // this.auctionId = auctionId;
-    // this.startTime = startTime;
-    // this.endTime = endTime;
-    // this.status = status;
-    // }
-
-    // public String getAuctionId() {
-    // return auctionId;
-    // }
-
-    // public String getStartTime() {
-    // return startTime;
-    // }
-
-    // public String getEndTime() {
-    // return endTime;
-    // }
-
-    // public String getStatus() {
-    // return status;
-    // }
-    // }
-
-    // ── API cho Controller gọi ────────────────────────────────
 
     /**
      * Lấy danh sách Bidder từ server.
@@ -260,6 +198,47 @@ public class AdminManager {
                 onSuccess.accept(msg);
             else
                 onError.accept(msg);
+        });
+    }
+
+    /*
+     * Lấy danh sách hoá đơn
+     */
+    public void layDanhSachHoaDon(Consumer<List<AdminDTOs.InvoiceDTO>> onSuccess,
+            Consumer<String> onError,
+            Consumer<Long> onTongDoanhThu) {
+        JsonObject request = buildRequest(ActionType.ADMIN_GET_INVOICES);
+        ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_GET_INVOICES_RESPONSE", response -> {
+            boolean ok = response.has("success") && response.get("success").getAsBoolean();
+            if (!ok) {
+                onError.accept(response.has("message")
+                        ? response.get("message").getAsString()
+                        : "Lỗi không xác định");
+                return;
+            }
+
+            // Tổng doanh thu
+            long tongDoanhThu = response.has("tongDoanhThu")
+                    ? response.get("tongDoanhThu").getAsLong()
+                    : 0;
+            onTongDoanhThu.accept(tongDoanhThu);
+
+            // Danh sách hoá đơn
+            List<AdminDTOs.InvoiceDTO> list = new ArrayList<>();
+            JsonArray data = response.getAsJsonArray("data");
+            if (data != null) {
+                data.forEach(el -> {
+                    JsonObject obj = el.getAsJsonObject();
+                    list.add(new AdminDTOs.InvoiceDTO(
+                            obj.get("auctionId").getAsInt(),
+                            obj.get("itemId").getAsInt(),
+                            obj.get("itemName").getAsString(),
+                            obj.get("sellerId").getAsInt(),
+                            obj.get("winnerId").getAsInt(),
+                            obj.get("highestBid").getAsLong()));
+                });
+            }
+            onSuccess.accept(list);
         });
     }
 
