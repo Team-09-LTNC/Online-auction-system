@@ -68,10 +68,10 @@ public class ClientSocket {
         if (out != null) {
             String requestId = jsonObject.has("requestId") && !jsonObject.get("requestId").isJsonNull()
                     ? jsonObject.get("requestId").getAsString() : null;
-
-            if (!jsonObject.has("requestId") || jsonObject.get("requestId").isJsonNull()) {
-                logger.error("Gửi request phải thêm requestId !");
-                return;
+            if (requestId == null || requestId.isBlank()) {
+                requestId = java.util.UUID.randomUUID().toString();
+                jsonObject.addProperty("requestId", requestId);
+                logger.warn("Request thiếu requestId, đã tự sinh requestId={}", requestId);
             }
             if (onResponse != null) {
                 if (requestId != null) {
@@ -112,29 +112,29 @@ public class ClientSocket {
     private void handleServerResponse(String json) {
         try {
             JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
-            if (!jsonObject.has("type")) return;
+            String type = jsonObject.has("type") && !jsonObject.get("type").isJsonNull()
+                    ? jsonObject.get("type").getAsString()
+                    : null;
+            String requestId = jsonObject.has("requestId") && !jsonObject.get("requestId").isJsonNull()
+                    ? jsonObject.get("requestId").getAsString()
+                    : null;
 
-            String type = jsonObject.get("type").getAsString();
-
-            if (isPushEvent(type)) {
+            if (type != null && isPushEvent(type)) {
                 PushHandler.handle(type, jsonObject);
+                return;
+            }
+
+            Consumer<JsonObject> callback = null;
+            if (requestId != null && responseCallbacks.containsKey(requestId)) {
+                callback = responseCallbacks.remove(requestId);
+            } else if (type != null && responseCallbacks.containsKey(type)) {
+                callback = responseCallbacks.remove(type);
+            }
+
+            if (callback != null) {
+                callback.accept(jsonObject);
             } else {
-                String requestId = jsonObject.has("requestId") && !jsonObject.get("requestId").isJsonNull()
-                        ? jsonObject.get("requestId").getAsString() : null;
-
-                Consumer<JsonObject> callback = null;
-
-                if (requestId != null && responseCallbacks.containsKey(requestId)) {
-                    callback = responseCallbacks.remove(requestId);
-                } else if (responseCallbacks.containsKey(type)) {
-                    callback = responseCallbacks.remove(type);
-                }
-
-                if (callback != null) {
-                    callback.accept(jsonObject);
-                } else {
-                    logger.debug("Nhận phản hồi nhưng không có Callback (requestId: {}, type: {})", requestId, type);
-                }
+                logger.debug("Nhận phản hồi nhưng không có Callback (requestId: {}, type: {})", requestId, type);
             }
         } catch (JsonSyntaxException e) {
             logger.error("JSON lỗi từ Server: {}", e.getMessage());

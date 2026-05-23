@@ -138,7 +138,23 @@ public class AuctionManager {
     // Xử lý đặt giá: kiểm tra điều kiện, chống sniping, lưu DB và kích hoạt auto-bid
     public boolean xuLyDatGia(int idPhien, BidTransaction giaoDich) throws InvalidBidException, AuctionClosedException {
         Auction phien = dsPhienDangChay.get(idPhien);
-        if (phien == null) throw new InvalidBidException("Phiên không khả dụng!");
+        if (phien == null) {
+            Auction tuDb = auctionDao.layPhienTheoId(idPhien);
+            if (tuDb == null) {
+                throw new InvalidBidException("Phiên đấu giá không tồn tại.");
+            }
+            AuctionStatus status = tuDb.getStoredStatus();
+            if (status == AuctionStatus.OPEN) {
+                throw new InvalidBidException("Phiên chưa mở, chưa thể đặt giá.");
+            }
+            if (status == AuctionStatus.RUNNING) {
+                throw new InvalidBidException("Phiên đang đồng bộ lại, vui lòng thử lại sau ít giây.");
+            }
+            if (status == AuctionStatus.CANCELED) {
+                throw new AuctionClosedException("Phiên đã bị hủy.");
+            }
+            throw new AuctionClosedException("Phiên đã kết thúc.");
+        }
 
         synchronized (phien) { // Đồng bộ trên phiên để tránh race condition
             if (!phien.isAcceptingBids()) throw new AuctionClosedException("Phiên đã kết thúc!");

@@ -2,6 +2,9 @@ package com.auction.client.controller.components;
 
 import com.auction.client.controller.MainController;
 import com.auction.client.controller.auth.UserSession;
+import com.auction.client.networkclient.ClientSocket;
+import com.auction.common.enums.ActionType;
+import com.google.gson.JsonObject;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -31,6 +34,7 @@ public class SidebarController {
         // Kích nổ hàm áp dụng phân quyền ngay khi nạp giao diện ban đầu
         applyRolePermissions();
         updateNotificationBadge();
+        dongBoThongBaoChuaDocTuServer();
     }
 
     /**
@@ -205,6 +209,26 @@ public class SidebarController {
         lblNotificationBadge.setManaged(hasUnread);
         lblNotificationBadge.setVisible(hasUnread);
         lblNotificationBadge.setText(unreadNotifications > 99 ? "99+" : String.valueOf(unreadNotifications));
+    }
+
+    private void dongBoThongBaoChuaDocTuServer() {
+        if (UserSession.getUserId() <= 0) {
+            return;
+        }
+
+        JsonObject request = new JsonObject();
+        request.addProperty("type", ActionType.GET_SYSTEM_NOTIFICATIONS);
+        request.addProperty("requestId", java.util.UUID.randomUUID().toString());
+
+        ClientSocket.getInstance().sendJsonRequest(request, "SYSTEM_NOTIFICATIONS_RESPONSE", response -> {
+            if (!response.has("success") || !response.get("success").getAsBoolean()
+                    || !response.has("data") || !response.get("data").isJsonArray()) {
+                return;
+            }
+            int total = response.getAsJsonArray("data").size();
+            unreadNotifications = Math.max(total, 0);
+            Platform.runLater(this::updateNotificationBadge);
+        });
     }
 
     // =========================================================================

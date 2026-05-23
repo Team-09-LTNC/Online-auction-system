@@ -57,6 +57,7 @@ public class PostAuctionController {
 
     private String selectedImagePath = "";
     private File selectedImageFile = null;
+    private volatile boolean isSubmitting = false;
 
     @FXML
     public void initialize() {
@@ -207,12 +208,20 @@ public class PostAuctionController {
 
     @FXML
     public void handleSubmitAuction(ActionEvent event) {
+        Button submitButton = event != null && event.getSource() instanceof Button
+                ? (Button) event.getSource()
+                : null;
+        if (isSubmitting) {
+            return;
+        }
         if (isInputInvalid()) return;
 
         if (this.selectedImageFile == null) {
             showAlert(Alert.AlertType.WARNING, "Thiếu ảnh", "Vui lòng chọn ảnh cho sản phẩm!");
             return;
         }
+        isSubmitting = true;
+        setSubmitButtonState(submitButton, true);
 
         try {
             String name = txtProductName.getText();
@@ -228,12 +237,16 @@ public class PostAuctionController {
 
             if (endTime.isBefore(startTime)) {
                 showAlert(Alert.AlertType.WARNING, "Lỗi thời gian", "Thời gian kết thúc phải lớn hơn thời gian bắt đầu!");
+                isSubmitting = false;
+                setSubmitButtonState(submitButton, false);
                 return;
             }
 
             // Kiểm tra tính hợp lệ về logic tài chính
             if (buyNow > 0 && buyNow <= startPrice) {
                 showAlert(Alert.AlertType.WARNING, "Lỗi cấu hình giá", "Giá mua đứt phải lớn hơn giá khởi điểm!");
+                isSubmitting = false;
+                setSubmitButtonState(submitButton, false);
                 return;
             }
 
@@ -244,6 +257,8 @@ public class PostAuctionController {
                 Platform.runLater(() -> {
                     if (imageUrl == null) {
                         showAlert(Alert.AlertType.ERROR, "Lỗi kết nối", "Không thể tải ảnh lên hệ thống đám mây!");
+                        isSubmitting = false;
+                        setSubmitButtonState(submitButton, false);
                         return;
                     }
 
@@ -273,6 +288,8 @@ public class PostAuctionController {
 
                     ClientSocket.getInstance().sendJsonRequest(reqJson, "CREATE_ITEM_RESPONSE", response -> {
                         Platform.runLater(() -> {
+                            isSubmitting = false;
+                            setSubmitButtonState(submitButton, false);
                             boolean success = response.has("success") && response.get("success").getAsBoolean();
                             if (success) {
                                 showAlert(Alert.AlertType.INFORMATION, "Thành công", "Sản phẩm đã lên sàn đấu giá!");
@@ -284,13 +301,32 @@ public class PostAuctionController {
                         });
                     });
                 });
+            }).exceptionally(ex -> {
+                Platform.runLater(() -> {
+                    isSubmitting = false;
+                    setSubmitButtonState(submitButton, false);
+                    showAlert(Alert.AlertType.ERROR, "Lỗi kết nối", "Không thể tải ảnh lên hệ thống đám mây!");
+                });
+                return null;
             });
 
         } catch (DateTimeParseException e) {
+            isSubmitting = false;
+            setSubmitButtonState(submitButton, false);
             showAlert(Alert.AlertType.ERROR, "Lỗi định dạng", "Vui lòng nhập đúng định dạng giờ HH:mm (VD: 14:30)");
         } catch (Exception e) {
+            isSubmitting = false;
+            setSubmitButtonState(submitButton, false);
             showAlert(Alert.AlertType.ERROR, "Lỗi định dạng", "Kiểm tra lại dữ liệu số tiền!");
         }
+    }
+
+    private void setSubmitButtonState(Button button, boolean submitting) {
+        if (button == null) {
+            return;
+        }
+        button.setDisable(submitting);
+        button.setText(submitting ? "ĐANG ĐĂNG..." : "ĐĂNG SẢN PHẨM");
     }
 
     private boolean isInputInvalid() {
