@@ -61,14 +61,12 @@ public class RequestDispatcher {
         danhSachTrinhXuLy.put(ActionType.GET_ALL_PRODUCTS, productController);
         danhSachTrinhXuLy.put(ActionType.DELETE_PRODUCT, productController);
         danhSachTrinhXuLy.put(ActionType.SEARCH_PRODUCT, productController);
+        danhSachTrinhXuLy.put(ActionType.GET_PRODUCT_BY_ID, productController);
         danhSachTrinhXuLy.put(ActionType.UPDATE_PRODUCT, productController);
         danhSachTrinhXuLy.put(ActionType.GET_MY_PRODUCTS, productController);
 
         // Nhóm Admin
         danhSachTrinhXuLy.put(ActionType.ADMIN_GET_ALL_AUCTIONS, adminController);
-        danhSachTrinhXuLy.put(ActionType.ADMIN_GET_PENDING_AUCTIONS, adminController);
-        danhSachTrinhXuLy.put(ActionType.ADMIN_APPROVE_AUCTION, adminController);
-        danhSachTrinhXuLy.put(ActionType.ADMIN_REJECT_AUCTION, adminController);
     }
 
     public static RequestDispatcher layInstance() {
@@ -84,7 +82,22 @@ public class RequestDispatcher {
         RequestHandler trinhXuLy = danhSachTrinhXuLy.get(loaiYeuCau);
         if (trinhXuLy != null) {
             logger.info("Đang xử lý yêu cầu '{}' thành công bởi Controller: {}", loaiYeuCau, trinhXuLy.getClass().getSimpleName());
-            return trinhXuLy.xuLy(yeuCau, client);
+            String phanHoi = trinhXuLy.xuLy(yeuCau, client);
+            if (phanHoi != null) {
+                return phanHoi;
+            }
+
+            logger.warn("Controller {} không trả phản hồi cho yêu cầu '{}'.",
+                    trinhXuLy.getClass().getSimpleName(), loaiYeuCau);
+            JsonObject loiNoiBo = new JsonObject();
+            loiNoiBo.addProperty("type", "ERROR_RESPONSE");
+            loiNoiBo.addProperty("success", false);
+            loiNoiBo.addProperty("errorCode", "ERR_HANDLER_NO_RESPONSE");
+            loiNoiBo.addProperty("message", "Yêu cầu đã được nhận nhưng không có dữ liệu phản hồi.");
+            if (yeuCau != null && yeuCau.has("requestId") && !yeuCau.get("requestId").isJsonNull()) {
+                loiNoiBo.addProperty("requestId", yeuCau.get("requestId").getAsString());
+            }
+            return gson.toJson(loiNoiBo);
         }
 
         logger.warn("Không tìm thấy Controller xử lý cho yêu cầu '{}'.", loaiYeuCau);

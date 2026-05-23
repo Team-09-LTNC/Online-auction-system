@@ -26,6 +26,9 @@ public class AuthController implements RequestHandler {
 
     @Override
     public String xuLy(JsonObject yeuCau, ClientHandler client) {
+        if (yeuCau == null || !yeuCau.has("type") || yeuCau.get("type").isJsonNull()) {
+            return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu truong type.", ErrorCode.BAD_REQUEST));
+        }
         String loaiYeuCau = yeuCau.get("type").getAsString();
 
         // Trích xuất chung mã requestId từ Client gửi lên
@@ -56,7 +59,7 @@ public class AuthController implements RequestHandler {
             case ActionType.ADMIN_TOGGLE_LOCK_USER:
                 return xuLyKhoaTaiKhoan(yeuCau, reqId);
             default:
-                return null;
+                return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Action khong duoc ho tro.", ErrorCode.BAD_REQUEST));
         }
     }
 
@@ -313,6 +316,13 @@ public class AuthController implements RequestHandler {
      * để Admin có thể hiển thị thông báo phù hợp trên UI.
      */
     private String xuLyKhoaTaiKhoan(JsonObject yeuCau, String reqId) {
+        if (!yeuCau.has("username") || yeuCau.get("username").isJsonNull()
+                || !yeuCau.has("newStatus") || yeuCau.get("newStatus").isJsonNull()) {
+            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST,
+                    "Thieu username hoac newStatus.", ErrorCode.BAD_REQUEST);
+            err.setRequestId(reqId);
+            return gson.toJson(err);
+        }
         String username = yeuCau.get("username").getAsString();
         String newStatus = yeuCau.get("newStatus").getAsString();
 

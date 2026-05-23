@@ -3,39 +3,76 @@ package com.auction.client.controller.seller;
 import com.auction.client.controller.auth.UserSession;
 import com.auction.client.controller.components.ProductCardController;
 import com.auction.client.networkclient.ClientSocket;
-import com.auction.client.util.AuctionTimeUtil; // IMPORT CÁI NÀY
+import com.auction.client.util.AuctionTimeUtil;
 import com.auction.common.enums.ActionType;
-import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MyProductsController implements Initializable {
     private static final Logger logger = LoggerFactory.getLogger(MyProductsController.class);
+    private static final int CARD_BATCH_SIZE = 10;
 
     @FXML private FlowPane productFlowPane;
     @FXML private Label lblHeaderName;
     @FXML private Label lblHeaderRole;
     @FXML private Label lblBannerWelcome;
+    @FXML private Label lblTotalProducts;
+    @FXML private Label lblRunningAuctions;
+    @FXML private Label lblFinishedAuctions;
+    @FXML private Label lblCanceledAuctions;
+    @FXML private TextField txtSearch;
+    @FXML private ComboBox<String> cbCategory;
+    @FXML private ComboBox<String> cbStatus;
 
-    private String serverNow; // Cần biến này để đồng bộ thời gian từ Server
+    private String currentKeyword = "";
+    private String currentCategory = "Tất cả";
+    private String currentStatus = "Tất cả";
+    private String loadedServerNow;
+    private JsonArray loadedProducts = new JsonArray();
+    private final PauseTransition searchDebounce = new PauseTransition(Duration.millis(180));
+    private final AtomicInteger renderVersion = new AtomicInteger();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        logger.info("Người bán đang xem danh sách sản phẩm của chính mình.");
         updateDashboardUserInfo();
+        setupFilters();
+
         if (productFlowPane != null) {
+            productFlowPane.getChildren().clear();
             loadMyPostedProducts();
         }
     }
@@ -47,6 +84,7 @@ public class MyProductsController implements Initializable {
 
             if (lblHeaderName != null) lblHeaderName.setText("Chào, " + currentUserName);
             if (lblBannerWelcome != null) lblBannerWelcome.setText("Chào mừng trở lại, " + currentUserName + "! 👋");
+
             if (lblHeaderRole != null) {
                 lblHeaderRole.setText(currentUserRole.substring(0, 1).toUpperCase() + currentUserRole.substring(1).toLowerCase());
             }
@@ -55,66 +93,418 @@ public class MyProductsController implements Initializable {
         }
     }
 
+    private void setupFilters() {
+        if (cbCategory != null) {
+            cbCategory.getItems().setAll("Tất cả", "ELECTRONICS", "VEHICLE", "ART", "OTHER");
+            cbCategory.setValue("Tất cả");
+            cbCategory.valueProperty().addListener((obs, oldVal, newVal) -> {
+                currentCategory = isBlank(newVal) ? "Tất cả" : newVal;
+                applyFiltersAndRender();
+            });
+        }
+
+        if (cbStatus != null) {
+            cbStatus.getItems().setAll("Tất cả", "OPEN", "RUNNING", "FINISHED", "PAID", "CANCELED");
+            cbStatus.setValue("Tất cả");
+            cbStatus.valueProperty().addListener((obs, oldVal, newVal) -> {
+                currentStatus = isBlank(newVal) ? "Tất cả" : newVal;
+                applyFiltersAndRender();
+            });
+        }
+
+        if (txtSearch != null) {
+            txtSearch.textProperty().addListener((obs, oldVal, newVal) -> {
+                currentKeyword = newVal == null ? "" : newVal;
+                searchDebounce.stop();
+                searchDebounce.setOnFinished(event -> applyFiltersAndRender());
+                searchDebounce.playFromStart();
+            });
+        }
+    }
+
     private void loadMyPostedProducts() {
         productFlowPane.getChildren().clear();
+        Label loadingLabel = new Label("Đang lấy dữ liệu sản phẩm từ máy chủ...");
+        loadingLabel.setStyle("-fx-text-fill: #888888; -fx-font-size: 14px; -fx-padding: 20px;");
+        productFlowPane.getChildren().add(loadingLabel);
 
         JsonObject reqJson = new JsonObject();
         reqJson.addProperty("type", ActionType.GET_MY_PRODUCTS);
-        reqJson.addProperty("requestId", System.currentTimeMillis());
+        reqJson.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
         ClientSocket.getInstance().sendJsonRequest(reqJson, ActionType.GET_MY_PRODUCTS, response -> {
-            System.out.println("DEBUG JSON SELLER: " + response.toString());
             try {
-                // Lấy serverNow từ server để tính toán thời gian chính xác
-                serverNow = response.has("serverNow") ? response.get("serverNow").getAsString() : LocalDateTime.now().toString();
-
-                if (response.has("success") && response.get("success").getAsBoolean() && response.has("data")) {
-                    Gson gson = new Gson();
-                    JsonObject[] items = gson.fromJson(response.get("data"), JsonObject[].class);
-
+                boolean success = response.has("success") && response.get("success").getAsBoolean();
+                if (success && response.has("data")) {
+                    loadedProducts = response.getAsJsonArray("data");
+                    loadedServerNow = getString(response, "serverNow", null);
+                    updateStatistics();
+                    applyFiltersAndRender();
+                } else {
                     Platform.runLater(() -> {
                         productFlowPane.getChildren().clear();
-                        for (JsonObject itemObj : items) {
-                            renderCard(itemObj);
-                        }
+                        productFlowPane.getChildren().add(new Label("Lỗi: Không thể tải dữ liệu từ Server."));
                     });
                 }
             } catch (Exception ex) {
-                logger.error("Lỗi load sản phẩm: ", ex);
+                logger.error("Lỗi phân tích dữ liệu JSON mạng: ", ex);
             }
         });
     }
 
-    private void renderCard(JsonObject itemObj) {
-        try {
-            System.out.println("DEBUG KEYS: " + itemObj.keySet());
-            int id = itemObj.has("auctionId") ? itemObj.get("auctionId").getAsInt() : -1;
-            String name = itemObj.has("itemName") ? itemObj.get("itemName").getAsString() : "Sản phẩm không tên";
-            double startingPrice = itemObj.has("currentPrice") ? itemObj.get("currentPrice").getAsDouble() : 0.0;
-            String imageUrl = itemObj.has("imageUrl") ? itemObj.get("imageUrl").getAsString() : "";
+    private void updateStatistics() {
+        int totalProducts = loadedProducts.size();
+        int runningCount = 0;
+        int finishedCount = 0;
+        int canceledCount = 0;
 
-            // --- LOGIC ĐỒNG BỘ ---
-            String startTime = itemObj.has("startTime") ? itemObj.get("startTime").getAsString() : null;
-            String endTime = itemObj.has("endTime") ? itemObj.get("endTime").getAsString() : null;
-            String serverStatus = itemObj.has("status") ? itemObj.get("status").getAsString() : "OPEN";
-
-            // Gọi bộ não AuctionTimeUtil
-            AuctionTimeUtil.AuctionState state = AuctionTimeUtil.calculateState(startTime, endTime, serverNow);
-
-            // Xử lý status ưu tiên
-            String effectiveStatus = (serverStatus.equals("PAID") || serverStatus.equals("CANCELLED"))
-                    ? serverStatus : state.finalStatus;
-
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
-            VBox card = loader.load();
-            ProductCardController controller = loader.getController();
-
-            // Truyền số giây và status sang Card
-            controller.setProductData(id, name, (long)startingPrice, state.countdownSeconds, effectiveStatus, imageUrl, false);
-
-            productFlowPane.getChildren().add(card);
-        } catch (IOException e) {
-            logger.error("Lỗi vẽ thẻ: {}", e.getMessage());
+        for (JsonElement element : loadedProducts) {
+            JsonObject obj = element.getAsJsonObject();
+            AuctionTimeUtil.AuctionState state =
+                    AuctionTimeUtil.calculateState(
+                            getString(obj, "startTime", null),
+                            getString(obj, "endTime", null),
+                            loadedServerNow);
+            String status = resolveDisplayStatus(getString(obj, "status", null), state.finalStatus);
+            if ("RUNNING".equalsIgnoreCase(status)) {
+                runningCount++;
+            } else if ("FINISHED".equalsIgnoreCase(status) || "PAID".equalsIgnoreCase(status)) {
+                finishedCount++;
+            } else if ("CANCELED".equalsIgnoreCase(status)) {
+                canceledCount++;
+            }
         }
+
+        int finalRunningCount = runningCount;
+        int finalFinishedCount = finishedCount;
+        int finalCanceledCount = canceledCount;
+        Platform.runLater(() -> {
+            if (lblTotalProducts != null) lblTotalProducts.setText(String.valueOf(totalProducts));
+            if (lblRunningAuctions != null) lblRunningAuctions.setText(String.valueOf(finalRunningCount));
+            if (lblFinishedAuctions != null) lblFinishedAuctions.setText(String.valueOf(finalFinishedCount));
+            if (lblCanceledAuctions != null) lblCanceledAuctions.setText(String.valueOf(finalCanceledCount));
+        });
+    }
+
+    private void applyFiltersAndRender() {
+        int currentRenderVersion = renderVersion.incrementAndGet();
+        JsonArray productsToFilter = loadedProducts.deepCopy();
+        String selectedKeyword = currentKeyword.trim().toLowerCase(Locale.ROOT);
+        String selectedCategory = currentCategory;
+        String selectedStatus = currentStatus;
+        String selectedServerNow = loadedServerNow;
+
+        new Thread(() -> {
+            try {
+                List<VBox> cardsToRender = new ArrayList<>();
+                boolean cardsPublished = false;
+
+                for (JsonElement element : productsToFilter) {
+                    JsonObject itemObj = element.getAsJsonObject();
+                    String name = getString(itemObj, "name", "Sản phẩm không tên");
+                    if (!selectedKeyword.isEmpty()
+                            && !name.toLowerCase(Locale.ROOT).contains(selectedKeyword)) {
+                        continue;
+                    }
+
+                    String category = getString(itemObj, "category", "");
+                    if (!"Tất cả".equalsIgnoreCase(selectedCategory)
+                            && !selectedCategory.equalsIgnoreCase(category)) {
+                        continue;
+                    }
+
+                    AuctionTimeUtil.AuctionState state =
+                            AuctionTimeUtil.calculateState(
+                                    getString(itemObj, "startTime", null),
+                                    getString(itemObj, "endTime", null),
+                                    selectedServerNow);
+                    String status = resolveDisplayStatus(getString(itemObj, "status", null), state.finalStatus);
+                    if (!"Tất cả".equalsIgnoreCase(selectedStatus)
+                            && !selectedStatus.equalsIgnoreCase(status)) {
+                        continue;
+                    }
+
+                    int auctionId = itemObj.has("auctionId") ? itemObj.get("auctionId").getAsInt() : -1;
+                    double currentPrice = itemObj.has("currentPrice") ? itemObj.get("currentPrice").getAsDouble() : 0.0;
+                    String imageUrl = getString(itemObj, "imageUrl", "");
+                    com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageUrl);
+
+                    try {
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
+                        VBox card = loader.load();
+                        ProductCardController controller = loader.getController();
+                        controller.setProductData(
+                                auctionId,
+                                name,
+                                currentPrice,
+                                state.countdownSeconds,
+                                status,
+                                imageUrl,
+                                false
+                        );
+                        JsonObject cardData = itemObj.deepCopy();
+                        boolean canManage = "OPEN".equalsIgnoreCase(status);
+                        controller.configureSellerActions(
+                                canManage,
+                                () -> showEditDialog(cardData),
+                                () -> confirmAndDelete(cardData)
+                        );
+                        cardsToRender.add(card);
+                        if (cardsToRender.size() >= CARD_BATCH_SIZE) {
+                            publishCardBatch(currentRenderVersion, cardsToRender, !cardsPublished);
+                            cardsPublished = true;
+                            cardsToRender = new ArrayList<>();
+                        }
+                    } catch (IOException e) {
+                        logger.error("Lỗi vẽ thẻ sản phẩm: {}", e.getMessage());
+                    }
+                }
+
+                publishCardBatch(currentRenderVersion, cardsToRender, !cardsPublished);
+            } catch (Exception ex) {
+                logger.error("Lỗi lọc và dựng sản phẩm seller: ", ex);
+            }
+        }).start();
+    }
+
+    private void publishCardBatch(int currentRenderVersion, List<VBox> cards, boolean replaceExisting) {
+        List<VBox> batch = new ArrayList<>(cards);
+        Platform.runLater(() -> {
+            if (productFlowPane == null || renderVersion.get() != currentRenderVersion) {
+                return;
+            }
+
+            if (replaceExisting) {
+                productFlowPane.getChildren().setAll(batch);
+                if (batch.isEmpty()) {
+                    productFlowPane.getChildren().add(new Label("Không có sản phẩm phù hợp."));
+                }
+            } else if (!batch.isEmpty()) {
+                productFlowPane.getChildren().addAll(batch);
+            }
+        });
+    }
+
+    private void showEditDialog(JsonObject itemObj) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Sửa sản phẩm");
+        dialog.setHeaderText("Chỉ có thể sửa khi phiên đang chờ mở.");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        TextField txtName = new TextField(getString(itemObj, "name", ""));
+        TextArea txtDescription = new TextArea(getString(itemObj, "description", ""));
+        txtDescription.setPrefRowCount(3);
+        TextField txtPrice = new TextField(String.valueOf(getLong(itemObj, "startingPrice", 0L)));
+        ComboBox<String> categoryBox = new ComboBox<>();
+        categoryBox.getItems().setAll("ELECTRONICS", "VEHICLE", "ART", "OTHER");
+        categoryBox.setValue(getString(itemObj, "category", "OTHER"));
+        TextField txtImageUrl = new TextField(getString(itemObj, "imageUrl", ""));
+        DatePicker dpStartDate = new DatePicker();
+        TextField txtStartTime = new TextField();
+        DatePicker dpEndDate = new DatePicker();
+        TextField txtEndTime = new TextField();
+        fillDateTimeFields(getString(itemObj, "startTime", null), dpStartDate, txtStartTime);
+        fillDateTimeFields(getString(itemObj, "endTime", null), dpEndDate, txtEndTime);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(10));
+        grid.addRow(0, new Label("Tên"), txtName);
+        grid.addRow(1, new Label("Mô tả"), txtDescription);
+        grid.addRow(2, new Label("Giá khởi điểm"), txtPrice);
+        grid.addRow(3, new Label("Loại"), categoryBox);
+        grid.addRow(4, new Label("Ảnh"), txtImageUrl);
+        grid.addRow(5, new Label("Ngày bắt đầu"), dpStartDate);
+        grid.addRow(6, new Label("Giờ bắt đầu"), txtStartTime);
+        grid.addRow(7, new Label("Ngày kết thúc"), dpEndDate);
+        grid.addRow(8, new Label("Giờ kết thúc"), txtEndTime);
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.showAndWait()
+                .filter(button -> button == ButtonType.OK)
+                .ifPresent(button -> submitProductUpdate(
+                        itemObj,
+                        txtName.getText(),
+                        txtDescription.getText(),
+                        txtPrice.getText(),
+                        categoryBox.getValue(),
+                        txtImageUrl.getText(),
+                        dpStartDate.getValue(),
+                        txtStartTime.getText(),
+                        dpEndDate.getValue(),
+                        txtEndTime.getText()
+                ));
+    }
+
+    private void submitProductUpdate(
+            JsonObject itemObj,
+            String name,
+            String description,
+            String priceText,
+            String category,
+            String imageUrl,
+            LocalDate startDate,
+            String startTimeText,
+            LocalDate endDate,
+            String endTimeText
+    ) {
+        String trimmedName = name == null ? "" : name.trim();
+        if (trimmedName.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Thiếu thông tin", "Tên sản phẩm không được để trống.");
+            return;
+        }
+
+        long startingPrice;
+        try {
+            startingPrice = Long.parseLong(priceText.replace(",", "").trim());
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.WARNING, "Giá không hợp lệ", "Giá khởi điểm phải là số nguyên dương.");
+            return;
+        }
+
+        if (startingPrice <= 0) {
+            showAlert(Alert.AlertType.WARNING, "Giá không hợp lệ", "Giá khởi điểm phải lớn hơn 0.");
+            return;
+        }
+
+        LocalDateTime startTime = parseDateTime(startDate, startTimeText);
+        LocalDateTime endTime = parseDateTime(endDate, endTimeText);
+        if (startTime == null || endTime == null) {
+            showAlert(Alert.AlertType.WARNING, "Thời gian không hợp lệ", "Vui lòng nhập ngày và giờ theo định dạng HH:mm.");
+            return;
+        }
+        if (startTime.isBefore(LocalDateTime.now())) {
+            showAlert(Alert.AlertType.WARNING, "Thời gian không hợp lệ", "Thời gian bắt đầu không được ở quá khứ.");
+            return;
+        }
+        if (!endTime.isAfter(startTime)) {
+            showAlert(Alert.AlertType.WARNING, "Thời gian không hợp lệ", "Thời gian kết thúc phải lớn hơn thời gian bắt đầu.");
+            return;
+        }
+
+        JsonObject request = new JsonObject();
+        request.addProperty("type", ActionType.UPDATE_PRODUCT);
+        request.addProperty("requestId", java.util.UUID.randomUUID().toString());
+        request.addProperty("itemId", getInt(itemObj, "itemId", getInt(itemObj, "id", -1)));
+        request.addProperty("name", trimmedName);
+        request.addProperty("description", description == null ? "" : description.trim());
+        request.addProperty("startingPrice", startingPrice);
+        request.addProperty("category", category == null ? "OTHER" : category);
+        request.addProperty("imageUrl", imageUrl == null ? "" : imageUrl.trim());
+        request.addProperty("startTime", startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        request.addProperty("endTime", endTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+
+        ClientSocket.getInstance().sendJsonRequest(request, ActionType.UPDATE_PRODUCT, response ->
+                Platform.runLater(() -> handleMutationResponse(response, "Cập nhật sản phẩm thành công.")));
+    }
+
+    private void confirmAndDelete(JsonObject itemObj) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Xóa sản phẩm");
+        confirm.setHeaderText("Xóa sản phẩm đang chờ mở phiên?");
+        confirm.setContentText("Thao tác này sẽ hủy đăng bán sản phẩm và không thể hoàn tác.");
+
+        confirm.showAndWait()
+                .filter(button -> button == ButtonType.OK)
+                .ifPresent(button -> submitProductDelete(itemObj));
+    }
+
+    private void submitProductDelete(JsonObject itemObj) {
+        JsonObject request = new JsonObject();
+        request.addProperty("type", ActionType.DELETE_PRODUCT);
+        request.addProperty("requestId", java.util.UUID.randomUUID().toString());
+        request.addProperty("itemId", getInt(itemObj, "itemId", getInt(itemObj, "id", -1)));
+
+        ClientSocket.getInstance().sendJsonRequest(request, ActionType.DELETE_PRODUCT, response ->
+                Platform.runLater(() -> handleMutationResponse(response, "Xóa sản phẩm thành công.")));
+    }
+
+    private void handleMutationResponse(JsonObject response, String successMessage) {
+        boolean success = response.has("success") && response.get("success").getAsBoolean();
+        if (success) {
+            showAlert(Alert.AlertType.INFORMATION, "Thành công", successMessage);
+            loadMyPostedProducts();
+            return;
+        }
+
+        showAlert(Alert.AlertType.WARNING, "Không thể thực hiện", getString(response, "message", "Yêu cầu bị từ chối."));
+    }
+
+    private void fillDateTimeFields(String rawValue, DatePicker datePicker, TextField timeField) {
+        LocalDateTime value = AuctionTimeUtil.parse(rawValue);
+        if (value == null) {
+            value = LocalDateTime.now().plusMinutes(10);
+        }
+        datePicker.setValue(value.toLocalDate());
+        timeField.setText(value.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+        timeField.setPromptText("HH:mm");
+    }
+
+    private LocalDateTime parseDateTime(LocalDate date, String timeText) {
+        if (date == null) {
+            return null;
+        }
+
+        String normalizedTime = timeText == null ? "" : timeText.trim();
+        if (normalizedTime.isEmpty()) {
+            normalizedTime = "00:00";
+        }
+
+        try {
+            LocalTime time = LocalTime.parse(normalizedTime, DateTimeFormatter.ofPattern("HH:mm"));
+            return LocalDateTime.of(date, time);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String resolveDisplayStatus(String storedStatus, String timeStatus) {
+        if (storedStatus == null || storedStatus.isBlank()) {
+            return timeStatus;
+        }
+
+        String normalized = storedStatus.trim().toUpperCase(Locale.ROOT);
+        switch (normalized) {
+            case "PAID":
+            case "CANCELED":
+            case "FINISHED":
+                return normalized;
+            case "OPEN":
+            case "RUNNING":
+                return timeStatus;
+            default:
+                return normalized;
+        }
+    }
+
+    private String getString(JsonObject obj, String key, String fallback) {
+        return obj.has(key) && !obj.get(key).isJsonNull()
+                ? obj.get(key).getAsString()
+                : fallback;
+    }
+
+    private int getInt(JsonObject obj, String key, int fallback) {
+        return obj.has(key) && !obj.get(key).isJsonNull()
+                ? obj.get(key).getAsInt()
+                : fallback;
+    }
+
+    private long getLong(JsonObject obj, String key, long fallback) {
+        return obj.has(key) && !obj.get(key).isJsonNull()
+                ? obj.get(key).getAsLong()
+                : fallback;
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

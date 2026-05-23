@@ -41,11 +41,20 @@ public class PushHandler {
             String bidderName = (bidder != null && bidder.has("username"))
                     ? bidder.get("username").getAsString()
                     : "Unknown";
+            String endTime = payload.has("endTime") && !payload.get("endTime").isJsonNull()
+                    ? payload.get("endTime").getAsString()
+                    : null;
+            String serverNow = payload.has("serverNow") && !payload.get("serverNow").isJsonNull()
+                    ? payload.get("serverNow").getAsString()
+                    : null;
+            String status = payload.has("status") && !payload.get("status").isJsonNull()
+                    ? payload.get("status").getAsString()
+                    : null;
 
             Platform.runLater(() -> {
                 logger.info("[Push] Giá mới: {} đ bởi {}", newBidAmount, bidderName);
                 if (currentRoomController != null) {
-                    currentRoomController.updateRealtimeBid(newBidAmount, bidderName);
+                    currentRoomController.updateRealtimeBid(newBidAmount, bidderName, endTime, serverNow, status);
                 }
             });
         } catch (Exception e) {

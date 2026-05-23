@@ -55,7 +55,9 @@ public class ItemDao {
     }
 
     public int luuSanPham(Item item) {
-        String sql = "INSERT INTO items (seller_id, name, description, category, starting_price, image_url) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO items "
+                + "(seller_id, name, description, category, starting_price, bid_increment, image_url) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -64,7 +66,8 @@ public class ItemDao {
             pstmt.setString(3, item.getDescription());
             pstmt.setString(4, item.getCategory().trim().toUpperCase());
             pstmt.setLong(5, item.getStartingPrice());
-            pstmt.setString(6, item.getImageUrl() != null ? item.getImageUrl() : "");
+            pstmt.setLong(6, item.getBidIncrement());
+            pstmt.setString(7, item.getImageUrl() != null ? item.getImageUrl() : "");
 
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {

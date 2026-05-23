@@ -65,12 +65,12 @@
 
                         <Region prefWidth="1.0" style="-fx-background-color: #EEEEEE; -fx-min-height: 30;" /> <!-- Vạch ngăn cách -->
 
-                        <!-- Ô 2: Sắp kết thúc -->
+                        <!-- Ô 2: Phiên đấu giá bạn đang tham gia -->
                         <HBox alignment="CENTER" spacing="10.0">
                             <Label style="-fx-font-size: 16;" text="⏳" textFill="#7A1B28" />
                             <VBox alignment="CENTER_LEFT">
                                 <Label fx:id="lblEndingSoonAuctions" text="0" textFill="#3E2723"><font><Font name="System Bold" size="16.0" /></font></Label>
-                                <Label style="-fx-font-size: 10;" text="Sắp kết thúc" textFill="#888888" />
+                                <Label style="-fx-font-size: 10;" text="Đang tham gia" textFill="#888888" />
                             </VBox>
                         </HBox>
 

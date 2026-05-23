@@ -2,7 +2,6 @@ package com.auction.client.controller.bidder;
 
 import com.auction.client.controller.auth.UserSession;
 import com.auction.client.controller.components.ProductCardController;
-import com.auction.client.interfaces.CategoryFilterListener;
 import com.auction.client.interfaces.RefreshableCenterContent;
 import com.auction.client.networkclient.ClientSocket;
 import com.auction.client.util.AuctionTimeUtil;
@@ -21,11 +20,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.ResourceBundle;
 
-public class MainDashboardController implements Initializable, RefreshableCenterContent, CategoryFilterListener {
+public class MainDashboardController implements Initializable, RefreshableCenterContent {
 
     private static final Logger logger = LoggerFactory.getLogger(MainDashboardController.class);
 
@@ -42,12 +39,10 @@ public class MainDashboardController implements Initializable, RefreshableCenter
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         logger.info("Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.");
-
         if (productFlowPane != null) {
             productFlowPane.getChildren().clear();
-            loadFeaturedAuctionsFromServer("ALL");
+            loadFeaturedAuctionsFromServer();
         }
-
         updateDashboardUserInfo();
         updateStatistics();
     }
@@ -55,23 +50,16 @@ public class MainDashboardController implements Initializable, RefreshableCenter
     private void updateDashboardUserInfo() {
         try {
             String currentUserName = UserSession.getUsername() != null ? UserSession.getUsername() : "Người dùng";
-
             String currentUserRole = UserSession.getCurrentRole() != null ? UserSession.getCurrentRole() : "BIDDER";
 
-            if (lblHeaderName != null) {
-                lblHeaderName.setText("Chào, " + currentUserName);
-            }
-
-            if (lblBannerWelcome != null) {
-                lblBannerWelcome.setText("Chào mừng trở lại, " + currentUserName + "! 👋");
-            }
+            if (lblHeaderName != null) lblHeaderName.setText("Chào, " + currentUserName);
+            if (lblBannerWelcome != null) lblBannerWelcome.setText("Chào mừng trở lại, " + currentUserName + "! 👋");
 
             if (lblHeaderRole != null) {
                 lblHeaderRole.setText("SELLER".equalsIgnoreCase(currentUserRole) ? "Seller" : "Bidder");
             }
-
         } catch (Exception e) {
-            logger.error("Lỗi khi load thông tin User lên Header", e);
+            logger.error("Lỗi khi load thông tin User lên Header: {}", e.getMessage());
         }
     }
 
@@ -83,103 +71,123 @@ public class MainDashboardController implements Initializable, RefreshableCenter
         ClientSocket.getInstance().sendJsonRequest(
                 request,
                 "DASHBOARD_STATS_RESPONSE",
-                response -> {
-                    Platform.runLater(() -> {
-                        if (response.has("success")
-                                && response.get("success").getAsBoolean()
-                                && response.has("data")) {
+                response -> Platform.runLater(() -> {
 
-                            JsonObject data = response.getAsJsonObject("data");
+                    if (response.has("success")
+                            && response.get("success").getAsBoolean()
+                            && response.has("data")) {
 
-                            int activeCount = data.has("activeCount") ? data.get("activeCount").getAsInt() : 0;
-                            int endingSoonCount = data.has("endingSoonCount") ? data.get("endingSoonCount").getAsInt() : 0;
-                            int followedCount = data.has("followedCount") ? data.get("followedCount").getAsInt() : 0;
-                            int myBidsCount = data.has("myBidsCount") ? data.get("myBidsCount").getAsInt() : 0;
+                        JsonObject data = response.getAsJsonObject("data");
 
-                            if (lblActiveAuctions != null) lblActiveAuctions.setText(String.valueOf(activeCount));
-                            if (lblEndingSoonAuctions != null) lblEndingSoonAuctions.setText(String.valueOf(endingSoonCount));
-                            if (lblFollowedAuctions != null) lblFollowedAuctions.setText(String.valueOf(followedCount));
-                            if (lblMyBidsCount != null) lblMyBidsCount.setText(String.valueOf(myBidsCount));
-                        }
-                    });
-                }
+                        int activeCount = data.has("activeCount") ? data.get("activeCount").getAsInt() : 0;
+                        int joinedActiveCount = data.has("joinedActiveCount")
+                                ? data.get("joinedActiveCount").getAsInt()
+                                : data.has("endingSoonCount") ? data.get("endingSoonCount").getAsInt() : 0;
+                        int followedCount = data.has("followedCount") ? data.get("followedCount").getAsInt() : 0;
+                        int myBidsCount = data.has("myBidsCount") ? data.get("myBidsCount").getAsInt() : 0;
+
+                        if (lblActiveAuctions != null)
+                            lblActiveAuctions.setText(String.valueOf(activeCount));
+
+                        if (lblEndingSoonAuctions != null)
+                            lblEndingSoonAuctions.setText(String.valueOf(joinedActiveCount));
+
+                        if (lblFollowedAuctions != null)
+                            lblFollowedAuctions.setText(String.valueOf(followedCount));
+
+                        if (lblMyBidsCount != null)
+                            lblMyBidsCount.setText(String.valueOf(myBidsCount));
+
+                        logger.info("Đã đồng bộ thành công số liệu thống kê lên Dashboard từ Server.");
+                    }
+                })
         );
     }
 
-    private void loadFeaturedAuctionsFromServer(String category) {
-        JsonObject request = new JsonObject();
+    private void loadFeaturedAuctionsFromServer() {
 
+        JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.GET_ALL_AUCTIONS);
         request.addProperty("featuredRunning", true);
-        request.addProperty("category", category == null ? "ALL" : category);
         request.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
-        ClientSocket.getInstance().sendJsonRequest(request, "AUCTION_LIST_RESPONSE", response -> {
+        ClientSocket.getInstance().sendJsonRequest(
+                request,
+                "AUCTION_LIST_RESPONSE",
+                response -> {
 
-                    if (!(response.has("success") && response.get("success").getAsBoolean() && response.has("auctions"))) {
+                    if (!(response.has("success")
+                            && response.get("success").getAsBoolean()
+                            && response.has("auctions"))) {
                         return;
                     }
 
                     JsonArray auctions = response.getAsJsonArray("auctions");
-
                     String serverNow = getString(response, "serverNow", null);
-
-                    List<Integer> followedIds = new ArrayList<>();
-
+                    java.util.List<Integer> followedIds = new java.util.ArrayList<>();
                     if (response.has("followedIds") && response.get("followedIds").isJsonArray()) {
-
                         for (JsonElement id : response.getAsJsonArray("followedIds")) {
                             followedIds.add(id.getAsInt());
                         }
                     }
 
-                    List<VBox> preparedCards = new ArrayList<>();
-                    int count = 0;
+                    java.util.List<VBox> preparedCards = new java.util.ArrayList<>();
 
                     for (JsonElement element : auctions) {
-                        if (count >= 6) break;
-
                         JsonObject obj = element.getAsJsonObject();
 
-                        int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
+                        int auctionId = obj.has("auctionId")
+                                ? obj.get("auctionId").getAsInt()
+                                : -1;
 
-                        String name = getString(obj, "itemName", "Sản phẩm");
+                        String name = obj.has("itemName")
+                                ? obj.get("itemName").getAsString()
+                                : "Sản phẩm";
 
-                        long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
+                        long price = obj.has("currentPrice")
+                                ? obj.get("currentPrice").getAsLong()
+                                : 0;
 
-                        String imageUrl = getString(obj, "imageUrl", "");
+                        String imageUrl = obj.has("imageUrl")
+                                ? obj.get("imageUrl").getAsString()
+                                : "";
 
                         String serverStatus = getString(obj, "status", "");
-
                         if (!"RUNNING".equalsIgnoreCase(serverStatus)) {
-                            continue;
-                        }
-
-                        String rawStartTime = getString(obj, "startTime", null);
-
-                        String rawEndTime = getString(obj, "endTime", null);
-
-                        AuctionTimeUtil.AuctionState state = AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, serverNow);
-
-                        if (!"RUNNING".equalsIgnoreCase(state.finalStatus) || state.countdownSeconds <= 0) {
-
-                            logger.warn("Bỏ qua phiên nổi bật không còn RUNNING theo thời gian DB: {}", auctionId);
                             continue;
                         }
 
                         com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageUrl);
 
+                        String rawStartTime = obj.has("startTime") && !obj.get("startTime").isJsonNull()
+                                ? obj.get("startTime").getAsString()
+                                : null;
+
+                        String rawEndTime = obj.has("endTime") && !obj.get("endTime").isJsonNull()
+                                ? obj.get("endTime").getAsString()
+                                : null;
+
+                        AuctionTimeUtil.AuctionState state =
+                                AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, serverNow);
+                        if (!"RUNNING".equalsIgnoreCase(state.finalStatus) || state.countdownSeconds <= 0) {
+                            logger.warn("Bỏ qua phiên nổi bật không còn RUNNING theo thời gian DB: {}", auctionId);
+                            continue;
+                        }
                         try {
                             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
-
                             VBox card = loader.load();
-
                             ProductCardController controller = loader.getController();
-
-                            controller.setProductData(auctionId, name, price, state.countdownSeconds, state.finalStatus, imageUrl, followedIds.contains(auctionId));
+                            controller.setProductData(
+                                    auctionId,
+                                    name,
+                                    price,
+                                    state.countdownSeconds,
+                                    serverStatus,
+                                    imageUrl,
+                                    followedIds.contains(auctionId)
+                            );
 
                             preparedCards.add(card);
-                            count++;
 
                         } catch (Exception e) {
                             logger.error("Load ProductCard lỗi", e);
@@ -198,19 +206,14 @@ public class MainDashboardController implements Initializable, RefreshableCenter
 
     @Override
     public void refreshContent() {
-        loadFeaturedAuctionsFromServer("ALL");
+        loadFeaturedAuctionsFromServer();
         updateStatistics();
     }
 
-    @Override
-    public void onCategorySelected(String category) {
-        if (productFlowPane != null) {
-            productFlowPane.getChildren().clear();
-            loadFeaturedAuctionsFromServer(category == null ? "ALL" : category);
-        }
+    private String getString(JsonObject obj, String key, String fallback) {
+        return obj.has(key) && !obj.get(key).isJsonNull()
+                ? obj.get(key).getAsString()
+                : fallback;
     }
 
-    private String getString(JsonObject obj, String key, String fallback) {
-        return obj.has(key) && !obj.get(key).isJsonNull() ? obj.get(key).getAsString() : fallback;
-    }
 }

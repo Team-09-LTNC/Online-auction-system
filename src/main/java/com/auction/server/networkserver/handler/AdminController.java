@@ -1,7 +1,6 @@
 package com.auction.server.networkserver.handler;
 
 import com.auction.common.util.GsonConfig;
-import com.auction.server.dao.AuctionDao;
 import com.auction.server.dao.AdminDao;
 import com.auction.server.networkserver.ClientHandler;
 import com.google.gson.Gson;
@@ -25,6 +24,13 @@ public class AdminController implements RequestHandler {
 
     @Override
     public String xuLy(JsonObject yeuCau, ClientHandler client) {
+        if (yeuCau == null || !yeuCau.has("type") || yeuCau.get("type").isJsonNull()) {
+            JsonObject loi = new JsonObject();
+            loi.addProperty("type", "ERROR_RESPONSE");
+            loi.addProperty("success", false);
+            loi.addProperty("message", "Thieu truong type.");
+            return gson.toJson(loi);
+        }
         String loaiYeuCau = yeuCau.get("type").getAsString();
 
         // Trích xuất chung mã requestId từ Client gửi lên
@@ -35,14 +41,13 @@ public class AdminController implements RequestHandler {
         switch (loaiYeuCau) {
             case ActionType.ADMIN_GET_ALL_AUCTIONS:
                 return xuLyLayDanhSachAuction(yeuCau, reqId);
-            case ActionType.ADMIN_GET_PENDING_AUCTIONS:
-                return xuLyLayDanhSachChoDuyet(reqId);
-            case ActionType.ADMIN_APPROVE_AUCTION:
-                return xuLyDuyetAuction(yeuCau, reqId);
-            case ActionType.ADMIN_REJECT_AUCTION:
-                return xuLyTuChoiAuction(yeuCau, reqId);
             default:
-                return null;
+                JsonObject loi = new JsonObject();
+                loi.addProperty("type", "ERROR_RESPONSE");
+                loi.addProperty("success", false);
+                loi.addProperty("message", "Action khong duoc ho tro.");
+                if (reqId != null) loi.addProperty("requestId", reqId);
+                return gson.toJson(loi);
         }
     }
 
@@ -52,8 +57,8 @@ public class AdminController implements RequestHandler {
         for (Auction a : auctions) {
             JsonObject obj = new JsonObject();
             obj.addProperty("itemname", a.getItem().getName());
-            obj.addProperty("starttime", a.getStartTime().toString());
-            obj.addProperty("endtime", a.getEndTime().toString());
+            obj.addProperty("starttime", a.getStartTime() != null ? a.getStartTime().toString() : null);
+            obj.addProperty("endtime", a.getEndTime() != null ? a.getEndTime().toString() : null);
             obj.addProperty("status", a.getStatus() != null ? a.getStatus().toString() : "OPEN");
             obj.addProperty("imageurl", a.getItem().getImageUrl());
             array.add(obj);
@@ -67,57 +72,4 @@ public class AdminController implements RequestHandler {
         return gson.toJson(res);
     }
 
-    private String xuLyLayDanhSachChoDuyet(String reqId) {
-        List<Auction> auctions = adminDao.layDanhSachChoDuyet();
-        JsonArray array = new JsonArray();
-        for (Auction a : auctions) {
-            JsonObject obj = new JsonObject();
-            obj.addProperty("id", a.getId());
-            obj.addProperty("itemName", a.getItem().getName());
-            obj.addProperty("sellerId", a.getItem().getSellerId());
-            obj.addProperty("description", a.getItem().getDescription());
-            obj.addProperty("startingPrice", a.getItem().getStartingPrice());
-            obj.addProperty("category", a.getItem().getCategory());
-            obj.addProperty("startTime", a.getStartTime().toString());
-            obj.addProperty("endTime", a.getEndTime().toString());
-            obj.addProperty("imageUrl", a.getItem().getImageUrl());
-            array.add(obj);
-        }
-        JsonObject res = new JsonObject();
-        res.addProperty("type", "ADMIN_GET_PENDING_AUCTIONS_RESPONSE");
-        res.addProperty("success", true);
-        res.add("data", array);
-
-        logger.info("Đã lấy danh sách phiên đấu giá chờ duyệt trong AdminController");
-
-        if (reqId != null)
-            res.addProperty("requestId", reqId);
-        return gson.toJson(res);
-    }
-
-    private String xuLyDuyetAuction(JsonObject yeuCau, String reqId) {
-        int auctionId = yeuCau.get("auctionId").getAsInt();
-        boolean ok = adminDao.duyetAuction(auctionId, "OPEN");
-
-        JsonObject res = new JsonObject();
-        res.addProperty("type", "ADMIN_APPROVE_AUCTION_RESPONSE");
-        res.addProperty("success", ok);
-        res.addProperty("message", ok ? "Đã duyệt phiên đấu giá!" : "Duyệt thất bại!");
-        if (reqId != null)
-            res.addProperty("requestId", reqId);
-        return gson.toJson(res);
-    }
-
-    private String xuLyTuChoiAuction(JsonObject yeuCau, String reqId) {
-        int auctionId = yeuCau.get("auctionId").getAsInt();
-        boolean ok = adminDao.duyetAuction(auctionId, "REJECTED");
-
-        JsonObject res = new JsonObject();
-        res.addProperty("type", "ADMIN_REJECT_AUCTION_RESPONSE");
-        res.addProperty("success", ok);
-        res.addProperty("message", ok ? "Đã từ chối phiên đấu giá!" : "Từ chối thất bại!");
-        if (reqId != null)
-            res.addProperty("requestId", reqId);
-        return gson.toJson(res);
-    }
 }

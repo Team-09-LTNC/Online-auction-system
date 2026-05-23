@@ -1,9 +1,11 @@
 package com.auction.server.networkserver;
 
 import com.auction.common.enums.ActionType;
+import com.auction.common.model.bid.Auction;
 import com.auction.common.model.bid.BidTransaction;
 import com.auction.common.model.user.User;
 import com.auction.common.observer.AuctionObserver;
+import com.auction.server.manager.AuctionManager;
 import com.auction.server.manager.UserManager;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -68,6 +70,10 @@ public class ClientHandler implements Runnable, AuctionObserver {
                 JsonObject yeuCau = null;
                 try {
                     yeuCau = JsonParser.parseString(chuoiJson).getAsJsonObject();
+                    if (!yeuCau.has("type") || yeuCau.get("type").isJsonNull()) {
+                        out.println(taoPhanHoiLoiYeuCau(yeuCau, "Thieu truong type trong request."));
+                        continue;
+                    }
                     String loaiYeuCau = yeuCau.get("type").getAsString();
 
                     // Chuyển giao xử lý cho bộ điều phối
@@ -98,10 +104,14 @@ public class ClientHandler implements Runnable, AuctionObserver {
     }
 
     private String taoPhanHoiLoi(JsonObject yeuCau) {
+        return taoPhanHoiLoiYeuCau(yeuCau, "Server khong xu ly duoc yeu cau.");
+    }
+
+    private String taoPhanHoiLoiYeuCau(JsonObject yeuCau, String message) {
         JsonObject loi = new JsonObject();
         loi.addProperty("type", "ERROR_RESPONSE");
         loi.addProperty("success", false);
-        loi.addProperty("message", "Server không xử lý được yêu cầu.");
+        loi.addProperty("message", message);
         if (yeuCau != null && yeuCau.has("requestId") && !yeuCau.get("requestId").isJsonNull()) {
             loi.addProperty("requestId", yeuCau.get("requestId").getAsString());
         }
@@ -115,6 +125,14 @@ public class ClientHandler implements Runnable, AuctionObserver {
             JsonObject update = new JsonObject();
             update.addProperty("type", ActionType.AUCTION_BID_UPDATE);
             update.add("transaction", gson.toJsonTree(giaodich));
+            update.addProperty("serverNow", LocalDateTime.now().toString());
+
+            Auction phien = AuctionManager.getInstance().layPhienTheoId(giaodich.getAuctionId());
+            if (phien != null) {
+                update.addProperty("auctionId", phien.getId());
+                update.addProperty("status", phien.getStatus().name());
+                update.addProperty("endTime", phien.getEndTime() != null ? phien.getEndTime().toString() : null);
+            }
 
             out.println(gson.toJson(update));
         }
