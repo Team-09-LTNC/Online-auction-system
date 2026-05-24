@@ -38,9 +38,17 @@ public class PushHandler {
             long newBidAmount = transaction.get("bidAmount").getAsLong();
 
             JsonObject bidder = transaction.getAsJsonObject("bidder");
-            String bidderName = (bidder != null && bidder.has("username"))
-                    ? bidder.get("username").getAsString()
-                    : "Unknown";
+            String bidderName = "Unknown";
+            if (bidder != null) {
+                if (bidder.has("fullName") && !bidder.get("fullName").isJsonNull()
+                        && !bidder.get("fullName").getAsString().isBlank()) {
+                    bidderName = bidder.get("fullName").getAsString();
+                } else if (bidder.has("username") && !bidder.get("username").isJsonNull()
+                        && !bidder.get("username").getAsString().isBlank()) {
+                    bidderName = bidder.get("username").getAsString();
+                }
+            }
+            final String finalBidderName = bidderName;
             String endTime = payload.has("endTime") && !payload.get("endTime").isJsonNull()
                     ? payload.get("endTime").getAsString()
                     : null;
@@ -52,9 +60,9 @@ public class PushHandler {
                     : null;
 
             Platform.runLater(() -> {
-                logger.info("[Push] Giá mới: {} đ bởi {}", newBidAmount, bidderName);
+                logger.info("[Push] Giá mới: {} đ bởi {}", newBidAmount, finalBidderName);
                 if (currentRoomController != null) {
-                    currentRoomController.updateRealtimeBid(newBidAmount, bidderName, endTime, serverNow, status);
+                    currentRoomController.updateRealtimeBid(newBidAmount, finalBidderName, endTime, serverNow, status);
                 }
             });
         } catch (Exception e) {

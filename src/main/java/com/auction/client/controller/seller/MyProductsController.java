@@ -224,8 +224,16 @@ public class MyProductsController implements Initializable {
                             MyProductsHelper.getString(itemObj, "status", null),
                             state.finalStatus
                     );
-                    if (!"Tất cả".equalsIgnoreCase(selectedStatus)
-                            && !selectedStatus.equalsIgnoreCase(status)) {
+                    boolean statusMatched;
+                    if ("Tất cả".equalsIgnoreCase(selectedStatus)) {
+                        statusMatched = true;
+                    } else if ("FINISHED".equalsIgnoreCase(selectedStatus)) {
+                        statusMatched = "FINISHED".equalsIgnoreCase(status) || "PAID".equalsIgnoreCase(status);
+                    } else {
+                        statusMatched = selectedStatus.equalsIgnoreCase(status);
+                    }
+
+                    if (!statusMatched) {
                         continue;
                     }
 

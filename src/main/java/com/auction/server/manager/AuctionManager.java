@@ -281,7 +281,7 @@ public class AuctionManager {
 
             boolean luuThanhCong = auctionDao.luuHoacCapNhatAutoBid(idPhien, bidder.getId(), maxBid, bidStep);
             if (!luuThanhCong) {
-                logger.warn("Không thể lưu giá trần auto-bid xuống Database cho userId={}", bidder.getId());
+                throw new Exception("Không thể lưu cấu hình Auto-bid. Vui lòng thử lại.");
             }
 
             kichHoatAutoBid(phien);
