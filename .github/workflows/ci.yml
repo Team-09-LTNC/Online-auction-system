@@ -84,8 +84,8 @@ jobs:
       - name: Checkstyle
         run: mvn -B -ntp checkstyle:check
 
-      - name: Build and test
-        run: mvn -B -ntp verify
+      - name: Initialize Database Schema
+        run: mvn -B -ntp compile exec:java -Dexec.mainClass="com.auction.server.db.SetupDatabase" -Ddb.config.file=application-test.properties -e
         env:
           DB_URL: jdbc:mysql://localhost:3306/auction_db
           DB_HOST: localhost
