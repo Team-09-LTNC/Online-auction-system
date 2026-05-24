@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import com.auction.common.enums.AuctionStatus;
 import com.auction.common.model.bid.Auction;
 import com.auction.common.model.bid.BidTransaction;
-// Thêm 2 import mới cho tính năng Auto-Bid
 import com.auction.common.model.bid.AutoBidConfig;
 import com.auction.common.model.user.Bidder;
 
@@ -135,7 +134,30 @@ public class AuctionDao {
         }
     }
 
+    public void capNhatTrangThaiTheoThoiGian() {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(
+                    "UPDATE auctions "
+                            + "SET status = 'RUNNING' "
+                            + "WHERE status = 'OPEN' "
+                            + "AND start_time <= NOW() "
+                            + "AND end_time > NOW()");
+            stmt.executeUpdate(
+                    "UPDATE auctions "
+                            + "SET status = CASE "
+                            + "    WHEN highest_bidder_id IS NULL THEN 'CANCELED' "
+                            + "    ELSE 'FINISHED' "
+                            + "END "
+                            + "WHERE status IN ('OPEN', 'RUNNING') "
+                            + "AND end_time <= NOW()");
+        } catch (SQLException e) {
+            logger.error("Lỗi cập nhật trạng thái phiên theo thời gian: ", e);
+        }
+    }
+
     public List<Auction> layDanhSachPhienDangChay() {
+        capNhatTrangThaiTheoThoiGian();
         return thucThiTruyVanDanhSach(
                 "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
                         +
@@ -144,6 +166,7 @@ public class AuctionDao {
     }
 
     public List<Auction> layDanhSachPhienChoMo() {
+        capNhatTrangThaiTheoThoiGian();
         return thucThiTruyVanDanhSach(
                 "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
                         +
@@ -152,6 +175,7 @@ public class AuctionDao {
     }
 
     public List<Auction> layDanhSachTatCaPhien() {
+        capNhatTrangThaiTheoThoiGian();
         return thucThiTruyVanDanhSach(
                 "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
                         +
@@ -159,6 +183,7 @@ public class AuctionDao {
     }
 
     public List<Auction> laySauPhienDangChayNhieuBidNhat() {
+        capNhatTrangThaiTheoThoiGian();
         return thucThiTruyVanDanhSach(
                 "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url, "
                         +
@@ -248,11 +273,13 @@ public class AuctionDao {
     }
 
     public int demPhienDangChay() {
+        capNhatTrangThaiTheoThoiGian();
         return demTheoSql(
                 "SELECT COUNT(*) FROM auctions WHERE status = 'RUNNING' AND start_time <= NOW() AND end_time > NOW()");
     }
 
     public int demPhienSapKetThuc() {
+        capNhatTrangThaiTheoThoiGian();
         return demTheoSql(
                 "SELECT COUNT(*) FROM auctions "
                         +
@@ -282,6 +309,7 @@ public class AuctionDao {
     }
 
     public int demPhienBidderDangThamGia(int bidderId) {
+        capNhatTrangThaiTheoThoiGian();
         String sql = "SELECT COUNT(DISTINCT b.auction_id) "
                 + "FROM bid_history b "
                 + "JOIN auctions a ON a.id = b.auction_id "
@@ -313,7 +341,7 @@ public class AuctionDao {
 
     public boolean thucHienGiaoDichDatGia(int idPhien, BidTransaction tx) {
         String sqlUpdate = "UPDATE auctions SET current_price = ?, highest_bidder_id = ? " +
-                "WHERE id = ? AND current_price < ? AND status = 'RUNNING'";
+                "WHERE id = ? AND current_price < ? AND status = 'RUNNING' AND end_time > NOW()";
         String sqlInsert = "INSERT INTO bid_history (auction_id, bidder_id, bid_amount, bid_time) VALUES (?, ?, ?, ?)";
 
         Connection conn = null;
@@ -441,6 +469,7 @@ public class AuctionDao {
     }
 
     public Auction layPhienTheoId(int idPhien) {
+        capNhatTrangThaiTheoThoiGian();
         String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
                 + "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = ?";
         List<Auction> danhSach = thucThiTruyVanDanhSach(sql, idPhien);
@@ -448,6 +477,7 @@ public class AuctionDao {
     }
 
     public Auction layPhienTheoItemId(int itemId) {
+        capNhatTrangThaiTheoThoiGian();
         String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
                 + "i.bid_increment, i.seller_id, i.image_url "
                 + "FROM auctions a JOIN items i ON a.item_id = i.id "
@@ -487,6 +517,7 @@ public class AuctionDao {
     }
 
     public List<Auction> timKiemVaLocPhienDauGia(String keyword, String status) {
+        capNhatTrangThaiTheoThoiGian();
         StringBuilder sql = new StringBuilder(
                 "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
                         +
@@ -535,7 +566,7 @@ public class AuctionDao {
             pstm.setInt(1, auctionId);
             pstm.setInt(2, bidderId);
             pstm.setLong(3, maxAutoBid);
-            pstm.setLong(4, maxAutoBid); // Giá trị cập nhật nếu đã tồn tại
+            pstm.setLong(4, maxAutoBid); 
             return pstm.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.error("Lỗi khi lưu/cập nhật Auto-Bid: ", e);

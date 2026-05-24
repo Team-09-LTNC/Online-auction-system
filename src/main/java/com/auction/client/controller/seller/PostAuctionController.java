@@ -277,8 +277,6 @@ public class PostAuctionController {
             showAlert(Alert.AlertType.WARNING, "Thiếu ảnh", "Vui lòng chọn ảnh cho sản phẩm!");
             return;
         }
-        isSubmitting = true;
-        setSubmitButtonState(submitButton, true);
 
         try {
             String name = txtProductName.getText();
@@ -295,13 +293,24 @@ public class PostAuctionController {
                     ? Long.parseLong(txtBuyNowPrice.getText().replaceAll("[^\\d]", ""))
                     : 0;
 
+            if (increment <= 0) {
+                showAlert(Alert.AlertType.WARNING, "Giá trị không hợp lệ", "Bước giá phải lớn hơn 0 đ!");
+                return;
+            }
+
             String category = mapCategoryToEnum(cbCategory.getValue());
             String description = txtDescription.getText() != null ? txtDescription.getText() : "";
 
             LocalDateTime startTime = parseDateTime(dpStartDate, txtStartTime);
             LocalDateTime endTime = parseDateTime(dpEndDate, txtEndTime);
 
-            if (endTime.isBefore(startTime)) {
+            if (!startTime.isAfter(LocalDateTime.now())) {
+                showAlert(Alert.AlertType.WARNING, "Lỗi thời gian",
+                        "Thời gian bắt đầu phải lớn hơn thời gian hiện tại!");
+                return;
+            }
+
+            if (!endTime.isAfter(startTime)) {
                 showAlert(Alert.AlertType.WARNING, "Lỗi thời gian",
                         "Thời gian kết thúc phải lớn hơn thời gian bắt đầu!");
                 return;
@@ -310,13 +319,14 @@ public class PostAuctionController {
             // Kiểm tra tính hợp lệ về logic tài chính
             if (buyNow > 0 && buyNow <= startPrice) {
                 showAlert(Alert.AlertType.WARNING, "Lỗi cấu hình giá", "Giá mua đứt phải lớn hơn giá khởi điểm!");
-                isSubmitting = false;
-                setSubmitButtonState(submitButton, false);
                 return;
             }
 
             String startTimeStr = startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
             String endTimeStr = endTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+
+            isSubmitting = true;
+            setSubmitButtonState(submitButton, true);
 
             CloudStorageUtil.uploadImageAsync(this.selectedImageFile).thenAccept(imageUrl -> {
                 Platform.runLater(() -> {
@@ -402,6 +412,9 @@ public class PostAuctionController {
     private boolean isInputInvalid() {
         if (txtProductName.getText() == null || txtProductName.getText().trim().isEmpty() ||
                 txtStartingPrice.getText() == null || txtStartingPrice.getText().trim().isEmpty() ||
+                txtIncrement == null || txtIncrement.getText() == null || txtIncrement.getText().trim().isEmpty() ||
+                txtStartTime == null || txtStartTime.getText() == null || txtStartTime.getText().trim().isEmpty() ||
+                txtEndTime == null || txtEndTime.getText() == null || txtEndTime.getText().trim().isEmpty() ||
                 cbCategory.getValue() == null || dpStartDate.getValue() == null || dpEndDate.getValue() == null) {
             showAlert(Alert.AlertType.WARNING, "Thiếu thông tin", "Vui lòng điền đầy đủ thông tin bắt buộc!");
             return true;
