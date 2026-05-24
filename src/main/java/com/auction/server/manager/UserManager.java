@@ -29,7 +29,9 @@ public class UserManager {
     public static UserManager getInstance() {
         if (instance == null) {
             synchronized (UserManager.class) {
-                if (instance == null) instance = new UserManager();
+                if (instance == null) {
+                    instance = new UserManager();
+                }
             }
         }
         return instance;
@@ -117,5 +119,17 @@ public class UserManager {
      */
     public User layNguoiDungOnline(int idNguoiDung) {
         return onlineUsers.get(idNguoiDung);
+    }
+
+    public boolean capNhatTrangThaiTaiKhoan(int userId, String status) {
+        boolean ok = userDao.capNhatTrangThaiTheoId(userId, status);
+        if (!ok) {
+            return false;
+        }
+        User online = onlineUsers.get(userId);
+        if (online != null) {
+            online.setStatus(status);
+        }
+        return true;
     }
 }

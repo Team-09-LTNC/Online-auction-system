@@ -134,6 +134,15 @@ public class SetupDatabase {
                 + "FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE, "
                 + "FOREIGN KEY (bidder_id) REFERENCES users(id) ON DELETE CASCADE"
                 + ") ENGINE=InnoDB");
+
+        stmt.execute("CREATE TABLE IF NOT EXISTS bidder_penalties ("
+                + "bidder_id INT PRIMARY KEY, "
+                + "violation_count INT NOT NULL DEFAULT 0, "
+                + "lock_until DATETIME NULL, "
+                + "last_reason VARCHAR(255) NULL, "
+                + "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, "
+                + "FOREIGN KEY (bidder_id) REFERENCES users(id) ON DELETE CASCADE"
+                + ") ENGINE=InnoDB");
     }
 
     private static void napDuLieuMauBanDau(Statement stmt) throws Exception {

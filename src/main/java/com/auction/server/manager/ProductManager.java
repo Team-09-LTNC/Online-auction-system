@@ -35,8 +35,9 @@ public class ProductManager {
     public static ProductManager getInstance() {
         if (instance == null) {
             synchronized (ProductManager.class) {
-                if (instance == null)
+                if (instance == null) {
                     instance = new ProductManager();
+                }
             }
         }
         return instance;
@@ -46,8 +47,9 @@ public class ProductManager {
      * Factory Method: Sinh ra đúng loại đối tượng con dựa trên phân loại
      */
     public Item taoSanPham(String loai, ItemAttributes thuocTinh) {
-        if (thuocTinh == null)
+        if (thuocTinh == null) {
             return null;
+        }
 
         ItemFactory factory = switch (loai.toUpperCase()) {
             case "ELECTRONICS" -> new ElectronicsFactory();
@@ -57,8 +59,9 @@ public class ProductManager {
             default -> null;
         };
 
-        if (factory == null)
+        if (factory == null) {
             return null;
+        }
         return factory.createItem(thuocTinh);
     }
 
@@ -84,8 +87,9 @@ public class ProductManager {
             LocalDateTime endTime,
             Long buyNowPrice,
             boolean antiSnipingEnabled) {
-        if (sanPham == null || sanPham.getStartingPrice() <= 0)
+        if (sanPham == null || sanPham.getStartingPrice() <= 0) {
             return false;
+        }
 
         // Lưu sản phẩm xuống DB
         int itemId = itemDao.luuSanPham(sanPham);
@@ -158,8 +162,9 @@ public class ProductManager {
      * Cập nhật thông tin sản phẩm đã có trong hệ thống
      */
     public boolean capNhatSanPham(Item sanPham) {
-        if (sanPham == null || sanPham.getId() <= 0)
+        if (sanPham == null || sanPham.getId() <= 0) {
             return false;
+        }
         return itemDao.updateSanPham(sanPham);
     }
 

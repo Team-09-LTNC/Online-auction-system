@@ -76,6 +76,10 @@ public class AuctionRoomController implements Initializable {
     private boolean currentUserOwnsAuction = false;
     private boolean ownerBidWarningShown = false;
 
+    private static long extractMoneyValue(String text) {
+        return Long.parseLong(text.replaceAll("\\D", ""));
+    }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         com.auction.client.networkclient.PushHandler.currentRoomController = this;
@@ -406,8 +410,8 @@ public class AuctionRoomController implements Initializable {
 
         try {
             long bidAmount = Long.parseLong(input);
-            long currentPrice = Long.parseLong(lblCurrentPrice.getText().replaceAll("\\D", ""));
-            long stepPrice = Long.parseLong(lblBidIncrement.getText().replaceAll("\\D", ""));
+            long currentPrice = extractMoneyValue(lblCurrentPrice.getText());
+            long stepPrice = extractMoneyValue(lblBidIncrement.getText());
             long minValidBid = currentPrice + stepPrice;
 
             if (bidAmount < minValidBid) {
@@ -526,8 +530,8 @@ public class AuctionRoomController implements Initializable {
 
         try {
             long maxPrice = Long.parseLong(txtMaxAutoBid.getText().trim());
-            long currentPrice = Long.parseLong(lblCurrentPrice.getText().replaceAll("\\D", ""));
-            long minValidBid = currentPrice + Long.parseLong(lblBidIncrement.getText().replaceAll("\\D", ""));
+            long currentPrice = extractMoneyValue(lblCurrentPrice.getText());
+            long minValidBid = currentPrice + extractMoneyValue(lblBidIncrement.getText());
 
             if (maxPrice < minValidBid) {
                 showAlert("Lỗi Auto-bid", "Mức giá tối đa phải >= " + String.format("%,d đ", minValidBid));

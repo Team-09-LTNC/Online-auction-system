@@ -15,8 +15,10 @@ import com.auction.common.util.GsonConfig;
 import com.auction.server.dao.AuctionDao;
 import com.auction.server.dao.BidTransactionDao;
 import com.auction.server.dao.BidderMoneySellerDao;
+import com.auction.server.dao.BidderPenaltyDao;
 import com.auction.server.dao.FollowDao;
 import com.auction.server.dao.SystemNotificationDao;
+import com.auction.server.dao.UserDao;
 import com.auction.server.manager.AuctionManager;
 import com.auction.server.networkserver.ClientHandler;
 import com.google.gson.Gson;
@@ -28,9 +30,11 @@ import java.util.List;
 
 public class AuctionController implements RequestHandler {
     private static final String SELLER_SELF_BID_MESSAGE = "Khong duoc tu bid san pham cua chinh minh.";
+    private static final String LOCKED_BIDDER_MESSAGE = "Tai khoan cua ban dang bi khoa, khong the tham gia dau gia.";
 
     private final Gson gson = GsonConfig.getInstance();
     private final AuctionDao auctionDao = new AuctionDao();
+    private final UserDao userDao = new UserDao();
 
     @Override
     public String xuLy(JsonObject yeuCau, ClientHandler client) {
@@ -122,6 +126,16 @@ public class AuctionController implements RequestHandler {
             }
             return gson.toJson(errorRes);
         }
+        if (laTaiKhoanBiKhoa(nguoiDung)) {
+            JsonObject errorRes = gson.toJsonTree(new BaseDTOs.ErrorResponse(
+                    StatusCode.FORBIDDEN, LOCKED_BIDDER_MESSAGE, ErrorCode.FORBIDDEN
+            )).getAsJsonObject();
+            errorRes.addProperty("type", "BID_RESPONSE");
+            if (requestId != null) {
+                errorRes.addProperty("requestId", requestId);
+            }
+            return gson.toJson(errorRes);
+        }
 
         try {
             BidTransaction giaoDich = new BidTransaction(
@@ -171,6 +185,11 @@ public class AuctionController implements RequestHandler {
         }
         if (maPhien == -1 || maxBid <= 0) {
             return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu thong tin maxBid hoac auctionId", ErrorCode.BAD_REQUEST));
+        }
+        if (laTaiKhoanBiKhoa(nguoiDung)) {
+            return gson.toJson(AuctionControllerUtil.taoPhanHoiDonGian(
+                    "AUTO_BID_RESPONSE", false, LOCKED_BIDDER_MESSAGE
+            ));
         }
         try {
             AuctionManager.getInstance().dangKyAutoBid(maPhien, nguoiDung, maxBid);
@@ -248,6 +267,11 @@ public class AuctionController implements RequestHandler {
         if (auctionId == -1) {
             phanHoi.addProperty("success", false);
             phanHoi.addProperty("message", "Thieu auctionId.");
+            return gson.toJson(phanHoi);
+        }
+        if (laTaiKhoanBiKhoa(nguoiDung)) {
+            phanHoi.addProperty("success", false);
+            phanHoi.addProperty("message", LOCKED_BIDDER_MESSAGE);
             return gson.toJson(phanHoi);
         }
         try {
@@ -468,5 +492,21 @@ public class AuctionController implements RequestHandler {
 
     private boolean laSellerCuaPhien(int auctionId, int userId) {
         return AuctionControllerUtil.laSellerCuaPhien(auctionDao, auctionId, userId);
+    }
+
+    private boolean laTaiKhoanBiKhoa(User nguoiDung) {
+        if (nguoiDung == null) {
+            return false;
+        }
+        if ("LOCKED".equalsIgnoreCase(nguoiDung.getStatus())) {
+            return true;
+        }
+        BidderPenaltyDao.LockInfo lockInfo = new BidderPenaltyDao().layTrangThaiTamKhoa(nguoiDung.getId());
+        if (lockInfo.locked) {
+            return true;
+        }
+        return userDao.timTheoTenDangNhap(nguoiDung.getUsername())
+                .map(user -> "LOCKED".equalsIgnoreCase(user.getStatus()))
+                .orElse(false);
     }
 }

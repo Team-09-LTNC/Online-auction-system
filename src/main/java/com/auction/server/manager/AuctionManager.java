@@ -10,6 +10,7 @@ import com.auction.common.model.user.Bidder;
 import com.auction.common.model.user.User;
 import com.auction.common.observer.AuctionObserver;
 import com.auction.server.dao.AuctionDao;
+import com.auction.server.dao.BidderPenaltyDao;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -32,25 +33,29 @@ public class AuctionManager {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
     private final ExecutorService notifierPool = Executors.newFixedThreadPool(50);
 
+    private void napAutoBidVaoPhien(Auction auction) {
+        if (auction == null) {
+            return;
+        }
+        List<AutoBidConfig> bots = auctionDao.layDanhSachAutoBidCuaPhien(auction.getId());
+        for (AutoBidConfig bot : bots) {
+            auction.addAutoBidConfig(bot);
+        }
+    }
+
     // Tải phiên từ DB và lên lịch khi khởi động
     private AuctionManager() {
         // Khôi phục các phiên đang chạy
         for (Auction a : auctionDao.layDanhSachPhienDangChay()) {
             // ---> PHỤC HỒI BOT TỪ DATABASE LÊN RAM
-            List<AutoBidConfig> bots = auctionDao.layDanhSachAutoBidCuaPhien(a.getId());
-            for(AutoBidConfig bot : bots) {
-                a.addAutoBidConfig(bot);
-            }
+            napAutoBidVaoPhien(a);
 
             dsPhienDangChay.put(a.getId(), a);
             henGioDongPhien(a);
         }
         // Lên lịch mở các phiên đang chờ
         for (Auction a : auctionDao.layDanhSachPhienChoMo()) {
-            List<AutoBidConfig> bots = auctionDao.layDanhSachAutoBidCuaPhien(a.getId());
-            for(AutoBidConfig bot : bots) {
-                a.addAutoBidConfig(bot);
-            }
+            napAutoBidVaoPhien(a);
 
             henGioMoPhien(a);
         }
@@ -154,6 +159,7 @@ public class AuctionManager {
                 throw new InvalidBidException("Phiên chưa mở, chưa thể đặt giá.");
             }
             if (status == AuctionStatus.RUNNING) {
+                napAutoBidVaoPhien(tuDb);
                 dsPhienDangChay.put(tuDb.getId(), tuDb);
                 henGioDongPhien(tuDb);
                 phien = tuDb;
@@ -444,6 +450,9 @@ public class AuctionManager {
 
             if (!ketQua.success) {
                 logger.info("Auto settlement skipped for auction {}: {}", auctionId, ketQua.message);
+                if (ketQua.message != null && ketQua.message.toLowerCase().contains("khong du")) {
+                    apDungPhatViPhamQuaHan(auctionId, targets.winnerId, targets.sellerId, "Khong du so du de thanh toan qua han.");
+                }
                 return;
             }
 
@@ -459,6 +468,8 @@ public class AuctionManager {
                     false
             );
 
+            apDungPhatViPhamQuaHan(auctionId, targets.winnerId, targets.sellerId, "Qua han thanh toan phien dau gia.");
+
             if (targets.sellerId > 0) {
                 SystemNotificationManager.getInstance().guiThongBaoRieng(
                         auctionId,
@@ -472,6 +483,40 @@ public class AuctionManager {
             logger.error("Auto settlement failed for auction {}.", auctionId, e);
         } finally {
             tasksQuaHanThanhToan.remove(auctionId);
+        }
+    }
+
+    private void apDungPhatViPhamQuaHan(int auctionId, int winnerId, int sellerId, String reason) {
+        BidderPenaltyDao.SanctionResult sanction =
+                new BidderPenaltyDao().ghiNhanViPhamQuaHan(winnerId, reason);
+        if (sanction.violationCount <= 0) {
+            return;
+        }
+
+        String bidderMessage;
+        if (sanction.permanentLock) {
+            UserManager.getInstance().capNhatTrangThaiTaiKhoan(winnerId, "LOCKED");
+            bidderMessage = "Ban da vi pham qua han thanh toan " + sanction.violationCount
+                    + " lan. Tai khoan bi khoa vinh vien, vui long lien he Admin.";
+        } else {
+            bidderMessage = "Ban da vi pham qua han thanh toan lan " + sanction.violationCount
+                    + ". Tam cam dau gia den " + sanction.lockUntil + ".";
+        }
+
+        SystemNotificationManager.getInstance().guiThongBaoRieng(
+                auctionId,
+                winnerId,
+                bidderMessage,
+                false
+        );
+
+        if (sellerId > 0) {
+            SystemNotificationManager.getInstance().guiThongBaoRieng(
+                    auctionId,
+                    sellerId,
+                    "He thong da ap dung xu phat bidder vi qua han thanh toan.",
+                    false
+            );
         }
     }
 
@@ -499,10 +544,7 @@ public class AuctionManager {
         if (phien == null) {
             for (Auction a : auctionDao.layDanhSachPhienDangChay()) {
                 if (a.getId() == idPhien) {
-                    List<AutoBidConfig> bots = auctionDao.layDanhSachAutoBidCuaPhien(a.getId());
-                    for(AutoBidConfig bot : bots) {
-                        a.addAutoBidConfig(bot);
-                    }
+                    napAutoBidVaoPhien(a);
 
                     dsPhienDangChay.put(a.getId(), a);
                     henGioDongPhien(a);
