@@ -32,6 +32,8 @@ public class ChatController {
         cauHinhDanhSachThongBao();
         capNhatTongThongBao();
         taiThongBaoDaLuu();
+        danhDauThongBaoDaDoc();
+        com.auction.client.controller.components.SidebarController.clearUnreadNotifications();
         com.auction.client.networkclient.PushHandler.flushNotifications(this);
     }
 
@@ -196,6 +198,13 @@ public class ChatController {
                 }
             });
         });
+    }
+
+    private void danhDauThongBaoDaDoc() {
+        JsonObject request = new JsonObject();
+        request.addProperty("type", ActionType.MARK_SYSTEM_NOTIFICATIONS_READ);
+        request.addProperty("requestId", java.util.UUID.randomUUID().toString());
+        ClientSocket.getInstance().sendJsonRequest(request, "MARK_NOTIFICATIONS_READ_RESPONSE", null);
     }
 
     private void guiQuyetToan(int auctionId, String decision, Button cancel, Button confirm, Label result) {

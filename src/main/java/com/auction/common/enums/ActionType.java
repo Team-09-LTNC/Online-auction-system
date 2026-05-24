@@ -40,6 +40,7 @@ public class ActionType {
     // --- CHAT REAL-TIME ---
     public static final String SEND_CHAT_MESSAGE = "CHAT_SEND_MESSAGE";
     public static final String GET_SYSTEM_NOTIFICATIONS = "CHAT_GET_SYSTEM_NOTIFICATIONS";
+    public static final String MARK_SYSTEM_NOTIFICATIONS_READ = "CHAT_MARK_SYSTEM_NOTIFICATIONS_READ";
 
     // --- SERVER PUSH (server chủ động gửi, không có requestId) ---
     public static final String AUCTION_BID_UPDATE = "AUCTION_BID_UPDATE";

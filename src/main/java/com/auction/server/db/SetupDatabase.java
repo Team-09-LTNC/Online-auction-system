@@ -80,6 +80,7 @@ public class SetupDatabase {
                 "recipient_id INT, " +
                 "message TEXT NOT NULL, " +
                 "payment_required BOOLEAN NOT NULL DEFAULT FALSE, " +
+                "is_read BOOLEAN NOT NULL DEFAULT FALSE, " +
                 "send_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
                 "FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE, " +
                 "FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE, " +

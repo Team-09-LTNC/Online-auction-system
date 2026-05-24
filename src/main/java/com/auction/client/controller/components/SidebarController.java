@@ -222,11 +222,10 @@ public class SidebarController {
 
         ClientSocket.getInstance().sendJsonRequest(request, "SYSTEM_NOTIFICATIONS_RESPONSE", response -> {
             if (!response.has("success") || !response.get("success").getAsBoolean()
-                    || !response.has("data") || !response.get("data").isJsonArray()) {
+                    || !response.has("unreadCount")) {
                 return;
             }
-            int total = response.getAsJsonArray("data").size();
-            unreadNotifications = Math.max(total, 0);
+            unreadNotifications = Math.max(response.get("unreadCount").getAsInt(), 0);
             Platform.runLater(this::updateNotificationBadge);
         });
     }

@@ -54,6 +54,7 @@ public class RequestDispatcher {
         danhSachTrinhXuLy.put(ActionType.GET_FOLLOWED_AUCTIONS, auctionController);
         danhSachTrinhXuLy.put(ActionType.SEND_CHAT_MESSAGE, auctionController);
         danhSachTrinhXuLy.put(ActionType.GET_SYSTEM_NOTIFICATIONS, auctionController);
+        danhSachTrinhXuLy.put(ActionType.MARK_SYSTEM_NOTIFICATIONS_READ, auctionController);
         danhSachTrinhXuLy.put("GET_WALLET_HISTORY", authController);
 
         // Nhóm Product

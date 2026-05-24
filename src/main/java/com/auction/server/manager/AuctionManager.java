@@ -148,12 +148,16 @@ public class AuctionManager {
                 throw new InvalidBidException("Phiên chưa mở, chưa thể đặt giá.");
             }
             if (status == AuctionStatus.RUNNING) {
-                throw new InvalidBidException("Phiên đang đồng bộ lại, vui lòng thử lại sau ít giây.");
+                dsPhienDangChay.put(tuDb.getId(), tuDb);
+                henGioDongPhien(tuDb);
+                phien = tuDb;
             }
             if (status == AuctionStatus.CANCELED) {
                 throw new AuctionClosedException("Phiên đã bị hủy.");
             }
-            throw new AuctionClosedException("Phiên đã kết thúc.");
+            if (status == AuctionStatus.FINISHED || status == AuctionStatus.PAID) {
+                throw new AuctionClosedException("Phiên đã kết thúc.");
+            }
         }
 
         synchronized (phien) { // Đồng bộ trên phiên để tránh race condition

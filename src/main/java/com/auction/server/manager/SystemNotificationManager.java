@@ -27,6 +27,8 @@ public class SystemNotificationManager {
     public void guiThongBaoRieng(int auctionId, int recipientId, String message, boolean paymentRequired) {
         long notificationId = notificationDao.luuThongBao(auctionId, recipientId, message, paymentRequired);
         if (notificationId <= 0) {
+            org.slf4j.LoggerFactory.getLogger(getClass())
+                    .error("Khong luu duoc thong bao he thong. auctionId={}, recipientId={}", auctionId, recipientId);
             return;
         }
 

@@ -66,6 +66,8 @@ public class AuctionController implements RequestHandler {
                 return xuLyChat(yeuCau, client);
             case ActionType.GET_SYSTEM_NOTIFICATIONS:
                 return xuLyLayThongBaoHeThong(yeuCau, client);
+            case ActionType.MARK_SYSTEM_NOTIFICATIONS_READ:
+                return xuLyDanhDauThongBaoDaDoc(yeuCau, client);
             default:
                 return taoLoi(yeuCau, StatusCode.BAD_REQUEST, "Action khong duoc ho tro.", ErrorCode.BAD_REQUEST);
         }
@@ -575,9 +577,27 @@ public class AuctionController implements RequestHandler {
             return gson.toJson(phanHoi);
         }
 
+        com.auction.server.dao.SystemNotificationDao dao = new com.auction.server.dao.SystemNotificationDao();
         phanHoi.addProperty("success", true);
-        phanHoi.add("data", new com.auction.server.dao.SystemNotificationDao()
-                .layThongBaoCuaNguoiNhan(nguoiDung.getId()));
+        phanHoi.add("data", dao.layThongBaoCuaNguoiNhan(nguoiDung.getId()));
+        phanHoi.addProperty("unreadCount", dao.demThongBaoChuaDoc(nguoiDung.getId()));
+        return gson.toJson(phanHoi);
+    }
+
+    private String xuLyDanhDauThongBaoDaDoc(JsonObject yeuCau, ClientHandler client) {
+        User nguoiDung = client.layNguoiDungHienTai();
+        JsonObject phanHoi = new JsonObject();
+        phanHoi.addProperty("type", "MARK_NOTIFICATIONS_READ_RESPONSE");
+        copyRequestId(yeuCau, phanHoi);
+
+        if (nguoiDung == null) {
+            phanHoi.addProperty("success", false);
+            phanHoi.addProperty("message", "ChÆ°a Ä‘Äƒng nháº­p.");
+            return gson.toJson(phanHoi);
+        }
+
+        boolean ok = new com.auction.server.dao.SystemNotificationDao().danhDauDaDoc(nguoiDung.getId());
+        phanHoi.addProperty("success", ok);
         return gson.toJson(phanHoi);
     }
 

@@ -144,6 +144,14 @@ public class UpdateDatabase {
                     logger.info(">>> Cột 'payment_required' của chat_messages đã tồn tại. Bỏ qua.");
                 }
 
+                if (!cotTonTai(metaData, "chat_messages", "is_read")) {
+                    logger.info(">>> Đang bổ sung cột 'is_read' vào bảng 'chat_messages'...");
+                    stmt.execute("ALTER TABLE chat_messages ADD COLUMN is_read BOOLEAN NOT NULL "
+                            + "DEFAULT FALSE AFTER payment_required;");
+                } else {
+                    logger.info(">>> Cột 'is_read' của chat_messages đã tồn tại. Bỏ qua.");
+                }
+
                 if (!chiMucTonTai(metaData, "chat_messages", "idx_chat_recipient_time")) {
                     logger.info(">>> Đang tạo chỉ mục notification theo người nhận...");
                     stmt.execute("CREATE INDEX idx_chat_recipient_time "
