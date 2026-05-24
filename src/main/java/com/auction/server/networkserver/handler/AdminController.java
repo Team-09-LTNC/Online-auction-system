@@ -2,6 +2,7 @@ package com.auction.server.networkserver.handler;
 
 import com.auction.common.util.GsonConfig;
 import com.auction.server.dao.AuctionDao;
+import com.auction.server.manager.AuctionManager;
 import com.auction.server.dao.AdminDao;
 import com.auction.server.networkserver.ClientHandler;
 import com.google.gson.Gson;
@@ -43,6 +44,8 @@ public class AdminController implements RequestHandler {
                 return xuLyTuChoiAuction(yeuCau, reqId);
             case ActionType.ADMIN_GET_INVOICES:
                 return xuLyLayDanhSachHoaDon(reqId);
+            case ActionType.ADMIN_CHANGE_AUCTION_STATUS:
+                return xuLyThayDoiTrangThaiAuction(yeuCau, reqId);
             default:
                 return null;
         }
@@ -53,6 +56,7 @@ public class AdminController implements RequestHandler {
         JsonArray array = new JsonArray();
         for (Auction a : auctions) {
             JsonObject obj = new JsonObject();
+            obj.addProperty("auctionId", a.getId());
             obj.addProperty("itemname", a.getItem().getName());
             obj.addProperty("starttime", a.getStartTime().toString());
             obj.addProperty("endtime", a.getEndTime().toString());
@@ -99,7 +103,8 @@ public class AdminController implements RequestHandler {
 
     private String xuLyDuyetAuction(JsonObject yeuCau, String reqId) {
         int auctionId = yeuCau.get("auctionId").getAsInt();
-        boolean ok = adminDao.duyetAuction(auctionId, "OPEN");
+        //boolean ok = adminDao.duyetAuction(auctionId, "OPEN");
+        boolean ok = AuctionManager.getInstance().duyetPhien(auctionId);
 
         JsonObject res = new JsonObject();
         res.addProperty("type", "ADMIN_APPROVE_AUCTION_RESPONSE");
@@ -151,5 +156,91 @@ public class AdminController implements RequestHandler {
         if (reqId != null)
             res.addProperty("requestId", reqId);
         return gson.toJson(res);
+    }
+
+    private String xuLyThayDoiTrangThaiAuction(JsonObject yeuCau, String reqId) {
+        int auctionId = yeuCau.get("auctionId").getAsInt();
+        String newStatus = yeuCau.get("newStatus").getAsString();
+
+        // Lấy trạng thái hiện tại và thời gian của phiên
+        JsonObject auctionInfo = adminDao.layThongTinAuction(auctionId);
+        if (auctionInfo == null) {
+            JsonObject res = new JsonObject();
+            res.addProperty("type", "ADMIN_CHANGE_AUCTION_STATUS_RESPONSE");
+            res.addProperty("success", false);
+            res.addProperty("message", "Không tìm thấy phiên đấu giá!");
+            if (reqId != null)
+                res.addProperty("requestId", reqId);
+            return gson.toJson(res);
+        }
+
+        String currentStatus = auctionInfo.get("status").getAsString();
+        String startTime = auctionInfo.get("start_time").getAsString();
+        String endTime = auctionInfo.get("end_time").getAsString();
+
+        // Validate chuyển trạng thái
+        String validationError = validateChuyenTrangThai(currentStatus, newStatus);
+        if (validationError != null) {
+            JsonObject res = new JsonObject();
+            res.addProperty("type", "ADMIN_CHANGE_AUCTION_STATUS_RESPONSE");
+            res.addProperty("success", false);
+            res.addProperty("message", validationError);
+            if (reqId != null)
+                res.addProperty("requestId", reqId);
+            return gson.toJson(res);
+        }
+
+        // Xử lý CANCELED → reopen: tự tính status đúng theo thời gian
+        if ("CANCELED".equals(currentStatus) && "REOPEN".equals(newStatus)) {
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            java.time.LocalDateTime start = java.time.LocalDateTime.parse(startTime);
+            java.time.LocalDateTime end = java.time.LocalDateTime.parse(endTime);
+
+            if (now.isBefore(start)) {
+                newStatus = "OPEN";
+            } else if (now.isAfter(end)) {
+                newStatus = "FINISHED";
+            } else {
+                newStatus = "RUNNING";
+            }
+        }
+
+        boolean ok = adminDao.capNhatTrangThaiAuction(auctionId, newStatus);
+        if (ok) AuctionManager.getInstance().dongBoSauCapNhatTrangThai(auctionId, newStatus);
+
+        JsonObject res = new JsonObject();
+        res.addProperty("type", "ADMIN_CHANGE_AUCTION_STATUS_RESPONSE");
+        res.addProperty("success", ok);
+        res.addProperty("message", ok ? "Đã cập nhật thành " + newStatus + "!" : "Cập nhật thất bại!");
+        res.addProperty("newStatus", newStatus); // trả về status thực tế đã set
+        if (reqId != null)
+            res.addProperty("requestId", reqId);
+        return gson.toJson(res);
+    }
+
+    private String validateChuyenTrangThai(String current, String requested) {
+        switch (current) {
+            case "OPEN":
+            case "RUNNING":
+                if (!"CANCELED".equals(requested))
+                    return "Phiên đang " + current + " chỉ có thể chuyển sang CANCELED!";
+                break;
+            case "CANCELED":
+                if (!"REOPEN".equals(requested))
+                    return "Phiên CANCELED chỉ có thể mở lại!";
+                break;
+            case "FINISHED":
+                if (!"PAID".equals(requested))
+                    return "Phiên FINISHED chỉ có thể chuyển sang PAID!";
+                break;
+            case "PAID":
+                return "Phiên đã PAID không thể thay đổi trạng thái!";
+            case "PENDING":
+            case "REJECTED":
+                return "Trạng thái này được quản lý qua trang duyệt sản phẩm!";
+            default:
+                return "Trạng thái không hợp lệ!";
+        }
+        return null; // hợp lệ
     }
 }

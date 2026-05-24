@@ -107,6 +107,7 @@ public class AdminManager {
       data.forEach(el -> {
         JsonObject obj = el.getAsJsonObject();
         list.add(new AuctionSummaryDTO(
+            obj.get("auctionId").getAsInt(),
             obj.get("itemname").getAsString(),
             obj.get("starttime").getAsString(),
             obj.get("endtime").getAsString(),

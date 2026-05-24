@@ -17,6 +17,7 @@ import com.auction.common.enums.AuctionStatus;
 import com.auction.common.model.bid.Auction;
 import com.auction.common.model.item.OtherItem;
 import com.auction.server.db.DatabaseConnection;
+import com.google.gson.JsonObject;
 
 /**
  * Tầng quản lý truy cập dữ liệu (DAO) cho các phiên đấu giá.
@@ -169,5 +170,29 @@ public class AdminDao {
             logger.error("Lỗi capNhatTrangThaiAuction: ", e);
             return false;
         }
+    }
+
+    public JsonObject layThongTinAuction(int auctionId) {
+        String sql = "SELECT status, start_time, end_time FROM auctions WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, auctionId); // ← set tham số TRƯỚC
+
+            try (ResultSet rs = ps.executeQuery()) { // ← executeQuery SAU
+                if (rs.next()) {
+                    JsonObject obj = new JsonObject();
+                    obj.addProperty("status", rs.getString("status"));
+                    obj.addProperty("start_time", rs.getTimestamp("start_time").toLocalDateTime().toString());
+                    obj.addProperty("end_time", rs.getTimestamp("end_time").toLocalDateTime().toString());
+                    return obj;
+                } else {
+                    logger.warn("layThongTinAuction: Không tìm thấy auction với id: {}", auctionId);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi layThongTinAuction: ", e);
+        }
+        return null;
     }
 }

@@ -33,14 +33,10 @@ public class AuctionsViewController implements Initializable {
     private static final String ALL_STATUS = "Tat ca";
     private static final List<String> STATUS_OPTIONS = List.of(
             ALL_STATUS,
-            "OPEN",
-            "RUNNING",
+            "REOPEN",
             "FINISHED",
             "PAID",
-            "CANCELED",
-            "REJECTED",
-            "PENDING"
-        );
+            "CANCELED");
 
     @FXML
     private StackPane contentPane;
@@ -176,22 +172,43 @@ public class AuctionsViewController implements Initializable {
         if (selected == null)
             return;
 
-        // Dialog chọn status mới
-        List<String> choices = List.of("OPEN", "RUNNING", "FINISHED", "PAID", "CANCELED");
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(selected.getStatus(), choices);
+        String currentStatus = selected.getStatus();
+
+        // Xác định các lựa chọn hợp lệ theo status hiện tại
+        List<String> choices;
+        switch (currentStatus) {
+            case "OPEN":
+            case "RUNNING":
+                choices = List.of("CANCELED");
+                break;
+            case "CANCELED":
+                choices = List.of("REOPEN"); // server tự tính OPEN/RUNNING/FINISHED
+                break;
+            case "FINISHED":
+                choices = List.of("PAID");
+                break;
+            default:
+                new Alert(Alert.AlertType.WARNING,
+                        "Không thể thay đổi trạng thái phiên đang " + currentStatus).showAndWait();
+                return;
+        }
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(choices.get(0), choices);
         dialog.setTitle("Thay đổi trạng thái");
         dialog.setHeaderText(null);
-        dialog.setContentText("Chọn trạng thái mới cho phiên \"" + selected.getProductId() + "\":");
+        dialog.setContentText("Phiên \"" + selected.getProductId() +
+                "\" đang " + currentStatus + "\nChọn hành động:");
 
-        dialog.showAndWait().ifPresent(newStatus -> {
-            if (newStatus.equals(selected.getStatus()))
-                return;
-
+        dialog.showAndWait().ifPresent(action -> {
             AdminManager.getInstance().thayDoiTrangThaiAuction(
                     Integer.parseInt(selected.getAuctionId()),
-                    newStatus,
+                    action,
                     msg -> Platform.runLater(() -> {
-                        selected.setStatus(newStatus); // cập nhật UI không cần reload
+                        // Lấy status thực từ response nếu là REOPEN
+                        String displayStatus = action.equals("REOPEN")
+                                ? msg.replace("Đã cập nhật thành ", "").replace("!", "")
+                                : action;
+                        selected.setStatus(displayStatus);
                         auctionTable.refresh();
                         new Alert(Alert.AlertType.INFORMATION, msg).showAndWait();
                     }),
