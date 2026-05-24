@@ -29,10 +29,10 @@ Dự án là ứng dụng đấu giá trực tuyến theo mô hình client-serve
 |---|---|
 | `src/main/java/com/auction/client/MainApp.java` | Entry point phía client, set encoding UTF-8 rồi gọi `ClientApplication`. |
 | `src/main/java/com/auction/client/networkclient/ClientApplication.java` | JavaFX `Application`, nạp màn đăng nhập và khởi tạo cửa sổ client. |
-| `src/main/java/com/auction/server/Sever.java` | Entry point phía server, đọc cấu hình và khởi động `ServerManager`. Tên file hiện là `Sever`, không phải `Server`. |
+| `src/main/java/com/auction/server/ServerApp.java` | Entry point phía server, đọc cấu hình và khởi động `ServerManager`. |
 | `pom.xml` | Cấu hình Maven, dependency, compiler Java 21, surefire test, JavaFX plugin, shade plugin, checkstyle. |
 
-Lưu ý: trong `pom.xml` hiện có một số tên main class cũ trong plugin (`com.auction.client.networkclient.MainApp`, `com.auction.server.Server`) không trùng với file entry point hiện tại. Khi chạy bằng IDE, hãy dùng `com.auction.client.MainApp` và `com.auction.server.Sever`.
+Khi chạy bằng IDE, hãy dùng `com.auction.client.MainApp` và `com.auction.server.ServerApp`.
 
 ## Cấu Trúc Thư Mục
 
@@ -247,7 +247,7 @@ src/
 
 | File | Nhiệm vụ |
 |---|---|
-| `Sever.java` | Entry point server, đọc config, setup database, mở server socket. |
+| `ServerApp.java` | Entry point server, đọc config, setup database, mở server socket. |
 
 ### `com.auction.server.networkserver`
 
@@ -414,7 +414,7 @@ Test dùng `src/test/resources/application-test-h2.properties` qua surefire syst
 Chạy class:
 
 ```text
-com.auction.server.Sever
+com.auction.server.ServerApp
 ```
 
 Server đọc `src/main/resources/application.properties`, khởi tạo database và mở socket theo `server.port`.
@@ -428,4 +428,3 @@ com.auction.client.MainApp
 ```
 
 Client đọc `server.ip` và `server.port` trong `application.properties`, sau đó kết nối socket đến server.
-
