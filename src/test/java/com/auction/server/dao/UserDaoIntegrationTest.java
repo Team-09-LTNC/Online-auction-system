@@ -2,6 +2,10 @@ package com.auction.server.dao;
 
 import com.auction.common.model.user.Bidder;
 import com.auction.common.model.user.User;
+import com.auction.server.db.DatabaseConnection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -16,28 +20,50 @@ class UserDaoIntegrationTest extends DaoIntegrationTestSupport {
     @Test
     void luuNguoiDungAndTimTheoTenDangNhapWork() {
         String username = "it_bidder_" + System.currentTimeMillis();
-        Bidder bidder = new Bidder(username, "secret", "Integration Bidder");
+        try {
+            Bidder bidder = new Bidder(username, "secret", "Integration Bidder");
 
-        boolean created = userDao.luuNguoiDung(bidder);
-        assertTrue(created);
+            boolean created = userDao.luuNguoiDung(bidder);
+            assertTrue(created);
 
-        Optional<User> found = userDao.timTheoTenDangNhap(username);
-        assertTrue(found.isPresent());
-        assertEquals("BIDDER", found.get().getRoleName());
-        assertEquals("ACTIVE", found.get().getStatus());
+            Optional<User> found = userDao.timTheoTenDangNhap(username);
+            assertTrue(found.isPresent());
+            assertEquals("BIDDER", found.get().getRoleName());
+            assertEquals("ACTIVE", found.get().getStatus());
+        } finally {
+            xoaNguoiDungTheoUsername(username);
+        }
     }
 
     @Test
     void capNhatSoDuUpdatesBalance() {
-        Optional<User> bidderOpt = userDao.timTheoTenDangNhap("bidder1");
-        assertTrue(bidderOpt.isPresent());
+        String username = "it_balance_" + System.currentTimeMillis();
+        try {
+            Bidder newBidder = new Bidder(username, "secret", "Balance Bidder");
+            assertTrue(userDao.luuNguoiDung(newBidder));
 
-        User bidder = bidderOpt.get();
-        long newBalance = 123_456_789L;
-        assertTrue(userDao.capNhatSoDu(bidder.getId(), newBalance));
+            Optional<User> bidderOpt = userDao.timTheoTenDangNhap(username);
+            assertTrue(bidderOpt.isPresent());
 
-        Optional<User> reloaded = userDao.timTheoTenDangNhap("bidder1");
-        assertTrue(reloaded.isPresent());
-        assertEquals(newBalance, reloaded.get().getBalance());
+            User bidder = bidderOpt.get();
+            long newBalance = 123_456_789L;
+            assertTrue(userDao.capNhatSoDu(bidder.getId(), newBalance));
+
+            Optional<User> reloaded = userDao.timTheoTenDangNhap(username);
+            assertTrue(reloaded.isPresent());
+            assertEquals(newBalance, reloaded.get().getBalance());
+        } finally {
+            xoaNguoiDungTheoUsername(username);
+        }
+    }
+
+    private void xoaNguoiDungTheoUsername(String username) {
+        String sql = "DELETE FROM users WHERE username = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            pstmt.executeUpdate();
+        } catch (SQLException ignored) {
+        }
     }
 }
