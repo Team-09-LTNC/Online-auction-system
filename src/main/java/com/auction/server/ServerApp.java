@@ -11,8 +11,8 @@ import java.util.Properties;
  * ServerApplication: Điểm khởi chạy (Entry Point) của toàn bộ hệ thống Server.
  * Nhiệm vụ chính: Cấu hình cổng kết nối và kích hoạt ServerManager.
  */
-public class Sever {
-    private static final Logger logger = LoggerFactory.getLogger(Sever.class);
+public class ServerApp {
+    private static final Logger logger = LoggerFactory.getLogger(ServerApp.class);
 
     //  giá trị mặc định của server,
 //  nếu muốn test xem chạy oke không ae cứ sửa địa chỉ thành localhost máy mình trong application.properties trước để test
@@ -21,7 +21,7 @@ public class Sever {
 
     // --- KHỐI STATIC: ĐỌC CẤU HÌNH PORT ---
     static {
-        try (InputStream input = Sever.class.getClassLoader().getResourceAsStream("application.properties")) {
+        try (InputStream input = ServerApp.class.getClassLoader().getResourceAsStream("application.properties")) {
             if (input != null) {
                 Properties props = new Properties();
                 props.load(input);

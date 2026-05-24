@@ -32,7 +32,7 @@ Dự án là ứng dụng đấu giá trực tuyến theo mô hình client-serve
 | `src/main/java/com/auction/server/ServerApp.java` | Entry point phía server, đọc cấu hình và khởi động `ServerManager`. |
 | `pom.xml` | Cấu hình Maven, dependency, compiler Java 21, surefire test, JavaFX plugin, shade plugin, checkstyle. |
 
-Lưu ý: trong `pom.xml` hiện có một số tên main class cũ trong plugin (`com.auction.client.networkclient.MainApp`, `com.auction.server.Server`) không trùng với file entry point hiện tại. Khi chạy bằng IDE, hãy dùng `com.auction.client.MainApp` và `com.auction.server.Sever`.
+Khi chạy bằng IDE, hãy dùng `com.auction.client.MainApp` và `com.auction.server.ServerApp`.
 
 ## Cấu Trúc Thư Mục
 
@@ -428,4 +428,3 @@ com.auction.client.MainApp
 ```
 
 Client đọc `server.ip` và `server.port` trong `application.properties`, sau đó kết nối socket đến server.
-
