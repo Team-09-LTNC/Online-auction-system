@@ -69,6 +69,9 @@ jobs:
           db.ssl=false
           EOF
 
+      - name: Initialize Database Schema
+        run: mvn exec:java -Dexec.mainClass="com.auction.server.db.SetupDatabase" -q
+
       - name: Checkstyle
         run: mvn -B -ntp checkstyle:check
 
