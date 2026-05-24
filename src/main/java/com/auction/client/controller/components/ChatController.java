@@ -61,9 +61,12 @@ public class ChatController {
 
         boolean paymentRequired = payload.has("paymentRequired")
                 && payload.get("paymentRequired").getAsBoolean();
+        String auctionStatus = payload.has("auctionStatus") && !payload.get("auctionStatus").isJsonNull()
+                ? payload.get("auctionStatus").getAsString()
+                : null;
         String message = payload.has("message") ? payload.get("message").getAsString() : "";
         if (paymentRequired && payload.has("auctionId")) {
-            themThongBao(taoThongBaoThanhToan(payload.get("auctionId").getAsInt(), message));
+            themThongBao(taoThongBaoThanhToan(payload.get("auctionId").getAsInt(), message, auctionStatus));
         } else {
             themThongBao(taoThongBaoThuong(message));
         }
@@ -90,7 +93,7 @@ public class ChatController {
         return bocThongBao("!", card);
     }
 
-    private Node taoThongBaoThanhToan(int auctionId, String content) {
+    private Node taoThongBaoThanhToan(int auctionId, String content, String auctionStatus) {
         Label title = new Label("Thông báo chiến thắng");
         title.setStyle("-fx-text-fill: #7A1B28; -fx-font-size: 14px; -fx-font-weight: bold;");
 
@@ -98,6 +101,20 @@ public class ChatController {
         body.setWrapText(true);
         body.setMaxWidth(Double.MAX_VALUE);
         body.setStyle("-fx-text-fill: #3E2723; -fx-font-size: 13px; -fx-line-spacing: 2px;");
+
+        if ("PAID".equalsIgnoreCase(auctionStatus) || "CANCELED".equalsIgnoreCase(auctionStatus)) {
+            Label settled = new Label(
+                    "PAID".equalsIgnoreCase(auctionStatus)
+                            ? "Bạn đã thanh toán thành công cho phiên này."
+                            : "Bạn đã hủy thanh toán cho phiên này."
+            );
+            settled.setWrapText(true);
+            settled.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1E8449;");
+
+            VBox card = taoKhungThongBao();
+            card.getChildren().addAll(title, body, settled);
+            return bocThongBao("✓", card);
+        }
 
         Button cancel = new Button("Hủy thanh toán");
         cancel.setStyle("-fx-background-color: #F0ECE8; -fx-text-fill: #3E2723; "

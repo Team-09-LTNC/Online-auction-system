@@ -11,6 +11,7 @@ import com.auction.common.util.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -335,8 +336,38 @@ public class AuctionController implements RequestHandler {
                     auctionId,
                     AuctionStatus.valueOf(ketQua.auctionStatus)
             );
+
+            Auction phien = auctionDao.layPhienTheoId(auctionId);
+            int sellerId = phien != null ? phien.getItem().getSellerId() : -1;
+            String tenPhien = phien != null ? phien.getItem().getName() : ("phiên #" + auctionId);
+            String soTienText = dinhDangTien(ketQua.amount);
+
+            com.auction.server.manager.SystemNotificationManager notificationManager =
+                    com.auction.server.manager.SystemNotificationManager.getInstance();
+
+            if (sellerId > 0) {
+                String sellerStatusMessage = thanhToan
+                        ? "Phiên đấu giá " + tenPhien + " đã được thanh toán thành công bởi bidder."
+                        : "Phiên đấu giá " + tenPhien + " đã bị bidder hủy thanh toán.";
+                String sellerBalanceMessage = thanhToan
+                        ? "Số dư ví của bạn đã tăng " + soTienText + " từ phiên " + tenPhien + "."
+                        : "Số dư ví của bạn đã tăng " + soTienText + " từ phí phạt hủy thanh toán của phiên " + tenPhien + ".";
+
+                notificationManager.guiThongBaoRieng(auctionId, sellerId, sellerStatusMessage, false);
+                notificationManager.guiThongBaoRieng(auctionId, sellerId, sellerBalanceMessage, false);
+            }
+
+            String bidderBalanceMessage = thanhToan
+                    ? "Số dư ví của bạn đã giảm " + soTienText + " để thanh toán phiên " + tenPhien + "."
+                    : "Số dư ví của bạn đã giảm " + soTienText + " do hủy thanh toán phiên " + tenPhien + ".";
+            notificationManager.guiThongBaoRieng(auctionId, nguoiDung.getId(), bidderBalanceMessage, false);
         }
         return gson.toJson(phanHoi);
+    }
+
+    private String dinhDangTien(long amount) {
+        NumberFormat numberFormat = NumberFormat.getInstance(new Locale("vi", "VN"));
+        return numberFormat.format(amount) + " VND";
     }
 
     private String taoNoiDungThongBaoThanhToan(String tenPhien) {

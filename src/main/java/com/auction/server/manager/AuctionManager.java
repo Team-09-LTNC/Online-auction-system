@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class AuctionManager {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AuctionManager.class);
     private static volatile AuctionManager instance;
     private static final ZoneId SERVER_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
@@ -124,6 +125,10 @@ public class AuctionManager {
                 p.setStatus(statusMoi);
                 auctionDao.capNhatTrangThai(idPhien, statusMoi.name());
                 if (statusMoi == AuctionStatus.FINISHED) {
+                    logger.info("Dong phien {} FINISHED. winnerId={}, sellerId={}",
+                            idPhien,
+                            targets != null ? targets.winnerId : null,
+                            targets != null ? targets.sellerId : null);
                     guiThongBaoKetThucPhien(targets);
                 }
 
@@ -350,6 +355,10 @@ public class AuctionManager {
     }
 
     private void guiThongBaoKetThucPhien(AuctionDao.AuctionNotificationTargets targets) {
+        if (targets == null || targets.winnerId == null) {
+            logger.warn("Bo qua gui thong bao ket thuc phien vi thieu winner.");
+            return;
+        }
         String itemName = targets.itemName == null ? "sản phẩm" : targets.itemName;
         String winnerName = targets.winnerName == null ? "người thắng phiên" : targets.winnerName;
         SystemNotificationManager.getInstance().guiThongBaoRieng(

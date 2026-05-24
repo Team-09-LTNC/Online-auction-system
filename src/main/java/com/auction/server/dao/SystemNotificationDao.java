@@ -22,6 +22,10 @@ public class SystemNotificationDao {
             logger.error("Cannot find ADMIN user to send system notification.");
             return -1;
         }
+        if (daCoThongBaoTrungGanDay(auctionId, recipientId, message, paymentRequired)) {
+            logger.info("Skip duplicated notification for user {} auction {}.", recipientId, auctionId);
+            return -1;
+        }
 
         String sql = "INSERT INTO chat_messages "
                 + "(auction_id, sender_id, recipient_id, message, payment_required) "
@@ -45,16 +49,10 @@ public class SystemNotificationDao {
     }
 
     public JsonArray layThongBaoCuaNguoiNhan(int recipientId) {
-        Integer systemAdminId = timSystemAdminId();
-        if (systemAdminId == null) {
-            return new JsonArray();
-        }
-
         String sql = "SELECT cm.id, cm.auction_id, cm.message, cm.payment_required, cm.send_time, cm.is_read, a.status "
                 + "FROM chat_messages cm "
                 + "JOIN auctions a ON a.id = cm.auction_id "
-                + "JOIN users s ON s.id = cm.sender_id "
-                + "WHERE s.role = 'ADMIN' AND cm.recipient_id = ? "
+                + "WHERE cm.recipient_id = ? "
                 + "ORDER BY cm.send_time DESC, cm.id DESC LIMIT 100";
         JsonArray notifications = new JsonArray();
 
@@ -69,10 +67,8 @@ public class SystemNotificationDao {
                     notification.addProperty("message", rs.getString("message"));
                     notification.addProperty("sentAt", rs.getTimestamp("send_time").toString());
                     notification.addProperty("isRead", rs.getBoolean("is_read"));
-                    notification.addProperty(
-                            "paymentRequired",
-                            rs.getBoolean("payment_required") && "FINISHED".equalsIgnoreCase(rs.getString("status"))
-                    );
+                    notification.addProperty("auctionStatus", rs.getString("status"));
+                    notification.addProperty("paymentRequired", rs.getBoolean("payment_required"));
                     notifications.add(notification);
                 }
             }
@@ -83,14 +79,8 @@ public class SystemNotificationDao {
     }
 
     public int demThongBaoChuaDoc(int recipientId) {
-        Integer systemAdminId = timSystemAdminId();
-        if (systemAdminId == null) {
-            return 0;
-        }
-
-        String sql = "SELECT COUNT(*) FROM chat_messages cm "
-                + "JOIN users s ON s.id = cm.sender_id "
-                + "WHERE s.role = 'ADMIN' AND cm.recipient_id = ? AND cm.is_read = FALSE";
+        String sql = "SELECT COUNT(*) FROM chat_messages "
+                + "WHERE recipient_id = ? AND is_read = FALSE";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, recipientId);
@@ -104,15 +94,8 @@ public class SystemNotificationDao {
     }
 
     public boolean danhDauDaDoc(int recipientId) {
-        Integer systemAdminId = timSystemAdminId();
-        if (systemAdminId == null) {
-            return false;
-        }
-
-        String sql = "UPDATE chat_messages cm "
-                + "JOIN users s ON s.id = cm.sender_id "
-                + "SET cm.is_read = TRUE "
-                + "WHERE s.role = 'ADMIN' AND cm.recipient_id = ? AND cm.is_read = FALSE";
+        String sql = "UPDATE chat_messages SET is_read = TRUE "
+                + "WHERE recipient_id = ? AND is_read = FALSE";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, recipientId);
@@ -150,5 +133,24 @@ public class SystemNotificationDao {
             logger.error("Cannot query fallback sender account.", e);
         }
         return null;
+    }
+
+    private boolean daCoThongBaoTrungGanDay(int auctionId, int recipientId, String message, boolean paymentRequired) {
+        String sql = "SELECT 1 FROM chat_messages "
+                + "WHERE auction_id = ? AND recipient_id = ? AND message = ? AND payment_required = ? "
+                + "AND send_time >= DATE_SUB(NOW(), INTERVAL 10 SECOND) LIMIT 1";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, auctionId);
+            pstmt.setInt(2, recipientId);
+            pstmt.setString(3, message);
+            pstmt.setBoolean(4, paymentRequired);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (Exception e) {
+            logger.error("Cannot check duplicate notification.", e);
+            return false;
+        }
     }
 }
