@@ -22,7 +22,7 @@
     </appender>
 
     <!-- Package của bạn: bật DEBUG, không đẩy lên root -->
-    <logger name="com.auction" level="DEBUG" additivity="false">
+    <logger name="com.auction" level="INFO" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </logger>

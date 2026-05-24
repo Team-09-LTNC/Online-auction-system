@@ -70,8 +70,11 @@ jobs:
           db.ssl=false
           EOF
 
+      - name: Checkstyle
+        run: mvn -B -ntp checkstyle:check
+
       - name: Initialize Database Schema
-        run: mvn -B -ntp exec:java -Dexec.mainClass="com.auction.server.db.SetupDatabase" -Ddb.config.file=application-test.properties -e
+        run: mvn -B -ntp compile exec:java -Dexec.mainClass="com.auction.server.db.SetupDatabase" -Ddb.config.file=application-test.properties -e
         env:
           DB_URL: jdbc:mysql://localhost:3306/auction_db
           DB_HOST: localhost
@@ -81,11 +84,8 @@ jobs:
           DB_PASSWORD: root
           DB_SSL: false
 
-      - name: Checkstyle
-        run: mvn -B -ntp checkstyle:check
-
-      - name: Initialize Database Schema
-        run: mvn -B -ntp compile exec:java -Dexec.mainClass="com.auction.server.db.SetupDatabase" -Ddb.config.file=application-test.properties -e
+      - name: Run Tests
+        run: mvn -B -ntp test -Ddb.config.file=application-test.properties
         env:
           DB_URL: jdbc:mysql://localhost:3306/auction_db
           DB_HOST: localhost

@@ -86,7 +86,7 @@ public class RequestDispatcher {
     public String dieuPhoi(String loaiYeuCau, JsonObject yeuCau, ClientHandler client) {
         RequestHandler trinhXuLy = danhSachTrinhXuLy.get(loaiYeuCau);
         if (trinhXuLy != null) {
-            logger.info("Đang xử lý yêu cầu '{}' thành công bởi Controller: {}", loaiYeuCau, trinhXuLy.getClass().getSimpleName());
+            logger.debug("Đang xử lý yêu cầu '{}' bởi Controller: {}", loaiYeuCau, trinhXuLy.getClass().getSimpleName());
             String phanHoi = trinhXuLy.xuLy(yeuCau, client);
             if (phanHoi != null) {
                 return phanHoi;

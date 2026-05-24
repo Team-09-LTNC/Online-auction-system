@@ -89,7 +89,7 @@ public class AuctionManager {
 
             tasksMoPhien.remove(phien.getId());
 
-            System.out.println("[AuctionManager] Đã TỰ ĐỘNG MỞ phiên đấu giá ID: " + phien.getId());
+            logger.info("Đã tự động mở phiên đấu giá ID: {}", phien.getId());
             henGioDongPhien(phien); // Bắt đầu đếm ngược đến giờ đóng
         }
     }
@@ -130,7 +130,7 @@ public class AuctionManager {
                             idPhien,
                             targets != null ? targets.winnerId : null,
                             targets != null ? targets.sellerId : null);
-                    guiThongBaoKetThucPhien(targets);
+                    AuctionSettlementNotifier.guiThongBaoKetThucPhien(targets);
                     henGioQuaHanThanhToan(idPhien, targets);
                 }
 
@@ -266,7 +266,7 @@ public class AuctionManager {
 
             boolean luuThanhCong = auctionDao.luuHoacCapNhatAutoBid(idPhien, bidder.getId(), maxBid);
             if (!luuThanhCong) {
-                System.err.println("[Auto-Bid] Lỗi: Không thể lưu giá trần xuống Database cho User ID: " + bidder.getId());
+                logger.warn("Không thể lưu giá trần auto-bid xuống Database cho userId={}", bidder.getId());
             }
 
             kichHoatAutoBid(phien);

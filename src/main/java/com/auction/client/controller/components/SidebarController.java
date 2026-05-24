@@ -105,21 +105,12 @@ public class SidebarController {
     // HÀM LỌC DANH MỤC
     @FXML
     private void handleFilterCategory(ActionEvent event) {
-        System.out.println("CLICK CATEGORY BUTTON");
         Button clickedBtn = (Button) event.getSource();
         // 1. Đổi màu nút đang được bấm
         setButtonActive(clickedBtn);
 
         String buttonText = clickedBtn.getText().trim();
-
-        String category;
-        System.out.println("BUTTON TEXT = " + buttonText);
-        if (buttonText.equals("Điện tử")) category = "ELECTRONICS";
-        else if (buttonText.equals("Xe cộ")) category = "VEHICLE";
-        else if (buttonText.equals("Nghệ thuật")) category = "ART";
-        else if (buttonText.equals("Khác")) category = "OTHER";
-        else category = "ALL";
-        System.out.println("CATEGORY SEND = " + category);
+        String category = mapCategory(buttonText);
 
         // 2. Ép hệ thống chuyển hướng sang màn hình "Tất cả phiên"
         boolean alreadyShowingAuctionList = MainController.instance.getCurrentCenterController()
@@ -136,6 +127,14 @@ public class SidebarController {
         if (currentCtrl instanceof com.auction.client.interfaces.CategoryFilterListener) {
             ((com.auction.client.interfaces.CategoryFilterListener) currentCtrl).onCategorySelected(category);
         }
+    }
+
+    private String mapCategory(String buttonText) {
+        if ("Điện tử".equals(buttonText)) return "ELECTRONICS";
+        if ("Xe cộ".equals(buttonText)) return "VEHICLE";
+        if ("Nghệ thuật".equals(buttonText)) return "ART";
+        if ("Khác".equals(buttonText)) return "OTHER";
+        return "ALL";
     }
     @FXML
     private void handleOpenDashboard(ActionEvent event) {

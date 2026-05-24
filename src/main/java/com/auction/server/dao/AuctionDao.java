@@ -9,22 +9,15 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.auction.common.enums.AuctionStatus;
 import com.auction.common.model.bid.Auction;
 import com.auction.common.model.bid.BidTransaction;
 import com.auction.common.model.bid.AutoBidConfig;
 import com.auction.common.model.user.Bidder;
 
-import com.auction.common.model.item.Art;
-import com.auction.common.model.item.Electronics;
-import com.auction.common.model.item.Item;
-import com.auction.common.model.item.OtherItem;
-import com.auction.common.model.item.Vehicle;
 import com.auction.server.db.DatabaseConnection;
 
 /**
@@ -56,82 +49,7 @@ public class AuctionDao {
     }
 
     private Auction mapResultSetToAuction(ResultSet rs) throws SQLException {
-        String rawCategory = rs.getString("category");
-        String loai = rawCategory == null || rawCategory.trim().isEmpty()
-                ? "OTHER"
-                : rawCategory.trim().toUpperCase(Locale.ROOT);
-        Item item;
-        switch (loai) {
-            case "ELECTRONICS":
-                item = new Electronics();
-                break;
-            case "ART":
-                item = new Art();
-                break;
-            case "VEHICLE":
-                item = new Vehicle();
-                break;
-            default:
-                item = new OtherItem();
-                break;
-        }
-
-        item.setId(rs.getInt("item_id"));
-        item.setName(rs.getString("name"));
-
-        try {
-            item.setDescription(rs.getString("description"));
-        } catch (Exception ignored) {
-        }
-
-        item.setStartingPrice(rs.getLong("starting_price"));
-        item.setBidIncrement(rs.getLong("bid_increment"));
-        item.setSellerId(rs.getInt("seller_id"));
-        item.setCategory(loai);
-
-        try {
-            item.setImageUrl(rs.getString("image_url"));
-        } catch (Exception ignored) {
-        }
-
-        Auction phien = new Auction(item);
-        phien.setId(rs.getInt("id"));
-        phien.setStatus(parseAuctionStatus(rs.getString("status")));
-        phien.setStartTime(rs.getObject("start_time", LocalDateTime.class));
-        phien.setEndTime(rs.getObject("end_time", LocalDateTime.class));
-        phien.setCurrentPrice(rs.getLong("current_price"));
-
-        long buyNowPrice = rs.getLong("buy_now_price");
-        if (!rs.wasNull()) {
-            phien.setBuyNowPrice(buyNowPrice);
-        }
-        phien.setAntiSnipingEnabled(rs.getBoolean("anti_sniping_enabled"));
-
-        return phien;
-    }
-
-    private AuctionStatus parseAuctionStatus(String rawStatus) {
-        if (rawStatus == null || rawStatus.trim().isEmpty()) {
-            return AuctionStatus.OPEN;
-        }
-
-        String normalizedStatus = rawStatus.trim().toUpperCase(Locale.ROOT);
-        if ("CANCELLED".equals(normalizedStatus)) {
-            return AuctionStatus.CANCELED;
-        }
-        if ("PENDING".equals(normalizedStatus)) {
-            return AuctionStatus.OPEN;
-        }
-        if ("REJECTED".equals(normalizedStatus)) {
-            return AuctionStatus.CANCELED;
-        }
-
-        try {
-            return AuctionStatus.valueOf(normalizedStatus);
-        } catch (IllegalArgumentException e) {
-            logger.warn("Trạng thái phiên đấu giá không hợp lệ trong DB: '{}'. Dùng OPEN.", rawStatus);
-            return AuctionStatus.OPEN;
-        }
+        return AuctionRowMapper.mapResultSetToAuction(rs, logger);
     }
 
     public void capNhatTrangThaiTheoThoiGian() {

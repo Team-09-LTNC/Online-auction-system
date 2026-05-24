@@ -63,7 +63,6 @@ public class BidTransactionDao {
             pstm.setInt(1, idPhien);
 
             try (ResultSet ketQua = pstm.executeQuery()) {
-                System.out.println("=== NHẬT KÝ ĐẤU GIÁ PHIÊN #" + idPhien + " ===");
                 while (ketQua.next()) {
                     // Chuyển sang sử dụng đối tượng BidLine để đồng bộ với Client
                     danhSach.add(new BidLine(
