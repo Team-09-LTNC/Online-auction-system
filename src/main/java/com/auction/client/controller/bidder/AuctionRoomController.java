@@ -680,10 +680,16 @@ public class AuctionRoomController implements Initializable {
             long maxPrice = Long.parseLong(txtMaxAutoBid.getText().trim());
             long bidStep = Long.parseLong(txtAutoBidStep.getText().trim());
             long currentPrice = extractMoneyValue(lblCurrentPrice.getText());
-            long minValidBid = currentPrice + extractMoneyValue(lblBidIncrement.getText());
+            long sellerBidStep = extractMoneyValue(lblBidIncrement.getText());
+            long minValidBid = currentPrice + sellerBidStep;
 
             if (maxPrice < minValidBid) {
                 showAlert("Lỗi Auto-bid", "Mức giá tối đa phải >= " + String.format("%,d đ", minValidBid));
+                return;
+            }
+            if (bidStep < sellerBidStep) {
+                showAlert("Lỗi Auto-bid", "Bước giá Auto-bid phải >= bước giá người bán ("
+                        + String.format("%,d đ", sellerBidStep) + ").");
                 return;
             }
 
@@ -703,12 +709,13 @@ public class AuctionRoomController implements Initializable {
                             alert.setContentText("Kích hoạt Auto-bid thành công!");
                             alert.showAndWait();
                             btnEnableAutoBid.setText("XOA AUTO-BID");
+                            refreshAuctionState();
                         } else {
                             showAlert("Lỗi Auto-bid", response.has("message") ? response.get("message").getAsString() : "Lỗi đăng ký.");
                         }
                     }));
         } catch (Exception e) {
-            e.printStackTrace();
+            showAlert("Lỗi Auto-bid", "Vui lòng nhập số hợp lệ cho mức tối đa và bước giá.");
         }
     }
 
@@ -733,6 +740,12 @@ public class AuctionRoomController implements Initializable {
                         txtAutoBidStep.clear();
                     }
                     btnEnableAutoBid.setText("DANG KY AUTO-BID");
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Thành công");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Xóa Auto-bid thành công.");
+                    alert.showAndWait();
+                    refreshAuctionState();
                 }));
     }
 

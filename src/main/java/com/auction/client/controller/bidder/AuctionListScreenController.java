@@ -151,10 +151,10 @@ public class AuctionListScreenController
         String selectedKeyword = currentKeyword.trim().toLowerCase(Locale.ROOT);
         String selectedStatus = currentStatus;
         String selectedServerNow = loadedServerNow;
-        JsonArray auctionsToFilter = allLoadedAuctions.deepCopy();
+        JsonArray auctionsToFilter = allLoadedAuctions;
         List<Integer> followedIds = new ArrayList<>(loadedFollowedIds);
 
-        new Thread(() -> {
+        com.auction.client.util.ClientTaskExecutor.execute(() -> {
             try {
                 List<VBox> cardsToRender = new ArrayList<>();
                 boolean cardsPublished = false;
@@ -221,7 +221,7 @@ public class AuctionListScreenController
             } catch (Exception ex) {
                 logger.error("Lỗi xử lý dựng card sảnh đấu giá trong Thread phụ: ", ex);
             }
-        }).start();
+        });
     }
 
     public void refreshData() {

@@ -115,10 +115,10 @@ public class MyAuctionsController implements Initializable, RefreshableCenterCon
         String selectedKeyword = currentKeyword.trim().toLowerCase(Locale.ROOT);
         String selectedStatus = currentStatus;
         String selectedServerNow = loadedServerNow;
-        JsonArray auctionsToFilter = joinedAuctions.deepCopy();
+        JsonArray auctionsToFilter = joinedAuctions;
         List<Integer> followedIds = new ArrayList<>(loadedFollowedIds);
 
-        new Thread(() -> {
+        com.auction.client.util.ClientTaskExecutor.execute(() -> {
             try {
                 List<VBox> cardsToRender = new ArrayList<>();
                 boolean cardsPublished = false;
@@ -180,7 +180,7 @@ public class MyAuctionsController implements Initializable, RefreshableCenterCon
             } catch (Exception ex) {
                 logger.error("Lỗi dựng danh sách phiên đấu giá đã tham gia", ex);
             }
-        }).start();
+        });
     }
 
     private void onSearchKeywordChanged(String newKeyword) {
