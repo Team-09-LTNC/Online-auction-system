@@ -18,6 +18,7 @@ public class Auction extends Entity {
 
     // --- THÊM GIÁ MUA ĐỨT ---
     private Long buyNowPrice;
+    private boolean antiSnipingEnabled;
 
     private final List<BidTransaction> bidHistory = new ArrayList<>();
     private final Queue<AutoBidConfig> autoBidders = new PriorityQueue<>();
@@ -86,4 +87,9 @@ public class Auction extends Entity {
     // --- GETTER/SETTER CHO GIÁ MUA ĐỨT ---
     public Long getBuyNowPrice() { return buyNowPrice; }
     public void setBuyNowPrice(Long buyNowPrice) { this.buyNowPrice = buyNowPrice; }
+
+    public boolean isAntiSnipingEnabled() { return antiSnipingEnabled; }
+    public void setAntiSnipingEnabled(boolean antiSnipingEnabled) {
+        this.antiSnipingEnabled = antiSnipingEnabled;
+    }
 }

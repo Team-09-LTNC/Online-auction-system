@@ -2,12 +2,16 @@ package com.auction.server.manager;
 
 import com.auction.server.dao.SystemNotificationDao;
 import com.google.gson.JsonObject;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Lưu notification trước khi đẩy realtime cho user đang online.
  */
 public class SystemNotificationManager {
     private static volatile SystemNotificationManager instance;
+    private static final DateTimeFormatter NOTIFICATION_TIME_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final SystemNotificationDao notificationDao = new SystemNotificationDao();
 
     private SystemNotificationManager() {
@@ -37,6 +41,7 @@ public class SystemNotificationManager {
         payload.addProperty("targetUserId", recipientId);
         payload.addProperty("auctionId", auctionId);
         payload.addProperty("message", message);
+        payload.addProperty("sentAt", LocalDateTime.now().format(NOTIFICATION_TIME_FORMAT));
         payload.addProperty("paymentRequired", paymentRequired);
         UserManager.getInstance().guiThongBaoHeThong(recipientId, payload);
     }

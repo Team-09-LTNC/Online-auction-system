@@ -4,6 +4,7 @@ import com.auction.server.db.DatabaseConnection;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.sql.Connection;
+import java.sql.Types;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -28,7 +29,11 @@ public class SystemNotificationDao {
                 + "VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            pstmt.setInt(1, auctionId);
+            if (auctionId > 0) {
+                pstmt.setInt(1, auctionId);
+            } else {
+                pstmt.setNull(1, Types.INTEGER);
+            }
             pstmt.setInt(2, systemAdminId);
             pstmt.setInt(3, recipientId);
             pstmt.setString(4, message);
@@ -52,9 +57,17 @@ public class SystemNotificationDao {
 
         String sql = "SELECT cm.id, cm.auction_id, cm.message, cm.payment_required, cm.send_time, cm.is_read, a.status "
                 + "FROM chat_messages cm "
-                + "JOIN auctions a ON a.id = cm.auction_id "
+                + "LEFT JOIN auctions a ON a.id = cm.auction_id "
                 + "JOIN users s ON s.id = cm.sender_id "
                 + "WHERE s.role = 'ADMIN' AND cm.recipient_id = ? "
+                + "AND (cm.payment_required = FALSE OR cm.id = ("
+                + "    SELECT MAX(cm2.id) FROM chat_messages cm2 "
+                + "    JOIN users s2 ON s2.id = cm2.sender_id "
+                + "    WHERE s2.role = 'ADMIN' "
+                + "    AND cm2.recipient_id = cm.recipient_id "
+                + "    AND cm2.auction_id = cm.auction_id "
+                + "    AND cm2.payment_required = TRUE"
+                + ")) "
                 + "ORDER BY cm.send_time DESC, cm.id DESC LIMIT 100";
         JsonArray notifications = new JsonArray();
 
@@ -65,7 +78,8 @@ public class SystemNotificationDao {
                 while (rs.next()) {
                     JsonObject notification = new JsonObject();
                     notification.addProperty("notificationId", rs.getLong("id"));
-                    notification.addProperty("auctionId", rs.getInt("auction_id"));
+                    int auctionId = rs.getInt("auction_id");
+                    notification.addProperty("auctionId", rs.wasNull() ? -1 : auctionId);
                     notification.addProperty("message", rs.getString("message"));
                     notification.addProperty("sentAt", rs.getTimestamp("send_time").toString());
                     notification.addProperty("isRead", rs.getBoolean("is_read"));
@@ -90,7 +104,15 @@ public class SystemNotificationDao {
 
         String sql = "SELECT COUNT(*) FROM chat_messages cm "
                 + "JOIN users s ON s.id = cm.sender_id "
-                + "WHERE s.role = 'ADMIN' AND cm.recipient_id = ? AND cm.is_read = FALSE";
+                + "WHERE s.role = 'ADMIN' AND cm.recipient_id = ? AND cm.is_read = FALSE "
+                + "AND (cm.payment_required = FALSE OR cm.id = ("
+                + "    SELECT MAX(cm2.id) FROM chat_messages cm2 "
+                + "    JOIN users s2 ON s2.id = cm2.sender_id "
+                + "    WHERE s2.role = 'ADMIN' "
+                + "    AND cm2.recipient_id = cm.recipient_id "
+                + "    AND cm2.auction_id = cm.auction_id "
+                + "    AND cm2.payment_required = TRUE"
+                + "))";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, recipientId);

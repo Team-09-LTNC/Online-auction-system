@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 public class AuctionController implements RequestHandler {
+    private static final String SELLER_SELF_BID_MESSAGE =
+            "Không được tự bid sản phẩm của chính mình.";
     private final Gson gson = GsonConfig.getInstance();
     private final AuctionDao auctionDao = new AuctionDao();
 
@@ -94,6 +96,13 @@ public class AuctionController implements RequestHandler {
         String requestId = yeuCau.has("requestId") ? yeuCau.get("requestId").getAsString() : null;
 
         if (nguoiDung == null || !"BIDDER".equals(nguoiDung.getRoleName())) {
+            if (nguoiDung != null
+                    && "SELLER".equalsIgnoreCase(nguoiDung.getRoleName())
+                    && laSellerCuaPhien(request.getAuctionId(), nguoiDung.getId())) {
+                JsonObject errorRes = taoPhanHoiDonGian("BID_RESPONSE", false, SELLER_SELF_BID_MESSAGE);
+                if (requestId != null) errorRes.addProperty("requestId", requestId);
+                return gson.toJson(errorRes);
+            }
             JsonObject errorRes = gson.toJsonTree(new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Chỉ người mua (Bidder) mới được đặt giá.", ErrorCode.UNAUTHORIZED)).getAsJsonObject();
             errorRes.addProperty("type", "BID_RESPONSE");
             if (requestId != null) errorRes.addProperty("requestId", requestId);
@@ -126,12 +135,21 @@ public class AuctionController implements RequestHandler {
 
     private String xuLyDangKyAutoBid(JsonObject yeuCau, ClientHandler client) {
         User nguoiDung = client.layNguoiDungHienTai();
-        if (nguoiDung == null || !"BIDDER".equals(nguoiDung.getRoleName())) {
-            return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN, "Chỉ người mua (Bidder) mới được cài auto-bid.", ErrorCode.UNAUTHORIZED));
-        }
-
         int maPhien = yeuCau.has("auctionId") ? yeuCau.get("auctionId").getAsInt() : -1;
         long maxBid = yeuCau.has("maxBid") ? yeuCau.get("maxBid").getAsLong() : -1;
+
+        if (nguoiDung == null || !"BIDDER".equals(nguoiDung.getRoleName())) {
+            if (nguoiDung != null
+                    && "SELLER".equalsIgnoreCase(nguoiDung.getRoleName())
+                    && laSellerCuaPhien(maPhien, nguoiDung.getId())) {
+                return gson.toJson(taoPhanHoiDonGian("AUTO_BID_RESPONSE", false, SELLER_SELF_BID_MESSAGE));
+            }
+            return gson.toJson(taoPhanHoiDonGian(
+                    "AUTO_BID_RESPONSE",
+                    false,
+                    "Chỉ người mua (Bidder) mới được cài auto-bid."
+            ));
+        }
 
         if (maPhien == -1 || maxBid <= 0) {
             return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thiếu thông tin maxBid hoặc auctionId", ErrorCode.BAD_REQUEST));
@@ -252,13 +270,20 @@ public class AuctionController implements RequestHandler {
         phanHoi.addProperty("type", "BUY_NOW_RESPONSE");
         copyRequestId(yeuCau, phanHoi);
 
+        int auctionId = yeuCau.has("auctionId") ? yeuCau.get("auctionId").getAsInt() : -1;
         if (nguoiDung == null || !"BIDDER".equals(nguoiDung.getRoleName())) {
+            if (nguoiDung != null
+                    && "SELLER".equalsIgnoreCase(nguoiDung.getRoleName())
+                    && laSellerCuaPhien(auctionId, nguoiDung.getId())) {
+                phanHoi.addProperty("success", false);
+                phanHoi.addProperty("message", SELLER_SELF_BID_MESSAGE);
+                return gson.toJson(phanHoi);
+            }
             phanHoi.addProperty("success", false);
             phanHoi.addProperty("message", "Chỉ bidder mới được mua đứt.");
             return gson.toJson(phanHoi);
         }
 
-        int auctionId = yeuCau.has("auctionId") ? yeuCau.get("auctionId").getAsInt() : -1;
         if (auctionId == -1) {
             phanHoi.addProperty("success", false);
             phanHoi.addProperty("message", "Thiếu auctionId.");
@@ -279,7 +304,7 @@ public class AuctionController implements RequestHandler {
             com.auction.server.manager.SystemNotificationManager.getInstance().guiThongBaoRieng(
                     auctionId,
                     nguoiDung.getId(),
-                    taoNoiDungThongBaoThanhToan(tenPhien),
+                    taoNoiDungThongBaoThanhToan(tenPhien, auctionId),
                     true
             );
 
@@ -335,12 +360,98 @@ public class AuctionController implements RequestHandler {
                     auctionId,
                     AuctionStatus.valueOf(ketQua.auctionStatus)
             );
+            guiThongBaoSauQuyetToan(auctionId, nguoiDung, ketQua, thanhToan);
         }
         return gson.toJson(phanHoi);
     }
 
-    private String taoNoiDungThongBaoThanhToan(String tenPhien) {
-        return "Chúc mừng bạn đã chiến thắng phiên đấu giá " + tenPhien + ".\n"
+    private void guiThongBaoSauQuyetToan(
+            int auctionId,
+            User nguoiDung,
+            com.auction.server.dao.BidderMoneySellerDao.PaymentResult ketQua,
+            boolean thanhToan
+    ) {
+        String tenSanPham = ketQua.itemName == null || ketQua.itemName.isBlank()
+                ? "sản phẩm"
+                : ketQua.itemName;
+        String tenBidder = ketQua.bidderName == null || ketQua.bidderName.isBlank()
+                ? nguoiDung.getFullName()
+                : ketQua.bidderName;
+        if (tenBidder == null || tenBidder.isBlank()) {
+            tenBidder = nguoiDung.getUsername();
+        }
+
+        com.auction.server.manager.SystemNotificationManager notificationManager =
+                com.auction.server.manager.SystemNotificationManager.getInstance();
+
+        notificationManager.guiThongBaoRieng(
+                auctionId,
+                ketQua.bidderId,
+                taoThongBaoKetQuaChoBidder(tenSanPham, auctionId, thanhToan),
+                false
+        );
+        notificationManager.guiThongBaoRieng(
+                auctionId,
+                ketQua.bidderId,
+                taoThongBaoBienDongSoDu(
+                        ketQua.bidderTransactionType,
+                        ketQua.amount,
+                        ketQua.bidderDescription
+                ),
+                false
+        );
+
+        notificationManager.guiThongBaoRieng(
+                auctionId,
+                ketQua.sellerId,
+                taoThongBaoKetQuaChoSeller(tenSanPham, auctionId, tenBidder, thanhToan),
+                false
+        );
+        notificationManager.guiThongBaoRieng(
+                auctionId,
+                ketQua.sellerId,
+                taoThongBaoBienDongSoDu(
+                        ketQua.sellerTransactionType,
+                        ketQua.amount,
+                        ketQua.sellerDescription
+                ),
+                false
+        );
+    }
+
+    private String taoThongBaoKetQuaChoBidder(String tenSanPham, int auctionId, boolean thanhToan) {
+        if (thanhToan) {
+            return "Chúc mừng bạn đã chính thức sở hữu sản phẩm " + tenSanPham
+                    + " của phiên ID " + auctionId + ".";
+        }
+        return "Bạn đã hủy thanh toán sản phẩm " + tenSanPham
+                + " của phiên ID " + auctionId + ".";
+    }
+
+    private String taoThongBaoKetQuaChoSeller(
+            String tenSanPham,
+            int auctionId,
+            String tenBidder,
+            boolean thanhToan
+    ) {
+        if (thanhToan) {
+            return "Bidder " + tenBidder + " đã thanh toán thành công sản phẩm "
+                    + tenSanPham + " của phiên ID " + auctionId + ".";
+        }
+        return "Bidder " + tenBidder + " đã hủy thanh toán sản phẩm "
+                + tenSanPham + " của phiên ID " + auctionId + ".";
+    }
+
+    private String taoThongBaoBienDongSoDu(String loaiGiaoDich, long soTien, String moTa) {
+        String loai = loaiGiaoDich == null || loaiGiaoDich.isBlank() ? "PAYMENT" : loaiGiaoDich;
+        String symbol = ("WITHDRAW".equals(loai) || "PAYMENT_SENT".equals(loai)) ? "🔻" : "🔹";
+        String noiDung = String.format(Locale.US, "%s %s: %,d đ - %s", symbol, loai, soTien, moTa);
+        return "Biến động số dư\n" + noiDung;
+    }
+
+    private String taoNoiDungThongBaoThanhToan(String tenPhien, int auctionId) {
+        return "Chúc mừng bạn đã chiến thắng phiên đấu giá " + tenPhien
+                + " của phiên ID " + auctionId + ".\n"
                 + "Xác nhận thanh toán để chính thức sở hữu sản phẩm.\n\n"
                 + "Nếu hủy thanh toán, bạn sẽ chịu phạt 10% tiền đặt giá.";
     }
@@ -416,6 +527,7 @@ public class AuctionController implements RequestHandler {
 
             dataObj.addProperty("currentHighestBid", phien.getCurrentHighestBid());
             dataObj.addProperty("currentPrice", phien.getCurrentHighestBid());
+            dataObj.addProperty("antiSnipingEnabled", phien.isAntiSnipingEnabled());
             phanHoi.addProperty("serverNow", LocalDateTime.now().toString());
 
             User user = client.layNguoiDungHienTai();
@@ -559,6 +671,21 @@ public class AuctionController implements RequestHandler {
         return gson.toJson(phanHoi);
     }
 
+    private boolean laSellerCuaPhien(int auctionId, int userId) {
+        Auction phien = auctionDao.layPhienTheoId(auctionId);
+        return phien != null
+                && phien.getItem() != null
+                && phien.getItem().getSellerId() == userId;
+    }
+
+    private JsonObject taoPhanHoiDonGian(String type, boolean success, String message) {
+        JsonObject phanHoi = new JsonObject();
+        phanHoi.addProperty("type", type);
+        phanHoi.addProperty("success", success);
+        phanHoi.addProperty("message", message);
+        return phanHoi;
+    }
+
     private void copyRequestId(JsonObject yeuCau, JsonObject phanHoi) {
         if (yeuCau != null && yeuCau.has("requestId") && !yeuCau.get("requestId").isJsonNull()) {
             phanHoi.addProperty("requestId", yeuCau.get("requestId").getAsString());
@@ -592,7 +719,7 @@ public class AuctionController implements RequestHandler {
 
         if (nguoiDung == null) {
             phanHoi.addProperty("success", false);
-            phanHoi.addProperty("message", "ChÆ°a Ä‘Äƒng nháº­p.");
+            phanHoi.addProperty("message", "Chưa đăng nhập.");
             return gson.toJson(phanHoi);
         }
 

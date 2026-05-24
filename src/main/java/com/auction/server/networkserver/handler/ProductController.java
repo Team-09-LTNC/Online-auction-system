@@ -151,6 +151,9 @@ public class ProductController implements RequestHandler {
         long buyNowPrice = yeuCau.has("buyNowPrice") && !yeuCau.get("buyNowPrice").isJsonNull()
                 ? yeuCau.get("buyNowPrice").getAsLong()
                 : 0L;
+        boolean antiSnipingEnabled = yeuCau.has("antiSnipingEnabled")
+                && !yeuCau.get("antiSnipingEnabled").isJsonNull()
+                && yeuCau.get("antiSnipingEnabled").getAsBoolean();
         sanPhamMoi.setBidIncrement(bidIncrement);
 
         LocalDateTime startTime = LocalDateTime.parse(request.getStartTime(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
@@ -166,10 +169,10 @@ public class ProductController implements RequestHandler {
                     new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST,
                             "Bước giá phải lớn hơn 0.", ErrorCode.BAD_REQUEST));
         }
-        if (startTime.isBefore(LocalDateTime.now())) {
+        if (!startTime.isAfter(LocalDateTime.now())) {
             return buildResponse(yeuCau, ActionType.CREATE_PRODUCT,
                     new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST,
-                            "Thời gian bắt đầu không được ở quá khứ.", ErrorCode.BAD_REQUEST));
+                            "Thời gian bắt đầu phải lớn hơn thời gian hiện tại.", ErrorCode.BAD_REQUEST));
         }
         if (!endTime.isAfter(startTime)) {
             return buildResponse(yeuCau, ActionType.CREATE_PRODUCT,
@@ -186,7 +189,8 @@ public class ProductController implements RequestHandler {
                 sanPhamMoi,
                 startTime,
                 endTime,
-                buyNowPrice > 0 ? buyNowPrice : null);
+                buyNowPrice > 0 ? buyNowPrice : null,
+                antiSnipingEnabled);
 
         if (thanhCong) {
             logger.info("xuLyThemSanPham: Thành công - Sản phẩm ID = {} đã được đăng bởi sellerId = {}",
@@ -335,10 +339,10 @@ public class ProductController implements RequestHandler {
                     ? LocalDateTime.parse(yeuCau.get("endTime").getAsString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                     : null;
 
-            if (startTime == null || startTime.isBefore(LocalDateTime.now())) {
+            if (startTime == null || !startTime.isAfter(LocalDateTime.now())) {
                 return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT,
                         new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST,
-                                "Thời gian bắt đầu không được ở quá khứ.", ErrorCode.BAD_REQUEST));
+                                "Thời gian bắt đầu phải lớn hơn thời gian hiện tại.", ErrorCode.BAD_REQUEST));
             }
             if (endTime == null || !endTime.isAfter(startTime)) {
                 return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT,
@@ -358,7 +362,7 @@ public class ProductController implements RequestHandler {
             }
             return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT,
                     new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN,
-                            "Chỉ có thể sửa sản phẩm khi phiên còn OPEN và chưa mở.", ErrorCode.FORBIDDEN));
+                            "Chỉ có thể sửa sản phẩm khi phiên còn OPEN và chưa có bid.", ErrorCode.FORBIDDEN));
         } catch (Exception e) {
             return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT,
                     new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Lỗi định dạng", ErrorCode.BAD_REQUEST));

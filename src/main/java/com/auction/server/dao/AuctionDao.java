@@ -106,6 +106,7 @@ public class AuctionDao {
         if (!rs.wasNull()) {
             phien.setBuyNowPrice(buyNowPrice);
         }
+        phien.setAntiSnipingEnabled(rs.getBoolean("anti_sniping_enabled"));
 
         return phien;
     }
@@ -389,7 +390,7 @@ public class AuctionDao {
     }
 
     public boolean taoPhienDauGia(int itemId, long startingPrice, LocalDateTime startTime, LocalDateTime endTime) {
-        return taoPhienDauGia(itemId, startingPrice, startTime, endTime, null);
+        return taoPhienDauGia(itemId, startingPrice, startTime, endTime, null, false);
     }
 
     public boolean taoPhienDauGia(
@@ -399,9 +400,20 @@ public class AuctionDao {
             LocalDateTime endTime,
             Long buyNowPrice
     ) {
+        return taoPhienDauGia(itemId, startingPrice, startTime, endTime, buyNowPrice, false);
+    }
+
+    public boolean taoPhienDauGia(
+            int itemId,
+            long startingPrice,
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            Long buyNowPrice,
+            boolean antiSnipingEnabled
+    ) {
         String sql = "INSERT INTO auctions "
-                + "(item_id, current_price, buy_now_price, status, start_time, end_time) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
+                + "(item_id, current_price, buy_now_price, anti_sniping_enabled, status, start_time, end_time) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -413,11 +425,13 @@ public class AuctionDao {
                 pstmt.setNull(3, java.sql.Types.BIGINT);
             }
 
-            String status = startTime.isAfter(LocalDateTime.now().plusSeconds(1)) ? "OPEN" : "RUNNING";
-            pstmt.setString(4, status);
+            pstmt.setBoolean(4, antiSnipingEnabled);
 
-            pstmt.setTimestamp(5, Timestamp.valueOf(startTime));
-            pstmt.setTimestamp(6, Timestamp.valueOf(endTime));
+            String status = startTime.isAfter(LocalDateTime.now().plusSeconds(1)) ? "OPEN" : "RUNNING";
+            pstmt.setString(5, status);
+
+            pstmt.setTimestamp(6, Timestamp.valueOf(startTime));
+            pstmt.setTimestamp(7, Timestamp.valueOf(endTime));
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {

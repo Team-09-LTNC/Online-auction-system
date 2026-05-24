@@ -30,10 +30,10 @@ public class ClientSocket {
                 props.load(input);
                 SERVER_IP = props.getProperty("server.ip", "127.0.0.1");
                 SERVER_PORT = Integer.parseInt(props.getProperty("server.port", "8080"));
-                logger.info("Đã nạp cấu hình mạng: IP = {}, Port = {}", SERVER_IP, SERVER_PORT);
+                logger.info("Da nap cau hinh mang: IP = {}, Port = {}", SERVER_IP, SERVER_PORT);
             }
         } catch (Exception e) {
-            logger.error("Lỗi khi đọc cấu hình mạng, sử dụng mặc định.", e);
+            logger.error("Loi khi doc cau hinh mang, su dung mac dinh.", e);
         }
     }
 
@@ -53,25 +53,44 @@ public class ClientSocket {
     }
 
     private void connect() {
+        for (int attempt = 1; attempt <= 30; attempt++) {
+            if (connectOnce()) {
+                return;
+            }
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+    }
+
+    private boolean connectOnce() {
         try {
             socket = new Socket(SERVER_IP, SERVER_PORT);
             out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-            logger.info("Đã kết nối Server {}:{}", SERVER_IP, SERVER_PORT);
+            logger.info("Da ket noi Server {}:{}", SERVER_IP, SERVER_PORT);
             startListeningThread();
+            return true;
         } catch (IOException e) {
-            logger.error("Kết nối Server thất bại: {}", e.getMessage());
+            logger.warn("Ket noi Server that bai: {}", e.getMessage());
+            return false;
         }
     }
 
     public void sendJsonRequest(JsonObject jsonObject, String expectedResponseType, Consumer<JsonObject> onResponse) {
+        if (!isSocketReady()) {
+            connect();
+        }
         if (out != null) {
             String requestId = jsonObject.has("requestId") && !jsonObject.get("requestId").isJsonNull()
                     ? jsonObject.get("requestId").getAsString() : null;
             if (requestId == null || requestId.isBlank()) {
                 requestId = java.util.UUID.randomUUID().toString();
                 jsonObject.addProperty("requestId", requestId);
-                logger.warn("Request thiếu requestId, đã tự sinh requestId={}", requestId);
+                logger.warn("Request thieu requestId, da tu sinh requestId={}", requestId);
             }
             if (onResponse != null) {
                 if (requestId != null) {
@@ -85,8 +104,12 @@ public class ClientSocket {
             out.println(jsonPayload);
             logger.debug("Request -> Server: {}", jsonPayload);
         } else {
-            logger.error("Socket chưa sẵn sàng!");
+            logger.error("Socket chua san sang!");
         }
+    }
+
+    private boolean isSocketReady() {
+        return socket != null && socket.isConnected() && !socket.isClosed() && out != null && in != null;
     }
 
     public void sendRequest(BaseDTOs.Request request) {
@@ -102,7 +125,7 @@ public class ClientSocket {
                     handleServerResponse(responseLine);
                 }
             } catch (IOException e) {
-                logger.error("Mất kết nối đọc: {}", e.getMessage());
+                logger.error("Mat ket noi doc: {}", e.getMessage());
             }
         });
         listenerThread.setDaemon(true);
@@ -134,10 +157,10 @@ public class ClientSocket {
             if (callback != null) {
                 callback.accept(jsonObject);
             } else {
-                logger.debug("Nhận phản hồi nhưng không có Callback (requestId: {}, type: {})", requestId, type);
+                logger.debug("Nhan phan hoi nhung khong co Callback (requestId: {}, type: {})", requestId, type);
             }
         } catch (JsonSyntaxException e) {
-            logger.error("JSON lỗi từ Server: {}", e.getMessage());
+            logger.error("JSON loi tu Server: {}", e.getMessage());
         }
     }
 

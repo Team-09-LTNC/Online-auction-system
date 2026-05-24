@@ -112,7 +112,7 @@ public class AuctionManager {
 
     // Đóng phiên: xác định trạng thái FINISHED/CANCELED, dọn dẹp tài nguyên
     private void dongPhien(int idPhien) {
-        Auction p = dsPhienDangChay.get(idPhien);
+        Auction p = dsPhienDangChay.remove(idPhien);
         if (p != null) {
             synchronized (p) {
                 AuctionDao.AuctionNotificationTargets targets =
@@ -128,7 +128,6 @@ public class AuctionManager {
                 }
 
                 // Xóa phiên khỏi bộ nhớ và dọn dẹp tài nguyên liên quan
-                dsPhienDangChay.remove(idPhien);
                 dsNguoiTheoDoi.remove(idPhien);
                 tasksDongPhien.remove(idPhien);
             }
@@ -326,6 +325,10 @@ public class AuctionManager {
     }
 
     private void giaHanNeuDatGiaCuoiPhien(Auction phien) {
+        if (!phien.isAntiSnipingEnabled()) {
+            return;
+        }
+
         LocalDateTime endTime = phien.getEndTime();
         LocalDateTime now = LocalDateTime.now(SERVER_ZONE);
         if (endTime == null || now.isBefore(endTime.minusSeconds(30)) || !now.isBefore(endTime)) {
@@ -355,7 +358,7 @@ public class AuctionManager {
         SystemNotificationManager.getInstance().guiThongBaoRieng(
                 targets.auctionId,
                 targets.winnerId,
-                taoNoiDungThongBaoThanhToan(itemName),
+                taoNoiDungThongBaoThanhToan(itemName, targets.auctionId),
                 true
         );
         SystemNotificationManager.getInstance().guiThongBaoRieng(
@@ -366,8 +369,9 @@ public class AuctionManager {
         );
     }
 
-    private String taoNoiDungThongBaoThanhToan(String itemName) {
-        return "Chúc mừng bạn đã chiến thắng phiên đấu giá " + itemName + ".\n"
+    private String taoNoiDungThongBaoThanhToan(String itemName, int auctionId) {
+        return "Chúc mừng bạn đã chiến thắng phiên đấu giá " + itemName
+                + " của phiên ID " + auctionId + ".\n"
                 + "Xác nhận thanh toán để chính thức sở hữu sản phẩm.\n\n"
                 + "Nếu hủy thanh toán, bạn sẽ chịu phạt 10% tiền đặt giá.";
     }

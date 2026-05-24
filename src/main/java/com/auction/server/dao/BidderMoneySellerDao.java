@@ -17,12 +17,45 @@ public class BidderMoneySellerDao {
         public final String message;
         public final String auctionStatus;
         public final long amount;
+        public final int bidderId;
+        public final int sellerId;
+        public final String itemName;
+        public final String bidderName;
+        public final String bidderTransactionType;
+        public final String sellerTransactionType;
+        public final String bidderDescription;
+        public final String sellerDescription;
 
         public PaymentResult(boolean success, String message, String auctionStatus, long amount) {
+            this(success, message, auctionStatus, amount, -1, -1, null, null, null, null, null, null);
+        }
+
+        public PaymentResult(
+                boolean success,
+                String message,
+                String auctionStatus,
+                long amount,
+                int bidderId,
+                int sellerId,
+                String itemName,
+                String bidderName,
+                String bidderTransactionType,
+                String sellerTransactionType,
+                String bidderDescription,
+                String sellerDescription
+        ) {
             this.success = success;
             this.message = message;
             this.auctionStatus = auctionStatus;
             this.amount = amount;
+            this.bidderId = bidderId;
+            this.sellerId = sellerId;
+            this.itemName = itemName;
+            this.bidderName = bidderName;
+            this.bidderTransactionType = bidderTransactionType;
+            this.sellerTransactionType = sellerTransactionType;
+            this.bidderDescription = bidderDescription;
+            this.sellerDescription = sellerDescription;
         }
     }
 
@@ -102,8 +135,9 @@ public class BidderMoneySellerDao {
      */
     public PaymentResult quyetToanMuaDut(int auctionId, int bidderId, boolean thanhToan) {
         String lockAuction = "SELECT a.status, a.current_price, a.buy_now_price, "
-                + "a.highest_bidder_id, i.seller_id "
+                + "a.highest_bidder_id, i.seller_id, i.name AS item_name, u.full_name AS bidder_name "
                 + "FROM auctions a JOIN items i ON a.item_id = i.id "
+                + "LEFT JOIN users u ON u.id = a.highest_bidder_id "
                 + "WHERE a.id = ? FOR UPDATE";
 
         try (Connection conn = DatabaseConnection.getInstance().getConnection()) {
@@ -115,6 +149,8 @@ public class BidderMoneySellerDao {
                 long currentPrice;
                 String status;
                 Integer winnerId;
+                String itemName;
+                String bidderName;
 
                 try (PreparedStatement lock = conn.prepareStatement(lockAuction)) {
                     lock.setInt(1, auctionId);
@@ -132,6 +168,8 @@ public class BidderMoneySellerDao {
                         int rawWinnerId = rs.getInt("highest_bidder_id");
                         winnerId = rs.wasNull() ? null : rawWinnerId;
                         sellerId = rs.getInt("seller_id");
+                        itemName = rs.getString("item_name");
+                        bidderName = rs.getString("bidder_name");
                     }
                 }
 
@@ -152,12 +190,16 @@ public class BidderMoneySellerDao {
                 long amount = thanhToan ? currentPrice : (currentPrice + 9) / 10;
                 String nextStatus = thanhToan ? "PAID" : "CANCELED";
                 String settlementLabel = isBuyNow ? "mua đứt" : "phiên";
+                String itemLabel = itemName == null || itemName.isBlank() ? "sản phẩm" : itemName;
+                String auctionLabel = "sản phẩm " + itemLabel + " của phiên ID " + auctionId;
                 String bidderDescription = thanhToan
-                        ? "Thanh toán " + settlementLabel + " #" + auctionId
-                        : "Phạt hủy thanh toán " + settlementLabel + " #" + auctionId;
+                        ? "Thanh toán " + settlementLabel + " " + auctionLabel
+                        : "Phạt hủy thanh toán " + settlementLabel + " " + auctionLabel;
                 String sellerDescription = thanhToan
-                        ? "Nhận tiền " + settlementLabel + " #" + auctionId
-                        : "Nhận phạt hủy thanh toán " + settlementLabel + " #" + auctionId;
+                        ? "Nhận tiền " + settlementLabel + " " + auctionLabel
+                        : "Nhận phạt hủy thanh toán " + settlementLabel + " " + auctionLabel;
+                String bidderTransactionType = "PAYMENT_SENT";
+                String sellerTransactionType = "PAYMENT_RECEIVED";
 
                 if (!truTienBidder(conn, bidderId, amount)) {
                     conn.rollback();
@@ -168,8 +210,8 @@ public class BidderMoneySellerDao {
                     return new PaymentResult(false, "Không tìm thấy seller nhận tiền.", status, amount);
                 }
 
-                ghiLichSuVi(conn, bidderId, "PAYMENT_SENT", amount, bidderDescription);
-                ghiLichSuVi(conn, sellerId, "PAYMENT_RECEIVED", amount, sellerDescription);
+                ghiLichSuVi(conn, bidderId, bidderTransactionType, amount, bidderDescription);
+                ghiLichSuVi(conn, sellerId, sellerTransactionType, amount, sellerDescription);
 
                 try (PreparedStatement updateStatus =
                              conn.prepareStatement("UPDATE auctions SET status = ? WHERE id = ? AND status = 'FINISHED'")) {
@@ -186,7 +228,15 @@ public class BidderMoneySellerDao {
                         true,
                         thanhToan ? "Thanh toán phiên đấu giá thành công." : "Đã hủy thanh toán và trừ phí phạt.",
                         nextStatus,
-                        amount
+                        amount,
+                        bidderId,
+                        sellerId,
+                        itemName,
+                        bidderName,
+                        bidderTransactionType,
+                        sellerTransactionType,
+                        bidderDescription,
+                        sellerDescription
                 );
             } catch (SQLException e) {
                 conn.rollback();

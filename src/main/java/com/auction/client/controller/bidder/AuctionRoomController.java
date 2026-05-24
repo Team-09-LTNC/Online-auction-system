@@ -31,6 +31,8 @@ import javafx.scene.control.Tooltip;
 import java.util.Optional;
 
 public class AuctionRoomController implements Initializable {
+    private static final String SELLER_SELF_BID_MESSAGE =
+            "Không được tự bid sản phẩm của chính mình.";
 
     @FXML private Label lblProductName;
     @FXML private Label lblDescription;
@@ -38,6 +40,7 @@ public class AuctionRoomController implements Initializable {
     @FXML private Label lblStartingPrice;
     @FXML private Label lblBidIncrement;
     @FXML private Label lblBuyNowPrice;
+    @FXML private Label lblAntiSniping;
 
     @FXML private Label lblCurrentPrice;
     @FXML private Label lblCountdown;
@@ -65,6 +68,9 @@ public class AuctionRoomController implements Initializable {
     private boolean isAuctionStarted = false;
     private String currentStatus = "OPEN";
     private Long currentBuyNowPrice;
+    private int currentSellerId = -1;
+    private boolean currentUserOwnsAuction = false;
+    private boolean ownerBidWarningShown = false;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -112,6 +118,12 @@ public class AuctionRoomController implements Initializable {
                 if (response.has("success") && response.get("success").getAsBoolean()) {
                     JsonObject data = response.getAsJsonObject("data");
                     JsonObject itemData = data.getAsJsonObject("item");
+                    currentSellerId = itemData.has("sellerId") && !itemData.get("sellerId").isJsonNull()
+                            ? itemData.get("sellerId").getAsInt()
+                            : -1;
+                    currentUserOwnsAuction =
+                            "SELLER".equalsIgnoreCase(com.auction.client.controller.auth.UserSession.getCurrentRole())
+                                    && currentSellerId == com.auction.client.controller.auth.UserSession.getUserId();
 
                     if (lblProductName != null) lblProductName.setText(itemData.has("name") ? itemData.get("name").getAsString() : "Sản phẩm");
                     if (lblDescription != null) lblDescription.setText(itemData.has("description") ? itemData.get("description").getAsString() : "Không có mô tả.");
@@ -127,6 +139,12 @@ public class AuctionRoomController implements Initializable {
                                 ? data.get("buyNowPrice").getAsLong() : null;
                         lblBuyNowPrice.setText(currentBuyNowPrice != null
                                 ? String.format("%,d đ", currentBuyNowPrice) : "Không hỗ trợ");
+                    }
+                    if (lblAntiSniping != null) {
+                        boolean antiSnipingEnabled = data.has("antiSnipingEnabled")
+                                && !data.get("antiSnipingEnabled").isJsonNull()
+                                && data.get("antiSnipingEnabled").getAsBoolean();
+                        lblAntiSniping.setText(antiSnipingEnabled ? "Có" : "Không");
                     }
 
                     long displayPrice = data.has("currentHighestBid") && !data.get("currentHighestBid").isJsonNull()
@@ -170,6 +188,16 @@ public class AuctionRoomController implements Initializable {
                         if (btnPlaceBid != null) { btnPlaceBid.setDisable(!isAuctionStarted); btnPlaceBid.setText(isAuctionStarted ? "ĐẶT GIÁ" : "CHỜ MỞ BÁN"); }
                         if (txtBidAmount != null) txtBidAmount.setEditable(isAuctionStarted);
                         if (btnEnableAutoBid != null) btnEnableAutoBid.setDisable(!isAuctionStarted);
+                        if (currentUserOwnsAuction) {
+                            if (txtBidAmount != null) txtBidAmount.setEditable(false);
+                            if (txtMaxAutoBid != null) txtMaxAutoBid.setEditable(false);
+                            if (!ownerBidWarningShown) {
+                                ownerBidWarningShown = true;
+                                showAlert("Không thể đặt giá", SELLER_SELF_BID_MESSAGE);
+                            }
+                        } else if (txtMaxAutoBid != null) {
+                            txtMaxAutoBid.setEditable(isAuctionStarted);
+                        }
                         if (data.has("userMaxAutoBid") && !data.get("userMaxAutoBid").isJsonNull()) {
                             long savedMaxBid = data.get("userMaxAutoBid").getAsLong();
                             if (txtMaxAutoBid != null) {
@@ -315,6 +343,10 @@ public class AuctionRoomController implements Initializable {
     @FXML
     private void handlePlaceBid() {
         if (!isAuctionStarted || currentAuctionId == -1) return;
+        if (currentUserOwnsAuction) {
+            showAlert("Không thể đặt giá", SELLER_SELF_BID_MESSAGE);
+            return;
+        }
         String input = txtBidAmount.getText().trim();
         if (input.isEmpty()) return;
 
@@ -386,6 +418,10 @@ public class AuctionRoomController implements Initializable {
     }
 
     private void guiXacNhanMuaDut() {
+        if (currentUserOwnsAuction) {
+            showAlert("Không thể mua đứt", SELLER_SELF_BID_MESSAGE);
+            return;
+        }
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.CONFIRM_BUY_NOW);
         request.addProperty("auctionId", currentAuctionId);
@@ -429,7 +465,12 @@ public class AuctionRoomController implements Initializable {
 
     @FXML
     private void handleEnableAutoBid() {
-        if (!isAuctionStarted || currentAuctionId == -1 || txtMaxAutoBid == null || txtMaxAutoBid.getText().trim().isEmpty()) return;
+        if (!isAuctionStarted || currentAuctionId == -1 || txtMaxAutoBid == null) return;
+        if (currentUserOwnsAuction) {
+            showAlert("Không thể Auto-bid", SELLER_SELF_BID_MESSAGE);
+            return;
+        }
+        if (txtMaxAutoBid.getText().trim().isEmpty()) return;
 
         try {
             long maxPrice = Long.parseLong(txtMaxAutoBid.getText().trim());

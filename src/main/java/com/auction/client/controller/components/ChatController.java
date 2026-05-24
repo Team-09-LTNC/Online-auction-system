@@ -15,12 +15,20 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.HashSet;
 import java.util.Set;
 
 public class ChatController {
     public static ChatController instance;
+    private static final DateTimeFormatter DISPLAY_TIME_FORMAT =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+    private static final DateTimeFormatter DB_TIME_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final Set<Long> renderedNotificationIds = new HashSet<>();
+    private final Set<Integer> renderedPaymentAuctionIds = new HashSet<>();
 
     @FXML private ListView<Node> lvChatMessages;
     @FXML private Label lblNotificationCount;
@@ -43,7 +51,7 @@ public class ChatController {
     public void receiveNotification(String content) {
         Platform.runLater(() -> {
             if (lvChatMessages != null) {
-                themThongBao(taoThongBaoThuong(content));
+                themThongBao(taoThongBaoThuong(content, null));
             }
         });
     }
@@ -62,10 +70,17 @@ public class ChatController {
         boolean paymentRequired = payload.has("paymentRequired")
                 && payload.get("paymentRequired").getAsBoolean();
         String message = payload.has("message") ? payload.get("message").getAsString() : "";
+        String sentAt = payload.has("sentAt") && !payload.get("sentAt").isJsonNull()
+                ? payload.get("sentAt").getAsString()
+                : null;
         if (paymentRequired && payload.has("auctionId")) {
-            themThongBao(taoThongBaoThanhToan(payload.get("auctionId").getAsInt(), message));
+            int auctionId = payload.get("auctionId").getAsInt();
+            if (!renderedPaymentAuctionIds.add(auctionId)) {
+                return;
+            }
+            themThongBao(taoThongBaoThanhToan(auctionId, message, sentAt));
         } else {
-            themThongBao(taoThongBaoThuong(message));
+            themThongBao(taoThongBaoThuong(message, sentAt));
         }
     }
 
@@ -76,9 +91,11 @@ public class ChatController {
         return !renderedNotificationIds.add(payload.get("notificationId").getAsLong());
     }
 
-    private Node taoThongBaoThuong(String content) {
+    private Node taoThongBaoThuong(String content, String sentAt) {
         Label title = new Label("Thông báo hệ thống");
         title.setStyle("-fx-text-fill: #7A1B28; -fx-font-size: 13px; -fx-font-weight: bold;");
+
+        Label time = taoNhanThoiGian(sentAt);
 
         Label label = new Label(content);
         label.setWrapText(true);
@@ -86,13 +103,15 @@ public class ChatController {
         label.setStyle("-fx-text-fill: #3E2723; -fx-font-size: 13px; -fx-line-spacing: 2px;");
 
         VBox card = taoKhungThongBao();
-        card.getChildren().addAll(title, label);
+        card.getChildren().addAll(title, time, label);
         return bocThongBao("!", card);
     }
 
-    private Node taoThongBaoThanhToan(int auctionId, String content) {
+    private Node taoThongBaoThanhToan(int auctionId, String content, String sentAt) {
         Label title = new Label("Thông báo chiến thắng");
         title.setStyle("-fx-text-fill: #7A1B28; -fx-font-size: 14px; -fx-font-weight: bold;");
+
+        Label time = taoNhanThoiGian(sentAt);
 
         Label body = new Label(content);
         body.setWrapText(true);
@@ -117,8 +136,30 @@ public class ChatController {
         actions.setAlignment(Pos.CENTER_RIGHT);
 
         VBox card = taoKhungThongBao();
-        card.getChildren().addAll(title, body, result, actions);
+        card.getChildren().addAll(title, time, body, result, actions);
         return bocThongBao("✓", card);
+    }
+
+    private Label taoNhanThoiGian(String sentAt) {
+        Label time = new Label(dinhDangThoiGian(sentAt));
+        time.setStyle("-fx-text-fill: #8A6F66; -fx-font-size: 11px;");
+        return time;
+    }
+
+    private String dinhDangThoiGian(String sentAt) {
+        if (sentAt == null || sentAt.isBlank()) {
+            return LocalDateTime.now().format(DISPLAY_TIME_FORMAT);
+        }
+        String normalized = sentAt.trim().replace('T', ' ');
+        int dotIndex = normalized.indexOf('.');
+        if (dotIndex > 0) {
+            normalized = normalized.substring(0, dotIndex);
+        }
+        try {
+            return LocalDateTime.parse(normalized, DB_TIME_FORMAT).format(DISPLAY_TIME_FORMAT);
+        } catch (DateTimeParseException ignored) {
+            return sentAt;
+        }
     }
 
     private VBox taoKhungThongBao() {

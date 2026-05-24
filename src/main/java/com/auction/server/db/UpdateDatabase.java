@@ -88,6 +88,8 @@ public class UpdateDatabase {
                     logger.info(">>> Bảng 'auto_bid_settings' đã tồn tại.");
                 }
 
+                suaDuLieuAuctionsBiLechCot(conn);
+
                 // 4. Đảm bảo enum status của bảng auctions không còn trạng thái duyệt.
                 boolean hasCurrentAuctionStatuses = false;
                 try (ResultSet rs = conn.createStatement().executeQuery(
@@ -126,6 +128,17 @@ public class UpdateDatabase {
                     logger.info(">>> Cột 'buy_now_price' đã tồn tại. Bỏ qua.");
                 }
 
+                if (!cotTonTai(metaData, "auctions", "anti_sniping_enabled")) {
+                    logger.info(">>> Đang bổ sung cột 'anti_sniping_enabled' vào bảng 'auctions'...");
+                    stmt.execute("ALTER TABLE auctions ADD COLUMN anti_sniping_enabled BOOLEAN NOT NULL "
+                            + "DEFAULT FALSE AFTER status;");
+                    logger.info(">>> Thêm cột 'anti_sniping_enabled' thành công.");
+                } else {
+                    logger.info(">>> Cột 'anti_sniping_enabled' đã tồn tại. Bỏ qua.");
+                    stmt.execute("ALTER TABLE auctions MODIFY COLUMN anti_sniping_enabled "
+                            + "BOOLEAN NOT NULL DEFAULT FALSE AFTER status;");
+                }
+
                 // 5. Notification riêng dùng lại bảng chat_messages theo từng người nhận
                 if (!cotTonTai(metaData, "chat_messages", "recipient_id")) {
                     logger.info(">>> Đang bổ sung cột 'recipient_id' vào bảng 'chat_messages'...");
@@ -150,6 +163,14 @@ public class UpdateDatabase {
                             + "DEFAULT FALSE AFTER payment_required;");
                 } else {
                     logger.info(">>> Cột 'is_read' của chat_messages đã tồn tại. Bỏ qua.");
+                }
+
+                if (!cotChoPhepNull(metaData, "chat_messages", "auction_id")) {
+                    logger.info(">>> Đang cho phép notification ví không cần auction_id...");
+                    stmt.execute("ALTER TABLE chat_messages MODIFY COLUMN auction_id INT NULL;");
+                    logger.info(">>> Cột 'auction_id' của chat_messages đã cho phép NULL.");
+                } else {
+                    logger.info(">>> Cột 'auction_id' của chat_messages đã cho phép NULL. Bỏ qua.");
                 }
 
                 if (!chiMucTonTai(metaData, "chat_messages", "idx_chat_recipient_time")) {
@@ -179,6 +200,13 @@ public class UpdateDatabase {
         }
     }
 
+    private static boolean cotChoPhepNull(DatabaseMetaData metaData, String tableName, String columnName)
+            throws SQLException {
+        try (ResultSet rs = metaData.getColumns(null, null, tableName, columnName)) {
+            return rs.next() && DatabaseMetaData.columnNullable == rs.getInt("NULLABLE");
+        }
+    }
+
     private static boolean chiMucTonTai(DatabaseMetaData metaData, String tableName, String indexName)
             throws SQLException {
         try (ResultSet rs = metaData.getIndexInfo(null, null, tableName, false, false)) {
@@ -189,6 +217,48 @@ public class UpdateDatabase {
             }
         }
         return false;
+    }
+
+    private static void suaDuLieuAuctionsBiLechCot(Connection conn) throws SQLException {
+        logger.info(">>> Đang kiểm tra dữ liệu lệch cột của bảng auctions...");
+        try (Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(
+                    "UPDATE auctions a "
+                            + "JOIN ("
+                            + "    SELECT id, end_time AS fixed_start_time, "
+                            + "           STR_TO_DATE(status, '%Y-%m-%d %H:%i:%s') AS fixed_end_time "
+                            + "    FROM auctions "
+                            + "    WHERE status REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}' "
+                            + "    AND end_time IS NOT NULL"
+                            + ") fixed ON fixed.id = a.id "
+                            + "SET a.start_time = fixed.fixed_start_time, "
+                            + "    a.end_time = fixed.fixed_end_time, "
+                            + "    a.status = CASE "
+                            + "        WHEN fixed.fixed_start_time > NOW() THEN 'OPEN' "
+                            + "        WHEN fixed.fixed_end_time <= NOW() THEN 'FINISHED' "
+                            + "        ELSE 'RUNNING' "
+                            + "    END");
+
+            stmt.executeUpdate(
+                    "UPDATE auctions "
+                            + "SET status = CASE "
+                            + "    WHEN start_time > NOW() THEN 'OPEN' "
+                            + "    WHEN end_time <= NOW() THEN 'FINISHED' "
+                            + "    ELSE 'RUNNING' "
+                            + "END "
+                            + "WHERE status IS NULL "
+                            + "OR status NOT IN ('OPEN', 'RUNNING', 'FINISHED', 'PAID', 'CANCELED')");
+
+            stmt.executeUpdate(
+                    "UPDATE auctions a "
+                            + "LEFT JOIN users u ON u.id = a.highest_bidder_id "
+                            + "SET a.highest_bidder_id = NULL "
+                            + "WHERE a.highest_bidder_id IS NOT NULL "
+                            + "AND (a.highest_bidder_id <= 0 OR u.id IS NULL)");
+
+            stmt.execute("ALTER TABLE auctions MODIFY COLUMN highest_bidder_id INT NULL");
+        }
+        logger.info(">>> Kiểm tra/sửa dữ liệu lệch cột bảng auctions hoàn tất.");
     }
 
     // --- SEED LEICA Q3 ---
