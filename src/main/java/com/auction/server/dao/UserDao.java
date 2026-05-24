@@ -162,4 +162,17 @@ public class UserDao {
             return false;
         }
     }
+
+    public boolean capNhatTrangThaiTheoId(int userId, String status) {
+        String sql = "UPDATE users SET status = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.error("Loi cap nhat trang thai user theo id: {}", e.getMessage());
+            return false;
+        }
+    }
 }

@@ -158,6 +158,13 @@ public class MyAuctionsController implements Initializable, RefreshableCenterCon
                                 imageUrl,
                                 followedIds.contains(auctionId)
                         );
+                        JsonObject roomSnapshot = obj.deepCopy();
+                        roomSnapshot.addProperty("displayStatus", statusForUi);
+                        roomSnapshot.addProperty("countdownSeconds", state.countdownSeconds);
+                        if (selectedServerNow != null) {
+                            roomSnapshot.addProperty("serverNow", selectedServerNow);
+                        }
+                        controller.setAuctionSnapshot(roomSnapshot);
                         cardsToRender.add(card);
                         if (cardsToRender.size() >= CARD_BATCH_SIZE) {
                             publishCardBatch(currentRenderVersion, cardsToRender, !cardsPublished);

@@ -27,7 +27,13 @@ final class AuctionControllerUtil {
                     auction.getItem().getImageUrl(),
                     auction.getStartTime() != null ? auction.getStartTime().toString() : null,
                     auction.getEndTime() != null ? auction.getEndTime().toString() : null,
-                    auction.getItem().getCategory()
+                    auction.getItem().getCategory(),
+                    auction.getItem().getDescription(),
+                    auction.getItem().getStartingPrice(),
+                    auction.getItem().getBidIncrement(),
+                    auction.getBuyNowPrice(),
+                    auction.isAntiSnipingEnabled(),
+                    auction.getItem().getSellerId()
             ));
         }
         return summaries;

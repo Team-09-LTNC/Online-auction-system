@@ -109,26 +109,36 @@ public class AuctionListScreenController
     }
 
     private void loadAuctionsFromServer() {
+        JsonObject cachedResponse = com.auction.client.util.AuctionWarmupCache.getAllAuctionsResponse();
+        if (cachedResponse != null) {
+            handleAuctionListResponse(cachedResponse);
+        }
+
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.GET_ALL_AUCTIONS);
         request.addProperty("category", "ALL");
         request.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
         ClientSocket.getInstance().sendJsonRequest(request, "AUCTION_LIST_RESPONSE", response -> {
-            if (response.has("auctions") && response.get("auctions").isJsonArray()) {
-                allLoadedAuctions = response.getAsJsonArray("auctions");
-                loadedServerNow = getString(response, "serverNow", null);
-
-                loadedFollowedIds.clear();
-                if (response.has("followedIds")) {
-                    for (JsonElement el : response.getAsJsonArray("followedIds")) {
-                        loadedFollowedIds.add(el.getAsInt());
-                    }
-                }
-
-                applyFiltersAndRender();
-            }
+            com.auction.client.util.AuctionWarmupCache.storeAllAuctions(response);
+            handleAuctionListResponse(response);
         });
+    }
+
+    private void handleAuctionListResponse(JsonObject response) {
+        if (response.has("auctions") && response.get("auctions").isJsonArray()) {
+            allLoadedAuctions = response.getAsJsonArray("auctions");
+            loadedServerNow = getString(response, "serverNow", null);
+
+            loadedFollowedIds.clear();
+            if (response.has("followedIds")) {
+                for (JsonElement el : response.getAsJsonArray("followedIds")) {
+                    loadedFollowedIds.add(el.getAsInt());
+                }
+            }
+
+            applyFiltersAndRender();
+        }
     }
 
     /**
@@ -188,6 +198,13 @@ public class AuctionListScreenController
 
                         controller.setProductData(auctionId, name, price, state.countdownSeconds, statusForUi,
                                 imageUrl, isFollowed);
+                        JsonObject roomSnapshot = obj.deepCopy();
+                        roomSnapshot.addProperty("displayStatus", statusForUi);
+                        roomSnapshot.addProperty("countdownSeconds", state.countdownSeconds);
+                        if (selectedServerNow != null) {
+                            roomSnapshot.addProperty("serverNow", selectedServerNow);
+                        }
+                        controller.setAuctionSnapshot(roomSnapshot);
 
                         cardsToRender.add(card);
                         if (cardsToRender.size() >= CARD_BATCH_SIZE) {

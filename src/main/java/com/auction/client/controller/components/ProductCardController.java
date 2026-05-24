@@ -39,6 +39,7 @@ public class ProductCardController {
     private boolean isFollowed = false;
     private boolean followRequestPending = false;
     private String currentStatus = "";
+    private JsonObject auctionSnapshot;
     private Runnable editAction;
     private Runnable deleteAction;
 
@@ -58,6 +59,7 @@ public class ProductCardController {
         this.isFollowed = isFollowed;
         this.currentStatus = status;
         this.deadlineMillis = System.currentTimeMillis() + Math.max(0, countdownSeconds) * 1000L;
+        this.auctionSnapshot = createBasicSnapshot(auctionId, name, price, countdownSeconds, status, imageUrl);
 
         lblProductName.setText(name);
         lblCurrentPrice.setText(String.format("%,.0f đ", price));
@@ -98,6 +100,10 @@ public class ProductCardController {
             sellerActions.setVisible(editable);
             sellerActions.setManaged(editable);
         }
+    }
+
+    public void setAuctionSnapshot(JsonObject auctionSnapshot) {
+        this.auctionSnapshot = auctionSnapshot == null ? null : auctionSnapshot.deepCopy();
     }
 
     private void loadImage() {
@@ -233,7 +239,7 @@ public class ProductCardController {
         Object controller = com.auction.client.controller.MainController.instance.getCurrentCenterController();
 
         if (controller instanceof com.auction.client.controller.bidder.AuctionRoomController room) {
-            room.initData(auctionId, imageUrl);
+            room.initData(auctionId, imageUrl, auctionSnapshot);
         }
     }
 
@@ -289,6 +295,25 @@ public class ProductCardController {
         int m = (totalSeconds % 3600) / 60;
         int s = totalSeconds % 60;
         return String.format("%02d:%02d:%02d", h, m, s);
+    }
+
+    private JsonObject createBasicSnapshot(
+            int auctionId,
+            String name,
+            double price,
+            long countdownSeconds,
+            String status,
+            String imageUrl
+    ) {
+        JsonObject snapshot = new JsonObject();
+        snapshot.addProperty("auctionId", auctionId);
+        snapshot.addProperty("itemName", name);
+        snapshot.addProperty("currentPrice", (long) price);
+        snapshot.addProperty("currentHighestBid", (long) price);
+        snapshot.addProperty("countdownSeconds", countdownSeconds);
+        snapshot.addProperty("status", status);
+        snapshot.addProperty("imageUrl", imageUrl);
+        return snapshot;
     }
 
     private void showAlert(String title, String content) {

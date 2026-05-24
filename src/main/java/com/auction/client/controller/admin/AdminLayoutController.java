@@ -1,5 +1,8 @@
 package com.auction.client.controller.admin;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -14,160 +17,108 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-
-// import com.auction.client.util.NavigationUtils;
-
-// Đây là controller cho AdminDashboard.fxml, quản lý giao diện chính của admin sau khi đăng nhập
-// Các chức năng như quản lý phiên đấu giá, sản phẩm, người dùng sẽ được nạp vào contentPane khi nhấn vào các nút ở sidebar
-// Tạm thời để trống các hàm xử lý điều hướng và nạp view.
+/**
+ * Controller chinh cho man hinh admin layout.
+ */
 public class AdminLayoutController implements Initializable {
+  private static final Logger logger = LoggerFactory.getLogger(AdminLayoutController.class);
 
-    // --- Sidebar Buttons ---
-    @FXML private Button btnDashboard;
-    @FXML private Button btnAuctions;
-    @FXML private Button btnProducts;
-    @FXML private Button btnBidders;
-    @FXML private Button btnSellers;
-    @FXML private Button btnTransactions;
-    @FXML private Button btnInvoices;
-    @FXML private Button logOut; // Nút đăng xuất
+  @FXML private Button btnDashboard;
+  @FXML private Button btnAuctions;
+  @FXML private Button btnProducts;
+  @FXML private Button btnBidders;
+  @FXML private Button btnSellers;
+  @FXML private Button btnTransactions;
+  @FXML private Button btnInvoices;
+  @FXML private Button logOut;
 
+  @FXML private Label lblPageTitle;
+  @FXML private Label lblBreadcrumb;
+  @FXML private Label lblAdminName;
+  @FXML private StackPane contentPane;
 
-    // --- Header Elements ---
-    @FXML private Label lblPageTitle;
-    @FXML private Label lblBreadcrumb;
-    @FXML private Label lblAdminName;
+  @Override
+  public void initialize(URL url, ResourceBundle rb) {
+    loadView("/fxml/admin/DashboardView.fxml", "Dashboard");
+    lblAdminName.setText("Super Admin");
+  }
 
-    // --- Layout Containers ---
-    @FXML private StackPane contentPane;
+  @FXML
+  private void navigate(ActionEvent event) {
+    Button sourceBtn = (Button) event.getSource();
+    logger.info("Admin nhan nut: {}", sourceBtn.getText());
+    String btnId = sourceBtn.getId();
 
-    private static final Logger logger = LoggerFactory.getLogger(AdminLayoutController.class);
+    resetNavStyles();
+    sourceBtn.getStyleClass().add("admin-nav-item-active");
 
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        // Mặc định load trang Dashboard khi vừa vào
+    switch (btnId) {
+      case "btnDashboard":
         loadView("/fxml/admin/DashboardView.fxml", "Dashboard");
-        lblAdminName.setText("Super Admin"); // Có thể lấy từ UserSession
+        break;
+      case "btnAuctions":
+        loadView("/fxml/admin/AuctionsView.fxml", "Phiên đấu giá");
+        break;
+      case "btnProducts":
+        loadView("/fxml/admin/ProductsCensorView.fxml", "Duyệt sản phẩm");
+        break;
+      case "btnBidders":
+        loadView("/fxml/admin/BiddersView.fxml", "Quản lý Bidder");
+        break;
+      case "btnSellers":
+        loadView("/fxml/admin/SellersView.fxml", "Quản lý Seller");
+        break;
+      case "btnTransactions":
+        loadView("/fxml/admin/TransactionsView.fxml", "Giao dịch");
+        break;
+      case "btnInvoices":
+        loadView("/fxml/admin/InvoicesView.fxml", "Hóa đơn");
+        break;
+      default:
+        logger.warn("Khong tim thay nut dieu huong cho id={}", btnId);
     }
+  }
 
-    /**
-     * Xử lý điều hướng khi nhấn vào các nút ở Sidebar
-     */
-    @FXML
-    private void navigate(ActionEvent event) {
-        Button sourceBtn = (Button) event.getSource();
-        logger.info("Admin nhấn nút: {}", sourceBtn.getText());
-        String btnId = sourceBtn.getId();
-
-        // Reset tất cả style các nút về bình thường
-        resetNavStyles();
-        // Thêm class active cho nút vừa nhấn
-        sourceBtn.getStyleClass().add("admin-nav-item-active");
-
-        switch (btnId) {
-            case "btnDashboard":
-                loadView("/fxml/admin/DashboardView.fxml", "Dashboard");
-                break;
-            case "btnAuctions":
-                loadView("/fxml/admin/AuctionsView.fxml", "Phiên đấu giá");
-                break;
-            case "btnProducts":
-                loadView("/fxml/admin/ProductsCensorView.fxml", "Duyệt sản phẩm");
-                break;
-            case "btnBidders":
-                loadView("/fxml/admin/BiddersView.fxml", "Quản lý Bidder");
-                break;
-            case "btnSellers":
-                loadView("/fxml/admin/SellersView.fxml", "Quản lý Seller");
-                break;
-            case "btnTransactions":
-                loadView("/fxml/admin/TransactionsView.fxml", "Giao dịch");
-                break;
-            case "btnInvoices":
-                loadView("/fxml/admin/InvoicesView.fxml", "Hóa đơn");
-                break;
-        }
+  private void loadView(String fxmlPath, String title) {
+    try {
+      Parent view = FXMLLoader.load(getClass().getResource(fxmlPath));
+      contentPane.getChildren().setAll(view);
+      lblPageTitle.setText(title);
+      lblBreadcrumb.setText(title);
+    } catch (IOException e) {
+      logger.error("Loi load view {}.", fxmlPath, e);
     }
+  }
 
-    /**
-     * Nạp file FXML con vào vùng contentPane
-     */
-    private void loadView(String fxmlPath, String title) {
-        try {
-            Parent view = FXMLLoader.load(getClass().getResource(fxmlPath));
-            contentPane.getChildren().setAll(view);
+  private void resetNavStyles() {
+    btnDashboard.getStyleClass().remove("admin-nav-item-active");
+    btnAuctions.getStyleClass().remove("admin-nav-item-active");
+    btnProducts.getStyleClass().remove("admin-nav-item-active");
+    btnBidders.getStyleClass().remove("admin-nav-item-active");
+    btnSellers.getStyleClass().remove("admin-nav-item-active");
+    btnTransactions.getStyleClass().remove("admin-nav-item-active");
+    btnInvoices.getStyleClass().remove("admin-nav-item-active");
+  }
 
-            // Cập nhật tiêu đề trang và Breadcrumb
-            lblPageTitle.setText(title);
-            lblBreadcrumb.setText(title);
+  @FXML
+  private void handleLogout() {
+    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+    alert.setTitle("Xác nhận đăng xuất");
+    alert.setHeaderText(null);
+    alert.setContentText("Bạn có chắc chắn muốn đăng xuất không?");
 
-        } catch (IOException e) {
-            System.err.println("Không thể load view: " + fxmlPath);
-            logger.error("Lỗi khi load view {}: {}", fxmlPath, e.getMessage());
-            e.printStackTrace();
-        }
+    if (alert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+      return;
     }
-
-    /**
-     * Xóa trạng thái Active của các nút điều hướng
-     */
-    private void resetNavStyles() {
-        btnDashboard.getStyleClass().remove("admin-nav-item-active");
-        btnAuctions.getStyleClass().remove("admin-nav-item-active");
-        btnProducts.getStyleClass().remove("admin-nav-item-active");
-        btnBidders.getStyleClass().remove("admin-nav-item-active");
-        btnSellers.getStyleClass().remove("admin-nav-item-active");
-        btnTransactions.getStyleClass().remove("admin-nav-item-active");
-        btnInvoices.getStyleClass().remove("admin-nav-item-active");
+    logger.info("Admin da dang xuat.");
+    try {
+      Stage stage = (Stage) logOut.getScene().getWindow();
+      FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/auth/Login.fxml"));
+      Parent root = loader.load();
+      stage.getScene().setRoot(root);
+      stage.setTitle("Đăng nhập hệ thống");
+    } catch (IOException e) {
+      logger.error("Loi khi chuyen ve man hinh dang nhap.", e);
     }
-
-    /**
-     * Thu gọn/Mở rộng Sidebar (Toggle)
-     */
-    // @FXML
-    // private void toggleSidebar() {
-    //     // Logic thu gọn sidebar: Bạn có thể chỉnh prefWidth hoặc ẩn/hiện
-    //     Node leftNode = ((BorderPane) contentPane.getScene().getRoot()).getLeft();
-    //     if (leftNode.isVisible()) {
-    //         leftNode.setVisible(false);
-    //         leftNode.setManaged(false);
-    //     } else {
-    //         leftNode.setVisible(true);
-    //         leftNode.setManaged(true);
-    //     }
-    // }
-
-    /**
-     * Xử lý tìm kiếm toàn cầu
-     */
-
-    /**
-     * Xử lý Đăng xuất
-     */
-    @FXML
-    private void handleLogout() {
-        // Hiển thị Alert xác nhận
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Xác nhận đăng xuất");
-        alert.setHeaderText(null);
-        alert.setContentText("Bạn có chắc chắn muốn đăng xuất không?");
-
-        if (alert.showAndWait().get() == ButtonType.OK) {
-            // Chuyển về màn hình Login
-            logger.info("Admin đã đăng xuất khỏi hệ thống.");
-            try {
-                Stage stage = (Stage) logOut.getScene().getWindow();
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/auth/Login.fxml"));
-                Parent root = loader.load();
-                stage.getScene().setRoot(root);
-                stage.setTitle("Đăng nhập hệ thống");
-            } catch (IOException e) {
-                e.printStackTrace();
-                logger.error("Lỗi khi chuyển về màn hình đăng nhập: {}", e.getMessage());
-            }
-        }
-    }
+  }
 }

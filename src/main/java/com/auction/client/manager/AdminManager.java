@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 public class AdminManager {
 
   private static final Logger logger = LoggerFactory.getLogger(AdminManager.class);
-
   private static AdminManager instance;
 
   private AdminManager() {
@@ -32,42 +31,35 @@ public class AdminManager {
   }
 
   /**
-  * Lấy danh sách Bidder từ server.
-  * Controller chỉ cần truyền callback nhận {@code List<UserSummaryDTO>}.
-  */
-  public void layDanhSachBidder(
-      Consumer<List<UserSummaryDTO>> onSuccess, Consumer<String> onError) {
+   * Lay danh sach Bidder tu server.
+   */
+  public void layDanhSachBidder(Consumer<List<UserSummaryDTO>> onSuccess, Consumer<String> onError) {
     JsonObject request = buildRequest(ActionType.ADMIN_GET_ALL_BIDDERS);
-
-    ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_BIDDERS_RESPONSE", response -> {
-      xuLyDanhSachUserResponse(response, "GET_ALL_BIDDERS_RESPONSE", onSuccess, onError);
-    });
+    ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_BIDDERS_RESPONSE",
+        response -> xuLyDanhSachUserResponse(response, onSuccess, onError));
   }
 
   /**
-  * Lấy danh sách Seller từ server.
-  */
+   * Lay danh sach Seller tu server.
+   */
   public void layDanhSachSeller(Consumer<List<UserSummaryDTO>> onSuccess, Consumer<String> onError) {
     JsonObject request = buildRequest(ActionType.ADMIN_GET_ALL_SELLERS);
-
-    ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_SELLERS_RESPONSE", response -> {
-      xuLyDanhSachUserResponse(response, "GET_ALL_SELLERS_RESPONSE", onSuccess, onError);
-    });
+    ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_SELLERS_RESPONSE",
+        response -> xuLyDanhSachUserResponse(response, onSuccess, onError));
   }
 
   public void layDanhSachAuction(Consumer<List<AuctionSummaryDTO>> onSuccess, Consumer<String> onError) {
     JsonObject request = buildRequest(ActionType.ADMIN_GET_ALL_AUCTIONS);
-
-    ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_AUCTIONS_RESPONSE", response -> {
-      xuLyDanhSachAuctionResponse(response, "GET_ALL_AUCTIONS_RESPONSE", onSuccess, onError);
-    });
+    ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_AUCTIONS_RESPONSE",
+        response -> xuLyDanhSachAuctionResponse(response, onSuccess, onError));
   }
 
-  /**
-  * Khoá hoặc mở khoá tài khoản.
-  */
-  public void toggleKhoaTaiKhoan(String username, String newStatus,
-      Consumer<JsonObject> onSuccess, Consumer<String> onError) {
+  public void toggleKhoaTaiKhoan(
+      String username,
+      String newStatus,
+      Consumer<JsonObject> onSuccess,
+      Consumer<String> onError
+  ) {
     JsonObject request = buildRequest(ActionType.ADMIN_TOGGLE_LOCK_USER);
     request.addProperty("username", username);
     request.addProperty("newStatus", newStatus);
@@ -77,42 +69,36 @@ public class AdminManager {
       if (ok) {
         onSuccess.accept(response);
       } else {
-        String msg = response.has("message") ? response.get("message").getAsString() : "Lỗi không xác định";
+        String msg = response.has("message")
+            ? response.get("message").getAsString()
+            : "Loi khong xac dinh";
         onError.accept(msg);
       }
     });
   }
 
-  /**
-  * Lấy tổng số người đấu giá, người bán, phiên đấu giá để hiển thị trên
-  * Dashboard.
-  * Controller chỉ cần gọi API này và nhận về số lượng, không cần quan tâm cách
-  * thức lấy dữ liệu.
-  */
-  // AdminManager.java
   public void layTongSoBidder(Consumer<Integer> onSuccess, Consumer<String> onError) {
-    layDanhSachBidder(
-        list -> onSuccess.accept(list.size()),
-        onError);
+    layDanhSachBidder(list -> onSuccess.accept(list.size()), onError);
   }
 
   public void layTongSoSeller(Consumer<Integer> onSuccess, Consumer<String> onError) {
-    layDanhSachSeller(
-        list -> onSuccess.accept(list.size()),
-        onError);
+    layDanhSachSeller(list -> onSuccess.accept(list.size()), onError);
   }
 
   public void layTongSoAuction(Consumer<Integer> onSuccess, Consumer<String> onError) {
-    layDanhSachAuction(
-        list -> onSuccess.accept(list.size()),
-        onError);
+    layDanhSachAuction(list -> onSuccess.accept(list.size()), onError);
   }
 
-  private void xuLyDanhSachAuctionResponse(JsonObject response, String expectedType,
-      Consumer<List<AuctionSummaryDTO>> onSuccess, Consumer<String> onError) {
+  private void xuLyDanhSachAuctionResponse(
+      JsonObject response,
+      Consumer<List<AuctionSummaryDTO>> onSuccess,
+      Consumer<String> onError
+  ) {
     boolean ok = response.has("success") && response.get("success").getAsBoolean();
     if (!ok) {
-      String msg = response.has("message") ? response.get("message").getAsString() : "Lỗi không xác định";
+      String msg = response.has("message")
+          ? response.get("message").getAsString()
+          : "Loi khong xac dinh";
       onError.accept(msg);
       return;
     }
@@ -133,12 +119,17 @@ public class AdminManager {
     onSuccess.accept(list);
   }
 
-  public void layDanhSachChoDuyet(Consumer<List<PendingAuctionDTO>> onSuccess, Consumer<String> onError) {
+  public void layDanhSachChoDuyet(
+      Consumer<List<PendingAuctionDTO>> onSuccess,
+      Consumer<String> onError
+  ) {
     JsonObject request = buildRequest(ActionType.ADMIN_GET_PENDING_AUCTIONS);
     ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_GET_PENDING_AUCTIONS_RESPONSE", response -> {
       boolean ok = response.has("success") && response.get("success").getAsBoolean();
       if (!ok) {
-        String msg = response.has("message") ? response.get("message").getAsString() : "Lỗi không xác định";
+        String msg = response.has("message")
+            ? response.get("message").getAsString()
+            : "Loi khong xac dinh";
         onError.accept(msg);
         return;
       }
@@ -160,17 +151,11 @@ public class AdminManager {
                 safeGetString(obj, "imageUrl", null)));
           });
           onSuccess.accept(list);
-          logger.info(
-              "Đã lấy danh sách phiên đấu giá chờ duyệt từ server trong AdminManager layDanhSachChoDuyet");
+          logger.info("Da lay danh sach phien dau gia cho duyet tu server.");
         }
-      } catch (NullPointerException e) {
-        onError.accept("Dữ liệu phản hồi không hợp lệ, layDanhSachChoDuyet thất bại");
-        logger.error("Dữ liệu phản hồi không hợp lệ, layDanhSachChoDuyet thất bại: ", e);
-        return;
       } catch (Exception e) {
-        onError.accept("Lỗi không xác định, layDanhSachChoDuyet thất bại");
-        logger.error("Lỗi không xác định khi xử lý phản hồi, layDanhSachChoDuyet thất bại: ", e);
-        return;
+        onError.accept("Du lieu phan hoi khong hop le.");
+        logger.error("Loi xu ly response layDanhSachChoDuyet.", e);
       }
     });
   }
@@ -203,29 +188,26 @@ public class AdminManager {
     });
   }
 
-  /*
-  * Lấy danh sách hoá đơn
-  */
-  public void layDanhSachHoaDon(Consumer<List<AdminDTOs.InvoiceDTO>> onSuccess,
+  public void layDanhSachHoaDon(
+      Consumer<List<AdminDTOs.InvoiceDTO>> onSuccess,
       Consumer<String> onError,
-      Consumer<Long> onTongDoanhThu) {
+      Consumer<Long> onTongDoanhThu
+  ) {
     JsonObject request = buildRequest(ActionType.ADMIN_GET_INVOICES);
     ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_GET_INVOICES_RESPONSE", response -> {
       boolean ok = response.has("success") && response.get("success").getAsBoolean();
       if (!ok) {
         onError.accept(response.has("message")
             ? response.get("message").getAsString()
-            : "Lỗi không xác định");
+            : "Loi khong xac dinh");
         return;
       }
 
-      // Tổng doanh thu
       long tongDoanhThu = response.has("tongDoanhThu")
           ? response.get("tongDoanhThu").getAsLong()
-          : 0;
+          : 0L;
       onTongDoanhThu.accept(tongDoanhThu);
 
-      // Danh sách hoá đơn
       List<AdminDTOs.InvoiceDTO> list = new ArrayList<>();
       JsonArray data = response.getAsJsonArray("data");
       if (data != null) {
@@ -244,43 +226,6 @@ public class AdminManager {
     });
   }
 
-  // Model
-  // public static class AuctionInfo {
-  // private final int id;
-  // private final String itemName, startTime, endTime, status;
-
-  // public AuctionInfo(int id, String itemName, String startTime, String endTime,
-  // String status) {
-  // this.id = id;
-  // this.itemName = itemName;
-  // this.startTime = startTime;
-  // this.endTime = endTime;
-  // this.status = status;
-  // }
-
-  // public int getId() {
-  // return id;
-  // }
-
-  // public String getItemName() {
-  // return itemName;
-  // }
-
-  // public String getStartTime() {
-  // return startTime;
-  // }
-
-  // public String getEndTime() {
-  // return endTime;
-  // }
-
-  // public String getStatus() {
-  // return status;
-  // }
-  // }
-
-  // ── Helpers ───────────────────────────────────────────────
-
   private JsonObject buildRequest(String type) {
     JsonObject request = new JsonObject();
     request.addProperty("type", type);
@@ -288,11 +233,16 @@ public class AdminManager {
     return request;
   }
 
-  private void xuLyDanhSachUserResponse(JsonObject response, String expectedType,
-      Consumer<List<UserSummaryDTO>> onSuccess, Consumer<String> onError) {
+  private void xuLyDanhSachUserResponse(
+      JsonObject response,
+      Consumer<List<UserSummaryDTO>> onSuccess,
+      Consumer<String> onError
+  ) {
     boolean ok = response.has("success") && response.get("success").getAsBoolean();
     if (!ok) {
-      String msg = response.has("message") ? response.get("message").getAsString() : "Lỗi không xác định";
+      String msg = response.has("message")
+          ? response.get("message").getAsString()
+          : "Loi khong xac dinh";
       onError.accept(msg);
       return;
     }
