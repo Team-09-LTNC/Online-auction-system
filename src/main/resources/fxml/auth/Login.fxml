@@ -40,17 +40,6 @@
                             </padding>
                             <children>
 
-                                <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308">
-                                    <Button fx:id="btnBack" text="← Quay về"
-                                            onAction="#onBackToHomeClick"
-                                            style="-fx-background-color: transparent;
-                                                   -fx-text-fill: #8b6354;
-                                                   -fx-font-size: 13px;
-                                                   -fx-cursor: hand;
-                                                   -fx-padding: 5 0 5 0;
-                                                   -fx-underline: true;" />
-                                </HBox>
-
                                 <Label styleClass="icon-label, title-icon" text="🛡" />
                                 <Label styleClass="title-text" text="ĐĂNG NHẬP" />
                                 <Label styleClass="sub-title-text" text="Đăng nhập để tham gia đấu giá"

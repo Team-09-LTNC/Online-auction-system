@@ -1,6 +1,7 @@
 package com.auction.server;
 
 import com.auction.server.networkserver.ServerManager;
+import com.auction.server.db.UpdateDatabase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +42,8 @@ public class ServerApplication {
     }
 
     public static void main(String[] args) {
+        UpdateDatabase.main(new String[0]);
+
         logger.info("==================================================");
         logger.info("   HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   ");
         logger.info("   Đang lắng nghe tại cổng: {}                  ", PORT);

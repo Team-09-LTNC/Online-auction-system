@@ -9,6 +9,7 @@ import com.auction.common.model.user.Bidder;
 import com.auction.common.model.user.Seller;
 import com.auction.common.model.user.User;
 import com.auction.server.manager.UserManager;
+import com.auction.server.manager.SystemNotificationManager;
 import com.auction.server.networkserver.ClientHandler;
 import com.auction.server.dao.UserDao;
 import com.auction.server.dao.WalletTransactionDao;
@@ -17,6 +18,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 public class AuthController implements RequestHandler {
@@ -197,7 +199,9 @@ public class AuthController implements RequestHandler {
             }
 
             if (userDao.capNhatSoDu(currentUser.getId(), newBalance)) {
-                walletTransactionDao.logTransaction(currentUser.getId(), "DEPOSIT", soTienNap, "Nạp tiền vào ví");
+                String description = "Nạp tiền vào ví";
+                walletTransactionDao.logTransaction(currentUser.getId(), "DEPOSIT", soTienNap, description);
+                guiThongBaoBienDongSoDu(currentUser.getId(), "DEPOSIT", soTienNap, description);
 
                 JsonObject phanHoi = new JsonObject();
                 phanHoi.addProperty("type", "TOP_UP_RESPONSE");
@@ -255,7 +259,9 @@ public class AuthController implements RequestHandler {
             }
 
             if (userDao.capNhatSoDu(currentUser.getId(), newBalance)) {
-                walletTransactionDao.logTransaction(currentUser.getId(), "WITHDRAW", soTienRut, "Rút tiền từ ví");
+                String description = "Rút tiền từ ví";
+                walletTransactionDao.logTransaction(currentUser.getId(), "WITHDRAW", soTienRut, description);
+                guiThongBaoBienDongSoDu(currentUser.getId(), "WITHDRAW", soTienRut, description);
 
                 JsonObject phanHoi = new JsonObject();
                 phanHoi.addProperty("type", "WITHDRAW_RESPONSE");
@@ -304,6 +310,19 @@ public class AuthController implements RequestHandler {
         }
 
         return gson.toJson(phanHoi);
+    }
+
+    private void guiThongBaoBienDongSoDu(int userId, String loaiGiaoDich, long soTien, String moTa) {
+        String symbol = ("WITHDRAW".equals(loaiGiaoDich) || "PAYMENT_SENT".equals(loaiGiaoDich))
+                ? "🔻"
+                : "🔹";
+        String noiDung = String.format(Locale.US, "%s %s: %,d đ - %s", symbol, loaiGiaoDich, soTien, moTa);
+        SystemNotificationManager.getInstance().guiThongBaoRieng(
+                -1,
+                userId,
+                "Biến động số dư\n" + noiDung,
+                false
+        );
     }
 
     /*

@@ -48,8 +48,11 @@ public class ItemDao {
         item.setCategory(loai);
         item.setImageUrl(rs.getString("image_url"));
 
-        item.setStartTime(rs.getString("start_time"));
-        item.setEndTime(rs.getString("end_time"));
+        try {
+            item.setStartTime(rs.getString("start_time"));
+            item.setEndTime(rs.getString("end_time"));
+        } catch (SQLException ignored) {
+        }
 
         return item;
     }
@@ -135,7 +138,11 @@ public class ItemDao {
     }
 
     public Item laySanPhamTheoId(int itemId) {
-        String sql = "SELECT * FROM items WHERE id = ?";
+        String sql = "SELECT i.*, a.start_time, a.end_time "
+                + "FROM items i "
+                + "LEFT JOIN auctions a ON i.id = a.item_id "
+                + "WHERE i.id = ? "
+                + "ORDER BY a.id DESC LIMIT 1";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 

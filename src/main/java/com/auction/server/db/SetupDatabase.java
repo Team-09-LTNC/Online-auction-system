@@ -14,7 +14,7 @@ public class SetupDatabase {
 
         // --- 1. Lệnh TẠO BẢNG ---
 
-        // Bảng 1: Users (Thêm cột balance)
+        // Bảng 1: Users 
         String createUsersTable = "CREATE TABLE users (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY, " +
                 "username VARCHAR(50) NOT NULL UNIQUE, " +
@@ -24,7 +24,7 @@ public class SetupDatabase {
                 "balance BIGINT DEFAULT 0" +
                 ") ENGINE=InnoDB;";
 
-        // Bảng 2: Items (Thêm cột image_url)
+        // Bảng 2: Items 
         String createItemsTable = "CREATE TABLE items (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY, " +
                 "seller_id INT NOT NULL, " +
@@ -37,16 +37,17 @@ public class SetupDatabase {
                 "FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE" +
                 ") ENGINE=InnoDB;";
 
-        // Bảng 3: Auctions (ĐÃ THÊM CỘT buy_now_price)
+        // Bảng 3: Auctions 
         String createAuctionsTable = "CREATE TABLE auctions (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY, " +
                 "item_id INT NOT NULL, " +
                 "current_price BIGINT NOT NULL DEFAULT 0, " +
-                "buy_now_price BIGINT DEFAULT NULL, " + // <-- Cột giá mua đứt
+                "buy_now_price BIGINT DEFAULT NULL, " + 
                 "highest_bidder_id INT, " +
                 "start_time DATETIME NOT NULL, " +
                 "end_time DATETIME NOT NULL, " +
                 "status VARCHAR(20) DEFAULT 'OPEN', " +
+                "anti_sniping_enabled BOOLEAN NOT NULL DEFAULT FALSE, " +
                 "FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE, " +
                 "FOREIGN KEY (highest_bidder_id) REFERENCES users(id) ON DELETE SET NULL" +
                 ") ENGINE=InnoDB;";
@@ -75,7 +76,7 @@ public class SetupDatabase {
         // Bảng 6: Chat Messages
         String createChatMessagesTable = "CREATE TABLE chat_messages (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY, " +
-                "auction_id INT NOT NULL, " +
+                "auction_id INT NULL, " +
                 "sender_id INT NOT NULL, " +
                 "recipient_id INT, " +
                 "message TEXT NOT NULL, " +

@@ -20,11 +20,13 @@ public class AuctionManager {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AuctionManager.class);
     private static volatile AuctionManager instance;
     private static final ZoneId SERVER_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    private static final long PAYMENT_TIMEOUT_MINUTES = 24 * 60 ;
 
     private final Map<Integer, Auction> dsPhienDangChay = new ConcurrentHashMap<>();
     private final Map<Integer, List<AuctionObserver>> dsNguoiTheoDoi = new ConcurrentHashMap<>();
     private final Map<Integer, ScheduledFuture<?>> tasksDongPhien = new ConcurrentHashMap<>();
     private final Map<Integer, ScheduledFuture<?>> tasksMoPhien = new ConcurrentHashMap<>();
+    private final Map<Integer, ScheduledFuture<?>> tasksQuaHanThanhToan = new ConcurrentHashMap<>();
 
     private final AuctionDao auctionDao = new AuctionDao();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
@@ -113,7 +115,7 @@ public class AuctionManager {
 
     // Đóng phiên: xác định trạng thái FINISHED/CANCELED, dọn dẹp tài nguyên
     private void dongPhien(int idPhien) {
-        Auction p = dsPhienDangChay.get(idPhien);
+        Auction p = dsPhienDangChay.remove(idPhien);
         if (p != null) {
             synchronized (p) {
                 AuctionDao.AuctionNotificationTargets targets =
@@ -130,10 +132,10 @@ public class AuctionManager {
                             targets != null ? targets.winnerId : null,
                             targets != null ? targets.sellerId : null);
                     guiThongBaoKetThucPhien(targets);
+                    henGioQuaHanThanhToan(idPhien, targets);
                 }
 
                 // Xóa phiên khỏi bộ nhớ và dọn dẹp tài nguyên liên quan
-                dsPhienDangChay.remove(idPhien);
                 dsNguoiTheoDoi.remove(idPhien);
                 tasksDongPhien.remove(idPhien);
             }
@@ -232,6 +234,8 @@ public class AuctionManager {
             huyLichDongPhien(idPhien);
             notifierPool.execute(() -> thongBaoGiaMoi(idPhien, giaoDich));
             thongBaoTrangThai(idPhien, AuctionStatus.FINISHED);
+            AuctionDao.AuctionNotificationTargets targets = auctionDao.layNguoiNhanThongBaoKetThuc(idPhien);
+            henGioQuaHanThanhToan(idPhien, targets);
             return giaoDich;
         }
     }
@@ -314,6 +318,7 @@ public class AuctionManager {
     }
 
     public void capNhatTrangThaiSauThanhToan(int idPhien, AuctionStatus status) {
+        huyLichQuaHanThanhToan(idPhien);
         Auction phien = layPhienTheoId(idPhien);
         if (phien != null) {
             synchronized (phien) {
@@ -331,6 +336,10 @@ public class AuctionManager {
     }
 
     private void giaHanNeuDatGiaCuoiPhien(Auction phien) {
+        if (!phien.isAntiSnipingEnabled()) {
+            return;
+        }
+
         LocalDateTime endTime = phien.getEndTime();
         LocalDateTime now = LocalDateTime.now(SERVER_ZONE);
         if (endTime == null || now.isBefore(endTime.minusSeconds(30)) || !now.isBefore(endTime)) {
@@ -364,7 +373,7 @@ public class AuctionManager {
         SystemNotificationManager.getInstance().guiThongBaoRieng(
                 targets.auctionId,
                 targets.winnerId,
-                taoNoiDungThongBaoThanhToan(itemName),
+                taoNoiDungThongBaoThanhToan(itemName, targets.auctionId),
                 true
         );
         SystemNotificationManager.getInstance().guiThongBaoRieng(
@@ -375,8 +384,9 @@ public class AuctionManager {
         );
     }
 
-    private String taoNoiDungThongBaoThanhToan(String itemName) {
-        return "Chúc mừng bạn đã chiến thắng phiên đấu giá " + itemName + ".\n"
+    private String taoNoiDungThongBaoThanhToan(String itemName, int auctionId) {
+        return "Chúc mừng bạn đã chiến thắng phiên đấu giá " + itemName
+                + " của phiên ID " + auctionId + ".\n"
                 + "Xác nhận thanh toán để chính thức sở hữu sản phẩm.\n\n"
                 + "Nếu hủy thanh toán, bạn sẽ chịu phạt 10% tiền đặt giá.";
     }
@@ -392,6 +402,69 @@ public class AuctionManager {
             taskDong.cancel(false);
         }
         dsPhienDangChay.remove(idPhien);
+    }
+
+    private void henGioQuaHanThanhToan(int auctionId, AuctionDao.AuctionNotificationTargets targets) {
+        if (targets == null || targets.winnerId == null) {
+            return;
+        }
+        huyLichQuaHanThanhToan(auctionId);
+        ScheduledFuture<?> task = scheduler.schedule(
+                () -> tuDongHuyThanhToanQuaHan(auctionId, targets),
+                PAYMENT_TIMEOUT_MINUTES,
+                TimeUnit.MINUTES
+        );
+        tasksQuaHanThanhToan.put(auctionId, task);
+        logger.info("Da len lich tu dong huy thanh toan cho phien {} sau {} phut.", auctionId, PAYMENT_TIMEOUT_MINUTES);
+    }
+
+    private void huyLichQuaHanThanhToan(int auctionId) {
+        ScheduledFuture<?> task = tasksQuaHanThanhToan.remove(auctionId);
+        if (task != null && !task.isDone()) {
+            task.cancel(false);
+        }
+    }
+
+    private void tuDongHuyThanhToanQuaHan(int auctionId, AuctionDao.AuctionNotificationTargets targets) {
+        try {
+            if (targets == null || targets.winnerId == null) {
+                return;
+            }
+            com.auction.server.dao.BidderMoneySellerDao.PaymentResult ketQua =
+                    new com.auction.server.dao.BidderMoneySellerDao()
+                            .quyetToanMuaDut(auctionId, targets.winnerId, false);
+
+            if (!ketQua.success) {
+                logger.info("Auto settlement skipped for auction {}: {}", auctionId, ketQua.message);
+                return;
+            }
+
+            capNhatTrangThaiSauThanhToan(auctionId, AuctionStatus.CANCELED);
+            String itemName = ketQua.itemName == null || ketQua.itemName.isBlank()
+                    ? "sản phẩm"
+                    : ketQua.itemName;
+
+            SystemNotificationManager.getInstance().guiThongBaoRieng(
+                    auctionId,
+                    targets.winnerId,
+                    "Phiên " + auctionId + " đã quá hạn thanh toán. Hệ thống tự động hủy và trừ phí phạt 10% cho sản phẩm " + itemName + ".",
+                    false
+            );
+
+            if (targets.sellerId > 0) {
+                SystemNotificationManager.getInstance().guiThongBaoRieng(
+                        auctionId,
+                        targets.sellerId,
+                        "Bidder đã quá hạn thanh toán ở phiên " + auctionId + ". Hệ thống đã tự động hủy và chuyển phí phạt cho bạn.",
+                        false
+                );
+            }
+            logger.info("Auto settlement success for auction {}.", auctionId);
+        } catch (Exception e) {
+            logger.error("Auto settlement failed for auction {}.", auctionId, e);
+        } finally {
+            tasksQuaHanThanhToan.remove(auctionId);
+        }
     }
 
     // Gửi tin nhắn chat đến tất cả observer trong phiên

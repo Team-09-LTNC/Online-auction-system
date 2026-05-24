@@ -336,6 +336,8 @@ public class PostAuctionController {
                     JsonObject reqJson = new Gson().toJsonTree(requestDto).getAsJsonObject();
                     reqJson.addProperty("bidIncrement", increment);
                     reqJson.addProperty("buyNowPrice", buyNow);
+                    reqJson.addProperty("antiSnipingEnabled",
+                            chkAntiSniping != null && chkAntiSniping.isSelected());
                     reqJson.addProperty("type", ActionType.CREATE_PRODUCT);
                     reqJson.addProperty("requestId", java.util.UUID.randomUUID().toString());
 

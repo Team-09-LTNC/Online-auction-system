@@ -3,12 +3,14 @@ package com.auction.server.dao;
 import com.auction.server.db.DatabaseConnection;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.sql.Types;
 
 /**
  * System notifications are stored in chat_messages with an ADMIN sender.
@@ -32,7 +34,11 @@ public class SystemNotificationDao {
                 + "VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            pstmt.setInt(1, auctionId);
+            if (auctionId > 0) {
+                pstmt.setInt(1, auctionId);
+            } else {
+                pstmt.setNull(1, Types.INTEGER);
+            }
             pstmt.setInt(2, systemAdminId);
             pstmt.setInt(3, recipientId);
             pstmt.setString(4, message);
@@ -51,7 +57,7 @@ public class SystemNotificationDao {
     public JsonArray layThongBaoCuaNguoiNhan(int recipientId) {
         String sql = "SELECT cm.id, cm.auction_id, cm.message, cm.payment_required, cm.send_time, cm.is_read, a.status "
                 + "FROM chat_messages cm "
-                + "JOIN auctions a ON a.id = cm.auction_id "
+                + "LEFT JOIN auctions a ON a.id = cm.auction_id "
                 + "WHERE cm.recipient_id = ? "
                 + "ORDER BY cm.send_time DESC, cm.id DESC LIMIT 100";
         JsonArray notifications = new JsonArray();
@@ -63,7 +69,8 @@ public class SystemNotificationDao {
                 while (rs.next()) {
                     JsonObject notification = new JsonObject();
                     notification.addProperty("notificationId", rs.getLong("id"));
-                    notification.addProperty("auctionId", rs.getInt("auction_id"));
+                    int auctionId = rs.getInt("auction_id");
+                    notification.addProperty("auctionId", rs.wasNull() ? -1 : auctionId);
                     notification.addProperty("message", rs.getString("message"));
                     notification.addProperty("sentAt", rs.getTimestamp("send_time").toString());
                     notification.addProperty("isRead", rs.getBoolean("is_read"));
@@ -119,7 +126,6 @@ public class SystemNotificationDao {
             logger.error("Cannot query ADMIN account.", e);
         }
 
-        // Fallback to any existing user to avoid dropping notification due to bad seed data.
         String fallbackSql = "SELECT id FROM users ORDER BY id LIMIT 1";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(fallbackSql);
@@ -137,11 +143,15 @@ public class SystemNotificationDao {
 
     private boolean daCoThongBaoTrungGanDay(int auctionId, int recipientId, String message, boolean paymentRequired) {
         String sql = "SELECT 1 FROM chat_messages "
-                + "WHERE auction_id = ? AND recipient_id = ? AND message = ? AND payment_required = ? "
+                + "WHERE auction_id <=> ? AND recipient_id = ? AND message = ? AND payment_required = ? "
                 + "AND send_time >= DATE_SUB(NOW(), INTERVAL 10 SECOND) LIMIT 1";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, auctionId);
+            if (auctionId > 0) {
+                pstmt.setInt(1, auctionId);
+            } else {
+                pstmt.setNull(1, Types.INTEGER);
+            }
             pstmt.setInt(2, recipientId);
             pstmt.setString(3, message);
             pstmt.setBoolean(4, paymentRequired);

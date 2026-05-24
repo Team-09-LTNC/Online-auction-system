@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 public class AppRunner {
@@ -15,7 +16,7 @@ public class AppRunner {
         int serverPort = ServerApplication.getPort();
         if (!isLocalPortBusy(serverPort)) {
             startEmbeddedServer(args);
-            waitForServerStartup();
+            waitForServerStartup(serverPort);
         } else {
             System.out.println("=== CỔNG " + serverPort
                     + " ĐANG ĐƯỢC DÙNG, BỎ QUA SERVER NHÚNG ===");
@@ -40,12 +41,21 @@ public class AppRunner {
         serverThread.start();
     }
 
-    private static void waitForServerStartup() {
-        try {
-            Thread.sleep(1500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+    private static void waitForServerStartup(int port) {
+        long deadline = System.currentTimeMillis() + 30000L;
+        while (System.currentTimeMillis() < deadline) {
+            try (Socket ignored = new Socket("127.0.0.1", port)) {
+                return;
+            } catch (Exception ignored) {
+                try {
+                    Thread.sleep(250);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
         }
+        System.out.println("=== SERVER CHUA SAN SANG SAU 30 GIAY, VAN KHOI DONG CLIENT ===");
     }
 
     private static boolean isLocalPortBusy(int port) {
