@@ -159,7 +159,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>${exec.maven.plugin.version}</version>
                 <configuration>
-                    <mainClass>com.auction.server.Server</mainClass>
+                    <mainClass>com.auction.server.db.SetupDatabase</mainClass>
                 </configuration>
             </plugin>
 
