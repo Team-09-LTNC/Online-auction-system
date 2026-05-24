@@ -68,6 +68,10 @@ public class RequestDispatcher {
 
         // Nhóm Admin
         danhSachTrinhXuLy.put(ActionType.ADMIN_GET_ALL_AUCTIONS, adminController);
+        danhSachTrinhXuLy.put(ActionType.ADMIN_GET_PENDING_AUCTIONS, adminController);
+        danhSachTrinhXuLy.put(ActionType.ADMIN_APPROVE_AUCTION, adminController);
+        danhSachTrinhXuLy.put(ActionType.ADMIN_REJECT_AUCTION, adminController);
+        danhSachTrinhXuLy.put(ActionType.ADMIN_GET_INVOICES, adminController);
     }
 
     public static RequestDispatcher layInstance() {

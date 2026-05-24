@@ -33,7 +33,7 @@ public class AuctionsViewController implements Initializable {
     @FXML private TableColumn<Auction, String>   colStartTime;
     @FXML private TableColumn<Auction, String>   colEndTime;
     @FXML private TableColumn<Auction, String>   colStatus;
-    @FXML private TableColumn<Auction, String>   colImageUrl;
+    // @FXML private TableColumn<Auction, String>   colImageUrl;
     @FXML private Label                          lblAuctionCount;
     @FXML private TextField                      tfSearch;
     @FXML private ComboBox<String>               cbStatusFilter;
@@ -62,7 +62,7 @@ public class AuctionsViewController implements Initializable {
         colStartTime.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStartTime()));
         colEndTime  .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEndTime()));
         colStatus   .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStatus()));
-        colImageUrl .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getImageUrl()));
+        // colImageUrl .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getImageUrl()));
     }
 
     private void setupStatusFilter() {

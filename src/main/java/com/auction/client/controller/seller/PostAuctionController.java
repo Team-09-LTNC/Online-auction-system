@@ -1,20 +1,5 @@
 package com.auction.client.controller.seller;
 
-import com.auction.client.controller.auth.UserSession;
-import com.auction.client.networkclient.ClientSocket;
-import com.auction.client.util.CloudStorageUtil;
-import com.auction.common.dto.ItemDTOs;
-import com.auction.common.enums.ActionType;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,38 +7,85 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.auction.client.controller.auth.UserSession;
+import com.auction.client.networkclient.ClientSocket;
+import com.auction.client.util.CloudStorageUtil;
+import com.auction.common.dto.ItemDTOs;
+import com.auction.common.enums.ActionType;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
+
 public class PostAuctionController {
 
     private static final Logger logger = LoggerFactory.getLogger(PostAuctionController.class);
 
     // --- Các trường nhập liệu của Form bên trái ---
-    @FXML private TextField txtProductName;
-    @FXML private ComboBox<String> cbCategory;
-    @FXML private TextArea txtDescription;
-    @FXML private TextField txtStartingPrice;
-    @FXML private TextField txtIncrement;
-    @FXML private TextField txtBuyNowPrice;
-    @FXML private DatePicker dpStartDate;
-    @FXML private TextField txtStartTime;
-    @FXML private DatePicker dpEndDate;
-    @FXML private TextField txtEndTime;
-    @FXML private CheckBox chkAntiSniping;
-    @FXML private CheckBox chkCommit;
+    @FXML
+    private TextField txtProductName;
+    @FXML
+    private ComboBox<String> cbCategory;
+    @FXML
+    private TextArea txtDescription;
+    @FXML
+    private TextField txtStartingPrice;
+    @FXML
+    private TextField txtIncrement;
+    @FXML
+    private TextField txtBuyNowPrice;
+    @FXML
+    private DatePicker dpStartDate;
+    @FXML
+    private TextField txtStartTime;
+    @FXML
+    private DatePicker dpEndDate;
+    @FXML
+    private TextField txtEndTime;
+    @FXML
+    private CheckBox chkAntiSniping;
+    @FXML
+    private CheckBox chkCommit;
 
     // --- Các thành phần hiển thị Realtime Xem Trước (Preview) ---
-    @FXML private Label lblPreviewName;
-    @FXML private Label lblPreviewCategory;
-    @FXML private Label lblPreviewPrice;
-    @FXML private Label lblPreviewIncrement;
-    @FXML private Label lblPreviewBuyNow;
-    @FXML private Label lblPreviewTime;
-    @FXML private Label lblPreviewAntiSniping;
-    @FXML private ImageView imgPreview;
-    @FXML private Button btnUploadImage;
+    @FXML
+    private Label lblPreviewName;
+    @FXML
+    private Label lblPreviewCategory;
+    @FXML
+    private Label lblPreviewPrice;
+    @FXML
+    private Label lblPreviewIncrement;
+    @FXML
+    private Label lblPreviewBuyNow;
+    @FXML
+    private Label lblPreviewTime;
+    @FXML
+    private Label lblPreviewAntiSniping;
+    @FXML
+    private ImageView imgPreview;
+    @FXML
+    private Button btnUploadImage;
 
     // --- Các thành phần thông tin tài khoản góc phải trên (Profile) ---
-    @FXML private Label lblProfileName;
-    @FXML private Label lblProfileRole;
+    @FXML
+    private Label lblProfileName;
+    @FXML
+    private Label lblProfileRole;
 
     private String selectedImagePath = "";
     private File selectedImageFile = null;
@@ -143,24 +175,32 @@ public class PostAuctionController {
 
         javafx.beans.InvalidationListener timeListener = obs -> {
             String startDate = (dpStartDate != null && dpStartDate.getValue() != null)
-                    ? dpStartDate.getValue().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "??/??/????";
+                    ? dpStartDate.getValue().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                    : "??/??/????";
             String startTime = (txtStartTime != null && !txtStartTime.getText().isEmpty())
-                    ? txtStartTime.getText() : "--:--";
+                    ? txtStartTime.getText()
+                    : "--:--";
 
             String endDate = (dpEndDate != null && dpEndDate.getValue() != null)
-                    ? dpEndDate.getValue().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "??/??/????";
+                    ? dpEndDate.getValue().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                    : "??/??/????";
             String endTime = (txtEndTime != null && !txtEndTime.getText().isEmpty())
-                    ? txtEndTime.getText() : "--:--";
+                    ? txtEndTime.getText()
+                    : "--:--";
 
             if (lblPreviewTime != null) {
                 lblPreviewTime.setText(String.format("%s %s\nđến %s %s", startDate, startTime, endDate, endTime));
             }
         };
 
-        if (dpStartDate != null) dpStartDate.valueProperty().addListener(timeListener);
-        if (txtStartTime != null) txtStartTime.textProperty().addListener(timeListener);
-        if (dpEndDate != null) dpEndDate.valueProperty().addListener(timeListener);
-        if (txtEndTime != null) txtEndTime.textProperty().addListener(timeListener);
+        if (dpStartDate != null)
+            dpStartDate.valueProperty().addListener(timeListener);
+        if (txtStartTime != null)
+            txtStartTime.textProperty().addListener(timeListener);
+        if (dpEndDate != null)
+            dpEndDate.valueProperty().addListener(timeListener);
+        if (txtEndTime != null)
+            txtEndTime.textProperty().addListener(timeListener);
 
         if (chkAntiSniping != null && lblPreviewAntiSniping != null) {
             lblPreviewAntiSniping.setText(chkAntiSniping.isSelected() ? "Có áp dụng" : "Không áp dụng");
@@ -172,22 +212,35 @@ public class PostAuctionController {
 
     @FXML
     public void handleClearForm(ActionEvent event) {
-        if (txtProductName != null) txtProductName.clear();
-        if (txtStartingPrice != null) txtStartingPrice.clear();
-        if (txtIncrement != null) txtIncrement.clear();
-        if (txtBuyNowPrice != null) txtBuyNowPrice.clear();
-        if (txtDescription != null) txtDescription.clear();
-        if (cbCategory != null) cbCategory.getSelectionModel().clearSelection();
-        if (dpStartDate != null) dpStartDate.setValue(null);
-        if (txtStartTime != null) txtStartTime.clear();
-        if (dpEndDate != null) dpEndDate.setValue(null);
-        if (txtEndTime != null) txtEndTime.clear();
-        if (chkAntiSniping != null) chkAntiSniping.setSelected(false);
-        if (chkCommit != null) chkCommit.setSelected(false);
+        if (txtProductName != null)
+            txtProductName.clear();
+        if (txtStartingPrice != null)
+            txtStartingPrice.clear();
+        if (txtIncrement != null)
+            txtIncrement.clear();
+        if (txtBuyNowPrice != null)
+            txtBuyNowPrice.clear();
+        if (txtDescription != null)
+            txtDescription.clear();
+        if (cbCategory != null)
+            cbCategory.getSelectionModel().clearSelection();
+        if (dpStartDate != null)
+            dpStartDate.setValue(null);
+        if (txtStartTime != null)
+            txtStartTime.clear();
+        if (dpEndDate != null)
+            dpEndDate.setValue(null);
+        if (txtEndTime != null)
+            txtEndTime.clear();
+        if (chkAntiSniping != null)
+            chkAntiSniping.setSelected(false);
+        if (chkCommit != null)
+            chkCommit.setSelected(false);
 
         selectedImagePath = "";
         selectedImageFile = null;
-        if (imgPreview != null) imgPreview.setImage(null);
+        if (imgPreview != null)
+            imgPreview.setImage(null);
         logger.info("Đã làm sạch form nhập liệu.");
     }
 
@@ -195,14 +248,17 @@ public class PostAuctionController {
     public void handleUploadImage(ActionEvent event) {
         javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
         fileChooser.setTitle("Chọn ảnh sản phẩm đấu giá");
-        fileChooser.getExtensionFilters().addAll(new javafx.stage.FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif"));
-        java.io.File selectedFile = fileChooser.showOpenDialog(((javafx.scene.Node) event.getSource()).getScene().getWindow());
+        fileChooser.getExtensionFilters().addAll(
+                new javafx.stage.FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif"));
+        java.io.File selectedFile = fileChooser
+                .showOpenDialog(((javafx.scene.Node) event.getSource()).getScene().getWindow());
 
         if (selectedFile != null) {
             this.selectedImageFile = selectedFile;
             this.selectedImagePath = selectedFile.toURI().toString();
             javafx.scene.image.Image image = new javafx.scene.image.Image(this.selectedImagePath);
-            if (imgPreview != null) imgPreview.setImage(image);
+            if (imgPreview != null)
+                imgPreview.setImage(image);
         }
     }
 
@@ -214,7 +270,8 @@ public class PostAuctionController {
         if (isSubmitting) {
             return;
         }
-        if (isInputInvalid()) return;
+        if (isInputInvalid())
+            return;
 
         if (this.selectedImageFile == null) {
             showAlert(Alert.AlertType.WARNING, "Thiếu ảnh", "Vui lòng chọn ảnh cho sản phẩm!");
@@ -226,8 +283,17 @@ public class PostAuctionController {
         try {
             String name = txtProductName.getText();
             long startPrice = Long.parseLong(txtStartingPrice.getText().replaceAll("[^\\d]", ""));
-            long increment = (txtIncrement != null && !txtIncrement.getText().isEmpty()) ? Long.parseLong(txtIncrement.getText().replaceAll("[^\\d]", "")) : 0;
-            long buyNow = (txtBuyNowPrice != null && !txtBuyNowPrice.getText().isEmpty()) ? Long.parseLong(txtBuyNowPrice.getText().replaceAll("[^\\d]", "")) : 0;
+
+            if (startPrice <= 0) {
+                showAlert(Alert.AlertType.WARNING, "Giá trị không hợp lệ", "Giá khởi điểm phải lớn hơn 0 đ!");
+                return;
+            }
+            long increment = (txtIncrement != null && !txtIncrement.getText().isEmpty())
+                    ? Long.parseLong(txtIncrement.getText().replaceAll("[^\\d]", ""))
+                    : 0;
+            long buyNow = (txtBuyNowPrice != null && !txtBuyNowPrice.getText().isEmpty())
+                    ? Long.parseLong(txtBuyNowPrice.getText().replaceAll("[^\\d]", ""))
+                    : 0;
 
             String category = mapCategoryToEnum(cbCategory.getValue());
             String description = txtDescription.getText() != null ? txtDescription.getText() : "";
@@ -236,9 +302,8 @@ public class PostAuctionController {
             LocalDateTime endTime = parseDateTime(dpEndDate, txtEndTime);
 
             if (endTime.isBefore(startTime)) {
-                showAlert(Alert.AlertType.WARNING, "Lỗi thời gian", "Thời gian kết thúc phải lớn hơn thời gian bắt đầu!");
-                isSubmitting = false;
-                setSubmitButtonState(submitButton, false);
+                showAlert(Alert.AlertType.WARNING, "Lỗi thời gian",
+                        "Thời gian kết thúc phải lớn hơn thời gian bắt đầu!");
                 return;
             }
 
@@ -266,11 +331,13 @@ public class PostAuctionController {
                     ItemDTOs.CreateItemRequest requestDto = new ItemDTOs.CreateItemRequest(
                             name, description, startPrice, category, 0, imageUrl, startTimeStr, endTimeStr);
 
-                    // Bơm thêm các thuộc tính mở rộng bằng JSON thao tác trực tiếp (Giải pháp linh hoạt)
+                    // Bơm thêm các thuộc tính mở rộng bằng JSON thao tác trực tiếp (Giải pháp linh
+                    // hoạt)
                     JsonObject reqJson = new Gson().toJsonTree(requestDto).getAsJsonObject();
                     reqJson.addProperty("bidIncrement", increment);
                     reqJson.addProperty("buyNowPrice", buyNow);
                     reqJson.addProperty("type", ActionType.CREATE_PRODUCT);
+                    reqJson.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
                     LocalDateTime now = LocalDateTime.now();
                     String determinedStatus;
@@ -286,7 +353,7 @@ public class PostAuctionController {
                     // Ép trạng thái đã được tính toán thông minh vào JSON
                     reqJson.addProperty("status", determinedStatus);
 
-                    ClientSocket.getInstance().sendJsonRequest(reqJson, "CREATE_ITEM_RESPONSE", response -> {
+                    ClientSocket.getInstance().sendJsonRequest(reqJson, ActionType.CREATE_PRODUCT, response -> {
                         Platform.runLater(() -> {
                             isSubmitting = false;
                             setSubmitButtonState(submitButton, false);
@@ -295,7 +362,8 @@ public class PostAuctionController {
                                 showAlert(Alert.AlertType.INFORMATION, "Thành công", "Sản phẩm đã lên sàn đấu giá!");
                                 handleClearForm(null);
                             } else {
-                                String msg = response.has("message") ? response.get("message").getAsString() : "Lỗi hệ thống!";
+                                String msg = response.has("message") ? response.get("message").getAsString()
+                                        : "Lỗi hệ thống!";
                                 showAlert(Alert.AlertType.ERROR, "Thất bại", msg);
                             }
                         });
@@ -344,18 +412,24 @@ public class PostAuctionController {
     }
 
     private String mapCategoryToEnum(String uiCategory) {
-        if (uiCategory == null) return "OTHER";
+        if (uiCategory == null)
+            return "OTHER";
         switch (uiCategory) {
-            case "Điện tử": return "ELECTRONICS";
-            case "Xe cộ": return "VEHICLE";
-            case "Nghệ thuật": return "ART";
-            default: return "OTHER";
+            case "Điện tử":
+                return "ELECTRONICS";
+            case "Xe cộ":
+                return "VEHICLE";
+            case "Nghệ thuật":
+                return "ART";
+            default:
+                return "OTHER";
         }
     }
 
     private LocalDateTime parseDateTime(DatePicker datePicker, TextField timeField) throws DateTimeParseException {
         LocalDate date = datePicker.getValue();
-        if (date == null) throw new DateTimeParseException("Chưa chọn ngày", "", 0);
+        if (date == null)
+            throw new DateTimeParseException("Chưa chọn ngày", "", 0);
         String timeStr = timeField.getText().trim();
         LocalTime time = LocalTime.of(0, 0);
         if (!timeStr.isEmpty()) {
