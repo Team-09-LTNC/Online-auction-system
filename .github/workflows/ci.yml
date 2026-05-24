@@ -60,6 +60,7 @@ jobs:
       - name: Configure test DB properties
         shell: bash
         run: |
+          mkdir -p src/test/resources
           cat > src/test/resources/application-test.properties <<'EOF'
           db.host=localhost
           db.port=3306
@@ -69,13 +70,30 @@ jobs:
           db.ssl=false
           EOF
 
+      - name: Initialize Database Schema
+        run: mvn -B -ntp exec:java -Dexec.mainClass="com.auction.server.db.SetupDatabase" -Ddb.config.file=application-test.properties -e
+        env:
+          DB_URL: jdbc:mysql://localhost:3306/auction_db
+          DB_HOST: localhost
+          DB_PORT: 3306
+          DB_NAME: auction_db
+          DB_USER: root
+          DB_PASSWORD: root
+          DB_SSL: false
+
       - name: Checkstyle
         run: mvn -B -ntp checkstyle:check
 
-      - name: Build and test
-        run: mvn -B -ntp verify
+      - name: Initialize Database Schema
+        run: mvn -B -ntp compile exec:java -Dexec.mainClass="com.auction.server.db.SetupDatabase" -Ddb.config.file=application-test.properties -e
         env:
           DB_URL: jdbc:mysql://localhost:3306/auction_db
+          DB_HOST: localhost
+          DB_PORT: 3306
+          DB_NAME: auction_db
+          DB_USER: root
+          DB_PASSWORD: root
+          DB_SSL: false
 
       - name: Upload surefire reports
         if: always()

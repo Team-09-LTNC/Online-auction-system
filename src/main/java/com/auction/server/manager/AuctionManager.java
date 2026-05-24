@@ -47,7 +47,6 @@ public class AuctionManager {
         }
         // Lên lịch mở các phiên đang chờ
         for (Auction a : auctionDao.layDanhSachPhienChoMo()) {
-            // ---> PHỤC HỒI BOT TỪ DATABASE LÊN RAM (Dành cho phiên chưa mở nhưng đã có người đặt Bot trước)
             List<AutoBidConfig> bots = auctionDao.layDanhSachAutoBidCuaPhien(a.getId());
             for(AutoBidConfig bot : bots) {
                 a.addAutoBidConfig(bot);
@@ -168,7 +167,10 @@ public class AuctionManager {
         }
 
         synchronized (phien) { // Đồng bộ trên phiên để tránh race condition
-            if (!phien.isAcceptingBids()) throw new AuctionClosedException("Phiên đã kết thúc!");
+            if (!phien.isAcceptingBids()) {
+                dongPhien(idPhien);
+                throw new AuctionClosedException("Phiên đã kết thúc!");
+            }
 
             // Chặn seller tự bid sản phẩm của mình
             if (giaoDich.getBidder().getId() == phien.getItem().getSellerId())
@@ -209,6 +211,7 @@ public class AuctionManager {
 
         synchronized (phien) {
             if (!phien.isAcceptingBids()) {
+                dongPhien(idPhien);
                 throw new AuctionClosedException("Phiên đã kết thúc!");
             }
             if (bidder.getId() == phien.getItem().getSellerId()) {
@@ -246,6 +249,11 @@ public class AuctionManager {
         if (phien == null) throw new Exception("Phiên không khả dụng!");
 
         synchronized (phien) {
+            if (!phien.isAcceptingBids()) {
+                dongPhien(idPhien);
+                throw new AuctionClosedException("Phiên đã kết thúc!");
+            }
+
             // Chặn seller cài auto-bid cho sản phẩm của mình
             if (bidder.getId() == phien.getItem().getSellerId()) {
                 throw new Exception("Seller không thể đăng ký Auto-bid cho sản phẩm của mình!");

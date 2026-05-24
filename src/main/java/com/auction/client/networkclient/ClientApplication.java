@@ -1,4 +1,4 @@
-package com.auction.client;
+package com.auction.client.networkclient;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
