@@ -73,7 +73,8 @@
                           -fx-border-color: #C8AFA0; -fx-border-width: 1px;
                           -fx-border-radius: 10px; -fx-background-radius: 10px;">
             <columns>
-                <TableColumn fx:id="colProductId" text="Sản phẩm" prefWidth="140"/>
+                <TableColumn fx:id="colAuctionId" text="ID Phiên đấu giá" prefWidth="140"/>
+                <TableColumn fx:id="colProductName" text="Tên Sản phẩm" prefWidth="140"/>
                 <TableColumn fx:id="colStartTime" text="Thời gian bắt đầu" prefWidth="180"/>
                 <TableColumn fx:id="colEndTime"   text="Thời gian kết thúc" prefWidth="180"/>
                 <TableColumn fx:id="colStatus"    text="Trạng thái"   prefWidth="140"/>

@@ -44,7 +44,9 @@ public class AuctionsViewController implements Initializable {
     @FXML
     private TableView<Auction> auctionTable;
     @FXML
-    private TableColumn<Auction, String> colProductId;
+    private TableColumn<Auction, String> colAuctionId;
+    @FXML
+    private TableColumn<Auction, String> colProductName;
     @FXML
     private TableColumn<Auction, String> colStartTime;
     @FXML
@@ -74,7 +76,8 @@ public class AuctionsViewController implements Initializable {
     }
 
     private void setupColumns() {
-        colProductId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getProductId()));
+        colAuctionId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getAuctionId()));
+        colProductName.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getProductName()));
         colStartTime.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStartTime()));
         colEndTime.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEndTime()));
         colStatus.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStatus()));
@@ -134,7 +137,7 @@ public class AuctionsViewController implements Initializable {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Xac nhan xoa");
         confirm.setHeaderText("Xoa phien dau gia? Toàn bộ lich sử đấu giá sẽ bị xóa và không thể khôi phục.");
-        confirm.setContentText("Xoa phien cua san pham \"" + selected.getProductId() + "\"?");
+        confirm.setContentText("Xoa phien cua san pham \"" + selected.getProductName() + "\"?");
 
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
@@ -150,7 +153,7 @@ public class AuctionsViewController implements Initializable {
 
         filteredList.setPredicate(a -> {
             boolean matchKw = kw.isEmpty()
-                    || a.getProductId().toLowerCase().contains(kw)
+                    || a.getProductName().toLowerCase().contains(kw)
                     || a.getStatus().toLowerCase().contains(kw);
             boolean matchStatus = status == null || ALL_STATUS.equals(status)
                     || a.getStatus().equalsIgnoreCase(status);
@@ -197,7 +200,7 @@ public class AuctionsViewController implements Initializable {
         ChoiceDialog<String> dialog = new ChoiceDialog<>(choices.get(0), choices);
         dialog.setTitle("Thay đổi trạng thái");
         dialog.setHeaderText(null);
-        dialog.setContentText("Phiên \"" + selected.getProductId() +
+        dialog.setContentText("Phiên \"" + selected.getProductName() +
                 "\" đang " + currentStatus + "\nChọn hành động:");
 
         dialog.showAndWait().ifPresent(action -> {
@@ -222,16 +225,16 @@ public class AuctionsViewController implements Initializable {
      */
     public static class Auction {
         private final SimpleStringProperty auctionId; // ← THÊM
-        private final SimpleStringProperty productId;
+        private final SimpleStringProperty productName;
         private final SimpleStringProperty startTime;
         private final SimpleStringProperty endTime;
         private final SimpleStringProperty status;
         private final SimpleStringProperty imageUrl;
 
-        public Auction(String auctionId, String productId, String startTime,
+        public Auction(String auctionId, String productName, String startTime,
                 String endTime, String status, String imageUrl) {
             this.auctionId = new SimpleStringProperty(auctionId); // ← THÊM
-            this.productId = new SimpleStringProperty(productId);
+            this.productName = new SimpleStringProperty(productName);
             this.startTime = new SimpleStringProperty(startTime);
             this.endTime = new SimpleStringProperty(endTime);
             this.status = new SimpleStringProperty(status);
@@ -242,8 +245,8 @@ public class AuctionsViewController implements Initializable {
             return auctionId.get();
         } // ← THÊM
 
-        public String getProductId() {
-            return productId.get();
+        public String getProductName() {
+            return productName.get();
         }
 
         public String getStartTime() {
