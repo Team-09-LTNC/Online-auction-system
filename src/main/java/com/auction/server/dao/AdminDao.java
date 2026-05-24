@@ -30,7 +30,7 @@ public class AdminDao {
      */
     public List<Auction> layDanhSachTatCaAuctions() {
         List<Auction> auctions = new ArrayList<>();
-        String sql = "SELECT i.name AS item_name, a.start_time, a.end_time, a.status, i.image_url " +
+        String sql = "SELECT a.id, i.name AS item_name, a.start_time, a.end_time, a.status, i.image_url " +
                 "FROM auctions a JOIN items i ON a.item_id = i.id"; // Câu truy vấn lấy thêm image_url từ bảng items
         // ... rest of the method implementation
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -38,6 +38,7 @@ public class AdminDao {
                 ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
+                int auctionId = rs.getInt("id");
                 String itemName = rs.getString("item_name");
                 LocalDateTime startTime = rs.getTimestamp("start_time").toLocalDateTime();
                 LocalDateTime endTime = rs.getTimestamp("end_time").toLocalDateTime();
@@ -48,6 +49,7 @@ public class AdminDao {
                 // Item
                 OtherItem item = new OtherItem(itemName, imageUrl); // Giá và hình ảnh tạm thời
                 Auction auction = new Auction(item);
+                auction.setId(auctionId);
                 auction.setStartTime(startTime);
                 auction.setEndTime(endTime);
                 auction.setStatus(status);
@@ -150,5 +152,22 @@ public class AdminDao {
             logger.error("Lỗi layDanhSachHoaDon: ", e);
         }
         return list;
+    }
+
+    /*
+     * Cập nhật trạng thái của phiên đấu giá (ví dụ: từ OPEN sang CANCELED, hoặc từ
+     * RUNNING sang FINISHED)
+     */
+    public boolean capNhatTrangThaiAuction(int auctionId, String newStatus) {
+        String sql = "UPDATE auctions SET status = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newStatus);
+            ps.setInt(2, auctionId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.error("Lỗi capNhatTrangThaiAuction: ", e);
+            return false;
+        }
     }
 }

@@ -112,6 +112,7 @@ public class RequestDispatcher {
     danhSachTrinhXuLy.put(ActionType.ADMIN_APPROVE_AUCTION, adminController);
     danhSachTrinhXuLy.put(ActionType.ADMIN_REJECT_AUCTION, adminController);
     danhSachTrinhXuLy.put(ActionType.ADMIN_GET_INVOICES, adminController);
+    danhSachTrinhXuLy.put(ActionType.ADMIN_CHANGE_AUCTION_STATUS, adminController);
   }
 
   private String taoLoiNoiBo(JsonObject yeuCau) {

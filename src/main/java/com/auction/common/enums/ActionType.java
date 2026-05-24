@@ -55,4 +55,5 @@ public class ActionType {
     public static final String ADMIN_APPROVE_AUCTION = "ADMIN_APPROVE_AUCTION";
     public static final String ADMIN_REJECT_AUCTION = "ADMIN_REJECT_AUCTION";
     public static final String ADMIN_GET_INVOICES = "ADMIN_GET_INVOICES";
+    public static final String ADMIN_CHANGE_AUCTION_STATUS = "ADMIN_CHANGE_AUCTION_STATUS";
 }

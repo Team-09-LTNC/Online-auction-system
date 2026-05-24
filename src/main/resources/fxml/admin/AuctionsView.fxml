@@ -49,6 +49,13 @@
                             -fx-font-size: 13px;
                              -fx-pref-width: 160px;"/>
             <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="btnChangeStatus" text="✏  Đổi trạng thái"
+                    onAction="#handleChangeStatus" disable="true"
+                    style="-fx-background-color: #3498DB; -fx-text-fill: white;
+                           -fx-font-size: 13px;
+                           -fx-font-weight: bold;
+                           -fx-padding: 8 18 8 18; -fx-border-radius: 6px;
+                           -fx-background-radius: 6px; -fx-cursor: hand;"/>
             <Button fx:id="btnDelete" text="🗑  Xoá phiên"
                     onAction="#handleDelete" disable="true"
                     style="-fx-background-color: #C0392B; -fx-text-fill: white;
