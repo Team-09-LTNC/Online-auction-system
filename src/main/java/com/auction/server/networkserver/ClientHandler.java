@@ -66,14 +66,14 @@ public class ClientHandler implements Runnable, AuctionObserver {
              new OutputStreamWriter(socketClient.getOutputStream(), StandardCharsets.UTF_8), true)) {
       this.out = outWriter;
       String chuoiJson;
-      LOGGER.debug("Dang cho du lieu tu client {}: {}",
+      LOGGER.debug("Đang chờ dữ liệu từ client {}: {}",
           socketClient.getInetAddress(), socketClient.getPort());
       while ((chuoiJson = in.readLine()) != null) {
-        LOGGER.trace("Du lieu nhan tu {}: {}", socketClient.getInetAddress(), chuoiJson);
+        LOGGER.trace("Dữ liệu nhận từ {}: {}", socketClient.getInetAddress(), chuoiJson);
         xuLyRequest(chuoiJson);
       }
     } catch (IOException e) {
-      LOGGER.warn("Client {} da ngat ket noi dot ngot.", socketClient.getInetAddress());
+      LOGGER.warn("Client {} đã ngắt kết nối đột ngột.", socketClient.getInetAddress());
     } finally {
       donDepKetNoi();
     }
@@ -84,7 +84,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
     try {
       yeuCau = JsonParser.parseString(chuoiJson).getAsJsonObject();
       if (!yeuCau.has("type") || yeuCau.get("type").isJsonNull()) {
-        out.println(taoPhanHoiLoiYeuCau(yeuCau, "Thieu truong type trong request."));
+        out.println(taoPhanHoiLoiYeuCau(yeuCau, "Thiếu trường type trong request."));
         return;
       }
       String loaiYeuCau = yeuCau.get("type").getAsString();
@@ -93,7 +93,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
         out.println(phanHoi);
       }
     } catch (RuntimeException e) {
-      LOGGER.error("Loi xu ly request tu client {}: {}",
+      LOGGER.error("Lỗi xử lý request từ client {}: {}",
           socketClient.getInetAddress(), chuoiJson, e);
       out.println(taoPhanHoiLoi(yeuCau));
     }
@@ -103,7 +103,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
     if (nguoiDungHienTai != null) {
       UserManager.getInstance().huyKetNoi(nguoiDungHienTai.getId(), this);
       UserManager.getInstance().dangXuat(nguoiDungHienTai.getId());
-      LOGGER.info("Nguoi dung {} da thoat he thong.", nguoiDungHienTai.getUsername());
+      LOGGER.info("Người dùng {} đã thoát hệ thống.", nguoiDungHienTai.getUsername());
     }
     try {
       socketClient.close();
@@ -113,7 +113,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
   }
 
   private String taoPhanHoiLoi(JsonObject yeuCau) {
-    return taoPhanHoiLoiYeuCau(yeuCau, "Server khong xu ly duoc yeu cau.");
+    return taoPhanHoiLoiYeuCau(yeuCau, "Server không xử lý được yêu cầu.");
   }
 
   private String taoPhanHoiLoiYeuCau(JsonObject yeuCau, String message) {

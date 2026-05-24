@@ -88,6 +88,8 @@
 
         <VBox spacing="10.0" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #EEEEEE;">
             <Label text="Đấu giá tự động:" textFill="#888888" style="-fx-font-size: 12px; -fx-font-weight: bold;" />
+            <TextField fx:id="txtAutoBidStep" prefHeight="38.0" promptText="Bước giá auto-bid..."
+                       style="-fx-background-radius: 8; -fx-alignment: center; -fx-font-size: 13;" />
             <HBox spacing="10.0">
                 <children>
                     <TextField fx:id="txtMaxAutoBid" prefHeight="40.0" promptText="Giá trần tối đa..." HBox.hgrow="ALWAYS"

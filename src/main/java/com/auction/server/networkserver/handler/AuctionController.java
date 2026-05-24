@@ -59,6 +59,8 @@ public class AuctionController implements RequestHandler {
                 return xuLyQuyetToanMuaDut(yeuCau, client);
             case ActionType.REGISTER_AUTO_BID:
                 return xuLyDangKyAutoBid(yeuCau, client);
+            case ActionType.REMOVE_AUTO_BID:
+                return xuLyXoaAutoBid(yeuCau, client);
             case ActionType.GET_ALL_AUCTIONS:
                 return xuLyLayDanhSachDauGia(yeuCau, client);
             case ActionType.GET_JOINED_AUCTIONS:
@@ -176,6 +178,7 @@ public class AuctionController implements RequestHandler {
         User nguoiDung = client.layNguoiDungHienTai();
         int maPhien = yeuCau.has("auctionId") ? yeuCau.get("auctionId").getAsInt() : -1;
         long maxBid = yeuCau.has("maxBid") ? yeuCau.get("maxBid").getAsLong() : -1;
+        long bidStep = yeuCau.has("bidStep") ? yeuCau.get("bidStep").getAsLong() : -1;
         if (nguoiDung == null || !"BIDDER".equals(nguoiDung.getRoleName())) {
             if (nguoiDung != null && "SELLER".equalsIgnoreCase(nguoiDung.getRoleName())
                     && laSellerCuaPhien(maPhien, nguoiDung.getId())) {
@@ -183,8 +186,8 @@ public class AuctionController implements RequestHandler {
             }
             return gson.toJson(AuctionControllerUtil.taoPhanHoiDonGian("AUTO_BID_RESPONSE", false, "Chi nguoi mua (Bidder) moi duoc cai auto-bid."));
         }
-        if (maPhien == -1 || maxBid <= 0) {
-            return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu thong tin maxBid hoac auctionId", ErrorCode.BAD_REQUEST));
+        if (maPhien == -1 || maxBid <= 0 || bidStep <= 0) {
+            return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu thong tin maxBid, bidStep hoac auctionId", ErrorCode.BAD_REQUEST));
         }
         if (laTaiKhoanBiKhoa(nguoiDung)) {
             return gson.toJson(AuctionControllerUtil.taoPhanHoiDonGian(
@@ -192,11 +195,32 @@ public class AuctionController implements RequestHandler {
             ));
         }
         try {
-            AuctionManager.getInstance().dangKyAutoBid(maPhien, nguoiDung, maxBid);
+            AuctionManager.getInstance().dangKyAutoBid(maPhien, nguoiDung, maxBid, bidStep);
             JsonObject phanHoi = new JsonObject();
             phanHoi.addProperty("type", "AUTO_BID_RESPONSE");
             phanHoi.addProperty("success", true);
             phanHoi.addProperty("message", "Da cai dat Auto-Bid thanh cong!");
+            return gson.toJson(phanHoi);
+        } catch (Exception e) {
+            return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.SERVER_ERROR, e.getMessage(), ErrorCode.INTERNAL_SERVER_ERROR));
+        }
+    }
+
+    private String xuLyXoaAutoBid(JsonObject yeuCau, ClientHandler client) {
+        User nguoiDung = client.layNguoiDungHienTai();
+        int maPhien = yeuCau.has("auctionId") ? yeuCau.get("auctionId").getAsInt() : -1;
+        if (nguoiDung == null || !"BIDDER".equals(nguoiDung.getRoleName())) {
+            return gson.toJson(AuctionControllerUtil.taoPhanHoiDonGian("AUTO_BID_RESPONSE", false, "Chi bidder moi duoc xoa auto-bid."));
+        }
+        if (maPhien <= 0) {
+            return gson.toJson(AuctionControllerUtil.taoPhanHoiDonGian("AUTO_BID_RESPONSE", false, "Thieu auctionId."));
+        }
+        try {
+            AuctionManager.getInstance().xoaAutoBid(maPhien, nguoiDung);
+            JsonObject phanHoi = new JsonObject();
+            phanHoi.addProperty("type", "AUTO_BID_RESPONSE");
+            phanHoi.addProperty("success", true);
+            phanHoi.addProperty("message", "Da xoa Auto-Bid thanh cong.");
             return gson.toJson(phanHoi);
         } catch (Exception e) {
             return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.SERVER_ERROR, e.getMessage(), ErrorCode.INTERNAL_SERVER_ERROR));
@@ -385,6 +409,10 @@ public class AuctionController implements RequestHandler {
                 long userMaxAutoBid = auctionDao.layGiaTranAutoBid(idPhien, user.getId());
                 if (userMaxAutoBid > 0) {
                     dataObj.addProperty("userMaxAutoBid", userMaxAutoBid);
+                    long userAutoBidStep = auctionDao.layBuocGiaAutoBid(idPhien, user.getId());
+                    if (userAutoBidStep > 0) {
+                        dataObj.addProperty("userAutoBidStep", userAutoBidStep);
+                    }
                 }
             }
             phanHoi.add("data", dataObj);

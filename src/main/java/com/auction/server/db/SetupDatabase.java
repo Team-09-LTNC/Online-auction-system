@@ -129,11 +129,13 @@ public class SetupDatabase {
                 + "auction_id INT NOT NULL, "
                 + "bidder_id INT NOT NULL, "
                 + "max_auto_bid BIGINT NOT NULL, "
+                + "bid_step BIGINT NOT NULL DEFAULT 0, "
                 + "register_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, "
                 + "PRIMARY KEY (auction_id, bidder_id), "
                 + "FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE, "
                 + "FOREIGN KEY (bidder_id) REFERENCES users(id) ON DELETE CASCADE"
                 + ") ENGINE=InnoDB");
+        stmt.execute("ALTER TABLE auto_bid_settings ADD COLUMN IF NOT EXISTS bid_step BIGINT NOT NULL DEFAULT 0");
 
         stmt.execute("CREATE TABLE IF NOT EXISTS bidder_penalties ("
                 + "bidder_id INT PRIMARY KEY, "

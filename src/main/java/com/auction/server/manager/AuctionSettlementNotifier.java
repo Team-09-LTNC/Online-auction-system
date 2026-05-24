@@ -33,7 +33,7 @@ final class AuctionSettlementNotifier {
         SystemNotificationManager.getInstance().guiThongBaoRieng(
                 auctionId,
                 winnerId,
-                "Phien " + auctionId + " da qua han thanh toan. He thong tu dong huy va tru phi phat 10% cho san pham " + safeItemName + ".",
+                "Phiên " + auctionId + " đã quá hạn thanh toán. Hệ thống tự động hủy và trừ phí phạt 10% cho sản phẩm " + safeItemName + ".",
                 false
         );
 
@@ -41,21 +41,21 @@ final class AuctionSettlementNotifier {
             SystemNotificationManager.getInstance().guiThongBaoRieng(
                     auctionId,
                     sellerId,
-                    "Bidder da qua han thanh toan o phien " + auctionId + ". He thong da tu dong huy va chuyen phi phat cho ban.",
+                    "Bidder đã quá hạn thanh toán ở phiên " + auctionId + ". Hệ thống đã tự động hủy và chuyển phí phạt cho bạn.",
                     false
             );
         }
     }
 
     private static String taoNoiDungThongBaoThanhToan(String itemName, int auctionId) {
-        return "Chuc mung ban da chien thang phien dau gia " + itemName
-                + " cua phien ID " + auctionId + ".\n"
-                + "Xac nhan thanh toan de chinh thuc so huu san pham.\n\n"
-                + "Neu huy thanh toan, ban se chiu phat 10% tien dat gia.";
+        return "Chúc mừng bạn đã chiến thắng phiên đấu giá " + itemName
+                + " của phiên ID " + auctionId + ".\n"
+                + "Xác nhận thanh toán để chính thức sở hữu sản phẩm.\n\n"
+                + "Nếu hủy thanh toán, bạn sẽ chịu phạt 10% tiền đặt giá.";
     }
 
     private static String taoNoiDungThongBaoSeller(String itemName, int auctionId, String winnerName) {
-        return "Chuc mung san pham " + itemName + " phien " + auctionId
-                + " da duoc ban thanh cong, nguoi chien thang la " + winnerName + ".";
+        return "Chúc mừng sản phẩm " + itemName + " phiên " + auctionId
+                + " đã được bán thành công, người chiến thắng là " + winnerName + ".";
     }
 }

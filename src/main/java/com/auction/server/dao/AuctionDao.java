@@ -475,16 +475,18 @@ public class AuctionDao {
     /**
      * Lưu hoặc cập nhật cấu hình Auto-Bid của người dùng (Dùng cơ chế UPSERT của MySQL)
      */
-    public boolean luuHoacCapNhatAutoBid(int auctionId, int bidderId, long maxAutoBid) {
-        String sql = "INSERT INTO auto_bid_settings (auction_id, bidder_id, max_auto_bid) " +
-                "VALUES (?, ?, ?) " +
-                "ON DUPLICATE KEY UPDATE max_auto_bid = ?";
+    public boolean luuHoacCapNhatAutoBid(int auctionId, int bidderId, long maxAutoBid, long bidStep) {
+        String sql = "INSERT INTO auto_bid_settings (auction_id, bidder_id, max_auto_bid, bid_step) "
+                + "VALUES (?, ?, ?, ?) "
+                + "ON DUPLICATE KEY UPDATE max_auto_bid = ?, bid_step = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstm = conn.prepareStatement(sql)) {
             pstm.setInt(1, auctionId);
             pstm.setInt(2, bidderId);
             pstm.setLong(3, maxAutoBid);
-            pstm.setLong(4, maxAutoBid); 
+            pstm.setLong(4, bidStep);
+            pstm.setLong(5, maxAutoBid);
+            pstm.setLong(6, bidStep);
             return pstm.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.error("Lỗi khi lưu/cập nhật Auto-Bid: ", e);
@@ -515,9 +517,40 @@ public class AuctionDao {
     /**
      * Lấy TOÀN BỘ cấu hình Bot của 1 phiên đấu giá
      */
+    public long layBuocGiaAutoBid(int auctionId, int bidderId) {
+        String sql = "SELECT bid_step FROM auto_bid_settings WHERE auction_id = ? AND bidder_id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstm = conn.prepareStatement(sql)) {
+            pstm.setInt(1, auctionId);
+            pstm.setInt(2, bidderId);
+            try (ResultSet rs = pstm.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong("bid_step");
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Loi khi lay buoc gia Auto-Bid: ", e);
+        }
+        return -1;
+    }
+
+    public boolean xoaAutoBid(int auctionId, int bidderId) {
+        String sql = "DELETE FROM auto_bid_settings WHERE auction_id = ? AND bidder_id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstm = conn.prepareStatement(sql)) {
+            pstm.setInt(1, auctionId);
+            pstm.setInt(2, bidderId);
+            pstm.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            logger.error("Loi khi xoa Auto-Bid: ", e);
+            return false;
+        }
+    }
+
     public List<AutoBidConfig> layDanhSachAutoBidCuaPhien(int auctionId) {
         List<AutoBidConfig> dsBot = new ArrayList<>();
-        String sql = "SELECT a.bidder_id, a.max_auto_bid, u.username, u.full_name " +
+        String sql = "SELECT a.bidder_id, a.max_auto_bid, a.bid_step, u.username, u.full_name " +
                 "FROM auto_bid_settings a " +
                 "JOIN users u ON a.bidder_id = u.id " +
                 "WHERE a.auction_id = ?";
@@ -534,7 +567,7 @@ public class AuctionDao {
                     );
                     u.setId(rs.getInt("bidder_id")); // Kế thừa từ class Entity
 
-                    dsBot.add(new AutoBidConfig(u, rs.getLong("max_auto_bid")));
+                    dsBot.add(new AutoBidConfig(u, rs.getLong("max_auto_bid"), rs.getLong("bid_step")));
                 }
             }
         } catch (SQLException e) {

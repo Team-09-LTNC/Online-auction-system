@@ -199,7 +199,7 @@ public class AuctionManager {
             if (auctionDao.thucHienGiaoDichDatGia(idPhien, giaoDich)) {
                 phien.updateWinner(giaoDich);
                 giaHanNeuDatGiaCuoiPhien(phien);
-                notifierPool.execute(() -> thongBaoGiaMoi(idPhien, giaoDich)); // Gửi thông báo bất đồng bộ
+                thongBaoGiaMoi(idPhien, giaoDich);
                 kichHoatAutoBid(phien); // Kích hoạt auto-bid để đáp trả nếu cần
                 return true;
             }
@@ -241,7 +241,7 @@ public class AuctionManager {
             phien.setStatus(AuctionStatus.FINISHED);
             auctionDao.capNhatTrangThai(idPhien, AuctionStatus.FINISHED.name());
             huyLichDongPhien(idPhien);
-            notifierPool.execute(() -> thongBaoGiaMoi(idPhien, giaoDich));
+            thongBaoGiaMoi(idPhien, giaoDich);
             thongBaoTrangThai(idPhien, AuctionStatus.FINISHED);
             AuctionDao.AuctionNotificationTargets targets = auctionDao.layNguoiNhanThongBaoKetThuc(idPhien);
             henGioQuaHanThanhToan(idPhien, targets);
@@ -250,7 +250,7 @@ public class AuctionManager {
     }
 
     // Đăng ký auto-bid: đặt giá tự động đến mức tối đa cho phép
-    public void dangKyAutoBid(int idPhien, User bidder, long maxBid) throws Exception {
+    public void dangKyAutoBid(int idPhien, User bidder, long maxBid, long bidStep) throws Exception {
         Auction phien = dsPhienDangChay.get(idPhien);
         if (phien == null) throw new Exception("Phiên không khả dụng!");
 
@@ -265,12 +265,21 @@ public class AuctionManager {
                 throw new Exception("Seller không thể đăng ký Auto-bid cho sản phẩm của mình!");
             }
 
+            long giaHienTai = phien.getCurrentHighestBid();
+            long buocGiaNguoiBan = phien.getItem().getBidIncrement();
+            if (maxBid <= giaHienTai) {
+                throw new Exception("Giá max Auto-bid phải lớn hơn giá hiện tại.");
+            }
+            if (bidStep < buocGiaNguoiBan) {
+                throw new Exception("Bước giá Auto-bid phải >= bước giá người bán.");
+            }
+
             Queue<AutoBidConfig> queue = phien.getAutoBidders();
             queue.removeIf(bot -> bot.getBidder().getId() == bidder.getId());
 
-            phien.addAutoBidConfig(new AutoBidConfig(bidder, maxBid));
+            phien.addAutoBidConfig(new AutoBidConfig(bidder, maxBid, bidStep));
 
-            boolean luuThanhCong = auctionDao.luuHoacCapNhatAutoBid(idPhien, bidder.getId(), maxBid);
+            boolean luuThanhCong = auctionDao.luuHoacCapNhatAutoBid(idPhien, bidder.getId(), maxBid, bidStep);
             if (!luuThanhCong) {
                 logger.warn("Không thể lưu giá trần auto-bid xuống Database cho userId={}", bidder.getId());
             }
@@ -289,7 +298,9 @@ public class AuctionManager {
                 break;
             }
 
-            long giaTiepTheo = phien.getCurrentHighestBid() + phien.getItem().getBidIncrement();
+            long buocGiaNguoiBan = phien.getItem().getBidIncrement();
+            long buocGiaBot = Math.max(topBot.getBidStep(), buocGiaNguoiBan);
+            long giaTiepTheo = phien.getCurrentHighestBid() + buocGiaBot;
             if (coDatGiaDatMuaDut(phien, giaTiepTheo)) {
                 break;
             }
@@ -311,7 +322,7 @@ public class AuctionManager {
             if (auctionDao.thucHienGiaoDichDatGia(phien.getId(), autoTx)) {
                 phien.updateWinner(autoTx);
                 giaHanNeuDatGiaCuoiPhien(phien);
-                notifierPool.execute(() -> thongBaoGiaMoi(phien.getId(), autoTx));
+                thongBaoGiaMoi(phien.getId(), autoTx);
             } else {
                 break;
             }
@@ -449,11 +460,13 @@ public class AuctionManager {
                             .quyetToanMuaDut(auctionId, targets.winnerId, false);
 
             if (!ketQua.success) {
-                logger.info("Auto settlement skipped for auction {}: {}", auctionId, ketQua.message);
-                if (ketQua.message != null && ketQua.message.toLowerCase().contains("khong du")) {
-                    apDungPhatViPhamQuaHan(auctionId, targets.winnerId, targets.sellerId, "Khong du so du de thanh toan qua han.");
-                }
-                return;
+            logger.info("Auto settlement skipped for auction {}: {}", auctionId, ketQua.message);
+            if (ketQua.message != null
+                    && (ketQua.message.toLowerCase().contains("không đủ")
+                    || ketQua.message.toLowerCase().contains("khong du"))) {
+                apDungPhatViPhamQuaHan(auctionId, targets.winnerId, targets.sellerId, "Không đủ số dư để thanh toán quá hạn.");
+            }
+            return;
             }
 
             capNhatTrangThaiSauThanhToan(auctionId, AuctionStatus.CANCELED);
@@ -468,7 +481,7 @@ public class AuctionManager {
                     false
             );
 
-            apDungPhatViPhamQuaHan(auctionId, targets.winnerId, targets.sellerId, "Qua han thanh toan phien dau gia.");
+            apDungPhatViPhamQuaHan(auctionId, targets.winnerId, targets.sellerId, "Quá hạn thanh toán phiên đấu giá.");
 
             if (targets.sellerId > 0) {
                 SystemNotificationManager.getInstance().guiThongBaoRieng(
@@ -486,6 +499,19 @@ public class AuctionManager {
         }
     }
 
+    public void xoaAutoBid(int idPhien, User bidder) throws Exception {
+        Auction phien = dsPhienDangChay.get(idPhien);
+        if (phien == null) {
+            throw new Exception("Phiên không khả dụng!");
+        }
+        synchronized (phien) {
+            phien.getAutoBidders().removeIf(bot -> bot.getBidder().getId() == bidder.getId());
+            if (!auctionDao.xoaAutoBid(idPhien, bidder.getId())) {
+                throw new Exception("Không thể xóa Auto-bid.");
+            }
+        }
+    }
+
     private void apDungPhatViPhamQuaHan(int auctionId, int winnerId, int sellerId, String reason) {
         BidderPenaltyDao.SanctionResult sanction =
                 new BidderPenaltyDao().ghiNhanViPhamQuaHan(winnerId, reason);
@@ -496,11 +522,11 @@ public class AuctionManager {
         String bidderMessage;
         if (sanction.permanentLock) {
             UserManager.getInstance().capNhatTrangThaiTaiKhoan(winnerId, "LOCKED");
-            bidderMessage = "Ban da vi pham qua han thanh toan " + sanction.violationCount
-                    + " lan. Tai khoan bi khoa vinh vien, vui long lien he Admin.";
+            bidderMessage = "Bạn đã vi phạm quá hạn thanh toán " + sanction.violationCount
+                    + " lần. Tài khoản bị khóa vĩnh viễn, vui lòng liên hệ Admin.";
         } else {
-            bidderMessage = "Ban da vi pham qua han thanh toan lan " + sanction.violationCount
-                    + ". Tam cam dau gia den " + sanction.lockUntil + ".";
+            bidderMessage = "Bạn đã vi phạm quá hạn thanh toán lần " + sanction.violationCount
+                    + ". Tạm cấm đấu giá đến " + sanction.lockUntil + ".";
         }
 
         SystemNotificationManager.getInstance().guiThongBaoRieng(
@@ -514,7 +540,7 @@ public class AuctionManager {
             SystemNotificationManager.getInstance().guiThongBaoRieng(
                     auctionId,
                     sellerId,
-                    "He thong da ap dung xu phat bidder vi qua han thanh toan.",
+                    "Hệ thống đã áp dụng xử phạt bidder vì quá hạn thanh toán.",
                     false
             );
         }
