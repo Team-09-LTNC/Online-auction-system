@@ -115,8 +115,16 @@ public class AuctionRoomController implements Initializable {
     }
 
     public void initData(int auctionId, String imageUrl) {
+        initData(auctionId, imageUrl, null);
+    }
+
+    public void initData(int auctionId, String imageUrl, JsonObject auctionSnapshot) {
         this.currentAuctionId = auctionId;
-        loadProductImage(imageUrl);
+        if (auctionSnapshot != null) {
+            applyAuctionSnapshot(auctionSnapshot, imageUrl);
+        } else {
+            loadProductImage(imageUrl);
+        }
 
         JsonObject joinReq = new JsonObject();
         joinReq.addProperty("type", ActionType.JOIN_AUCTION);
@@ -124,6 +132,116 @@ public class AuctionRoomController implements Initializable {
         ClientSocket.getInstance().sendJsonRequest(joinReq, null, null);
 
         refreshAuctionState();
+        loadBidHistoryFromServer();
+    }
+
+    private void applyAuctionSnapshot(JsonObject snapshot, String fallbackImageUrl) {
+        String imageUrl = getString(snapshot, "imageUrl", fallbackImageUrl);
+        loadProductImage(imageUrl);
+
+        if (lblProductName != null) {
+            lblProductName.setText(getString(snapshot, "itemName", getString(snapshot, "name", "Sản phẩm")));
+        }
+        if (lblDescription != null) {
+            lblDescription.setText(getString(snapshot, "description", "Đang đồng bộ mô tả..."));
+        }
+        if (lblCategory != null) {
+            lblCategory.setText("Danh mục: " + getString(snapshot, "category", "Khác"));
+        }
+
+        long startingPrice = getLong(snapshot, "startingPrice", getLong(snapshot, "currentPrice", 0));
+        long bidIncrement = getLong(snapshot, "bidIncrement", 0);
+        if (lblStartingPrice != null) {
+            lblStartingPrice.setText(String.format("%,d đ", startingPrice));
+        }
+        if (lblBidIncrement != null) {
+            lblBidIncrement.setText(String.format("%,d đ", bidIncrement));
+        }
+
+        currentBuyNowPrice = hasValue(snapshot, "buyNowPrice") ? snapshot.get("buyNowPrice").getAsLong() : null;
+        if (lblBuyNowPrice != null) {
+            lblBuyNowPrice.setText(currentBuyNowPrice != null ? String.format("%,d đ", currentBuyNowPrice) : "Không hỗ trợ");
+        }
+        if (lblAntiSniping != null) {
+            lblAntiSniping.setText(getBoolean(snapshot, "antiSnipingEnabled", false) ? "Có" : "Không");
+        }
+
+        long displayPrice = getLong(snapshot, "currentHighestBid", getLong(snapshot, "currentPrice", startingPrice));
+        if (lblCurrentPrice != null) {
+            lblCurrentPrice.setText(String.format("%,d đ", displayPrice));
+        }
+        if (lblLeader != null) {
+            lblLeader.setText("Chưa có ai đặt giá");
+        }
+
+        currentSellerId = (int) getLong(snapshot, "sellerId", -1);
+        currentUserOwnsAuction =
+                "SELLER".equalsIgnoreCase(com.auction.client.controller.auth.UserSession.getCurrentRole())
+                        && currentSellerId == com.auction.client.controller.auth.UserSession.getUserId();
+
+        String rawStartTime = getString(snapshot, "startTime", null);
+        String rawEndTime = getString(snapshot, "endTime", null);
+        String rawServerNow = getString(snapshot, "serverNow", null);
+        AuctionTimeUtil.AuctionState state = AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, rawServerNow);
+        totalSeconds = (int) getLong(snapshot, "countdownSeconds", state.countdownSeconds);
+        currentStatus = getString(snapshot, "displayStatus", getString(snapshot, "status", state.finalStatus));
+        applyInteractionState(false);
+    }
+
+    private void applyInteractionState(boolean showOwnerWarning) {
+        if ("OPEN".equalsIgnoreCase(currentStatus) || "RUNNING".equalsIgnoreCase(currentStatus)) {
+            isAuctionStarted = "RUNNING".equalsIgnoreCase(currentStatus);
+            if (btnPlaceBid != null) {
+                btnPlaceBid.setDisable(!isAuctionStarted || currentUserOwnsAuction);
+                btnPlaceBid.setText(isAuctionStarted ? "ĐẶT GIÁ" : "CHỜ MỞ BÁN");
+            }
+            if (txtBidAmount != null) {
+                txtBidAmount.setEditable(isAuctionStarted && !currentUserOwnsAuction);
+            }
+            if (txtMaxAutoBid != null) {
+                txtMaxAutoBid.setEditable(isAuctionStarted && !currentUserOwnsAuction);
+            }
+            if (btnEnableAutoBid != null) {
+                btnEnableAutoBid.setDisable(!isAuctionStarted || currentUserOwnsAuction);
+            }
+            if (currentUserOwnsAuction && showOwnerWarning && !ownerBidWarningShown) {
+                ownerBidWarningShown = true;
+                showAlert("Không thể đặt giá", SELLER_SELF_BID_MESSAGE);
+            }
+            startCountdown();
+        } else {
+            setExpiredUI();
+        }
+    }
+
+    private boolean hasValue(JsonObject obj, String key) {
+        return obj != null && obj.has(key) && !obj.get(key).isJsonNull();
+    }
+
+    private String getString(JsonObject obj, String key, String fallback) {
+        return hasValue(obj, key) ? obj.get(key).getAsString() : fallback;
+    }
+
+    private long getLong(JsonObject obj, String key, long fallback) {
+        if (!hasValue(obj, key)) {
+            return fallback;
+        }
+        try {
+            return obj.get(key).getAsLong();
+        } catch (RuntimeException e) {
+            return fallback;
+        }
+    }
+
+    private boolean getBoolean(JsonObject obj, String key, boolean fallback) {
+        if (!hasValue(obj, key)) {
+            return fallback;
+        }
+        try {
+            return obj.get(key).getAsBoolean();
+        } catch (RuntimeException e) {
+            return fallback;
+        }
     }
 
     private void refreshAuctionState() {
@@ -279,7 +397,6 @@ public class AuctionRoomController implements Initializable {
                         setExpiredUI();
                     }
 
-                    loadBidHistoryFromServer();
                 }));
     }
 
@@ -458,6 +575,7 @@ public class AuctionRoomController implements Initializable {
                             showAlert("Lỗi", response.has("message") ? response.get("message").getAsString() : "Lỗi đặt giá.");
                         } else {
                             refreshAuctionState();
+                            loadBidHistoryFromServer();
                             txtBidAmount.clear();
                         }
                     }));
@@ -524,6 +642,7 @@ public class AuctionRoomController implements Initializable {
                         txtBidAmount.clear();
                     }
                     refreshAuctionState();
+                    loadBidHistoryFromServer();
                 }));
     }
 

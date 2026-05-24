@@ -105,6 +105,10 @@ public class MainDashboardController implements Initializable, RefreshableCenter
     }
 
     private void loadFeaturedAuctionsFromServer() {
+        JsonObject cachedResponse = com.auction.client.util.AuctionWarmupCache.getFeaturedAuctionsResponse();
+        if (cachedResponse != null) {
+            handleFeaturedAuctionsResponse(cachedResponse);
+        }
 
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.GET_ALL_AUCTIONS);
@@ -115,93 +119,104 @@ public class MainDashboardController implements Initializable, RefreshableCenter
                 request,
                 "AUCTION_LIST_RESPONSE",
                 response -> {
-
-                    if (!(response.has("success")
-                            && response.get("success").getAsBoolean()
-                            && response.has("auctions"))) {
-                        return;
-                    }
-
-                    JsonArray auctions = response.getAsJsonArray("auctions");
-                    String serverNow = getString(response, "serverNow", null);
-                    java.util.List<Integer> followedIds = new java.util.ArrayList<>();
-                    if (response.has("followedIds") && response.get("followedIds").isJsonArray()) {
-                        for (JsonElement id : response.getAsJsonArray("followedIds")) {
-                            followedIds.add(id.getAsInt());
-                        }
-                    }
-
-                    java.util.List<VBox> preparedCards = new java.util.ArrayList<>();
-
-                    for (JsonElement element : auctions) {
-                        JsonObject obj = element.getAsJsonObject();
-
-                        int auctionId = obj.has("auctionId")
-                                ? obj.get("auctionId").getAsInt()
-                                : -1;
-
-                        String name = obj.has("itemName")
-                                ? obj.get("itemName").getAsString()
-                                : "Sản phẩm";
-
-                        long price = obj.has("currentPrice")
-                                ? obj.get("currentPrice").getAsLong()
-                                : 0;
-
-                        String imageUrl = obj.has("imageUrl")
-                                ? obj.get("imageUrl").getAsString()
-                                : "";
-
-                        String serverStatus = getString(obj, "status", "");
-                        if (!"RUNNING".equalsIgnoreCase(serverStatus)) {
-                            continue;
-                        }
-
-                        com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageUrl);
-
-                        String rawStartTime = obj.has("startTime") && !obj.get("startTime").isJsonNull()
-                                ? obj.get("startTime").getAsString()
-                                : null;
-
-                        String rawEndTime = obj.has("endTime") && !obj.get("endTime").isJsonNull()
-                                ? obj.get("endTime").getAsString()
-                                : null;
-
-                        AuctionTimeUtil.AuctionState state =
-                                AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, serverNow);
-                        if (!"RUNNING".equalsIgnoreCase(state.finalStatus) || state.countdownSeconds <= 0) {
-                            logger.warn("Bỏ qua phiên nổi bật không còn RUNNING theo thời gian DB: {}", auctionId);
-                            continue;
-                        }
-                        try {
-                            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
-                            VBox card = loader.load();
-                            ProductCardController controller = loader.getController();
-                            controller.setProductData(
-                                    auctionId,
-                                    name,
-                                    price,
-                                    state.countdownSeconds,
-                                    serverStatus,
-                                    imageUrl,
-                                    followedIds.contains(auctionId)
-                            );
-
-                            preparedCards.add(card);
-
-                        } catch (Exception e) {
-                            logger.error("Load ProductCard lỗi", e);
-                        }
-                    }
-
-                    Platform.runLater(() -> {
-                        if (productFlowPane != null) {
-                            productFlowPane.getChildren().clear();
-                            productFlowPane.getChildren().addAll(preparedCards);
-                        }
-                    });
+                    com.auction.client.util.AuctionWarmupCache.storeFeaturedAuctions(response);
+                    handleFeaturedAuctionsResponse(response);
                 }
         );
+    }
+
+    private void handleFeaturedAuctionsResponse(JsonObject response) {
+        if (!(response.has("success")
+                && response.get("success").getAsBoolean()
+                && response.has("auctions"))) {
+            return;
+        }
+
+        JsonArray auctions = response.getAsJsonArray("auctions");
+        String serverNow = getString(response, "serverNow", null);
+        java.util.List<Integer> followedIds = new java.util.ArrayList<>();
+        if (response.has("followedIds") && response.get("followedIds").isJsonArray()) {
+            for (JsonElement id : response.getAsJsonArray("followedIds")) {
+                followedIds.add(id.getAsInt());
+            }
+        }
+
+        java.util.List<VBox> preparedCards = new java.util.ArrayList<>();
+
+        for (JsonElement element : auctions) {
+            JsonObject obj = element.getAsJsonObject();
+
+            int auctionId = obj.has("auctionId")
+                    ? obj.get("auctionId").getAsInt()
+                    : -1;
+
+            String name = obj.has("itemName")
+                    ? obj.get("itemName").getAsString()
+                    : "Sản phẩm";
+
+            long price = obj.has("currentPrice")
+                    ? obj.get("currentPrice").getAsLong()
+                    : 0;
+
+            String imageUrl = obj.has("imageUrl")
+                    ? obj.get("imageUrl").getAsString()
+                    : "";
+
+            String serverStatus = getString(obj, "status", "");
+            if (!"RUNNING".equalsIgnoreCase(serverStatus)) {
+                continue;
+            }
+
+            com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageUrl);
+
+            String rawStartTime = obj.has("startTime") && !obj.get("startTime").isJsonNull()
+                    ? obj.get("startTime").getAsString()
+                    : null;
+
+            String rawEndTime = obj.has("endTime") && !obj.get("endTime").isJsonNull()
+                    ? obj.get("endTime").getAsString()
+                    : null;
+
+            AuctionTimeUtil.AuctionState state =
+                    AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, serverNow);
+            if (!"RUNNING".equalsIgnoreCase(state.finalStatus) || state.countdownSeconds <= 0) {
+                logger.warn("Bỏ qua phiên nổi bật không còn RUNNING theo thời gian DB: {}", auctionId);
+                continue;
+            }
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
+                VBox card = loader.load();
+                ProductCardController controller = loader.getController();
+                controller.setProductData(
+                        auctionId,
+                        name,
+                        price,
+                        state.countdownSeconds,
+                        serverStatus,
+                        imageUrl,
+                        followedIds.contains(auctionId)
+                );
+                JsonObject roomSnapshot = obj.deepCopy();
+                roomSnapshot.addProperty("displayStatus", state.finalStatus);
+                roomSnapshot.addProperty("countdownSeconds", state.countdownSeconds);
+                if (serverNow != null) {
+                    roomSnapshot.addProperty("serverNow", serverNow);
+                }
+                controller.setAuctionSnapshot(roomSnapshot);
+
+                preparedCards.add(card);
+
+            } catch (Exception e) {
+                logger.error("Load ProductCard lỗi", e);
+            }
+        }
+
+        Platform.runLater(() -> {
+            if (productFlowPane != null) {
+                productFlowPane.getChildren().clear();
+                productFlowPane.getChildren().addAll(preparedCards);
+            }
+        });
     }
 
     @Override

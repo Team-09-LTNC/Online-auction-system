@@ -242,6 +242,7 @@ public class SidebarController {
         ChatController.instance = null;
         com.auction.client.networkclient.PushHandler.clearNotifications();
         com.auction.client.util.ViewCacheManager.clear();
+        com.auction.client.util.AuctionWarmupCache.clear();
 
         try {
             // 1. Tải file giao diện Đăng nhập gốc
