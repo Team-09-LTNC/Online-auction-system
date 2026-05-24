@@ -21,8 +21,33 @@ public class AuctionDTOs {
         private String startTime;
         private String endTime;
         private String category;
+        private String description;
+        private long startingPrice;
+        private long bidIncrement;
+        private Long buyNowPrice;
+        private boolean antiSnipingEnabled;
+        private int sellerId;
 
         public AuctionSummaryDTO(int auctionId, String itemName, long currentPrice, String status, String imageUrl, String startTime, String endTime, String category) {
+            this(auctionId, itemName, currentPrice, status, imageUrl, startTime, endTime, category, null, 0, 0, null, false, -1);
+        }
+
+        public AuctionSummaryDTO(
+                int auctionId,
+                String itemName,
+                long currentPrice,
+                String status,
+                String imageUrl,
+                String startTime,
+                String endTime,
+                String category,
+                String description,
+                long startingPrice,
+                long bidIncrement,
+                Long buyNowPrice,
+                boolean antiSnipingEnabled,
+                int sellerId
+        ) {
             this.auctionId = auctionId;
             this.itemName = itemName;
             this.currentPrice = currentPrice;
@@ -31,6 +56,12 @@ public class AuctionDTOs {
             this.startTime = startTime;
             this.endTime = endTime;
             this.category = category;
+            this.description = description;
+            this.startingPrice = startingPrice;
+            this.bidIncrement = bidIncrement;
+            this.buyNowPrice = buyNowPrice;
+            this.antiSnipingEnabled = antiSnipingEnabled;
+            this.sellerId = sellerId;
         }
 
         public int getAuctionId() { return auctionId; }
@@ -38,6 +69,18 @@ public class AuctionDTOs {
         public long getCurrentPrice() { return currentPrice; }
         public String getStatus() { return status; }
         public String getImageUrl() { return imageUrl; }
+        public String getStartTime() { return startTime; }
+        public void setStartTime(String startTime) { this.startTime = startTime; }
+        public String getEndTime() { return endTime; }
+        public void setEndTime(String endTime) { this.endTime = endTime; }
+        public String getCategory() { return category; }
+        public void setCategory(String category) { this.category = category; }
+        public String getDescription() { return description; }
+        public long getStartingPrice() { return startingPrice; }
+        public long getBidIncrement() { return bidIncrement; }
+        public Long getBuyNowPrice() { return buyNowPrice; }
+        public boolean isAntiSnipingEnabled() { return antiSnipingEnabled; }
+        public int getSellerId() { return sellerId; }
     }
 
     public static class AuctionListResponse extends BaseDTOs.Response {

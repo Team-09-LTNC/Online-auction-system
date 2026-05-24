@@ -9,6 +9,7 @@ import com.auction.common.model.user.Bidder;
 import com.auction.common.model.user.Seller;
 import com.auction.common.model.user.User;
 import com.auction.server.manager.UserManager;
+import com.auction.server.manager.SystemNotificationManager;
 import com.auction.server.networkserver.ClientHandler;
 import com.auction.server.dao.UserDao;
 import com.auction.server.dao.WalletTransactionDao;
@@ -17,6 +18,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 public class AuthController implements RequestHandler {
@@ -26,6 +28,9 @@ public class AuthController implements RequestHandler {
 
     @Override
     public String xuLy(JsonObject yeuCau, ClientHandler client) {
+        if (yeuCau == null || !yeuCau.has("type") || yeuCau.get("type").isJsonNull()) {
+            return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu truong type.", ErrorCode.BAD_REQUEST));
+        }
         String loaiYeuCau = yeuCau.get("type").getAsString();
 
         // Trích xuất chung mã requestId từ Client gửi lên
@@ -56,7 +61,7 @@ public class AuthController implements RequestHandler {
             case ActionType.ADMIN_TOGGLE_LOCK_USER:
                 return xuLyKhoaTaiKhoan(yeuCau, reqId);
             default:
-                return null;
+                return gson.toJson(new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Action khong duoc ho tro.", ErrorCode.BAD_REQUEST));
         }
     }
 
@@ -194,7 +199,9 @@ public class AuthController implements RequestHandler {
             }
 
             if (userDao.capNhatSoDu(currentUser.getId(), newBalance)) {
-                walletTransactionDao.logTransaction(currentUser.getId(), "DEPOSIT", soTienNap, "Nạp tiền vào ví");
+                String description = "Nạp tiền vào ví";
+                walletTransactionDao.logTransaction(currentUser.getId(), "DEPOSIT", soTienNap, description);
+                guiThongBaoBienDongSoDu(currentUser.getId(), "DEPOSIT", soTienNap, description);
 
                 JsonObject phanHoi = new JsonObject();
                 phanHoi.addProperty("type", "TOP_UP_RESPONSE");
@@ -252,7 +259,9 @@ public class AuthController implements RequestHandler {
             }
 
             if (userDao.capNhatSoDu(currentUser.getId(), newBalance)) {
-                walletTransactionDao.logTransaction(currentUser.getId(), "WITHDRAW", soTienRut, "Rút tiền từ ví");
+                String description = "Rút tiền từ ví";
+                walletTransactionDao.logTransaction(currentUser.getId(), "WITHDRAW", soTienRut, description);
+                guiThongBaoBienDongSoDu(currentUser.getId(), "WITHDRAW", soTienRut, description);
 
                 JsonObject phanHoi = new JsonObject();
                 phanHoi.addProperty("type", "WITHDRAW_RESPONSE");
@@ -303,6 +312,19 @@ public class AuthController implements RequestHandler {
         return gson.toJson(phanHoi);
     }
 
+    private void guiThongBaoBienDongSoDu(int userId, String loaiGiaoDich, long soTien, String moTa) {
+        String symbol = ("WITHDRAW".equals(loaiGiaoDich) || "PAYMENT_SENT".equals(loaiGiaoDich))
+                ? "🔻"
+                : "🔹";
+        String noiDung = String.format(Locale.US, "%s %s: %,d đ - %s", symbol, loaiGiaoDich, soTien, moTa);
+        SystemNotificationManager.getInstance().guiThongBaoRieng(
+                -1,
+                userId,
+                "Biến động số dư\n" + noiDung,
+                false
+        );
+    }
+
     /*
      * Xử lý yêu cầu khoá tài khoản từ Admin. Yêu cầu này sẽ nhận vào username và
      * trạng thái mới (LOCKED/ACTIVE), cập nhật vào DB, và trả về kết quả cho Admin.
@@ -313,6 +335,13 @@ public class AuthController implements RequestHandler {
      * để Admin có thể hiển thị thông báo phù hợp trên UI.
      */
     private String xuLyKhoaTaiKhoan(JsonObject yeuCau, String reqId) {
+        if (!yeuCau.has("username") || yeuCau.get("username").isJsonNull()
+                || !yeuCau.has("newStatus") || yeuCau.get("newStatus").isJsonNull()) {
+            BaseDTOs.ErrorResponse err = new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST,
+                    "Thieu username hoac newStatus.", ErrorCode.BAD_REQUEST);
+            err.setRequestId(reqId);
+            return gson.toJson(err);
+        }
         String username = yeuCau.get("username").getAsString();
         String newStatus = yeuCau.get("newStatus").getAsString();
 

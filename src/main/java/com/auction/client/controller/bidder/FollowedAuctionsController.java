@@ -101,6 +101,13 @@ public class FollowedAuctionsController implements Initializable, RefreshableCen
                                     img,
                                     true
                             );
+                            JsonObject roomSnapshot = obj.deepCopy();
+                            roomSnapshot.addProperty("displayStatus", resolveDisplayStatus(storedStatus, state.finalStatus));
+                            roomSnapshot.addProperty("countdownSeconds", state.countdownSeconds);
+                            if (serverNow != null) {
+                                roomSnapshot.addProperty("serverNow", serverNow);
+                            }
+                            controller.setAuctionSnapshot(roomSnapshot);
 
                             cards.add(card);
                         }

@@ -16,8 +16,9 @@ public class ItemDao {
     private static final Logger logger = LoggerFactory.getLogger(ItemDao.class);
 
     private Item mapResultSetToItem(ResultSet rs) throws SQLException {
-        String loai = rs.getString("category").trim().toUpperCase();
         Item item;
+        String loai = rs.getString("category").trim().toUpperCase();
+
 
         switch (loai) {
             case "ELECTRONICS":
@@ -46,6 +47,12 @@ public class ItemDao {
         item.setStartingPrice(rs.getLong("starting_price"));
         item.setCategory(loai);
         item.setImageUrl(rs.getString("image_url"));
+
+        try {
+            item.setStartTime(rs.getString("start_time"));
+            item.setEndTime(rs.getString("end_time"));
+        } catch (SQLException ignored) {
+        }
 
         return item;
     }
@@ -100,7 +107,12 @@ public class ItemDao {
     // Lấy danh sách sản phẩm do một Seller cụ thể đăng bán
     public List<Item> laySanPhamTheoSellerId(int sellerId) {
         List<Item> danhSach = new ArrayList<>();
-        String sql = "SELECT * FROM items WHERE seller_id = ?";
+
+        // SỬA SQL Ở ĐÂY: JOIN thêm bảng auctions để lấy thời gian
+        String sql = "SELECT i.*, a.start_time, a.end_time " +
+                "FROM items i " +
+                "LEFT JOIN auctions a ON i.id = a.item_id " +
+                "WHERE i.seller_id = ?";
 
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -108,8 +120,15 @@ public class ItemDao {
             pstmt.setInt(1, sellerId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
+                    // Bước 1: Map các thông tin cơ bản
                     Item item = mapResultSetToItem(rs);
-                    if (item != null) danhSach.add(item);
+
+                    // Bước 2: Map thêm thời gian vào đối tượng Item
+                    if (item != null) {
+                        item.setStartTime(rs.getString("start_time"));
+                        item.setEndTime(rs.getString("end_time"));
+                        danhSach.add(item);
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -119,7 +138,11 @@ public class ItemDao {
     }
 
     public Item laySanPhamTheoId(int itemId) {
-        String sql = "SELECT * FROM items WHERE id = ?";
+        String sql = "SELECT i.*, a.start_time, a.end_time "
+                + "FROM items i "
+                + "LEFT JOIN auctions a ON i.id = a.item_id "
+                + "WHERE i.id = ? "
+                + "ORDER BY a.id DESC LIMIT 1";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 

@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,7 +97,7 @@ public class MyProductsController implements Initializable {
             cbCategory.getItems().setAll("Tất cả", "ELECTRONICS", "VEHICLE", "ART", "OTHER");
             cbCategory.setValue("Tất cả");
             cbCategory.valueProperty().addListener((obs, oldVal, newVal) -> {
-                currentCategory = isBlank(newVal) ? "Tất cả" : newVal;
+                currentCategory = MyProductsHelper.isBlank(newVal) ? "Tất cả" : newVal;
                 applyFiltersAndRender();
             });
         }
@@ -107,7 +106,7 @@ public class MyProductsController implements Initializable {
             cbStatus.getItems().setAll("Tất cả", "OPEN", "RUNNING", "FINISHED", "PAID", "CANCELED");
             cbStatus.setValue("Tất cả");
             cbStatus.valueProperty().addListener((obs, oldVal, newVal) -> {
-                currentStatus = isBlank(newVal) ? "Tất cả" : newVal;
+                currentStatus = MyProductsHelper.isBlank(newVal) ? "Tất cả" : newVal;
                 applyFiltersAndRender();
             });
         }
@@ -137,7 +136,7 @@ public class MyProductsController implements Initializable {
                 boolean success = response.has("success") && response.get("success").getAsBoolean();
                 if (success && response.has("data")) {
                     loadedProducts = response.getAsJsonArray("data");
-                    loadedServerNow = getString(response, "serverNow", null);
+                    loadedServerNow = MyProductsHelper.getString(response, "serverNow", null);
                     updateStatistics();
                     applyFiltersAndRender();
                 } else {
@@ -162,10 +161,13 @@ public class MyProductsController implements Initializable {
             JsonObject obj = element.getAsJsonObject();
             AuctionTimeUtil.AuctionState state =
                     AuctionTimeUtil.calculateState(
-                            getString(obj, "startTime", null),
-                            getString(obj, "endTime", null),
+                            MyProductsHelper.getString(obj, "startTime", null),
+                            MyProductsHelper.getString(obj, "endTime", null),
                             loadedServerNow);
-            String status = resolveDisplayStatus(getString(obj, "status", null), state.finalStatus);
+            String status = MyProductsHelper.resolveDisplayStatus(
+                    MyProductsHelper.getString(obj, "status", null),
+                    state.finalStatus
+            );
             if ("RUNNING".equalsIgnoreCase(status)) {
                 runningCount++;
             } else if ("FINISHED".equalsIgnoreCase(status) || "PAID".equalsIgnoreCase(status)) {
@@ -201,13 +203,13 @@ public class MyProductsController implements Initializable {
 
                 for (JsonElement element : productsToFilter) {
                     JsonObject itemObj = element.getAsJsonObject();
-                    String name = getString(itemObj, "name", "Sản phẩm không tên");
+                    String name = MyProductsHelper.getString(itemObj, "name", "Sản phẩm không tên");
                     if (!selectedKeyword.isEmpty()
                             && !name.toLowerCase(Locale.ROOT).contains(selectedKeyword)) {
                         continue;
                     }
 
-                    String category = getString(itemObj, "category", "");
+                    String category = MyProductsHelper.getString(itemObj, "category", "");
                     if (!"Tất cả".equalsIgnoreCase(selectedCategory)
                             && !selectedCategory.equalsIgnoreCase(category)) {
                         continue;
@@ -215,10 +217,13 @@ public class MyProductsController implements Initializable {
 
                     AuctionTimeUtil.AuctionState state =
                             AuctionTimeUtil.calculateState(
-                                    getString(itemObj, "startTime", null),
-                                    getString(itemObj, "endTime", null),
+                                    MyProductsHelper.getString(itemObj, "startTime", null),
+                                    MyProductsHelper.getString(itemObj, "endTime", null),
                                     selectedServerNow);
-                    String status = resolveDisplayStatus(getString(itemObj, "status", null), state.finalStatus);
+                    String status = MyProductsHelper.resolveDisplayStatus(
+                            MyProductsHelper.getString(itemObj, "status", null),
+                            state.finalStatus
+                    );
                     if (!"Tất cả".equalsIgnoreCase(selectedStatus)
                             && !selectedStatus.equalsIgnoreCase(status)) {
                         continue;
@@ -226,7 +231,7 @@ public class MyProductsController implements Initializable {
 
                     int auctionId = itemObj.has("auctionId") ? itemObj.get("auctionId").getAsInt() : -1;
                     double currentPrice = itemObj.has("currentPrice") ? itemObj.get("currentPrice").getAsDouble() : 0.0;
-                    String imageUrl = getString(itemObj, "imageUrl", "");
+                    String imageUrl = MyProductsHelper.getString(itemObj, "imageUrl", "");
                     com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageUrl);
 
                     try {
@@ -291,20 +296,20 @@ public class MyProductsController implements Initializable {
         dialog.setHeaderText("Chỉ có thể sửa khi phiên đang chờ mở.");
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        TextField txtName = new TextField(getString(itemObj, "name", ""));
-        TextArea txtDescription = new TextArea(getString(itemObj, "description", ""));
+        TextField txtName = new TextField(MyProductsHelper.getString(itemObj, "name", ""));
+        TextArea txtDescription = new TextArea(MyProductsHelper.getString(itemObj, "description", ""));
         txtDescription.setPrefRowCount(3);
-        TextField txtPrice = new TextField(String.valueOf(getLong(itemObj, "startingPrice", 0L)));
+        TextField txtPrice = new TextField(String.valueOf(MyProductsHelper.getLong(itemObj, "startingPrice", 0L)));
         ComboBox<String> categoryBox = new ComboBox<>();
         categoryBox.getItems().setAll("ELECTRONICS", "VEHICLE", "ART", "OTHER");
-        categoryBox.setValue(getString(itemObj, "category", "OTHER"));
-        TextField txtImageUrl = new TextField(getString(itemObj, "imageUrl", ""));
+        categoryBox.setValue(MyProductsHelper.getString(itemObj, "category", "OTHER"));
+        TextField txtImageUrl = new TextField(MyProductsHelper.getString(itemObj, "imageUrl", ""));
         DatePicker dpStartDate = new DatePicker();
         TextField txtStartTime = new TextField();
         DatePicker dpEndDate = new DatePicker();
         TextField txtEndTime = new TextField();
-        fillDateTimeFields(getString(itemObj, "startTime", null), dpStartDate, txtStartTime);
-        fillDateTimeFields(getString(itemObj, "endTime", null), dpEndDate, txtEndTime);
+        MyProductsHelper.fillDateTimeFields(MyProductsHelper.getString(itemObj, "startTime", null), dpStartDate, txtStartTime);
+        MyProductsHelper.fillDateTimeFields(MyProductsHelper.getString(itemObj, "endTime", null), dpEndDate, txtEndTime);
 
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -368,8 +373,8 @@ public class MyProductsController implements Initializable {
             return;
         }
 
-        LocalDateTime startTime = parseDateTime(startDate, startTimeText);
-        LocalDateTime endTime = parseDateTime(endDate, endTimeText);
+        LocalDateTime startTime = MyProductsHelper.parseDateTime(startDate, startTimeText);
+        LocalDateTime endTime = MyProductsHelper.parseDateTime(endDate, endTimeText);
         if (startTime == null || endTime == null) {
             showAlert(Alert.AlertType.WARNING, "Thời gian không hợp lệ", "Vui lòng nhập ngày và giờ theo định dạng HH:mm.");
             return;
@@ -386,7 +391,7 @@ public class MyProductsController implements Initializable {
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.UPDATE_PRODUCT);
         request.addProperty("requestId", java.util.UUID.randomUUID().toString());
-        request.addProperty("itemId", getInt(itemObj, "itemId", getInt(itemObj, "id", -1)));
+        request.addProperty("itemId", MyProductsHelper.getInt(itemObj, "itemId", MyProductsHelper.getInt(itemObj, "id", -1)));
         request.addProperty("name", trimmedName);
         request.addProperty("description", description == null ? "" : description.trim());
         request.addProperty("startingPrice", startingPrice);
@@ -414,7 +419,7 @@ public class MyProductsController implements Initializable {
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.DELETE_PRODUCT);
         request.addProperty("requestId", java.util.UUID.randomUUID().toString());
-        request.addProperty("itemId", getInt(itemObj, "itemId", getInt(itemObj, "id", -1)));
+        request.addProperty("itemId", MyProductsHelper.getInt(itemObj, "itemId", MyProductsHelper.getInt(itemObj, "id", -1)));
 
         ClientSocket.getInstance().sendJsonRequest(request, ActionType.DELETE_PRODUCT, response ->
                 Platform.runLater(() -> handleMutationResponse(response, "Xóa sản phẩm thành công.")));
@@ -428,73 +433,9 @@ public class MyProductsController implements Initializable {
             return;
         }
 
-        showAlert(Alert.AlertType.WARNING, "Không thể thực hiện", getString(response, "message", "Yêu cầu bị từ chối."));
+        showAlert(Alert.AlertType.WARNING, "Không thể thực hiện", MyProductsHelper.getString(response, "message", "Yêu cầu bị từ chối."));
     }
 
-    private void fillDateTimeFields(String rawValue, DatePicker datePicker, TextField timeField) {
-        LocalDateTime value = AuctionTimeUtil.parse(rawValue);
-        if (value == null) {
-            value = LocalDateTime.now().plusMinutes(10);
-        }
-        datePicker.setValue(value.toLocalDate());
-        timeField.setText(value.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")));
-        timeField.setPromptText("HH:mm");
-    }
-
-    private LocalDateTime parseDateTime(LocalDate date, String timeText) {
-        if (date == null) {
-            return null;
-        }
-
-        String normalizedTime = timeText == null ? "" : timeText.trim();
-        if (normalizedTime.isEmpty()) {
-            normalizedTime = "00:00";
-        }
-
-        try {
-            LocalTime time = LocalTime.parse(normalizedTime, DateTimeFormatter.ofPattern("HH:mm"));
-            return LocalDateTime.of(date, time);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private String resolveDisplayStatus(String storedStatus, String timeStatus) {
-        if (storedStatus == null || storedStatus.isBlank()) {
-            return timeStatus;
-        }
-
-        String normalized = storedStatus.trim().toUpperCase(Locale.ROOT);
-        switch (normalized) {
-            case "PAID":
-            case "CANCELED":
-            case "FINISHED":
-                return normalized;
-            case "OPEN":
-            case "RUNNING":
-                return timeStatus;
-            default:
-                return normalized;
-        }
-    }
-
-    private String getString(JsonObject obj, String key, String fallback) {
-        return obj.has(key) && !obj.get(key).isJsonNull()
-                ? obj.get(key).getAsString()
-                : fallback;
-    }
-
-    private int getInt(JsonObject obj, String key, int fallback) {
-        return obj.has(key) && !obj.get(key).isJsonNull()
-                ? obj.get(key).getAsInt()
-                : fallback;
-    }
-
-    private long getLong(JsonObject obj, String key, long fallback) {
-        return obj.has(key) && !obj.get(key).isJsonNull()
-                ? obj.get(key).getAsLong()
-                : fallback;
-    }
 
     private void showAlert(Alert.AlertType type, String title, String content) {
         Alert alert = new Alert(type);
@@ -504,7 +445,4 @@ public class MyProductsController implements Initializable {
         alert.showAndWait();
     }
 
-    private boolean isBlank(String value) {
-        return value == null || value.isBlank();
-    }
 }

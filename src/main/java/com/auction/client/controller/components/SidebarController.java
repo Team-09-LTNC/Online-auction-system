@@ -2,6 +2,9 @@ package com.auction.client.controller.components;
 
 import com.auction.client.controller.MainController;
 import com.auction.client.controller.auth.UserSession;
+import com.auction.client.networkclient.ClientSocket;
+import com.auction.common.enums.ActionType;
+import com.google.gson.JsonObject;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -31,6 +34,7 @@ public class SidebarController {
         // Kích nổ hàm áp dụng phân quyền ngay khi nạp giao diện ban đầu
         applyRolePermissions();
         updateNotificationBadge();
+        dongBoThongBaoChuaDocTuServer();
     }
 
     /**
@@ -101,21 +105,12 @@ public class SidebarController {
     // HÀM LỌC DANH MỤC
     @FXML
     private void handleFilterCategory(ActionEvent event) {
-        System.out.println("CLICK CATEGORY BUTTON");
         Button clickedBtn = (Button) event.getSource();
         // 1. Đổi màu nút đang được bấm
         setButtonActive(clickedBtn);
 
         String buttonText = clickedBtn.getText().trim();
-
-        String category;
-        System.out.println("BUTTON TEXT = " + buttonText);
-        if (buttonText.equals("Điện tử")) category = "ELECTRONICS";
-        else if (buttonText.equals("Xe cộ")) category = "VEHICLE";
-        else if (buttonText.equals("Nghệ thuật")) category = "ART";
-        else if (buttonText.equals("Khác")) category = "OTHER";
-        else category = "ALL";
-        System.out.println("CATEGORY SEND = " + category);
+        String category = mapCategory(buttonText);
 
         // 2. Ép hệ thống chuyển hướng sang màn hình "Tất cả phiên"
         boolean alreadyShowingAuctionList = MainController.instance.getCurrentCenterController()
@@ -132,6 +127,14 @@ public class SidebarController {
         if (currentCtrl instanceof com.auction.client.interfaces.CategoryFilterListener) {
             ((com.auction.client.interfaces.CategoryFilterListener) currentCtrl).onCategorySelected(category);
         }
+    }
+
+    private String mapCategory(String buttonText) {
+        if ("Điện tử".equals(buttonText)) return "ELECTRONICS";
+        if ("Xe cộ".equals(buttonText)) return "VEHICLE";
+        if ("Nghệ thuật".equals(buttonText)) return "ART";
+        if ("Khác".equals(buttonText)) return "OTHER";
+        return "ALL";
     }
     @FXML
     private void handleOpenDashboard(ActionEvent event) {
@@ -207,6 +210,25 @@ public class SidebarController {
         lblNotificationBadge.setText(unreadNotifications > 99 ? "99+" : String.valueOf(unreadNotifications));
     }
 
+    private void dongBoThongBaoChuaDocTuServer() {
+        if (UserSession.getUserId() <= 0) {
+            return;
+        }
+
+        JsonObject request = new JsonObject();
+        request.addProperty("type", ActionType.GET_SYSTEM_NOTIFICATIONS);
+        request.addProperty("requestId", java.util.UUID.randomUUID().toString());
+
+        ClientSocket.getInstance().sendJsonRequest(request, "SYSTEM_NOTIFICATIONS_RESPONSE", response -> {
+            if (!response.has("success") || !response.get("success").getAsBoolean()
+                    || !response.has("unreadCount")) {
+                return;
+            }
+            unreadNotifications = Math.max(response.get("unreadCount").getAsInt(), 0);
+            Platform.runLater(this::updateNotificationBadge);
+        });
+    }
+
     // =========================================================================
     // LOGIC ĐĂNG XUẤT (LOGOUT) CHUẨN KIẾN TRÚC MỚI
     // =========================================================================
@@ -220,6 +242,7 @@ public class SidebarController {
         ChatController.instance = null;
         com.auction.client.networkclient.PushHandler.clearNotifications();
         com.auction.client.util.ViewCacheManager.clear();
+        com.auction.client.util.AuctionWarmupCache.clear();
 
         try {
             // 1. Tải file giao diện Đăng nhập gốc

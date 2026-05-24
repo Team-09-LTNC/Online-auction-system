@@ -1,5 +1,6 @@
 package com.auction.client.controller.admin;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -12,6 +13,8 @@ import javafx.scene.layout.StackPane;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import com.auction.client.manager.AdminManager;
+
 /**
  * InvoicesController
  * ─────────────────────────────────────────────────────────────
@@ -21,21 +24,32 @@ import java.util.ResourceBundle;
 public class InvoicesController implements Initializable {
 
     // ── FXML injections ──────────────────────────────────────
-    @FXML private StackPane                        contentPane;
-    @FXML private TableView<Invoice>               invoiceTable;
-    @FXML private TableColumn<Invoice, String>     colProductId;
-    @FXML private TableColumn<Invoice, String>     colName;
-    @FXML private TableColumn<Invoice, String>     colAuctionId;
-    @FXML private TableColumn<Invoice, String>     colSellerId;
-    @FXML private TableColumn<Invoice, String>     colWinnerId;
-    @FXML private TableColumn<Invoice, String>     colFinalPrice;
-    @FXML private Label                            lblInvoiceCount;
-    @FXML private Label                            lblTotalRevenue;
-    @FXML private TextField                        tfSearch;
+    @FXML
+    private StackPane contentPane;
+    @FXML
+    private TableView<Invoice> invoiceTable;
+    @FXML
+    private TableColumn<Invoice, String> colProductId;
+    @FXML
+    private TableColumn<Invoice, String> colName;
+    @FXML
+    private TableColumn<Invoice, String> colAuctionId;
+    @FXML
+    private TableColumn<Invoice, String> colSellerId;
+    @FXML
+    private TableColumn<Invoice, String> colWinnerId;
+    @FXML
+    private TableColumn<Invoice, String> colFinalPrice;
+    @FXML
+    private Label lblInvoiceCount;
+    @FXML
+    private Label lblTotalRevenue;
+    @FXML
+    private TextField tfSearch;
 
     // ── Data ─────────────────────────────────────────────────
-    private final ObservableList<Invoice> masterList   = FXCollections.observableArrayList();
-    private       FilteredList<Invoice>  filteredList;
+    private final ObservableList<Invoice> masterList = FXCollections.observableArrayList();
+    private FilteredList<Invoice> filteredList;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -47,11 +61,11 @@ public class InvoicesController implements Initializable {
     // ── Setup ────────────────────────────────────────────────
 
     private void setupColumns() {
-        colProductId .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getProductId()));
-        colName      .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getName()));
-        colAuctionId .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getAuctionId()));
-        colSellerId  .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getSellerId()));
-        colWinnerId  .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getWinnerId()));
+        colProductId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getProductId()));
+        colName.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getName()));
+        colAuctionId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getAuctionId()));
+        colSellerId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getSellerId()));
+        colWinnerId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getWinnerId()));
         colFinalPrice.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFinalPrice()));
     }
 
@@ -62,13 +76,22 @@ public class InvoicesController implements Initializable {
     }
 
     private void loadData() {
-        // TODO: thay bằng service call — chỉ lấy bản ghi có status = PAID
-        masterList.setAll(
-                new Invoice("SP-001", "Đồng hồ Rolex vintage",  "AUC-101", "SELLER-01", "USER-88",  "485.000.000"),
-                new Invoice("SP-002", "iPhone 15 Pro Max 256GB","AUC-102", "SELLER-02", "USER-44",  "27.500.000"),
-                new Invoice("SP-003", "Áo dài thêu tay",        "AUC-103", "SELLER-01", "USER-112", "5.100.000")
-        );
-        updateSummary();
+        AdminManager.getInstance().layDanhSachHoaDon(
+                invoices -> Platform.runLater(() -> {
+                    masterList.clear();
+                    invoices.forEach(inv -> masterList.add(new Invoice(
+                            String.valueOf(inv.getItemId()), // itemId → productId
+                            inv.getItemName(), // itemName → name
+                            String.valueOf(inv.getAuctionId()),
+                            String.valueOf(inv.getSellerId()),
+                            String.valueOf(inv.getWinnerId()),
+                            String.format("%,d", inv.getHighestBid()) // highestBid → finalPrice
+                    )));
+                    updateSummary();
+                }),
+                error -> Platform.runLater(() -> lblInvoiceCount.setText("Lỗi: " + error)),
+                tongDoanhThu -> Platform
+                        .runLater(() -> lblTotalRevenue.setText("Tổng: ₫ " + String.format("%,d", tongDoanhThu))));
     }
 
     // ── FXML handlers ────────────────────────────────────────
@@ -76,14 +99,12 @@ public class InvoicesController implements Initializable {
     @FXML
     private void handleSearch() {
         String kw = tfSearch.getText().trim().toLowerCase();
-        filteredList.setPredicate(inv ->
-                kw.isEmpty()
-                        || inv.getProductId().toLowerCase().contains(kw)
-                        || inv.getName().toLowerCase().contains(kw)
-                        || inv.getAuctionId().toLowerCase().contains(kw)
-                        || inv.getSellerId().toLowerCase().contains(kw)
-                        || inv.getWinnerId().toLowerCase().contains(kw)
-        );
+        filteredList.setPredicate(inv -> kw.isEmpty()
+                || inv.getProductId().toLowerCase().contains(kw)
+                || inv.getName().toLowerCase().contains(kw)
+                || inv.getAuctionId().toLowerCase().contains(kw)
+                || inv.getSellerId().toLowerCase().contains(kw)
+                || inv.getWinnerId().toLowerCase().contains(kw));
         updateSummary();
     }
 
@@ -92,23 +113,10 @@ public class InvoicesController implements Initializable {
     private void updateSummary() {
         int shown = filteredList.size();
         int total = masterList.size();
-
         lblInvoiceCount.setText(shown == total
                 ? total + " hoá đơn"
                 : shown + " / " + total + " hoá đơn");
-
-        // Tính tổng final_price của các hàng đang hiển thị
-        long sum = filteredList.stream()
-                .mapToLong(inv -> {
-                    try {
-                        return Long.parseLong(inv.getFinalPrice().replaceAll("[^0-9]", ""));
-                    } catch (NumberFormatException e) {
-                        return 0L;
-                    }
-                })
-                .sum();
-
-        lblTotalRevenue.setText("Tổng: ₫ " + String.format("%,d", sum));
+        // Bỏ phần tính sum — đã có server tính sẵn qua callback tongDoanhThu
     }
 
     // ── Model ────────────────────────────────────────────────
@@ -122,27 +130,61 @@ public class InvoicesController implements Initializable {
         private final SimpleStringProperty finalPrice;
 
         public Invoice(String productId, String name, String auctionId,
-                       String sellerId, String winnerId, String finalPrice) {
-            this.productId  = new SimpleStringProperty(productId);
-            this.name       = new SimpleStringProperty(name);
-            this.auctionId  = new SimpleStringProperty(auctionId);
-            this.sellerId   = new SimpleStringProperty(sellerId);
-            this.winnerId   = new SimpleStringProperty(winnerId);
+                String sellerId, String winnerId, String finalPrice) {
+            this.productId = new SimpleStringProperty(productId);
+            this.name = new SimpleStringProperty(name);
+            this.auctionId = new SimpleStringProperty(auctionId);
+            this.sellerId = new SimpleStringProperty(sellerId);
+            this.winnerId = new SimpleStringProperty(winnerId);
             this.finalPrice = new SimpleStringProperty(finalPrice);
         }
 
-        public String getProductId()  { return productId.get();  }
-        public String getName()       { return name.get();       }
-        public String getAuctionId()  { return auctionId.get();  }
-        public String getSellerId()   { return sellerId.get();   }
-        public String getWinnerId()   { return winnerId.get();   }
-        public String getFinalPrice() { return finalPrice.get(); }
+        public String getProductId() {
+            return productId.get();
+        }
 
-        public SimpleStringProperty productIdProperty()  { return productId;  }
-        public SimpleStringProperty nameProperty()       { return name;       }
-        public SimpleStringProperty auctionIdProperty()  { return auctionId;  }
-        public SimpleStringProperty sellerIdProperty()   { return sellerId;   }
-        public SimpleStringProperty winnerIdProperty()   { return winnerId;   }
-        public SimpleStringProperty finalPriceProperty() { return finalPrice; }
+        public String getName() {
+            return name.get();
+        }
+
+        public String getAuctionId() {
+            return auctionId.get();
+        }
+
+        public String getSellerId() {
+            return sellerId.get();
+        }
+
+        public String getWinnerId() {
+            return winnerId.get();
+        }
+
+        public String getFinalPrice() {
+            return finalPrice.get();
+        }
+
+        public SimpleStringProperty productIdProperty() {
+            return productId;
+        }
+
+        public SimpleStringProperty nameProperty() {
+            return name;
+        }
+
+        public SimpleStringProperty auctionIdProperty() {
+            return auctionId;
+        }
+
+        public SimpleStringProperty sellerIdProperty() {
+            return sellerId;
+        }
+
+        public SimpleStringProperty winnerIdProperty() {
+            return winnerId;
+        }
+
+        public SimpleStringProperty finalPriceProperty() {
+            return finalPrice;
+        }
     }
 }

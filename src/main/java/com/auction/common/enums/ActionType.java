@@ -40,6 +40,7 @@ public class ActionType {
     // --- CHAT REAL-TIME ---
     public static final String SEND_CHAT_MESSAGE = "CHAT_SEND_MESSAGE";
     public static final String GET_SYSTEM_NOTIFICATIONS = "CHAT_GET_SYSTEM_NOTIFICATIONS";
+    public static final String MARK_SYSTEM_NOTIFICATIONS_READ = "CHAT_MARK_SYSTEM_NOTIFICATIONS_READ";
 
     // --- SERVER PUSH (server chủ động gửi, không có requestId) ---
     public static final String AUCTION_BID_UPDATE = "AUCTION_BID_UPDATE";
@@ -50,4 +51,8 @@ public class ActionType {
     public static final String ADMIN_GET_ALL_SELLERS = "ADMIN_GET_ALL_SELLERS";
     public static final String ADMIN_GET_ALL_AUCTIONS = "ADMIN_GET_ALL_AUCTIONS";
     public static final String ADMIN_TOGGLE_LOCK_USER = "ADMIN_TOGGLE_LOCK_USER";
+    public static final String ADMIN_GET_PENDING_AUCTIONS = "ADMIN_GET_PENDING_AUCTIONS";
+    public static final String ADMIN_APPROVE_AUCTION = "ADMIN_APPROVE_AUCTION";
+    public static final String ADMIN_REJECT_AUCTION = "ADMIN_REJECT_AUCTION";
+    public static final String ADMIN_GET_INVOICES = "ADMIN_GET_INVOICES";
 }

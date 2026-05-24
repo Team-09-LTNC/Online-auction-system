@@ -32,7 +32,7 @@
 
                 <GridPane hgap="15.0" vgap="10.0" style="-fx-background-color: #FAFAFA; -fx-padding: 12; -fx-background-radius: 8; -fx-border-color: #EAEAEA;">
                     <columnConstraints>
-                        <ColumnConstraints prefWidth="120.0" />
+                        <ColumnConstraints prefWidth="270.0" />
                         <ColumnConstraints hgrow="ALWAYS" />
                     </columnConstraints>
                     <children>
@@ -44,6 +44,9 @@
 
                         <Label text="Giá mua đứt:" textFill="#777777" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-size: 13px;" />
                         <Label fx:id="lblBuyNowPrice" text="0 đ" textFill="#A64452" GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-font-size: 13px; -fx-font-weight: bold;" />
+
+                        <Label text="Gia hạn thời gian 60s nếu có người đấu giá vào 30s cuối:" textFill="#777777" wrapText="true" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-size: 13px;" />
+                        <Label fx:id="lblAntiSniping" text="Không" textFill="#3E2723" GridPane.columnIndex="1" GridPane.rowIndex="3" style="-fx-font-size: 13px; -fx-font-weight: bold;" />
                     </children>
                 </GridPane>
 

@@ -97,6 +97,7 @@ public class LoginController {
                         UserSession.setUsername(userName);
                     }
 
+                    com.auction.client.util.AuctionWarmupCache.warmAfterLogin(role);
                     navigateToHome(role);
 
                     if (SidebarController.instance != null) {
