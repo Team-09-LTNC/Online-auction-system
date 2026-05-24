@@ -39,6 +39,8 @@ import java.util.ResourceBundle;
 
 public class AuctionRoomController implements Initializable {
     private static final String SELLER_SELF_BID_MESSAGE = "Không được tự bid sản phẩm của chính mình.";
+    private static final String AUTO_BID_REGISTER_TEXT = "ĐĂNG KÝ AUTO-BID";
+    private static final String AUTO_BID_REMOVE_TEXT = "XÓA AUTO-BID";
 
     @FXML private Label lblProductName;
     @FXML private Label lblDescription;
@@ -55,6 +57,7 @@ public class AuctionRoomController implements Initializable {
     @FXML private TextField txtBidAmount;
     @FXML private Button btnPlaceBid;
     @FXML private TextField txtMaxAutoBid;
+    @FXML private TextField txtAutoBidStep;
     @FXML private Button btnEnableAutoBid;
     @FXML private ImageView imgProduct;
 
@@ -75,6 +78,7 @@ public class AuctionRoomController implements Initializable {
     private int currentSellerId = -1;
     private boolean currentUserOwnsAuction = false;
     private boolean ownerBidWarningShown = false;
+    private boolean autoBidActive = false;
 
     private static long extractMoneyValue(String text) {
         return Long.parseLong(text.replaceAll("\\D", ""));
@@ -95,6 +99,13 @@ public class AuctionRoomController implements Initializable {
             txtMaxAutoBid.textProperty().addListener((obs, oldVal, newVal) -> {
                 if (!newVal.isEmpty()) {
                     txtMaxAutoBid.setText(newVal.replaceAll("\\D", ""));
+                }
+            });
+        }
+        if (txtAutoBidStep != null) {
+            txtAutoBidStep.textProperty().addListener((obs, oldVal, newVal) -> {
+                if (!newVal.isEmpty()) {
+                    txtAutoBidStep.setText(newVal.replaceAll("\\D", ""));
                 }
             });
         }
@@ -329,11 +340,11 @@ public class AuctionRoomController implements Initializable {
                     if ("OPEN".equalsIgnoreCase(currentStatus) || "RUNNING".equalsIgnoreCase(currentStatus)) {
                         isAuctionStarted = "RUNNING".equalsIgnoreCase(currentStatus);
                         if (btnPlaceBid != null) {
-                            btnPlaceBid.setDisable(!isAuctionStarted);
+                            btnPlaceBid.setDisable(!isAuctionStarted || autoBidActive);
                             btnPlaceBid.setText(isAuctionStarted ? "ĐẶT GIÁ" : "CHỜ MỞ BÁN");
                         }
                         if (txtBidAmount != null) {
-                            txtBidAmount.setEditable(isAuctionStarted);
+                            txtBidAmount.setEditable(isAuctionStarted && !autoBidActive);
                         }
                         if (btnEnableAutoBid != null) {
                             btnEnableAutoBid.setDisable(!isAuctionStarted);
@@ -346,28 +357,51 @@ public class AuctionRoomController implements Initializable {
                             if (txtMaxAutoBid != null) {
                                 txtMaxAutoBid.setEditable(false);
                             }
+                            if (txtAutoBidStep != null) {
+                                txtAutoBidStep.setEditable(false);
+                            }
                             if (!ownerBidWarningShown) {
                                 ownerBidWarningShown = true;
                                 showAlert("Không thể đặt giá", SELLER_SELF_BID_MESSAGE);
                             }
                         } else if (txtMaxAutoBid != null) {
                             txtMaxAutoBid.setEditable(isAuctionStarted);
+                            if (txtAutoBidStep != null) {
+                                txtAutoBidStep.setEditable(isAuctionStarted);
+                            }
                         }
 
                         if (data.has("userMaxAutoBid") && !data.get("userMaxAutoBid").isJsonNull()) {
+                            autoBidActive = true;
                             long savedMaxBid = data.get("userMaxAutoBid").getAsLong();
                             if (txtMaxAutoBid != null) {
                                 txtMaxAutoBid.setText(String.valueOf(savedMaxBid));
                             }
+                            if (txtAutoBidStep != null && data.has("userAutoBidStep")
+                                    && !data.get("userAutoBidStep").isJsonNull()) {
+                                txtAutoBidStep.setText(String.valueOf(data.get("userAutoBidStep").getAsLong()));
+                            }
                             if (btnEnableAutoBid != null) {
-                                btnEnableAutoBid.setText("CẬP NHẬT AUTO-BID");
+                                btnEnableAutoBid.setText(AUTO_BID_REMOVE_TEXT);
                             }
                         } else {
+                            autoBidActive = false;
                             if (txtMaxAutoBid != null) {
                                 txtMaxAutoBid.clear();
                             }
+                            if (txtAutoBidStep != null) {
+                                txtAutoBidStep.clear();
+                            }
                             if (btnEnableAutoBid != null) {
-                                btnEnableAutoBid.setText("ĐĂNG KÝ AUTO-BID");
+                                btnEnableAutoBid.setText(AUTO_BID_REGISTER_TEXT);
+                            }
+                        }
+                        if (!currentUserOwnsAuction && isAuctionStarted) {
+                            if (btnPlaceBid != null) {
+                                btnPlaceBid.setDisable(autoBidActive);
+                            }
+                            if (txtBidAmount != null) {
+                                txtBidAmount.setEditable(!autoBidActive);
                             }
                         }
 
@@ -643,17 +677,32 @@ public class AuctionRoomController implements Initializable {
             showAlert("Không thể Auto-bid", SELLER_SELF_BID_MESSAGE);
             return;
         }
+        if (btnEnableAutoBid != null && AUTO_BID_REMOVE_TEXT.equals(btnEnableAutoBid.getText())) {
+            xoaAutoBid();
+            return;
+        }
         if (txtMaxAutoBid.getText().trim().isEmpty()) {
+            return;
+        }
+        if (txtAutoBidStep == null || txtAutoBidStep.getText().trim().isEmpty()) {
+            showAlert("Lỗi Auto-bid", "Vui lòng nhập bước giá Auto-bid.");
             return;
         }
 
         try {
             long maxPrice = Long.parseLong(txtMaxAutoBid.getText().trim());
+            long bidStep = Long.parseLong(txtAutoBidStep.getText().trim());
             long currentPrice = extractMoneyValue(lblCurrentPrice.getText());
-            long minValidBid = currentPrice + extractMoneyValue(lblBidIncrement.getText());
+            long sellerBidStep = extractMoneyValue(lblBidIncrement.getText());
+            long minValidBid = currentPrice + sellerBidStep;
 
             if (maxPrice < minValidBid) {
                 showAlert("Lỗi Auto-bid", "Mức giá tối đa phải >= " + String.format("%,d đ", minValidBid));
+                return;
+            }
+            if (bidStep < sellerBidStep) {
+                showAlert("Lỗi Auto-bid", "Bước giá Auto-bid phải >= bước giá người bán ("
+                        + String.format("%,d đ", sellerBidStep) + ").");
                 return;
             }
 
@@ -661,6 +710,8 @@ public class AuctionRoomController implements Initializable {
             jsonRequest.addProperty("type", ActionType.REGISTER_AUTO_BID);
             jsonRequest.addProperty("auctionId", currentAuctionId);
             jsonRequest.addProperty("maxBid", maxPrice);
+            jsonRequest.addProperty("bidStep", bidStep);
+            jsonRequest.addProperty("requestId", java.util.UUID.randomUUID().toString());
             btnEnableAutoBid.setDisable(true);
 
             ClientSocket.getInstance().sendJsonRequest(jsonRequest, "AUTO_BID_RESPONSE", response ->
@@ -669,15 +720,64 @@ public class AuctionRoomController implements Initializable {
                         if (response.has("success") && response.get("success").getAsBoolean()) {
                             Alert alert = new Alert(Alert.AlertType.INFORMATION);
                             alert.setTitle("Thành công");
+                            alert.setHeaderText(null);
                             alert.setContentText("Kích hoạt Auto-bid thành công!");
                             alert.showAndWait();
+                            autoBidActive = true;
+                            btnEnableAutoBid.setText(AUTO_BID_REMOVE_TEXT);
+                            if (btnPlaceBid != null) {
+                                btnPlaceBid.setDisable(true);
+                                btnPlaceBid.setText("ĐANG AUTO-BID");
+                            }
+                            if (txtBidAmount != null) {
+                                txtBidAmount.setEditable(false);
+                            }
                         } else {
                             showAlert("Lỗi Auto-bid", response.has("message") ? response.get("message").getAsString() : "Lỗi đăng ký.");
                         }
                     }));
         } catch (Exception e) {
-            e.printStackTrace();
+            showAlert("Lỗi Auto-bid", "Vui lòng nhập số hợp lệ cho mức tối đa và bước giá.");
         }
+    }
+
+    private void xoaAutoBid() {
+        JsonObject request = new JsonObject();
+        request.addProperty("type", ActionType.REMOVE_AUTO_BID);
+        request.addProperty("auctionId", currentAuctionId);
+        request.addProperty("requestId", java.util.UUID.randomUUID().toString());
+        btnEnableAutoBid.setDisable(true);
+        ClientSocket.getInstance().sendJsonRequest(request, "AUTO_BID_RESPONSE", response ->
+                Platform.runLater(() -> {
+                    btnEnableAutoBid.setDisable(false);
+                    if (!(response.has("success") && response.get("success").getAsBoolean())) {
+                        showAlert("Lỗi Auto-bid", response.has("message")
+                                ? response.get("message").getAsString() : "Không thể xóa Auto-bid.");
+                        return;
+                    }
+                    if (txtMaxAutoBid != null) {
+                        txtMaxAutoBid.clear();
+                    }
+                    if (txtAutoBidStep != null) {
+                        txtAutoBidStep.clear();
+                    }
+                    autoBidActive = false;
+                    btnEnableAutoBid.setText(AUTO_BID_REGISTER_TEXT);
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Thành công");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Đã xóa đăng ký Auto-bid.");
+                    alert.showAndWait();
+                    if (!currentUserOwnsAuction && isAuctionStarted) {
+                        if (btnPlaceBid != null) {
+                            btnPlaceBid.setDisable(false);
+                            btnPlaceBid.setText("ĐẶT GIÁ");
+                        }
+                        if (txtBidAmount != null) {
+                            txtBidAmount.setEditable(true);
+                        }
+                    }
+                }));
     }
 
     public void updateRealtimeBid(long newPrice, String bidderName, String endTime, String serverNow, String status) {
@@ -728,12 +828,13 @@ public class AuctionRoomController implements Initializable {
             return;
         }
 
+        boolean allowManualBid = !autoBidActive && !currentUserOwnsAuction;
         if (btnPlaceBid != null) {
-            btnPlaceBid.setDisable(false);
-            btnPlaceBid.setText("ĐẶT GIÁ");
+            btnPlaceBid.setDisable(!allowManualBid);
+            btnPlaceBid.setText(autoBidActive ? "ĐANG AUTO-BID" : "ĐẶT GIÁ");
         }
         if (txtBidAmount != null) {
-            txtBidAmount.setEditable(true);
+            txtBidAmount.setEditable(allowManualBid);
         }
         if (btnEnableAutoBid != null) {
             btnEnableAutoBid.setDisable(false);

@@ -2,6 +2,7 @@ package com.auction.client.util;
 
 import javafx.scene.image.Image;
 import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -11,6 +12,7 @@ public class ImageCacheManager {
     private static final double PREVIEW_WIDTH = 480;
     private static final double PREVIEW_HEIGHT = 320;
     private static final ConcurrentHashMap<String, Image> imageCache = new ConcurrentHashMap<>();
+    private static final Set<String> inFlightPreviewLoads = ConcurrentHashMap.newKeySet();
     private static final ExecutorService preloadExecutor = Executors.newFixedThreadPool(4, runnable -> {
         Thread thread = new Thread(runnable, "image-preload");
         thread.setDaemon(true);
@@ -29,7 +31,19 @@ public class ImageCacheManager {
         if (imageUrl == null || imageUrl.trim().isEmpty()) {
             return;
         }
-        preloadExecutor.execute(() -> getPreviewImage(imageUrl));
+        String normalizedUrl = imageUrl.trim();
+        String cacheKey = normalizedUrl + "#" + (int) PREVIEW_WIDTH + "x" + (int) PREVIEW_HEIGHT;
+        if (imageCache.containsKey(cacheKey) || !inFlightPreviewLoads.add(cacheKey)) {
+            return;
+        }
+
+        preloadExecutor.execute(() -> {
+            try {
+                getPreviewImage(normalizedUrl);
+            } finally {
+                inFlightPreviewLoads.remove(cacheKey);
+            }
+        });
     }
 
     public static void preloadPreviewImages(Collection<String> imageUrls) {

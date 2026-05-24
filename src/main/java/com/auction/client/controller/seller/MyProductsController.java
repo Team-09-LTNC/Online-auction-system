@@ -190,13 +190,13 @@ public class MyProductsController implements Initializable {
 
     private void applyFiltersAndRender() {
         int currentRenderVersion = renderVersion.incrementAndGet();
-        JsonArray productsToFilter = loadedProducts.deepCopy();
+        JsonArray productsToFilter = loadedProducts;
         String selectedKeyword = currentKeyword.trim().toLowerCase(Locale.ROOT);
         String selectedCategory = currentCategory;
         String selectedStatus = currentStatus;
         String selectedServerNow = loadedServerNow;
 
-        new Thread(() -> {
+        com.auction.client.util.ClientTaskExecutor.execute(() -> {
             try {
                 List<VBox> cardsToRender = new ArrayList<>();
                 boolean cardsPublished = false;
@@ -224,8 +224,16 @@ public class MyProductsController implements Initializable {
                             MyProductsHelper.getString(itemObj, "status", null),
                             state.finalStatus
                     );
-                    if (!"Tất cả".equalsIgnoreCase(selectedStatus)
-                            && !selectedStatus.equalsIgnoreCase(status)) {
+                    boolean statusMatched;
+                    if ("Tất cả".equalsIgnoreCase(selectedStatus)) {
+                        statusMatched = true;
+                    } else if ("FINISHED".equalsIgnoreCase(selectedStatus)) {
+                        statusMatched = "FINISHED".equalsIgnoreCase(status) || "PAID".equalsIgnoreCase(status);
+                    } else {
+                        statusMatched = selectedStatus.equalsIgnoreCase(status);
+                    }
+
+                    if (!statusMatched) {
                         continue;
                     }
 
@@ -269,7 +277,7 @@ public class MyProductsController implements Initializable {
             } catch (Exception ex) {
                 logger.error("Lỗi lọc và dựng sản phẩm seller: ", ex);
             }
-        }).start();
+        });
     }
 
     private void publishCardBatch(int currentRenderVersion, List<VBox> cards, boolean replaceExisting) {

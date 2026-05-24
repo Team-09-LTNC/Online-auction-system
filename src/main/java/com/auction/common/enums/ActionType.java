@@ -29,6 +29,7 @@ public class ActionType {
     public static final String CONFIRM_BUY_NOW   = "AUCTION_BUY_NOW_CONFIRM";
     public static final String SETTLE_BUY_NOW    = "AUCTION_BUY_NOW_SETTLE";
     public static final String REGISTER_AUTO_BID = "AUCTION_REGISTER_AUTO_BID";
+    public static final String REMOVE_AUTO_BID = "AUCTION_REMOVE_AUTO_BID";
     public static final String GET_BID_HISTORY = "AUCTION_BID_HISTORY";
     public static final String GET_DASHBOARD_STATS = "USER_DASHBOARD_STATS";
 

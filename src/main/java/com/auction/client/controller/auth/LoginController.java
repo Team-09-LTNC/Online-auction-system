@@ -49,7 +49,7 @@ public class LoginController {
     }
 
     private void establishSocketConnection() {
-        new Thread(() -> {
+        com.auction.client.util.ClientTaskExecutor.execute(() -> {
             try {
                 ClientSocket clientSocket = ClientSocket.getInstance();
                 if (clientSocket != null) {
@@ -58,7 +58,7 @@ public class LoginController {
             } catch (Throwable t) {
                 org.slf4j.LoggerFactory.getLogger(getClass()).error("[Socket Error] Không thể thông luồng mạng: {}", t.getMessage());
             }
-        }).start();
+        });
     }
 
     @FXML

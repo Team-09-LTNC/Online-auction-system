@@ -19,7 +19,10 @@ import javafx.scene.layout.VBox;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ChatController {
@@ -252,11 +255,38 @@ public class ChatController {
                 }
 
                 com.google.gson.JsonArray notifications = response.getAsJsonArray("data");
-                for (int i = notifications.size() - 1; i >= 0; i--) {
-                    hienThiThongBao(notifications.get(i).getAsJsonObject());
+                List<JsonObject> sorted = new ArrayList<>();
+                notifications.forEach(element -> sorted.add(element.getAsJsonObject()));
+                sorted.sort(Comparator.comparing(this::parseSentAt));
+
+                for (JsonObject notification : sorted) {
+                    hienThiThongBao(notification);
                 }
             });
         });
+    }
+
+    private LocalDateTime parseSentAt(JsonObject payload) {
+        if (payload == null || !payload.has("sentAt") || payload.get("sentAt").isJsonNull()) {
+            return LocalDateTime.MIN;
+        }
+
+        String sentAt = payload.get("sentAt").getAsString();
+        if (sentAt == null || sentAt.isBlank()) {
+            return LocalDateTime.MIN;
+        }
+
+        String normalized = sentAt.trim().replace('T', ' ');
+        int dotIndex = normalized.indexOf('.');
+        if (dotIndex > 0) {
+            normalized = normalized.substring(0, dotIndex);
+        }
+
+        try {
+            return LocalDateTime.parse(normalized, DB_TIME_FORMAT);
+        } catch (DateTimeParseException ignored) {
+            return LocalDateTime.MIN;
+        }
     }
 
     private void danhDauThongBaoDaDoc() {
