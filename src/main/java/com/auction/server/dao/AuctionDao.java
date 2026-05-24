@@ -376,6 +376,8 @@ public class AuctionDao {
             String status = startTime.isAfter(LocalDateTime.now().plusSeconds(1)) ? "OPEN" : "RUNNING";
             pstmt.setString(5, status);
 
+            // pstmt.setString(5,"PENDING");
+
             pstmt.setTimestamp(6, Timestamp.valueOf(startTime));
             pstmt.setTimestamp(7, Timestamp.valueOf(endTime));
 

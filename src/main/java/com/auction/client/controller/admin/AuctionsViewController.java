@@ -33,7 +33,8 @@ public class AuctionsViewController implements Initializable {
     private static final String ALL_STATUS = "Tat ca";
     private static final List<String> STATUS_OPTIONS = List.of(
             ALL_STATUS,
-            "REOPEN",
+            "OPEN",
+            "RUNNING",
             "FINISHED",
             "PAID",
             "CANCELED");

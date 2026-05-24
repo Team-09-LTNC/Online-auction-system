@@ -44,14 +44,14 @@
     <TableView fx:id="productTable" maxHeight="Infinity" onMouseClicked="#handleTableClick" style="-fx-background-color: #F0EAE4;                           -fx-border-color: #C8AFA0; -fx-border-width: 1px;                           -fx-border-radius: 10px; -fx-background-radius: 10px;" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn fx:id="colProductId" prefWidth="100" text="ID Sản phẩm" />
-            <TableColumn fx:id="colProductName" prefWidth="100" text="Tên sản phẩm" />
+            <TableColumn fx:id="colProductName" prefWidth="150" text="Tên sản phẩm" />
             <TableColumn fx:id="colSellerId" prefWidth="100" text="ID Người bán" />
-            <TableColumn fx:id="colDescription" prefWidth="200" text="Mô tả" />
-            <TableColumn fx:id="colStartPrice" prefWidth="100" text="Giá khởi điểm" />
+            <TableColumn fx:id="colDescription" prefWidth="150" text="Mô tả" />
+            <TableColumn fx:id="colStartPrice" prefWidth="150" text="Giá khởi điểm" />
             <TableColumn fx:id="colCategory" prefWidth="100" text="Phân loại" />
-            <TableColumn fx:id="colStartTime" prefWidth="100" text="Start Time" />
-            <TableColumn fx:id="colEndTime" prefWidth="100" text="End Time" />
-            <TableColumn fx:id="colImage" prefWidth="100" text="IMG" />
+            <TableColumn fx:id="colStartTime" prefWidth="150" text="Start Time" />
+            <TableColumn fx:id="colEndTime" prefWidth="150" text="End Time" />
+            <TableColumn fx:id="colImage" prefWidth="200" text="IMG" />
         </columns>
         <placeholder>
             <Label style="-fx-text-fill: #C8AFA0; -fx-font-size: 13px;" text="Không có sản phẩm nào chờ duyệt" />
