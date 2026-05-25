@@ -76,7 +76,7 @@ public class InvoicesController implements Initializable {
     }
 
     private void loadData() {
-        AdminManager.getInstance().layDanhSachHoaDon(
+        AdminManager.getInstance().getInvoices(
                 invoices -> Platform.runLater(() -> {
                     masterList.clear();
                     invoices.forEach(inv -> masterList.add(new Invoice(

@@ -26,7 +26,7 @@ public class ProductController implements RequestHandler {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProductController.class);
 
     @Override
-    public String xuLy(JsonObject yeuCau, ClientHandler client) {
+    public String handleRequest(JsonObject yeuCau, ClientHandler client) {
         if (yeuCau == null || !yeuCau.has("type") || yeuCau.get("type").isJsonNull()) {
             return buildResponse(yeuCau, "ERROR_RESPONSE",
                     new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu truong type.", ErrorCode.BAD_REQUEST));
@@ -35,19 +35,19 @@ public class ProductController implements RequestHandler {
 
         switch (loaiYeuCau) {
             case ActionType.CREATE_PRODUCT:
-                return xuLyThemSanPham(yeuCau, client);
+                return handleCreateProduct(yeuCau, client);
             case ActionType.GET_ALL_PRODUCTS:
-                return xuLyLayTatCaSanPham(yeuCau);
+                return handleGetAllProducts(yeuCau);
             case ActionType.DELETE_PRODUCT:
-                return xuLyXoaSanPham(yeuCau, client);
+                return handleDeleteProduct(yeuCau, client);
             case ActionType.SEARCH_PRODUCT:
-                return xuLyTimKiemSanPham(yeuCau);
+                return handleSearchProduct(yeuCau);
             case ActionType.GET_PRODUCT_BY_ID:
-                return xuLyLaySanPhamTheoId(yeuCau);
+                return handleGetProductById(yeuCau);
             case ActionType.UPDATE_PRODUCT:
-                return xuLyCapNhatSanPham(yeuCau, client);
+                return handleUpdateProduct(yeuCau, client);
             case ActionType.GET_MY_PRODUCTS:
-                return xuLyLaySanPhamCuaToi(yeuCau, client);
+                return handleGetMyProducts(yeuCau, client);
             default:
                 return buildResponse(yeuCau, "ERROR_RESPONSE",
                         new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Action khong duoc ho tro.",
@@ -67,9 +67,9 @@ public class ProductController implements RequestHandler {
 
     // --- CÁC HÀM XỬ LÝ NGHIỆP VỤ ---
 
-    private String xuLyLaySanPhamCuaToi(JsonObject yeuCau, ClientHandler client) {
+    private String handleGetMyProducts(JsonObject yeuCau, ClientHandler client) {
         // LUÔN lấy thông tin người dùng đang đăng nhập trên hệ thống Server
-        User nguoiDung = client.layNguoiDungHienTai();
+        User nguoiDung = client.getCurrentUser();
 
         if (nguoiDung == null) {
             logger.warn("xuLyLaySanPhamCuaToi: Người dùng chưa đăng nhập!");
@@ -85,18 +85,18 @@ public class ProductController implements RequestHandler {
 
         int sellerId = nguoiDung.getId();
         logger.info("xuLyLaySanPhamCuaToi: Lấy sản phẩm cho sellerId = {}", sellerId);
-        List<Auction> danhSach = auctionDao.layDanhSachPhienThamGia(sellerId, "SELLER");
+        List<Auction> danhSach = auctionDao.getJoinedAuctions(sellerId, "SELLER");
         logger.info("xuLyLaySanPhamCuaToi: Tìm thấy {} phiên/sản phẩm", danhSach.size());
 
         JsonObject dataPayload = new JsonObject();
         dataPayload.addProperty("success", true);
-        dataPayload.add("data", taoDanhSachSanPhamSeller(danhSach));
+        dataPayload.add("data", buildSellerProductList(danhSach));
         dataPayload.addProperty("serverNow", LocalDateTime.now().toString());
 
         return buildResponse(yeuCau, ActionType.GET_MY_PRODUCTS, dataPayload);
     }
 
-    private JsonArray taoDanhSachSanPhamSeller(List<Auction> auctions) {
+    private JsonArray buildSellerProductList(List<Auction> auctions) {
         JsonArray data = new JsonArray();
         for (Auction auction : auctions) {
             Item item = auction.getItem();
@@ -118,10 +118,10 @@ public class ProductController implements RequestHandler {
         return data;
     }
 
-    private String xuLyThemSanPham(JsonObject yeuCau, ClientHandler client) {
+    private String handleCreateProduct(JsonObject yeuCau, ClientHandler client) {
         logger.info("Bắt đầu xử lý thêm sản phẩm mới");
         ItemDTOs.CreateItemRequest request = gson.fromJson(yeuCau, ItemDTOs.CreateItemRequest.class);
-        User nguoiDung = client.layNguoiDungHienTai();
+        User nguoiDung = client.getCurrentUser();
 
         if (nguoiDung == null || !"SELLER".equals(nguoiDung.getRoleName())) {
             logger.warn("xuLyThemSanPham: Thất bại - User null hoặc không phải SELLER. User: {}",
@@ -135,7 +135,7 @@ public class ProductController implements RequestHandler {
         thuocTinh.setDescription(request.getDescription());
         thuocTinh.setStartingPrice(request.getStartingPrice());
 
-        Item sanPhamMoi = ProductManager.getInstance().taoSanPham(request.getCategory(), thuocTinh);
+        Item sanPhamMoi = ProductManager.getInstance().createProduct(request.getCategory(), thuocTinh);
         if (sanPhamMoi == null) {
             logger.warn("xuLyThemSanPham: Thất bại - Không tạo được đối tượng Item từ Factory");
             return buildResponse(yeuCau, ActionType.CREATE_PRODUCT, new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST,
@@ -185,7 +185,7 @@ public class ProductController implements RequestHandler {
                             "Giá mua đứt phải lớn hơn giá khởi điểm.", ErrorCode.BAD_REQUEST));
         }
 
-        boolean thanhCong = ProductManager.getInstance().dangBanSanPham(
+        boolean thanhCong = ProductManager.getInstance().listProductForAuction(
                 sanPhamMoi,
                 startTime,
                 endTime,
@@ -204,21 +204,21 @@ public class ProductController implements RequestHandler {
         }
     }
 
-    private String xuLyLayTatCaSanPham(JsonObject yeuCau) {
-        List<Item> danhSach = ProductManager.getInstance().layTatCaSanPham();
+    private String handleGetAllProducts(JsonObject yeuCau) {
+        List<Item> danhSach = ProductManager.getInstance().getAllProducts();
         JsonObject dataPayload = new JsonObject();
         dataPayload.addProperty("success", true);
         dataPayload.add("data", gson.toJsonTree(danhSach));
         return buildResponse(yeuCau, ActionType.GET_ALL_PRODUCTS, dataPayload);
     }
 
-    private String xuLyXoaSanPham(JsonObject yeuCau, ClientHandler client) {
-        int idSanPham = layItemId(yeuCau);
+    private String handleDeleteProduct(JsonObject yeuCau, ClientHandler client) {
+        int idSanPham = getItemIdFromRequest(yeuCau);
         if (idSanPham <= 0) {
             return buildResponse(yeuCau, ActionType.DELETE_PRODUCT,
                     new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu itemId hop le.", ErrorCode.BAD_REQUEST));
         }
-        User nguoiDung = client.layNguoiDungHienTai();
+        User nguoiDung = client.getCurrentUser();
         if (nguoiDung == null) {
             return buildResponse(yeuCau, ActionType.DELETE_PRODUCT,
                     new BaseDTOs.ErrorResponse(StatusCode.UNAUTHORIZED, "Vui lòng đăng nhập!", ErrorCode.UNAUTHORIZED));
@@ -230,7 +230,7 @@ public class ProductController implements RequestHandler {
                             ErrorCode.FORBIDDEN));
         }
 
-        Item sanPham = ProductManager.getInstance().laySanPhamTheoId(idSanPham);
+        Item sanPham = ProductManager.getInstance().getProductById(idSanPham);
         if (sanPham == null) {
             return buildResponse(yeuCau, ActionType.DELETE_PRODUCT,
                     new BaseDTOs.ErrorResponse(StatusCode.NOT_FOUND, "Không tìm thấy sản phẩm để xóa.",
@@ -243,7 +243,7 @@ public class ProductController implements RequestHandler {
                             ErrorCode.FORBIDDEN));
         }
 
-        if (ProductManager.getInstance().xoaSanPhamDangChoMo(idSanPham, nguoiDung.getId())) {
+        if (ProductManager.getInstance().deletePendingProduct(idSanPham, nguoiDung.getId())) {
             JsonObject successPayload = new JsonObject();
             successPayload.addProperty("statusCode", StatusCode.OK);
             successPayload.addProperty("success", true);
@@ -255,13 +255,13 @@ public class ProductController implements RequestHandler {
                         "Chỉ có thể xóa sản phẩm khi phiên còn OPEN và chưa mở.", ErrorCode.FORBIDDEN));
     }
 
-    private String xuLyTimKiemSanPham(JsonObject yeuCau) {
+    private String handleSearchProduct(JsonObject yeuCau) {
         if (!yeuCau.has("keyword") || yeuCau.get("keyword").isJsonNull()) {
             return buildResponse(yeuCau, ActionType.SEARCH_PRODUCT,
                     new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu keyword.", ErrorCode.BAD_REQUEST));
         }
         String tuKhoa = yeuCau.get("keyword").getAsString();
-        List<Item> ketQua = ProductManager.getInstance().timSanPhamTheoTukhoa(tuKhoa);
+        List<Item> ketQua = ProductManager.getInstance().searchProductsByKeyword(tuKhoa);
 
         JsonObject dataPayload = new JsonObject();
         dataPayload.addProperty("success", true);
@@ -271,15 +271,15 @@ public class ProductController implements RequestHandler {
         return buildResponse(yeuCau, ActionType.SEARCH_PRODUCT, dataPayload);
     }
 
-    private String xuLyLaySanPhamTheoId(JsonObject yeuCau) {
+    private String handleGetProductById(JsonObject yeuCau) {
         try {
-            int itemId = layItemId(yeuCau);
+            int itemId = getItemIdFromRequest(yeuCau);
             if (itemId <= 0) {
                 return buildResponse(yeuCau, ActionType.GET_PRODUCT_BY_ID,
                         new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu itemId hop le.",
                                 ErrorCode.BAD_REQUEST));
             }
-            Item sanPham = ProductManager.getInstance().laySanPhamTheoId(itemId);
+            Item sanPham = ProductManager.getInstance().getProductById(itemId);
             if (sanPham != null) {
                 JsonObject dataPayload = new JsonObject();
                 dataPayload.addProperty("success", true);
@@ -294,20 +294,20 @@ public class ProductController implements RequestHandler {
         }
     }
 
-    private String xuLyCapNhatSanPham(JsonObject yeuCau, ClientHandler client) {
+    private String handleUpdateProduct(JsonObject yeuCau, ClientHandler client) {
         try {
-            User nguoiDung = client.layNguoiDungHienTai();
+            User nguoiDung = client.getCurrentUser();
             if (nguoiDung == null || !"SELLER".equals(nguoiDung.getRoleName())) {
                 return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT, new BaseDTOs.ErrorResponse(StatusCode.FORBIDDEN,
                         "Chỉ Seller mới được cập nhật!", ErrorCode.UNAUTHORIZED));
             }
 
-            int itemId = layItemId(yeuCau);
+            int itemId = getItemIdFromRequest(yeuCau);
             if (itemId <= 0) {
                 return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT, new BaseDTOs.ErrorResponse(
                         StatusCode.BAD_REQUEST, "Thieu itemId hop le.", ErrorCode.BAD_REQUEST));
             }
-            Item sanPham = ProductManager.getInstance().laySanPhamTheoId(itemId);
+            Item sanPham = ProductManager.getInstance().getProductById(itemId);
             if (sanPham == null)
                 return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT,
                         new BaseDTOs.ErrorResponse(StatusCode.NOT_FOUND, "Không tìm thấy", ErrorCode.ITEM_NOT_FOUND));
@@ -350,7 +350,7 @@ public class ProductController implements RequestHandler {
                                 "Thời gian kết thúc phải lớn hơn thời gian bắt đầu.", ErrorCode.BAD_REQUEST));
             }
 
-            if (ProductManager.getInstance().capNhatSanPhamDangChoMo(
+            if (ProductManager.getInstance().updatePendingProduct(
                     sanPham,
                     nguoiDung.getId(),
                     startTime,
@@ -369,7 +369,7 @@ public class ProductController implements RequestHandler {
         }
     }
 
-    private int layItemId(JsonObject yeuCau) {
+    private int getItemIdFromRequest(JsonObject yeuCau) {
         if (yeuCau == null || !yeuCau.has("itemId") || yeuCau.get("itemId").isJsonNull()) {
             return -1;
         }

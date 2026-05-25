@@ -24,7 +24,7 @@ final class AuctionRowMapper {
         String loai = rawCategory == null || rawCategory.trim().isEmpty()
                 ? "OTHER"
                 : rawCategory.trim().toUpperCase(Locale.ROOT);
-        Item item = taoItemTheoLoai(loai);
+        Item item = createItemByType(loai);
 
         item.setId(rs.getInt("item_id"));
         item.setName(rs.getString("name"));
@@ -56,7 +56,7 @@ final class AuctionRowMapper {
         return phien;
     }
 
-    private static Item taoItemTheoLoai(String loai) {
+    private static Item createItemByType(String loai) {
         return switch (loai) {
             case "ELECTRONICS" -> new Electronics();
             case "ART" -> new Art();

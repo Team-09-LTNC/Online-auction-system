@@ -26,6 +26,7 @@ public class AdminDTOs {
     }
 
     public static class AuctionSummaryDTO {
+        private final int id;
         private final String itemName;
         private final String startTime;
         private final String endTime;
@@ -33,11 +34,25 @@ public class AdminDTOs {
         private final String imageUrl;
 
         public AuctionSummaryDTO(String itemName, String startTime, String endTime, String status, String imageUrl) {
+            this.id = 0;
             this.itemName = itemName;
             this.startTime = startTime;
             this.endTime = endTime;
             this.status = status;
-            this.imageUrl = imageUrl; // Placeholder, cần sửa lại sau
+            this.imageUrl = imageUrl; 
+        }
+
+        public AuctionSummaryDTO(int id, String itemName, String startTime, String endTime, String status, String imageUrl) {
+            this.id = id;
+            this.itemName = itemName;
+            this.startTime = startTime;
+            this.endTime = endTime;
+            this.status = status;
+            this.imageUrl = imageUrl; 
+        }
+
+        public int getId() {
+            return id;
         }
 
         public String getItemName() {

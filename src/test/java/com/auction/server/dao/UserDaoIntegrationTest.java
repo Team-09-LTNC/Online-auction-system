@@ -18,46 +18,46 @@ class UserDaoIntegrationTest extends DaoIntegrationTestSupport {
     private final UserDao userDao = new UserDao();
 
     @Test
-    void luuNguoiDungAndTimTheoTenDangNhapWork() {
+    void saveUserAndFindByUsernameWork() {
         String username = "it_bidder_" + System.currentTimeMillis();
         try {
             Bidder bidder = new Bidder(username, "secret", "Integration Bidder");
 
-            boolean created = userDao.luuNguoiDung(bidder);
+            boolean created = userDao.saveUser(bidder);
             assertTrue(created);
 
-            Optional<User> found = userDao.timTheoTenDangNhap(username);
+            Optional<User> found = userDao.findByUsername(username);
             assertTrue(found.isPresent());
             assertEquals("BIDDER", found.get().getRoleName());
             assertEquals("ACTIVE", found.get().getStatus());
         } finally {
-            xoaNguoiDungTheoUsername(username);
+            deleteUserByUsername(username);
         }
     }
 
     @Test
-    void capNhatSoDuUpdatesBalance() {
+    void updateBalanceUpdatesBalance() {
         String username = "it_balance_" + System.currentTimeMillis();
         try {
             Bidder newBidder = new Bidder(username, "secret", "Balance Bidder");
-            assertTrue(userDao.luuNguoiDung(newBidder));
+            assertTrue(userDao.saveUser(newBidder));
 
-            Optional<User> bidderOpt = userDao.timTheoTenDangNhap(username);
+            Optional<User> bidderOpt = userDao.findByUsername(username);
             assertTrue(bidderOpt.isPresent());
 
             User bidder = bidderOpt.get();
             long newBalance = 123_456_789L;
-            assertTrue(userDao.capNhatSoDu(bidder.getId(), newBalance));
+            assertTrue(userDao.updateBalance(bidder.getId(), newBalance));
 
-            Optional<User> reloaded = userDao.timTheoTenDangNhap(username);
+            Optional<User> reloaded = userDao.findByUsername(username);
             assertTrue(reloaded.isPresent());
             assertEquals(newBalance, reloaded.get().getBalance());
         } finally {
-            xoaNguoiDungTheoUsername(username);
+            deleteUserByUsername(username);
         }
     }
 
-    private void xoaNguoiDungTheoUsername(String username) {
+    private void deleteUserByUsername(String username) {
         String sql = "DELETE FROM users WHERE username = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {

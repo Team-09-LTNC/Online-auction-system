@@ -68,9 +68,9 @@ public class AdminLayoutController implements Initializable {
       case "btnSellers":
         loadView("/fxml/admin/SellersView.fxml", "Quản lý Seller");
         break;
-      case "btnTransactions":
-        loadView("/fxml/admin/TransactionsView.fxml", "Giao dịch");
-        break;
+      // case "btnTransactions":
+      //   loadView("/fxml/admin/TransactionsView.fxml", "Giao dịch");
+      //   break;
       case "btnInvoices":
         loadView("/fxml/admin/InvoicesView.fxml", "Hóa đơn");
         break;

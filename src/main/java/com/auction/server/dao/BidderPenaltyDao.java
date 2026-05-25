@@ -35,8 +35,8 @@ public class BidderPenaltyDao {
         }
     }
 
-    public SanctionResult ghiNhanViPhamQuaHan(int bidderId, String reason) {
-        taoBangNeuChuaCo();
+    public SanctionResult recordLatePaymentViolation(int bidderId, String reason) {
+        createTableIfMissing();
         String selectSql = "SELECT violation_count FROM bidder_penalties WHERE bidder_id = ?";
         String insertSql = "INSERT INTO bidder_penalties (bidder_id, violation_count, lock_until, last_reason) VALUES (?, ?, ?, ?)";
         String updateSql = "UPDATE bidder_penalties SET violation_count = ?, lock_until = ?, last_reason = ?, updated_at = CURRENT_TIMESTAMP WHERE bidder_id = ?";
@@ -91,8 +91,8 @@ public class BidderPenaltyDao {
         }
     }
 
-    public LockInfo layTrangThaiTamKhoa(int bidderId) {
-        taoBangNeuChuaCo();
+    public LockInfo getTemporaryLockInfo(int bidderId) {
+        createTableIfMissing();
         String sql = "SELECT lock_until FROM bidder_penalties WHERE bidder_id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -114,7 +114,7 @@ public class BidderPenaltyDao {
         }
     }
 
-    private void taoBangNeuChuaCo() {
+    private void createTableIfMissing() {
         String sql = "CREATE TABLE IF NOT EXISTS bidder_penalties ("
                 + "bidder_id INT PRIMARY KEY, "
                 + "violation_count INT NOT NULL DEFAULT 0, "

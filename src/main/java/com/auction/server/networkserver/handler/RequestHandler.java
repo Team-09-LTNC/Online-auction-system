@@ -14,5 +14,5 @@ public interface RequestHandler {
      * @param client Tham chiếu đến ClientHandler đang quản lý kết nối này.
      * @return Chuỗi JSON phản hồi lại cho Client.
      */
-    String xuLy(JsonObject yeuCau, ClientHandler client);
+    String handleRequest(JsonObject yeuCau, ClientHandler client);
 }

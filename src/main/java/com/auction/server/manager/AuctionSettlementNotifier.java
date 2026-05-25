@@ -6,56 +6,56 @@ final class AuctionSettlementNotifier {
     private AuctionSettlementNotifier() {
     }
 
-    static void guiThongBaoKetThucPhien(AuctionDao.AuctionNotificationTargets targets) {
+    static void sendAuctionEndNotification(AuctionDao.AuctionNotificationTargets targets) {
         if (targets == null || targets.winnerId == null) {
             return;
         }
         String itemName = targets.itemName == null ? "san pham" : targets.itemName;
         String winnerName = targets.winnerName == null ? "nguoi thang phien" : targets.winnerName;
 
-        SystemNotificationManager.getInstance().guiThongBaoRieng(
+        SystemNotificationManager.getInstance().sendPrivateNotification(
                 targets.auctionId,
                 targets.winnerId,
-                taoNoiDungThongBaoThanhToan(itemName, targets.auctionId),
+                buildPaymentNotificationContent(itemName, targets.auctionId),
                 true
         );
-        SystemNotificationManager.getInstance().guiThongBaoRieng(
+        SystemNotificationManager.getInstance().sendPrivateNotification(
                 targets.auctionId,
                 targets.sellerId,
-                taoNoiDungThongBaoSeller(itemName, targets.auctionId, winnerName),
+                buildSellerNotificationContent(itemName, targets.auctionId, winnerName),
                 false
         );
     }
 
-    static void guiThongBaoQuaHanThanhToan(int auctionId, int winnerId, int sellerId, String itemName) {
+    static void sendPaymentOverdueNotification(int auctionId, int winnerId, int sellerId, String itemName) {
         String safeItemName = (itemName == null || itemName.isBlank()) ? "san pham" : itemName;
 
-        SystemNotificationManager.getInstance().guiThongBaoRieng(
+        SystemNotificationManager.getInstance().sendPrivateNotification(
                 auctionId,
                 winnerId,
-                "Phien " + auctionId + " da qua han thanh toan. He thong tu dong huy va tru phi phat 10% cho san pham " + safeItemName + ".",
+                "Phiên " + auctionId + " đã quá hạn thanh toán. Hệ thống tự động hủy và trừ phí phạt 10% cho sản phẩm " + safeItemName + ".",
                 false
         );
 
         if (sellerId > 0) {
-            SystemNotificationManager.getInstance().guiThongBaoRieng(
+            SystemNotificationManager.getInstance().sendPrivateNotification(
                     auctionId,
                     sellerId,
-                    "Bidder da qua han thanh toan o phien " + auctionId + ". He thong da tu dong huy va chuyen phi phat cho ban.",
+                    "Bidder đã quá hạn thanh toán ở phiên " + auctionId + ". Hệ thống đã tự động hủy và chuyển phí phạt cho bạn.",
                     false
             );
         }
     }
 
-    private static String taoNoiDungThongBaoThanhToan(String itemName, int auctionId) {
-        return "Chuc mung ban da chien thang phien dau gia " + itemName
-                + " cua phien ID " + auctionId + ".\n"
-                + "Xac nhan thanh toan de chinh thuc so huu san pham.\n\n"
-                + "Neu huy thanh toan, ban se chiu phat 10% tien dat gia.";
+    private static String buildPaymentNotificationContent(String itemName, int auctionId) {
+        return "Chúc mừng bạn đã chiến thắng phiên đấu giá " + itemName
+                + " của phiên ID " + auctionId + ".\n"
+                + "Xác nhận thanh toán để chính thức sở hữu sản phẩm.\n\n"
+                + "Nếu hủy thanh toán, bạn sẽ chịu phạt 10% tiền đặt giá.";
     }
 
-    private static String taoNoiDungThongBaoSeller(String itemName, int auctionId, String winnerName) {
-        return "Chuc mung san pham " + itemName + " phien " + auctionId
-                + " da duoc ban thanh cong, nguoi chien thang la " + winnerName + ".";
+    private static String buildSellerNotificationContent(String itemName, int auctionId, String winnerName) {
+        return "Chúc mừng sản phẩm " + itemName + " phiên " + auctionId
+                + " đã được bán thành công, người chiến thắng là " + winnerName + ".";
     }
 }

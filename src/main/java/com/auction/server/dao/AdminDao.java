@@ -17,6 +17,7 @@ import com.auction.common.enums.AuctionStatus;
 import com.auction.common.model.bid.Auction;
 import com.auction.common.model.item.OtherItem;
 import com.auction.server.db.DatabaseConnection;
+import com.google.gson.JsonObject;
 
 /**
  * Tầng quản lý truy cập dữ liệu (DAO) cho các phiên đấu giá.
@@ -28,9 +29,9 @@ public class AdminDao {
      * Lấy danh sách tất cả phiên đấu giá, bao gồm cả thông tin sản phẩm và trạng
      * thái.
      */
-    public List<Auction> layDanhSachTatCaAuctions() {
+    public List<Auction> getAllAuctions() {
         List<Auction> auctions = new ArrayList<>();
-        String sql = "SELECT i.name AS item_name, a.start_time, a.end_time, a.status, i.image_url " +
+        String sql = "SELECT a.id, i.name AS item_name, a.start_time, a.end_time, a.status, i.image_url " +
                 "FROM auctions a JOIN items i ON a.item_id = i.id"; // Câu truy vấn lấy thêm image_url từ bảng items
         // ... rest of the method implementation
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -38,6 +39,7 @@ public class AdminDao {
                 ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
+                int auctionId = rs.getInt("id");
                 String itemName = rs.getString("item_name");
                 LocalDateTime startTime = rs.getTimestamp("start_time").toLocalDateTime();
                 LocalDateTime endTime = rs.getTimestamp("end_time").toLocalDateTime();
@@ -48,6 +50,7 @@ public class AdminDao {
                 // Item
                 OtherItem item = new OtherItem(itemName, imageUrl); // Giá và hình ảnh tạm thời
                 Auction auction = new Auction(item);
+                auction.setId(auctionId);
                 auction.setStartTime(startTime);
                 auction.setEndTime(endTime);
                 auction.setStatus(status);
@@ -62,7 +65,7 @@ public class AdminDao {
     }
 
     // Lấy danh sách phiên chờ duyệt
-    public List<Auction> layDanhSachChoDuyet() {
+    public List<Auction> getPendingAuctions() {
         List<Auction> auctions = new ArrayList<>();
         String sql = "SELECT a.id, a.status, i.seller_id, i.name AS item_name, i.category, " +
                 "i.starting_price, i.description, i.image_url, " +
@@ -106,7 +109,7 @@ public class AdminDao {
     }
 
     // Duyệt hoặc từ chối phiên đấu giá
-    public boolean duyetAuction(int auctionId, String newStatus) {
+    public boolean approveAuction(int auctionId, String newStatus) {
         String sql = "UPDATE auctions SET status = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -123,7 +126,7 @@ public class AdminDao {
      * Lấy danh sách hóa đơn đã thanh toán, bao gồm thông tin về phiên đấu giá, sản
      * phẩm, người bán, người mua và giá cuối cùng.
      */
-    public List<com.auction.common.dto.AdminDTOs.InvoiceDTO> layDanhSachHoaDon() {
+    public List<com.auction.common.dto.AdminDTOs.InvoiceDTO> getInvoices() {
         List<com.auction.common.dto.AdminDTOs.InvoiceDTO> list = new ArrayList<>();
         String sql = "SELECT a.id AS auction_id, a.item_id, i.name AS item_name, " +
                 "       i.seller_id, a.highest_bidder_id AS winner_id, " +
@@ -150,5 +153,46 @@ public class AdminDao {
             logger.error("Lỗi layDanhSachHoaDon: ", e);
         }
         return list;
+    }
+
+    /*
+     * Cập nhật trạng thái của phiên đấu giá (ví dụ: từ OPEN sang CANCELED, hoặc từ
+     * RUNNING sang FINISHED)
+     */
+    public boolean updateAuctionStatus(int auctionId, String newStatus) {
+        String sql = "UPDATE auctions SET status = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newStatus);
+            ps.setInt(2, auctionId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.error("Lỗi capNhatTrangThaiAuction: ", e);
+            return false;
+        }
+    }
+
+    public JsonObject getAuctionInfo(int auctionId) {
+        String sql = "SELECT status, start_time, end_time FROM auctions WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, auctionId); // ← set tham số TRƯỚC
+
+            try (ResultSet rs = ps.executeQuery()) { // ← executeQuery SAU
+                if (rs.next()) {
+                    JsonObject obj = new JsonObject();
+                    obj.addProperty("status", rs.getString("status"));
+                    obj.addProperty("start_time", rs.getTimestamp("start_time").toLocalDateTime().toString());
+                    obj.addProperty("end_time", rs.getTimestamp("end_time").toLocalDateTime().toString());
+                    return obj;
+                } else {
+                    logger.warn("layThongTinAuction: Không tìm thấy auction với id: {}", auctionId);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi layThongTinAuction: ", e);
+        }
+        return null;
     }
 }

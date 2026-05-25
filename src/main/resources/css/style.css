@@ -104,27 +104,101 @@
     -fx-font-size: 18px;
 }
 
-/* Nút "Ra giá" nằm trong mỗi thẻ sản phẩm */
-.bid-button {
-    -fx-background-color: #A64452;
-    -fx-text-fill: white !important;
-    -fx-background-radius: 8;
-    -fx-padding: 8 15;
+/* Nút hành động trong thẻ sản phẩm */
+.auction-action-button {
+    -fx-min-width: 112;
+    -fx-pref-height: 34;
+    -fx-padding: 7 14;
+    -fx-background-radius: 9;
+    -fx-border-radius: 9;
+    -fx-border-width: 1;
+    -fx-font-size: 13px;
     -fx-font-weight: bold;
     -fx-cursor: hand;
 }
 
-.bid-button:hover {
-    -fx-background-color: #C25B69; /* Sáng hơn một chút khi hover */
+.auction-action-button:disabled {
+    -fx-opacity: 1;
+    -fx-cursor: default;
+}
+
+.auction-action-live {
+    -fx-background-color: linear-gradient(to bottom, #C04455, #9F2838);
+    -fx-border-color: #8E2231;
+    -fx-text-fill: #FFFFFF !important;
+    -fx-effect: dropshadow(three-pass-box, rgba(166,68,82,0.22), 8, 0, 0, 3);
+}
+
+.auction-action-live:hover {
+    -fx-background-color: linear-gradient(to bottom, #D05263, #AD3041);
+}
+
+.auction-action-live:pressed {
+    -fx-background-color: #8E2231;
+}
+
+.auction-action-waiting {
+    -fx-background-color: #FFF7E8;
+    -fx-border-color: #E7C27D;
+    -fx-text-fill: #9A641B !important;
+}
+
+.auction-action-expired {
+    -fx-background-color: #F2EEEB;
+    -fx-border-color: #DED4CF;
+    -fx-text-fill: #7D6E6A !important;
+}
+
+.auction-action-paid {
+    -fx-background-color: #EAF7EF;
+    -fx-border-color: #B9DEC6;
+    -fx-text-fill: #2E7D48 !important;
+}
+
+.auction-action-canceled {
+    -fx-background-color: #F7EAEC;
+    -fx-border-color: #E5C6CC;
+    -fx-text-fill: #9A3A49 !important;
 }
 
 /* Nhãn trạng thái nhỏ (Ví dụ: Đang diễn ra, Đã kết thúc) */
 .status-label {
-    -fx-background-color: #F1F8E9; /* Nền xanh lá cực nhạt */
-    -fx-text-fill: #689F38;         /* Chữ xanh lá trung tính */
-    -fx-background-radius: 5;
-    -fx-padding: 3 8;
-    -fx-font-size: 11px;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 4 10;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.status-live {
+    -fx-background-color: #ECF8EF;
+    -fx-border-color: #C9E8D0;
+    -fx-text-fill: #2F8A43;
+}
+
+.status-waiting {
+    -fx-background-color: #FFF7E8;
+    -fx-border-color: #E7C27D;
+    -fx-text-fill: #9A641B;
+}
+
+.status-expired {
+    -fx-background-color: #F2EEEB;
+    -fx-border-color: #DED4CF;
+    -fx-text-fill: #7D6E6A;
+}
+
+.status-paid {
+    -fx-background-color: #EAF7EF;
+    -fx-border-color: #B9DEC6;
+    -fx-text-fill: #2E7D48;
+}
+
+.status-canceled {
+    -fx-background-color: #F7EAEC;
+    -fx-border-color: #E5C6CC;
+    -fx-text-fill: #9A3A49;
 }
 
 /* ==========================================================

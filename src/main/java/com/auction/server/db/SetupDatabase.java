@@ -15,13 +15,13 @@ public class SetupDatabase {
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              Statement stmt = conn.createStatement()) {
 
-            if (daKhoiTaoDatabase(conn)) {
+            if (isDatabaseInitialized(conn)) {
                 System.out.println(">>> Database da co bang he thong. Bo qua setup de giu nguyen du lieu hien tai.");
                 return;
             }
 
-            taoSchemaMoiNhat(stmt);
-            napDuLieuMauBanDau(stmt);
+            createLatestSchema(stmt);
+            seedInitialData(stmt);
 
             System.out.println();
             System.out.println("==================================================");
@@ -34,14 +34,14 @@ public class SetupDatabase {
         }
     }
 
-    private static boolean daKhoiTaoDatabase(Connection conn) throws Exception {
+    private static boolean isDatabaseInitialized(Connection conn) throws Exception {
         DatabaseMetaData metaData = conn.getMetaData();
         try (ResultSet rs = metaData.getTables(null, null, "users", null)) {
             return rs.next();
         }
     }
 
-    private static void taoSchemaMoiNhat(Statement stmt) throws Exception {
+    private static void createLatestSchema(Statement stmt) throws Exception {
         System.out.println(">>> Dang tao schema moi nhat neu chua ton tai...");
 
         stmt.execute("CREATE TABLE IF NOT EXISTS users ("
@@ -129,11 +129,13 @@ public class SetupDatabase {
                 + "auction_id INT NOT NULL, "
                 + "bidder_id INT NOT NULL, "
                 + "max_auto_bid BIGINT NOT NULL, "
+                + "bid_step BIGINT NOT NULL DEFAULT 0, "
                 + "register_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, "
                 + "PRIMARY KEY (auction_id, bidder_id), "
                 + "FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE, "
                 + "FOREIGN KEY (bidder_id) REFERENCES users(id) ON DELETE CASCADE"
                 + ") ENGINE=InnoDB");
+        stmt.execute("ALTER TABLE auto_bid_settings ADD COLUMN IF NOT EXISTS bid_step BIGINT NOT NULL DEFAULT 0");
 
         stmt.execute("CREATE TABLE IF NOT EXISTS bidder_penalties ("
                 + "bidder_id INT PRIMARY KEY, "
@@ -145,7 +147,7 @@ public class SetupDatabase {
                 + ") ENGINE=InnoDB");
     }
 
-    private static void napDuLieuMauBanDau(Statement stmt) throws Exception {
+    private static void seedInitialData(Statement stmt) throws Exception {
         System.out.println(">>> Dang nap du lieu mau ban dau...");
 
         stmt.execute("INSERT IGNORE INTO users "

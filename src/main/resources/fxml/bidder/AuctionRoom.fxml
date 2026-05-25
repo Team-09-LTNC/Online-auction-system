@@ -88,11 +88,13 @@
 
         <VBox spacing="10.0" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-border-color: #EEEEEE;">
             <Label text="Đấu giá tự động:" textFill="#888888" style="-fx-font-size: 12px; -fx-font-weight: bold;" />
+            <TextField fx:id="txtMaxAutoBid" prefHeight="42.0" promptText="Giá trần tối đa..."
+                       style="-fx-background-radius: 10; -fx-alignment: center; -fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #A64452; -fx-border-color: #DDD; -fx-border-radius: 10;" />
             <HBox spacing="10.0">
                 <children>
-                    <TextField fx:id="txtMaxAutoBid" prefHeight="40.0" promptText="Giá trần tối đa..." HBox.hgrow="ALWAYS"
-                               style="-fx-background-radius: 8; -fx-alignment: center; -fx-font-size: 13;" />
-                    <Button fx:id="btnEnableAutoBid" onAction="#handleEnableAutoBid" prefHeight="40.0" prefWidth="120.0" text="KÍCH HOẠT"
+                    <TextField fx:id="txtAutoBidStep" prefHeight="40.0" promptText="Bước giá auto-bid..." HBox.hgrow="ALWAYS"
+                               style="-fx-background-radius: 10; -fx-alignment: center; -fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #A64452; -fx-border-color: #DDD; -fx-border-radius: 10;" />
+                    <Button fx:id="btnEnableAutoBid" minWidth="142.0" onAction="#handleEnableAutoBid" prefHeight="40.0" prefWidth="142.0" text="KÍCH HOẠT"
                             style="-fx-background-color: #5D4037; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;" />
                 </children>
             </HBox>

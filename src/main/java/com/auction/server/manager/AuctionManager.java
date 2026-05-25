@@ -21,7 +21,7 @@ public class AuctionManager {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AuctionManager.class);
     private static volatile AuctionManager instance;
     private static final ZoneId SERVER_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
-    private static final long PAYMENT_TIMEOUT_MINUTES = 24 * 60 ;
+    private static final long PAYMENT_TIMEOUT_MINUTES = 24 * 60;
 
     private final Map<Integer, Auction> dsPhienDangChay = new ConcurrentHashMap<>();
     private final Map<Integer, List<AuctionObserver>> dsNguoiTheoDoi = new ConcurrentHashMap<>();
@@ -33,11 +33,11 @@ public class AuctionManager {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
     private final ExecutorService notifierPool = Executors.newFixedThreadPool(50);
 
-    private void napAutoBidVaoPhien(Auction auction) {
+    private void loadAutoBidsIntoAuction(Auction auction) {
         if (auction == null) {
             return;
         }
-        List<AutoBidConfig> bots = auctionDao.layDanhSachAutoBidCuaPhien(auction.getId());
+        List<AutoBidConfig> bots = auctionDao.getAuctionAutoBids(auction.getId());
         for (AutoBidConfig bot : bots) {
             auction.addAutoBidConfig(bot);
         }
@@ -46,18 +46,18 @@ public class AuctionManager {
     // Tải phiên từ DB và lên lịch khi khởi động
     private AuctionManager() {
         // Khôi phục các phiên đang chạy
-        for (Auction a : auctionDao.layDanhSachPhienDangChay()) {
+        for (Auction a : auctionDao.getRunningAuctions()) {
             // ---> PHỤC HỒI BOT TỪ DATABASE LÊN RAM
-            napAutoBidVaoPhien(a);
+            loadAutoBidsIntoAuction(a);
 
             dsPhienDangChay.put(a.getId(), a);
-            henGioDongPhien(a);
+            scheduleAuctionClose(a);
         }
         // Lên lịch mở các phiên đang chờ
-        for (Auction a : auctionDao.layDanhSachPhienChoMo()) {
-            napAutoBidVaoPhien(a);
+        for (Auction a : auctionDao.getPendingAuctionSessions()) {
+            loadAutoBidsIntoAuction(a);
 
-            henGioMoPhien(a);
+            scheduleAuctionStart(a);
         }
     }
 
@@ -65,42 +65,44 @@ public class AuctionManager {
     public static AuctionManager getInstance() {
         if (instance == null) {
             synchronized (AuctionManager.class) {
-                if (instance == null) instance = new AuctionManager();
+                if (instance == null)
+                    instance = new AuctionManager();
             }
         }
         return instance;
     }
 
     // Lên lịch mở phiên vào thời điểm startTime
-    public void henGioMoPhien(Auction phien) {
+    public void scheduleAuctionStart(Auction phien) {
         ScheduledFuture<?> taskCu = tasksMoPhien.get(phien.getId());
-        if (taskCu != null && !taskCu.isDone()) taskCu.cancel(false);
+        if (taskCu != null && !taskCu.isDone())
+            taskCu.cancel(false);
 
         long delay = java.time.Duration.between(LocalDateTime.now(SERVER_ZONE), phien.getStartTime()).toMillis();
 
         if (delay <= 0) {
-            thucThiMoPhien(phien);
+            openAuction(phien);
         } else {
-            ScheduledFuture<?> taskMoi = scheduler.schedule(() -> thucThiMoPhien(phien), delay, TimeUnit.MILLISECONDS);
+            ScheduledFuture<?> taskMoi = scheduler.schedule(() -> openAuction(phien), delay, TimeUnit.MILLISECONDS);
             tasksMoPhien.put(phien.getId(), taskMoi);
         }
     }
 
     // Cập nhật trạng thái phiên thành RUNNING và lên lịch đóng
-    private void thucThiMoPhien(Auction phien) {
-        if (auctionDao.capNhatTrangThai(phien.getId(), AuctionStatus.RUNNING.name())) {
+    private void openAuction(Auction phien) {
+        if (auctionDao.updateStatus(phien.getId(), AuctionStatus.RUNNING.name())) {
             phien.setStatus(AuctionStatus.RUNNING);
             dsPhienDangChay.put(phien.getId(), phien);
 
             tasksMoPhien.remove(phien.getId());
 
             logger.info("Đã tự động mở phiên đấu giá ID: {}", phien.getId());
-            henGioDongPhien(phien); // Bắt đầu đếm ngược đến giờ đóng
+            scheduleAuctionClose(phien); // Bắt đầu đếm ngược đến giờ đóng
         }
     }
 
     // Lên lịch đóng phiên, hủy task cũ nếu có (dùng cho Anti-sniping khi gia hạn)
-    public void henGioDongPhien(Auction phien) {
+    public void scheduleAuctionClose(Auction phien) {
         // Hủy tác vụ đóng phiên cũ nếu đang chạy
         ScheduledFuture<?> taskCu = tasksDongPhien.get(phien.getId());
         if (taskCu != null && !taskCu.isDone()) {
@@ -110,33 +112,33 @@ public class AuctionManager {
         long delay = java.time.Duration.between(LocalDateTime.now(SERVER_ZONE), phien.getEndTime()).toMillis();
 
         if (delay <= 0) {
-            dongPhien(phien.getId()); // Đã quá giờ thì đóng luôn
+            closeAuction(phien.getId()); // Đã quá giờ thì đóng luôn
         } else {
-            ScheduledFuture<?> taskMoi = scheduler.schedule(() -> dongPhien(phien.getId()), delay, TimeUnit.MILLISECONDS);
+            ScheduledFuture<?> taskMoi = scheduler.schedule(() -> closeAuction(phien.getId()), delay,
+                    TimeUnit.MILLISECONDS);
             tasksDongPhien.put(phien.getId(), taskMoi);
         }
     }
 
     // Đóng phiên: xác định trạng thái FINISHED/CANCELED, dọn dẹp tài nguyên
-    private void dongPhien(int idPhien) {
+    private void closeAuction(int idPhien) {
         Auction p = dsPhienDangChay.remove(idPhien);
         if (p != null) {
             synchronized (p) {
-                AuctionDao.AuctionNotificationTargets targets =
-                        auctionDao.layNguoiNhanThongBaoKetThuc(idPhien);
+                AuctionDao.AuctionNotificationTargets targets = auctionDao.getAuctionEndNotificationTargets(idPhien);
                 // Có người thắng -> FINISHED, không có -> CANCELED
                 AuctionStatus statusMoi = targets != null && targets.winnerId != null
                         ? AuctionStatus.FINISHED
                         : AuctionStatus.CANCELED;
                 p.setStatus(statusMoi);
-                auctionDao.capNhatTrangThai(idPhien, statusMoi.name());
+                auctionDao.updateStatus(idPhien, statusMoi.name());
                 if (statusMoi == AuctionStatus.FINISHED) {
                     logger.info("Dong phien {} FINISHED. winnerId={}, sellerId={}",
                             idPhien,
                             targets != null ? targets.winnerId : null,
                             targets != null ? targets.sellerId : null);
-                    AuctionSettlementNotifier.guiThongBaoKetThucPhien(targets);
-                    henGioQuaHanThanhToan(idPhien, targets);
+                    AuctionSettlementNotifier.sendAuctionEndNotification(targets);
+                    schedulePaymentTimeout(idPhien, targets);
                 }
 
                 // Xóa phiên khỏi bộ nhớ và dọn dẹp tài nguyên liên quan
@@ -146,11 +148,12 @@ public class AuctionManager {
         }
     }
 
-    // Xử lý đặt giá: kiểm tra điều kiện, chống sniping, lưu DB và kích hoạt auto-bid
-    public boolean xuLyDatGia(int idPhien, BidTransaction giaoDich) throws InvalidBidException, AuctionClosedException {
+    // Xử lý đặt giá: kiểm tra điều kiện, chống sniping, lưu DB và kích hoạt
+    // auto-bid
+    public boolean handlePlaceBid(int idPhien, BidTransaction giaoDich) throws InvalidBidException, AuctionClosedException {
         Auction phien = dsPhienDangChay.get(idPhien);
         if (phien == null) {
-            Auction tuDb = auctionDao.layPhienTheoId(idPhien);
+            Auction tuDb = auctionDao.getAuctionById(idPhien);
             if (tuDb == null) {
                 throw new InvalidBidException("Phiên đấu giá không tồn tại.");
             }
@@ -159,9 +162,9 @@ public class AuctionManager {
                 throw new InvalidBidException("Phiên chưa mở, chưa thể đặt giá.");
             }
             if (status == AuctionStatus.RUNNING) {
-                napAutoBidVaoPhien(tuDb);
+                loadAutoBidsIntoAuction(tuDb);
                 dsPhienDangChay.put(tuDb.getId(), tuDb);
-                henGioDongPhien(tuDb);
+                scheduleAuctionClose(tuDb);
                 phien = tuDb;
             }
             if (status == AuctionStatus.CANCELED) {
@@ -174,7 +177,7 @@ public class AuctionManager {
 
         synchronized (phien) { // Đồng bộ trên phiên để tránh race condition
             if (!phien.isAcceptingBids()) {
-                dongPhien(idPhien);
+                closeAuction(idPhien);
                 throw new AuctionClosedException("Phiên đã kết thúc!");
             }
 
@@ -191,16 +194,16 @@ public class AuctionManager {
             if (giaoDich.getBidAmount() < giaToiThieu) {
                 throw new InvalidBidException("Giá đặt tối thiểu: " + giaToiThieu);
             }
-            if (coDatGiaDatMuaDut(phien, giaoDich.getBidAmount())) {
+            if (isBuyNowBid(phien, giaoDich.getBidAmount())) {
                 throw new InvalidBidException("Mức giá này đạt giá mua đứt. Hãy xác nhận mua ngay.");
             }
 
             // Lưu giao dịch vào DB và cập nhật người thắng hiện tại
-            if (auctionDao.thucHienGiaoDichDatGia(idPhien, giaoDich)) {
+            if (auctionDao.executeBidTransaction(idPhien, giaoDich)) {
                 phien.updateWinner(giaoDich);
-                giaHanNeuDatGiaCuoiPhien(phien);
-                notifierPool.execute(() -> thongBaoGiaMoi(idPhien, giaoDich)); // Gửi thông báo bất đồng bộ
-                kichHoatAutoBid(phien); // Kích hoạt auto-bid để đáp trả nếu cần
+                extendIfLateBid(phien);
+                notifyNewBid(idPhien, giaoDich);
+                triggerAutoBid(phien); // Kích hoạt auto-bid để đáp trả nếu cần
                 return true;
             }
             return false;
@@ -208,7 +211,7 @@ public class AuctionManager {
     }
 
     /** Mua đứt luôn chốt ở giá mua đứt trong DB, không lấy số tiền từ client. */
-    public BidTransaction xuLyMuaDut(int idPhien, Bidder bidder)
+    public BidTransaction handleBuyNow(int idPhien, Bidder bidder)
             throws InvalidBidException, AuctionClosedException {
         Auction phien = dsPhienDangChay.get(idPhien);
         if (phien == null) {
@@ -217,7 +220,7 @@ public class AuctionManager {
 
         synchronized (phien) {
             if (!phien.isAcceptingBids()) {
-                dongPhien(idPhien);
+                closeAuction(idPhien);
                 throw new AuctionClosedException("Phiên đã kết thúc!");
             }
             if (bidder.getId() == phien.getItem().getSellerId()) {
@@ -233,30 +236,31 @@ public class AuctionManager {
             }
 
             BidTransaction giaoDich = new BidTransaction(idPhien, bidder, giaMuaDut, LocalDateTime.now());
-            if (!auctionDao.thucHienGiaoDichDatGia(idPhien, giaoDich)) {
+            if (!auctionDao.executeBidTransaction(idPhien, giaoDich)) {
                 throw new InvalidBidException("Đã có người trả giá cao hơn.");
             }
 
             phien.updateWinner(giaoDich);
             phien.setStatus(AuctionStatus.FINISHED);
-            auctionDao.capNhatTrangThai(idPhien, AuctionStatus.FINISHED.name());
-            huyLichDongPhien(idPhien);
-            notifierPool.execute(() -> thongBaoGiaMoi(idPhien, giaoDich));
-            thongBaoTrangThai(idPhien, AuctionStatus.FINISHED);
-            AuctionDao.AuctionNotificationTargets targets = auctionDao.layNguoiNhanThongBaoKetThuc(idPhien);
-            henGioQuaHanThanhToan(idPhien, targets);
+            auctionDao.updateStatus(idPhien, AuctionStatus.FINISHED.name());
+            cancelAuctionCloseSchedule(idPhien);
+            notifyNewBid(idPhien, giaoDich);
+            notifyStatusChange(idPhien, AuctionStatus.FINISHED);
+            AuctionDao.AuctionNotificationTargets targets = auctionDao.getAuctionEndNotificationTargets(idPhien);
+            schedulePaymentTimeout(idPhien, targets);
             return giaoDich;
         }
     }
 
     // Đăng ký auto-bid: đặt giá tự động đến mức tối đa cho phép
-    public void dangKyAutoBid(int idPhien, User bidder, long maxBid) throws Exception {
+    public void registerAutoBid(int idPhien, User bidder, long maxBid, long bidStep) throws Exception {
         Auction phien = dsPhienDangChay.get(idPhien);
-        if (phien == null) throw new Exception("Phiên không khả dụng!");
+        if (phien == null)
+            throw new Exception("Phiên không khả dụng!");
 
         synchronized (phien) {
             if (!phien.isAcceptingBids()) {
-                dongPhien(idPhien);
+                closeAuction(idPhien);
                 throw new AuctionClosedException("Phiên đã kết thúc!");
             }
 
@@ -265,22 +269,31 @@ public class AuctionManager {
                 throw new Exception("Seller không thể đăng ký Auto-bid cho sản phẩm của mình!");
             }
 
+            long giaHienTai = phien.getCurrentHighestBid();
+            long buocGiaNguoiBan = phien.getItem().getBidIncrement();
+            if (maxBid <= giaHienTai) {
+                throw new Exception("Giá max Auto-bid phải lớn hơn giá hiện tại.");
+            }
+            if (bidStep < buocGiaNguoiBan) {
+                throw new Exception("Bước giá Auto-bid phải >= bước giá người bán.");
+            }
+
             Queue<AutoBidConfig> queue = phien.getAutoBidders();
             queue.removeIf(bot -> bot.getBidder().getId() == bidder.getId());
 
-            phien.addAutoBidConfig(new AutoBidConfig(bidder, maxBid));
+            phien.addAutoBidConfig(new AutoBidConfig(bidder, maxBid, bidStep));
 
-            boolean luuThanhCong = auctionDao.luuHoacCapNhatAutoBid(idPhien, bidder.getId(), maxBid);
+            boolean luuThanhCong = auctionDao.saveOrUpdateAutoBid(idPhien, bidder.getId(), maxBid, bidStep);
             if (!luuThanhCong) {
-                logger.warn("Không thể lưu giá trần auto-bid xuống Database cho userId={}", bidder.getId());
+                throw new Exception("Không thể lưu cấu hình Auto-bid. Vui lòng thử lại.");
             }
 
-            kichHoatAutoBid(phien);
+            triggerAutoBid(phien);
         }
     }
 
     // Xử lý auto-bid: bot đại diện người dùng tự động trả giá theo bước giá
-    private void kichHoatAutoBid(Auction phien) {
+    private void triggerAutoBid(Auction phien) {
         Queue<AutoBidConfig> queue = phien.getAutoBidders();
         while (!queue.isEmpty()) {
             AutoBidConfig topBot = queue.peek();
@@ -289,8 +302,10 @@ public class AuctionManager {
                 break;
             }
 
-            long giaTiepTheo = phien.getCurrentHighestBid() + phien.getItem().getBidIncrement();
-            if (coDatGiaDatMuaDut(phien, giaTiepTheo)) {
+            long buocGiaNguoiBan = phien.getItem().getBidIncrement();
+            long buocGiaBot = Math.max(topBot.getBidStep(), buocGiaNguoiBan);
+            long giaTiepTheo = phien.getCurrentHighestBid() + buocGiaBot;
+            if (isBuyNowBid(phien, giaTiepTheo)) {
                 break;
             }
 
@@ -305,13 +320,12 @@ public class AuctionManager {
                     phien.getId(),
                     (Bidder) topBot.getBidder(),
                     giaTiepTheo,
-                    LocalDateTime.now()
-            );
+                    LocalDateTime.now());
 
-            if (auctionDao.thucHienGiaoDichDatGia(phien.getId(), autoTx)) {
+            if (auctionDao.executeBidTransaction(phien.getId(), autoTx)) {
                 phien.updateWinner(autoTx);
-                giaHanNeuDatGiaCuoiPhien(phien);
-                notifierPool.execute(() -> thongBaoGiaMoi(phien.getId(), autoTx));
+                extendIfLateBid(phien);
+                notifyNewBid(phien.getId(), autoTx);
             } else {
                 break;
             }
@@ -319,37 +333,41 @@ public class AuctionManager {
     }
 
     // Đăng ký observer để nhận thông báo khi có bid mới
-    public void dangKyTheoDoi(int idPhien, AuctionObserver obs) {
-        dsNguoiTheoDoi.computeIfAbsent(idPhien, k -> new CopyOnWriteArrayList<>()).add(obs);
-    }
-
-    // Gửi thông báo đến tất cả observer đang theo dõi phiên
-    private void thongBaoGiaMoi(int idPhien, BidTransaction tx) {
-        List<AuctionObserver> observers = dsNguoiTheoDoi.get(idPhien);
-        if (observers != null) {
-            for (AuctionObserver obs : observers) obs.onNewBid(tx);
+    public void subscribe(int idPhien, AuctionObserver obs) {
+        List<AuctionObserver> observers = dsNguoiTheoDoi.computeIfAbsent(idPhien, k -> new CopyOnWriteArrayList<>());
+        if (!observers.contains(obs)) {
+            observers.add(obs);
         }
     }
 
-    public void capNhatTrangThaiSauThanhToan(int idPhien, AuctionStatus status) {
-        huyLichQuaHanThanhToan(idPhien);
-        Auction phien = layPhienTheoId(idPhien);
+    // Gửi thông báo đến tất cả observer đang theo dõi phiên
+    private void notifyNewBid(int idPhien, BidTransaction tx) {
+        List<AuctionObserver> observers = dsNguoiTheoDoi.get(idPhien);
+        if (observers != null) {
+            for (AuctionObserver obs : observers)
+                obs.onNewBid(tx);
+        }
+    }
+
+    public void updateStatusAfterPayment(int idPhien, AuctionStatus status) {
+        cancelPaymentTimeoutSchedule(idPhien);
+        Auction phien = getAuctionById(idPhien);
         if (phien != null) {
             synchronized (phien) {
                 phien.setStatus(status);
-                huyLichDongPhien(idPhien);
-                thongBaoTrangThai(idPhien, status);
+                cancelAuctionCloseSchedule(idPhien);
+                notifyStatusChange(idPhien, status);
             }
         }
     }
 
-    private boolean coDatGiaDatMuaDut(Auction phien, long giaDat) {
+    private boolean isBuyNowBid(Auction phien, long giaDat) {
         return phien.getBuyNowPrice() != null
                 && phien.getBuyNowPrice() > 0
                 && giaDat >= phien.getBuyNowPrice();
     }
 
-    private void giaHanNeuDatGiaCuoiPhien(Auction phien) {
+    private void extendIfLateBid(Auction phien) {
         if (!phien.isAntiSnipingEnabled()) {
             return;
         }
@@ -361,14 +379,14 @@ public class AuctionManager {
         }
 
         phien.setEndTime(endTime.plusSeconds(60));
-        if (!auctionDao.capNhatThoiGianKetThuc(phien.getId(), phien.getEndTime())) {
+        if (!auctionDao.updateEndTime(phien.getId(), phien.getEndTime())) {
             phien.setEndTime(endTime);
             return;
         }
-        henGioDongPhien(phien);
+        scheduleAuctionClose(phien);
     }
 
-    private void thongBaoTrangThai(int idPhien, AuctionStatus status) {
+    private void notifyStatusChange(int idPhien, AuctionStatus status) {
         List<AuctionObserver> observers = dsNguoiTheoDoi.get(idPhien);
         if (observers != null) {
             for (AuctionObserver obs : observers) {
@@ -377,40 +395,38 @@ public class AuctionManager {
         }
     }
 
-    private void guiThongBaoKetThucPhien(AuctionDao.AuctionNotificationTargets targets) {
+    private void sendAuctionEndNotification(AuctionDao.AuctionNotificationTargets targets) {
         if (targets == null || targets.winnerId == null) {
             logger.warn("Bo qua gui thong bao ket thuc phien vi thieu winner.");
             return;
         }
         String itemName = targets.itemName == null ? "sản phẩm" : targets.itemName;
         String winnerName = targets.winnerName == null ? "người thắng phiên" : targets.winnerName;
-        SystemNotificationManager.getInstance().guiThongBaoRieng(
+        SystemNotificationManager.getInstance().sendPrivateNotification(
                 targets.auctionId,
                 targets.winnerId,
-                taoNoiDungThongBaoThanhToan(itemName, targets.auctionId),
-                true
-        );
-        SystemNotificationManager.getInstance().guiThongBaoRieng(
+                buildPaymentNotificationContent(itemName, targets.auctionId),
+                true);
+        SystemNotificationManager.getInstance().sendPrivateNotification(
                 targets.auctionId,
                 targets.sellerId,
-                taoNoiDungThongBaoSeller(itemName, targets.auctionId, winnerName),
-                false
-        );
+                buildSellerNotificationContent(itemName, targets.auctionId, winnerName),
+                false);
     }
 
-    private String taoNoiDungThongBaoThanhToan(String itemName, int auctionId) {
+    private String buildPaymentNotificationContent(String itemName, int auctionId) {
         return "Chúc mừng bạn đã chiến thắng phiên đấu giá " + itemName
                 + " của phiên ID " + auctionId + ".\n"
                 + "Xác nhận thanh toán để chính thức sở hữu sản phẩm.\n\n"
                 + "Nếu hủy thanh toán, bạn sẽ chịu phạt 10% tiền đặt giá.";
     }
 
-    private String taoNoiDungThongBaoSeller(String itemName, int auctionId, String winnerName) {
+    private String buildSellerNotificationContent(String itemName, int auctionId, String winnerName) {
         return "Chúc mừng sản phẩm " + itemName + " phiên " + auctionId
                 + " đã được bán thành công, người chiến thắng là " + winnerName + ".";
     }
 
-    private void huyLichDongPhien(int idPhien) {
+    private void cancelAuctionCloseSchedule(int idPhien) {
         ScheduledFuture<?> taskDong = tasksDongPhien.remove(idPhien);
         if (taskDong != null && !taskDong.isDone()) {
             taskDong.cancel(false);
@@ -418,65 +434,66 @@ public class AuctionManager {
         dsPhienDangChay.remove(idPhien);
     }
 
-    private void henGioQuaHanThanhToan(int auctionId, AuctionDao.AuctionNotificationTargets targets) {
+    private void schedulePaymentTimeout(int auctionId, AuctionDao.AuctionNotificationTargets targets) {
         if (targets == null || targets.winnerId == null) {
             return;
         }
-        huyLichQuaHanThanhToan(auctionId);
+        cancelPaymentTimeoutSchedule(auctionId);
         ScheduledFuture<?> task = scheduler.schedule(
-                () -> tuDongHuyThanhToanQuaHan(auctionId, targets),
+                () -> autoCancelOverduePayment(auctionId, targets),
                 PAYMENT_TIMEOUT_MINUTES,
-                TimeUnit.MINUTES
-        );
+                TimeUnit.MINUTES);
         tasksQuaHanThanhToan.put(auctionId, task);
         logger.info("Da len lich tu dong huy thanh toan cho phien {} sau {} phut.", auctionId, PAYMENT_TIMEOUT_MINUTES);
     }
 
-    private void huyLichQuaHanThanhToan(int auctionId) {
+    private void cancelPaymentTimeoutSchedule(int auctionId) {
         ScheduledFuture<?> task = tasksQuaHanThanhToan.remove(auctionId);
         if (task != null && !task.isDone()) {
             task.cancel(false);
         }
     }
 
-    private void tuDongHuyThanhToanQuaHan(int auctionId, AuctionDao.AuctionNotificationTargets targets) {
+    private void autoCancelOverduePayment(int auctionId, AuctionDao.AuctionNotificationTargets targets) {
         try {
             if (targets == null || targets.winnerId == null) {
                 return;
             }
-            com.auction.server.dao.BidderMoneySellerDao.PaymentResult ketQua =
-                    new com.auction.server.dao.BidderMoneySellerDao()
-                            .quyetToanMuaDut(auctionId, targets.winnerId, false);
+            com.auction.server.dao.BidderMoneySellerDao.PaymentResult ketQua = new com.auction.server.dao.BidderMoneySellerDao()
+                    .settleBuyNow(auctionId, targets.winnerId, false);
 
             if (!ketQua.success) {
-                logger.info("Auto settlement skipped for auction {}: {}", auctionId, ketQua.message);
-                if (ketQua.message != null && ketQua.message.toLowerCase().contains("khong du")) {
-                    apDungPhatViPhamQuaHan(auctionId, targets.winnerId, targets.sellerId, "Khong du so du de thanh toan qua han.");
-                }
-                return;
+            logger.info("Auto settlement skipped for auction {}: {}", auctionId, ketQua.message);
+            if (ketQua.message != null
+                    && (ketQua.message.toLowerCase().contains("không đủ")
+                    || ketQua.message.toLowerCase().contains("khong du"))) {
+                applyLatePaymentPenalty(auctionId, targets.winnerId, targets.sellerId, "Không đủ số dư để thanh toán quá hạn.");
+            }
+            return;
             }
 
-            capNhatTrangThaiSauThanhToan(auctionId, AuctionStatus.CANCELED);
+            updateStatusAfterPayment(auctionId, AuctionStatus.CANCELED);
             String itemName = ketQua.itemName == null || ketQua.itemName.isBlank()
                     ? "sản phẩm"
                     : ketQua.itemName;
 
-            SystemNotificationManager.getInstance().guiThongBaoRieng(
+            SystemNotificationManager.getInstance().sendPrivateNotification(
                     auctionId,
                     targets.winnerId,
-                    "Phiên " + auctionId + " đã quá hạn thanh toán. Hệ thống tự động hủy và trừ phí phạt 10% cho sản phẩm " + itemName + ".",
-                    false
-            );
+                    "Phiên " + auctionId
+                            + " đã quá hạn thanh toán. Hệ thống tự động hủy và trừ phí phạt 10% cho sản phẩm "
+                            + itemName + ".",
+                    false);
 
-            apDungPhatViPhamQuaHan(auctionId, targets.winnerId, targets.sellerId, "Qua han thanh toan phien dau gia.");
+            applyLatePaymentPenalty(auctionId, targets.winnerId, targets.sellerId, "Quá hạn thanh toán phiên đấu giá.");
 
             if (targets.sellerId > 0) {
-                SystemNotificationManager.getInstance().guiThongBaoRieng(
+                SystemNotificationManager.getInstance().sendPrivateNotification(
                         auctionId,
                         targets.sellerId,
-                        "Bidder đã quá hạn thanh toán ở phiên " + auctionId + ". Hệ thống đã tự động hủy và chuyển phí phạt cho bạn.",
-                        false
-                );
+                        "Bidder đã quá hạn thanh toán ở phiên " + auctionId
+                                + ". Hệ thống đã tự động hủy và chuyển phí phạt cho bạn.",
+                        false);
             }
             logger.info("Auto settlement success for auction {}.", auctionId);
         } catch (Exception e) {
@@ -486,35 +503,46 @@ public class AuctionManager {
         }
     }
 
-    private void apDungPhatViPhamQuaHan(int auctionId, int winnerId, int sellerId, String reason) {
-        BidderPenaltyDao.SanctionResult sanction =
-                new BidderPenaltyDao().ghiNhanViPhamQuaHan(winnerId, reason);
+    public void removeAutoBid(int idPhien, User bidder) throws Exception {
+        Auction phien = dsPhienDangChay.get(idPhien);
+        if (phien == null) {
+            throw new Exception("Phiên không khả dụng!");
+        }
+        synchronized (phien) {
+            phien.getAutoBidders().removeIf(bot -> bot.getBidder().getId() == bidder.getId());
+            if (!auctionDao.removeAutoBid(idPhien, bidder.getId())) {
+                throw new Exception("Không thể xóa Auto-bid.");
+            }
+        }
+    }
+
+    private void applyLatePaymentPenalty(int auctionId, int winnerId, int sellerId, String reason) {
+        BidderPenaltyDao.SanctionResult sanction = new BidderPenaltyDao().recordLatePaymentViolation(winnerId, reason);
         if (sanction.violationCount <= 0) {
             return;
         }
 
         String bidderMessage;
         if (sanction.permanentLock) {
-            UserManager.getInstance().capNhatTrangThaiTaiKhoan(winnerId, "LOCKED");
-            bidderMessage = "Ban da vi pham qua han thanh toan " + sanction.violationCount
-                    + " lan. Tai khoan bi khoa vinh vien, vui long lien he Admin.";
+            UserManager.getInstance().updateAccountStatus(winnerId, "LOCKED");
+            bidderMessage = "Bạn đã vi phạm quá hạn thanh toán " + sanction.violationCount
+                    + " lần. Tài khoản bị khóa vĩnh viễn, vui lòng liên hệ Admin.";
         } else {
-            bidderMessage = "Ban da vi pham qua han thanh toan lan " + sanction.violationCount
-                    + ". Tam cam dau gia den " + sanction.lockUntil + ".";
+            bidderMessage = "Bạn đã vi phạm quá hạn thanh toán lần " + sanction.violationCount
+                    + ". Tạm cấm đấu giá đến " + sanction.lockUntil + ".";
         }
 
-        SystemNotificationManager.getInstance().guiThongBaoRieng(
+        SystemNotificationManager.getInstance().sendPrivateNotification(
                 auctionId,
                 winnerId,
                 bidderMessage,
-                false
-        );
+                false);
 
         if (sellerId > 0) {
-            SystemNotificationManager.getInstance().guiThongBaoRieng(
+            SystemNotificationManager.getInstance().sendPrivateNotification(
                     auctionId,
                     sellerId,
-                    "He thong da ap dung xu phat bidder vi qua han thanh toan.",
+                    "Hệ thống đã áp dụng xử phạt bidder vì quá hạn thanh toán.",
                     false
             );
         }
@@ -533,21 +561,21 @@ public class AuctionManager {
     }
 
     /** Lấy danh sách các phiên đang chạy (từ bộ nhớ tạm ConcurrentHashMap) */
-    public List<Auction> layDanhSachPhienDangChay() {
+    public List<Auction> getRunningAuctions() {
         return new ArrayList<>(dsPhienDangChay.values());
     }
 
     /** Lấy chi tiết 1 phiên đang chạy */
-    public Auction layPhienTheoId(int idPhien) {
+    public Auction getAuctionById(int idPhien) {
         Auction phien = dsPhienDangChay.get(idPhien);
 
         if (phien == null) {
-            for (Auction a : auctionDao.layDanhSachPhienDangChay()) {
+            for (Auction a : auctionDao.getRunningAuctions()) {
                 if (a.getId() == idPhien) {
-                    napAutoBidVaoPhien(a);
+                    loadAutoBidsIntoAuction(a);
 
                     dsPhienDangChay.put(a.getId(), a);
-                    henGioDongPhien(a);
+                    scheduleAuctionClose(a);
                     return a;
                 }
             }
@@ -556,19 +584,88 @@ public class AuctionManager {
     }
 
     /** Gỡ Client khỏi danh sách nhận thông báo Real-time (Rời phòng) */
-    public void huyTheoDoi(int idPhien, AuctionObserver obs) {
+    public void unsubscribe(int idPhien, AuctionObserver obs) {
         List<AuctionObserver> observers = dsNguoiTheoDoi.get(idPhien);
         if (observers != null) {
-            observers.remove(obs);
+            observers.removeIf(observer -> observer == obs);
         }
     }
 
     /** Ép buộc đóng phiên đấu giá ngay lập tức (Dành cho Admin) */
-    public boolean buocDongPhien(int idPhien) {
+    public boolean forceCloseAuction(int idPhien) {
         if (dsPhienDangChay.containsKey(idPhien)) {
-            dongPhien(idPhien);
+            closeAuction(idPhien);
             return true;
         }
         return false;
+    }
+    
+    //-----------ADMIN FUNCTION: QUẢN LÝ PHIÊN ĐẤU GIÁ -----------/
+    /**
+     * Duyệt phiên PENDING: tính đúng status theo thời gian rồi lên lịch scheduler
+     */
+    public boolean approveAuctionSession(int auctionId) {
+        Auction phien = auctionDao.getAuctionById(auctionId);
+        if (phien == null)
+            return false;
+
+        LocalDateTime now = LocalDateTime.now(SERVER_ZONE);
+        String statusMoi;
+        if (now.isBefore(phien.getStartTime())) {
+            statusMoi = AuctionStatus.OPEN.name();
+        } else if (now.isAfter(phien.getEndTime())) {
+            statusMoi = AuctionStatus.CANCELED.name(); // quá giờ, không có winner
+        } else {
+            statusMoi = AuctionStatus.RUNNING.name();
+        }
+
+        if (!auctionDao.updateStatus(auctionId, statusMoi))
+            return false;
+
+        phien.setStatus(AuctionStatus.valueOf(statusMoi));
+        loadAutoBidsIntoAuction(phien);
+
+        switch (statusMoi) {
+            case "OPEN":
+                scheduleAuctionStart(phien);
+                break;
+            case "RUNNING":
+                dsPhienDangChay.put(auctionId, phien);
+                scheduleAuctionClose(phien);
+                break;
+            // CANCELED: không cần lên lịch gì
+        }
+
+        logger.info("Admin da duyet phien {} -> {}", auctionId, statusMoi);
+        return true;
+    }
+
+    /** Admin thay đổi trạng thái: đồng bộ RAM và scheduler sau khi DB đã update */
+    public void syncAfterStatusUpdate(int auctionId, String newStatus) {
+        switch (newStatus) {
+            case "CANCELED":
+                forceCloseAuction(auctionId);
+                break;
+            case "OPEN":
+                Auction phienOpen = auctionDao.getAuctionById(auctionId);
+                if (phienOpen != null) {
+                    dsPhienDangChay.remove(auctionId); // đảm bảo không còn trong RAM cũ
+                    loadAutoBidsIntoAuction(phienOpen);
+                    scheduleAuctionStart(phienOpen);
+                }
+                break;
+            case "RUNNING":
+                Auction phienRunning = auctionDao.getAuctionById(auctionId);
+                if (phienRunning != null) {
+                    loadAutoBidsIntoAuction(phienRunning);
+                    dsPhienDangChay.put(auctionId, phienRunning);
+                    scheduleAuctionClose(phienRunning);
+                }
+                break;
+            default:
+                // FINISHED, PAID, REJECTED: chỉ cần xóa khỏi RAM nếu có
+                cancelAuctionCloseSchedule(auctionId);
+                break;
+        }
     }
 }

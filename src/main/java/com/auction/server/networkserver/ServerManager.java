@@ -29,7 +29,7 @@ public class ServerManager {
     /**
      * Mở cổng kết nối và liên tục lắng nghe các yêu cầu từ Client.
      */
-    public void batDauServer() {
+    public void startServer() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             logger.info("Server đã mở thành công và đang lắng nghe tại cổng: {}", port);
 

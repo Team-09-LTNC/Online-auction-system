@@ -15,8 +15,8 @@ final class AuctionMiscHandler {
     private AuctionMiscHandler() {
     }
 
-    static String xuLyTheoDoi(Gson gson, JsonObject yeuCau, ClientHandler client, boolean isFollow) {
-        User nguoiDung = client.layNguoiDungHienTai();
+    static String handleFollow(Gson gson, JsonObject yeuCau, ClientHandler client, boolean isFollow) {
+        User nguoiDung = client.getCurrentUser();
         if (nguoiDung == null) {
             JsonObject loi = gson.toJsonTree(new BaseDTOs.ErrorResponse(
                     StatusCode.UNAUTHORIZED, "Chua dang nhap!", ErrorCode.UNAUTHORIZED
@@ -53,8 +53,8 @@ final class AuctionMiscHandler {
         return gson.toJson(phanHoi);
     }
 
-    static String xuLyLayThongBaoHeThong(Gson gson, JsonObject yeuCau, ClientHandler client) {
-        User nguoiDung = client.layNguoiDungHienTai();
+    static String handleGetSystemNotifications(Gson gson, JsonObject yeuCau, ClientHandler client) {
+        User nguoiDung = client.getCurrentUser();
         JsonObject phanHoi = new JsonObject();
         phanHoi.addProperty("type", "SYSTEM_NOTIFICATIONS_RESPONSE");
         AuctionControllerUtil.copyRequestId(yeuCau, phanHoi);
@@ -65,13 +65,13 @@ final class AuctionMiscHandler {
         }
         SystemNotificationDao dao = new SystemNotificationDao();
         phanHoi.addProperty("success", true);
-        phanHoi.add("data", dao.layThongBaoCuaNguoiNhan(nguoiDung.getId()));
-        phanHoi.addProperty("unreadCount", dao.demThongBaoChuaDoc(nguoiDung.getId()));
+        phanHoi.add("data", dao.getNotificationsForRecipient(nguoiDung.getId()));
+        phanHoi.addProperty("unreadCount", dao.countUnreadNotifications(nguoiDung.getId()));
         return gson.toJson(phanHoi);
     }
 
-    static String xuLyDanhDauThongBaoDaDoc(Gson gson, JsonObject yeuCau, ClientHandler client) {
-        User nguoiDung = client.layNguoiDungHienTai();
+    static String handleMarkNotificationsRead(Gson gson, JsonObject yeuCau, ClientHandler client) {
+        User nguoiDung = client.getCurrentUser();
         JsonObject phanHoi = new JsonObject();
         phanHoi.addProperty("type", "MARK_NOTIFICATIONS_READ_RESPONSE");
         AuctionControllerUtil.copyRequestId(yeuCau, phanHoi);
@@ -80,13 +80,13 @@ final class AuctionMiscHandler {
             phanHoi.addProperty("message", "Chua dang nhap.");
             return gson.toJson(phanHoi);
         }
-        boolean ok = new SystemNotificationDao().danhDauDaDoc(nguoiDung.getId());
+        boolean ok = new SystemNotificationDao().markAsRead(nguoiDung.getId());
         phanHoi.addProperty("success", ok);
         return gson.toJson(phanHoi);
     }
 
-    static String xuLyChat(Gson gson, JsonObject yeuCau, ClientHandler client) {
-        User nguoiDung = client.layNguoiDungHienTai();
+    static String handleChat(Gson gson, JsonObject yeuCau, ClientHandler client) {
+        User nguoiDung = client.getCurrentUser();
         if (nguoiDung == null) {
             return gson.toJson(new BaseDTOs.ErrorResponse(
                     StatusCode.UNAUTHORIZED, "Chua dang nhap!", ErrorCode.UNAUTHORIZED

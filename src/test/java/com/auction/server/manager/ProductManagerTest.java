@@ -15,17 +15,17 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class ProductManagerTest {
 
     @Test
-    void taoSanPhamReturnsExpectedSubtypeByCategory() {
+    void createProductReturnsExpectedSubtypeByCategory() {
         ProductManager manager = ProductManager.getInstance();
         ItemAttributes attrs = new ItemAttributes();
         attrs.setName("Item");
         attrs.setDescription("desc");
         attrs.setStartingPrice(1000L);
 
-        Item e = manager.taoSanPham("ELECTRONICS", attrs);
-        Item a = manager.taoSanPham("ART", attrs);
-        Item v = manager.taoSanPham("VEHICLE", attrs);
-        Item o = manager.taoSanPham("OTHER", attrs);
+        Item e = manager.createProduct("ELECTRONICS", attrs);
+        Item a = manager.createProduct("ART", attrs);
+        Item v = manager.createProduct("VEHICLE", attrs);
+        Item o = manager.createProduct("OTHER", attrs);
 
         assertNotNull(e);
         assertNotNull(a);
@@ -38,14 +38,14 @@ class ProductManagerTest {
     }
 
     @Test
-    void taoSanPhamReturnsNullWhenInputInvalid() {
+    void createProductReturnsNullWhenInputInvalid() {
         ProductManager manager = ProductManager.getInstance();
         ItemAttributes attrs = new ItemAttributes();
         attrs.setName("Item");
         attrs.setDescription("desc");
         attrs.setStartingPrice(1000L);
 
-        assertNull(manager.taoSanPham("UNKNOWN", attrs));
-        assertNull(manager.taoSanPham("ELECTRONICS", null));
+        assertNull(manager.createProduct("UNKNOWN", attrs));
+        assertNull(manager.createProduct("ELECTRONICS", null));
     }
 }

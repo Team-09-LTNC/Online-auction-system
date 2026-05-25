@@ -22,7 +22,7 @@ class AuctionDaoIntegrationTest extends DaoIntegrationTestSupport {
     private final ItemDao itemDao = new ItemDao();
 
     @Test
-    void capNhatGiaHienTaiThanhCong_KhiGiaoDichDatGiaHopLe() {
+    void updateCurrentPriceSucceedsForValidBidTransaction() {
         int maNguoiBan = -1;
         int maNguoiMua = -1;
         int maSanPham = -1;
@@ -32,14 +32,14 @@ class AuctionDaoIntegrationTest extends DaoIntegrationTestSupport {
             long thoiGianHienTai = System.currentTimeMillis();
 
             Seller nguoiBan = new Seller("seller_" + thoiGianHienTai, "pass", "Test Seller");
-            assertTrue(userDao.luuNguoiDung(nguoiBan), "Người bán test phải được tạo thành công");
-            maNguoiBan = userDao.timTheoTenDangNhap(nguoiBan.getUsername())
+            assertTrue(userDao.saveUser(nguoiBan), "Người bán test phải được tạo thành công");
+            maNguoiBan = userDao.findByUsername(nguoiBan.getUsername())
                     .orElseThrow()
                     .getId();
 
             Bidder nguoiMua = new Bidder("bidder_" + thoiGianHienTai, "pass", "Test Bidder");
-            assertTrue(userDao.luuNguoiDung(nguoiMua), "Người mua test phải được tạo thành công");
-            maNguoiMua = userDao.timTheoTenDangNhap(nguoiMua.getUsername())
+            assertTrue(userDao.saveUser(nguoiMua), "Người mua test phải được tạo thành công");
+            maNguoiMua = userDao.findByUsername(nguoiMua.getUsername())
                     .orElseThrow()
                     .getId();
             nguoiMua.setId(maNguoiMua);
@@ -47,16 +47,16 @@ class AuctionDaoIntegrationTest extends DaoIntegrationTestSupport {
             OtherItem sanPham = new OtherItem("Test Item", maNguoiBan, "Desc", 100000L, "OTHER", "");
             sanPham.setCategory("OTHER");
 
-            maSanPham = itemDao.luuSanPham(sanPham);
+            maSanPham = itemDao.saveProduct(sanPham);
             assertTrue(maSanPham > 0, "Sản phẩm test phải được tạo thành công");
 
             LocalDateTime thoiGianBatDau = LocalDateTime.now().minusMinutes(10);
             LocalDateTime thoiGianKetThuc = LocalDateTime.now().plusHours(1);
-            boolean taoPhienThanhCong = auctionDao.taoPhienDauGia(
+            boolean taoPhienThanhCong = auctionDao.createAuctionSession(
                     maSanPham, 100000L, thoiGianBatDau, thoiGianKetThuc);
             assertTrue(taoPhienThanhCong, "Phiên đấu giá phải được tạo thành công vào Database");
 
-            Auction phienDauGiaTest = auctionDao.layPhienTheoItemId(maSanPham);
+            Auction phienDauGiaTest = auctionDao.getAuctionByItemId(maSanPham);
             assertNotNull(phienDauGiaTest, "Phiên đấu giá không được null");
             maPhienDauGia = phienDauGiaTest.getId();
 
@@ -64,11 +64,11 @@ class AuctionDaoIntegrationTest extends DaoIntegrationTestSupport {
             BidTransaction giaoDich = new BidTransaction(
                     maPhienDauGia, nguoiMua, mucGiaTiepTheo, LocalDateTime.now());
 
-            boolean giaoDichThanhCong = auctionDao.thucHienGiaoDichDatGia(maPhienDauGia, giaoDich);
+            boolean giaoDichThanhCong = auctionDao.executeBidTransaction(maPhienDauGia, giaoDich);
 
             assertTrue(giaoDichThanhCong, "Giao dịch đặt giá phải thành công và trả về true");
 
-            Auction phienDauGiaDaCapNhat = auctionDao.layPhienTheoId(maPhienDauGia);
+            Auction phienDauGiaDaCapNhat = auctionDao.getAuctionById(maPhienDauGia);
             assertNotNull(phienDauGiaDaCapNhat);
             assertEquals(
                     mucGiaTiepTheo,
@@ -77,13 +77,13 @@ class AuctionDaoIntegrationTest extends DaoIntegrationTestSupport {
 
         } finally {
             if (maSanPham != -1) {
-                xoaSanPhamKhoiDatabase(maSanPham);
+                deleteProductFromDatabase(maSanPham);
             }
             if (maNguoiMua != -1) {
-                xoaNguoiDungKhoiDatabase(maNguoiMua);
+                deleteUserFromDatabase(maNguoiMua);
             }
             if (maNguoiBan != -1) {
-                xoaNguoiDungKhoiDatabase(maNguoiBan);
+                deleteUserFromDatabase(maNguoiBan);
             }
         }
     }
@@ -91,7 +91,7 @@ class AuctionDaoIntegrationTest extends DaoIntegrationTestSupport {
     /**
      * Xóa người dùng.
      */
-    private void xoaNguoiDungKhoiDatabase(int maNguoiDung) {
+    private void deleteUserFromDatabase(int maNguoiDung) {
         String sql = "DELETE FROM users WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -104,7 +104,7 @@ class AuctionDaoIntegrationTest extends DaoIntegrationTestSupport {
     /**
      * Xóa sản phẩm.
      */
-    private void xoaSanPhamKhoiDatabase(int maSanPham) {
+    private void deleteProductFromDatabase(int maSanPham) {
         String sql = "DELETE FROM items WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {

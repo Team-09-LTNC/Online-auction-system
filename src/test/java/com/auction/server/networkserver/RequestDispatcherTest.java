@@ -15,11 +15,11 @@ class RequestDispatcherTest {
 
     @Test
     void unknownActionReturnsErrorPayload() {
-        RequestDispatcher dispatcher = RequestDispatcher.layInstance();
+        RequestDispatcher dispatcher = RequestDispatcher.getInstance();
 
         JsonObject request = new JsonObject();
         request.addProperty("type", "NOT_EXISTING_ACTION");
-        String response = dispatcher.dieuPhoi("NOT_EXISTING_ACTION", request, null);
+        String response = dispatcher.dispatch("NOT_EXISTING_ACTION", request, null);
 
         JsonObject json = JsonParser.parseString(response).getAsJsonObject();
         assertFalse(json.get("success").getAsBoolean());
@@ -28,7 +28,7 @@ class RequestDispatcherTest {
 
     @Test
     void nullHandlerResponseReturnsFallbackErrorAndPreservesRequestId() throws Exception {
-        RequestDispatcher dispatcher = RequestDispatcher.layInstance();
+        RequestDispatcher dispatcher = RequestDispatcher.getInstance();
 
         Field field = RequestDispatcher.class.getDeclaredField("danhSachTrinhXuLy");
         field.setAccessible(true);
@@ -42,7 +42,7 @@ class RequestDispatcherTest {
             request.addProperty("type", action);
             request.addProperty("requestId", "req-123");
 
-            String response = dispatcher.dieuPhoi(action, request, null);
+            String response = dispatcher.dispatch(action, request, null);
             JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
             assertEquals("ERROR_RESPONSE", json.get("type").getAsString());

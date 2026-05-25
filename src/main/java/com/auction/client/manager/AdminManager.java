@@ -33,33 +33,32 @@ public class AdminManager {
   /**
    * Lay danh sach Bidder tu server.
    */
-  public void layDanhSachBidder(Consumer<List<UserSummaryDTO>> onSuccess, Consumer<String> onError) {
+  public void getBidders(Consumer<List<UserSummaryDTO>> onSuccess, Consumer<String> onError) {
     JsonObject request = buildRequest(ActionType.ADMIN_GET_ALL_BIDDERS);
     ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_BIDDERS_RESPONSE",
-        response -> xuLyDanhSachUserResponse(response, onSuccess, onError));
+        response -> handleUserListResponse(response, onSuccess, onError));
   }
 
   /**
    * Lay danh sach Seller tu server.
    */
-  public void layDanhSachSeller(Consumer<List<UserSummaryDTO>> onSuccess, Consumer<String> onError) {
+  public void getSellers(Consumer<List<UserSummaryDTO>> onSuccess, Consumer<String> onError) {
     JsonObject request = buildRequest(ActionType.ADMIN_GET_ALL_SELLERS);
     ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_SELLERS_RESPONSE",
-        response -> xuLyDanhSachUserResponse(response, onSuccess, onError));
+        response -> handleUserListResponse(response, onSuccess, onError));
   }
 
-  public void layDanhSachAuction(Consumer<List<AuctionSummaryDTO>> onSuccess, Consumer<String> onError) {
+  public void getAuctions(Consumer<List<AuctionSummaryDTO>> onSuccess, Consumer<String> onError) {
     JsonObject request = buildRequest(ActionType.ADMIN_GET_ALL_AUCTIONS);
     ClientSocket.getInstance().sendJsonRequest(request, "GET_ALL_AUCTIONS_RESPONSE",
-        response -> xuLyDanhSachAuctionResponse(response, onSuccess, onError));
+        response -> handleAuctionListResponse(response, onSuccess, onError));
   }
 
-  public void toggleKhoaTaiKhoan(
+  public void toggleAccountLock(
       String username,
       String newStatus,
       Consumer<JsonObject> onSuccess,
-      Consumer<String> onError
-  ) {
+      Consumer<String> onError) {
     JsonObject request = buildRequest(ActionType.ADMIN_TOGGLE_LOCK_USER);
     request.addProperty("username", username);
     request.addProperty("newStatus", newStatus);
@@ -77,23 +76,22 @@ public class AdminManager {
     });
   }
 
-  public void layTongSoBidder(Consumer<Integer> onSuccess, Consumer<String> onError) {
-    layDanhSachBidder(list -> onSuccess.accept(list.size()), onError);
+  public void getBidderCount(Consumer<Integer> onSuccess, Consumer<String> onError) {
+    getBidders(list -> onSuccess.accept(list.size()), onError);
   }
 
-  public void layTongSoSeller(Consumer<Integer> onSuccess, Consumer<String> onError) {
-    layDanhSachSeller(list -> onSuccess.accept(list.size()), onError);
+  public void getSellerCount(Consumer<Integer> onSuccess, Consumer<String> onError) {
+    getSellers(list -> onSuccess.accept(list.size()), onError);
   }
 
-  public void layTongSoAuction(Consumer<Integer> onSuccess, Consumer<String> onError) {
-    layDanhSachAuction(list -> onSuccess.accept(list.size()), onError);
+  public void getAuctionCount(Consumer<Integer> onSuccess, Consumer<String> onError) {
+    getAuctions(list -> onSuccess.accept(list.size()), onError);
   }
 
-  private void xuLyDanhSachAuctionResponse(
+  private void handleAuctionListResponse(
       JsonObject response,
       Consumer<List<AuctionSummaryDTO>> onSuccess,
-      Consumer<String> onError
-  ) {
+      Consumer<String> onError) {
     boolean ok = response.has("success") && response.get("success").getAsBoolean();
     if (!ok) {
       String msg = response.has("message")
@@ -109,6 +107,7 @@ public class AdminManager {
       data.forEach(el -> {
         JsonObject obj = el.getAsJsonObject();
         list.add(new AuctionSummaryDTO(
+            obj.get("auctionId").getAsInt(),
             obj.get("itemname").getAsString(),
             obj.get("starttime").getAsString(),
             obj.get("endtime").getAsString(),
@@ -119,10 +118,9 @@ public class AdminManager {
     onSuccess.accept(list);
   }
 
-  public void layDanhSachChoDuyet(
+  public void getPendingAuctions(
       Consumer<List<PendingAuctionDTO>> onSuccess,
-      Consumer<String> onError
-  ) {
+      Consumer<String> onError) {
     JsonObject request = buildRequest(ActionType.ADMIN_GET_PENDING_AUCTIONS);
     ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_GET_PENDING_AUCTIONS_RESPONSE", response -> {
       boolean ok = response.has("success") && response.get("success").getAsBoolean();
@@ -160,7 +158,7 @@ public class AdminManager {
     });
   }
 
-  public void duyetAuction(int auctionId, Consumer<String> onSuccess, Consumer<String> onError) {
+  public void approveAuction(int auctionId, Consumer<String> onSuccess, Consumer<String> onError) {
     JsonObject request = buildRequest(ActionType.ADMIN_APPROVE_AUCTION);
     request.addProperty("auctionId", auctionId);
     ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_APPROVE_AUCTION_RESPONSE", response -> {
@@ -174,7 +172,7 @@ public class AdminManager {
     });
   }
 
-  public void tuChoiAuction(int auctionId, Consumer<String> onSuccess, Consumer<String> onError) {
+  public void rejectAuction(int auctionId, Consumer<String> onSuccess, Consumer<String> onError) {
     JsonObject request = buildRequest(ActionType.ADMIN_REJECT_AUCTION);
     request.addProperty("auctionId", auctionId);
     ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_REJECT_AUCTION_RESPONSE", response -> {
@@ -188,11 +186,10 @@ public class AdminManager {
     });
   }
 
-  public void layDanhSachHoaDon(
+  public void getInvoices(
       Consumer<List<AdminDTOs.InvoiceDTO>> onSuccess,
       Consumer<String> onError,
-      Consumer<Long> onTongDoanhThu
-  ) {
+      Consumer<Long> onTongDoanhThu) {
     JsonObject request = buildRequest(ActionType.ADMIN_GET_INVOICES);
     ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_GET_INVOICES_RESPONSE", response -> {
       boolean ok = response.has("success") && response.get("success").getAsBoolean();
@@ -233,11 +230,10 @@ public class AdminManager {
     return request;
   }
 
-  private void xuLyDanhSachUserResponse(
+  private void handleUserListResponse(
       JsonObject response,
       Consumer<List<UserSummaryDTO>> onSuccess,
-      Consumer<String> onError
-  ) {
+      Consumer<String> onError) {
     boolean ok = response.has("success") && response.get("success").getAsBoolean();
     if (!ok) {
       String msg = response.has("message")
@@ -271,5 +267,21 @@ public class AdminManager {
 
   private long safeGetLong(JsonObject obj, String key, long defaultValue) {
     return (obj.has(key) && !obj.get(key).isJsonNull()) ? obj.get(key).getAsLong() : defaultValue;
+  }
+
+  public void changeAuctionStatus(int auctionId, String newStatus,
+      Consumer<String> onSuccess, Consumer<String> onError) {
+    JsonObject request = buildRequest(ActionType.ADMIN_CHANGE_AUCTION_STATUS);
+    request.addProperty("auctionId", auctionId);
+    request.addProperty("newStatus", newStatus);
+    ClientSocket.getInstance().sendJsonRequest(request,
+        "ADMIN_CHANGE_AUCTION_STATUS_RESPONSE", response -> {
+          boolean ok = response.has("success") && response.get("success").getAsBoolean();
+          String msg = response.has("message") ? response.get("message").getAsString() : "";
+          if (ok)
+            onSuccess.accept(msg);
+          else
+            onError.accept(msg);
+        });
   }
 }

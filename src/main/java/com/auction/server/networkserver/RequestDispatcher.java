@@ -26,13 +26,13 @@ public class RequestDispatcher {
     ProductController productController = new ProductController();
     AdminController adminController = new AdminController();
 
-    dangKyNhomAuth(authController);
-    dangKyNhomAuction(auctionController, authController);
-    dangKyNhomProduct(productController);
-    dangKyNhomAdmin(adminController);
+    registerAuthHandlers(authController);
+    registerAuctionHandlers(auctionController, authController);
+    registerProductHandlers(productController);
+    registerAdminHandlers(adminController);
   }
 
-  public static RequestDispatcher layInstance() {
+  public static RequestDispatcher getInstance() {
     if (instance == null) {
       synchronized (RequestDispatcher.class) {
         if (instance == null) {
@@ -43,26 +43,26 @@ public class RequestDispatcher {
     return instance;
   }
 
-  public String dieuPhoi(String loaiYeuCau, JsonObject yeuCau, ClientHandler client) {
+  public String dispatch(String loaiYeuCau, JsonObject yeuCau, ClientHandler client) {
     RequestHandler trinhXuLy = danhSachTrinhXuLy.get(loaiYeuCau);
     if (trinhXuLy == null) {
-      LOGGER.warn("Khong tim thay controller cho request '{}'.", loaiYeuCau);
-      return taoLoiKhongTimThayController();
+      LOGGER.warn("Không tìm thấy controller cho request '{}'.", loaiYeuCau);
+      return buildControllerNotFoundError();
     }
 
-    LOGGER.trace("Xu ly request '{}' boi controller {}",
+    LOGGER.trace("Xử lý request '{}' bởi controller {}",
         loaiYeuCau, trinhXuLy.getClass().getSimpleName());
-    String phanHoi = trinhXuLy.xuLy(yeuCau, client);
+    String phanHoi = trinhXuLy.handleRequest(yeuCau, client);
     if (phanHoi != null) {
       return phanHoi;
     }
 
-    LOGGER.warn("Controller {} khong tra phan hoi cho request '{}'.",
+    LOGGER.warn("Controller {} không trả phản hồi cho request '{}'.",
         trinhXuLy.getClass().getSimpleName(), loaiYeuCau);
-    return taoLoiNoiBo(yeuCau);
+    return buildInternalError(yeuCau);
   }
 
-  private void dangKyNhomAuth(AuthController authController) {
+  private void registerAuthHandlers(AuthController authController) {
     danhSachTrinhXuLy.put(ActionType.LOGIN, authController);
     danhSachTrinhXuLy.put(ActionType.REGISTER, authController);
     danhSachTrinhXuLy.put(ActionType.LOGOUT, authController);
@@ -73,7 +73,7 @@ public class RequestDispatcher {
     danhSachTrinhXuLy.put(ActionType.ADMIN_TOGGLE_LOCK_USER, authController);
   }
 
-  private void dangKyNhomAuction(AuctionController auctionController, AuthController authController) {
+  private void registerAuctionHandlers(AuctionController auctionController, AuthController authController) {
     danhSachTrinhXuLy.put(ActionType.JOIN_AUCTION, auctionController);
     danhSachTrinhXuLy.put(ActionType.PLACE_BID, auctionController);
     danhSachTrinhXuLy.put(ActionType.CONFIRM_BUY_NOW, auctionController);
@@ -87,6 +87,7 @@ public class RequestDispatcher {
     danhSachTrinhXuLy.put(ActionType.GET_BID_HISTORY, auctionController);
     danhSachTrinhXuLy.put(ActionType.GET_DASHBOARD_STATS, auctionController);
     danhSachTrinhXuLy.put(ActionType.REGISTER_AUTO_BID, auctionController);
+    danhSachTrinhXuLy.put(ActionType.REMOVE_AUTO_BID, auctionController);
     danhSachTrinhXuLy.put(ActionType.FOLLOW_AUCTION, auctionController);
     danhSachTrinhXuLy.put(ActionType.UNFOLLOW_AUCTION, auctionController);
     danhSachTrinhXuLy.put(ActionType.GET_FOLLOWED_AUCTIONS, auctionController);
@@ -96,7 +97,7 @@ public class RequestDispatcher {
     danhSachTrinhXuLy.put("GET_WALLET_HISTORY", authController);
   }
 
-  private void dangKyNhomProduct(ProductController productController) {
+  private void registerProductHandlers(ProductController productController) {
     danhSachTrinhXuLy.put(ActionType.CREATE_PRODUCT, productController);
     danhSachTrinhXuLy.put(ActionType.GET_ALL_PRODUCTS, productController);
     danhSachTrinhXuLy.put(ActionType.DELETE_PRODUCT, productController);
@@ -106,31 +107,32 @@ public class RequestDispatcher {
     danhSachTrinhXuLy.put(ActionType.GET_MY_PRODUCTS, productController);
   }
 
-  private void dangKyNhomAdmin(AdminController adminController) {
+  private void registerAdminHandlers(AdminController adminController) {
     danhSachTrinhXuLy.put(ActionType.ADMIN_GET_ALL_AUCTIONS, adminController);
     danhSachTrinhXuLy.put(ActionType.ADMIN_GET_PENDING_AUCTIONS, adminController);
     danhSachTrinhXuLy.put(ActionType.ADMIN_APPROVE_AUCTION, adminController);
     danhSachTrinhXuLy.put(ActionType.ADMIN_REJECT_AUCTION, adminController);
     danhSachTrinhXuLy.put(ActionType.ADMIN_GET_INVOICES, adminController);
+    danhSachTrinhXuLy.put(ActionType.ADMIN_CHANGE_AUCTION_STATUS, adminController);
   }
 
-  private String taoLoiNoiBo(JsonObject yeuCau) {
+  private String buildInternalError(JsonObject yeuCau) {
     JsonObject loiNoiBo = new JsonObject();
     loiNoiBo.addProperty("type", "ERROR_RESPONSE");
     loiNoiBo.addProperty("success", false);
     loiNoiBo.addProperty("errorCode", "ERR_HANDLER_NO_RESPONSE");
-    loiNoiBo.addProperty("message", "Yeu cau da duoc nhan nhung khong co du lieu phan hoi.");
+    loiNoiBo.addProperty("message", "Yêu cầu đã được nhận nhưng không có dữ liệu phản hồi.");
     if (yeuCau != null && yeuCau.has("requestId") && !yeuCau.get("requestId").isJsonNull()) {
       loiNoiBo.addProperty("requestId", yeuCau.get("requestId").getAsString());
     }
     return gson.toJson(loiNoiBo);
   }
 
-  private String taoLoiKhongTimThayController() {
+  private String buildControllerNotFoundError() {
     JsonObject loi = new JsonObject();
     loi.addProperty("success", false);
     loi.addProperty("errorCode", "ERR_UNKNOWN");
-    loi.addProperty("message", "Khong tim thay controller xu ly cho yeu cau nay.");
+    loi.addProperty("message", "Không tìm thấy controller xử lý cho yêu cầu này.");
     return gson.toJson(loi);
   }
 }

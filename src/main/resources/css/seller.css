@@ -220,6 +220,43 @@
     -fx-background-color: #4A1010;
 }
 
+.button.submit-auction-button {
+    -fx-min-width: 190;
+    -fx-pref-width: 190;
+    -fx-min-height: 44;
+    -fx-padding: 0 26;
+    -fx-alignment: CENTER;
+    -fx-background-color: linear-gradient(to bottom, #8B222B, #6E1C1C);
+    -fx-background-radius: 9;
+    -fx-border-color: #9E3A42;
+    -fx-border-radius: 9;
+    -fx-border-width: 1;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(three-pass-box, rgba(110,28,28,0.28), 10, 0, 0, 3);
+    -fx-cursor: hand;
+}
+
+.button.submit-auction-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #9B2A34, #781E25);
+}
+
+.button.submit-auction-button:pressed {
+    -fx-background-color: #5B151B;
+    -fx-effect: dropshadow(three-pass-box, rgba(110,28,28,0.18), 6, 0, 0, 1);
+}
+
+.button.submit-auction-button:disabled,
+.button.submit-auction-button.submit-auction-button-loading {
+    -fx-opacity: 1;
+    -fx-background-color: #D8AEB5;
+    -fx-border-color: #D8AEB5;
+    -fx-text-fill: #FFFFFF;
+    -fx-effect: none;
+    -fx-cursor: default;
+}
+
 .btn-cancel {
     -fx-background-color: #FFFFFF;
     -fx-border-color: #EAE3D3;
@@ -227,6 +264,35 @@
     -fx-text-fill: #5D4037;
     -fx-padding: 10 30;
     -fx-cursor: hand;
+}
+
+.button.clear-auction-button {
+    -fx-min-width: 130;
+    -fx-pref-width: 130;
+    -fx-min-height: 44;
+    -fx-padding: 0 24;
+    -fx-alignment: CENTER;
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 9;
+    -fx-border-color: #D9CFC3;
+    -fx-border-radius: 9;
+    -fx-border-width: 1;
+    -fx-text-fill: #6E1C1C;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(three-pass-box, rgba(93,64,55,0.10), 8, 0, 0, 2);
+    -fx-cursor: hand;
+}
+
+.button.clear-auction-button:hover {
+    -fx-background-color: #FFF7F5;
+    -fx-border-color: #B98283;
+    -fx-text-fill: #7A1B28;
+}
+
+.button.clear-auction-button:pressed {
+    -fx-background-color: #F5EBEB;
+    -fx-effect: dropshadow(three-pass-box, rgba(93,64,55,0.06), 4, 0, 0, 1);
 }
 
 /* ==========================================================

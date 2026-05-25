@@ -46,7 +46,10 @@
                         <VBox styleClass="editor-box">
                             <TextArea fx:id="txtDescription" prefRowCount="4" wrapText="true"
                                       promptText="Mô tả chi tiết về sản phẩm: tình trạng, đặc điểm, xuất xứ, v.v." styleClass="editor-area"/>
-                            <HBox alignment="CENTER_RIGHT"><Label text="0/3000" style="-fx-text-fill: #A0968C; -fx-font-size: 11px; -fx-padding: 0 5 5 0;"/></HBox>
+                            <HBox alignment="CENTER_RIGHT">
+                                <Label fx:id="lblDescriptionCount" text="0/3000"
+                                       style="-fx-text-fill: #A0968C; -fx-font-size: 11px; -fx-padding: 0 5 5 0;"/>
+                            </HBox>
                         </VBox>
                         <Button fx:id="btnUploadImage" onAction="#handleUploadImage" prefHeight="40.0" style="-fx-background-color: #F8F9FA; -fx-border-color: #DDD; -fx-border-radius: 8; -fx-cursor: hand;" text="📸 Tải lên ảnh sản phẩm" maxWidth="Infinity" />
                     </VBox>
@@ -114,9 +117,11 @@
                 <CheckBox fx:id="chkCommit" text="Tôi cam kết thông tin sản phẩm chuẩn xác, minh bạch." style="-fx-text-fill: #1A0F0A; -fx-font-size: 12px;"/>
 
                 <HBox alignment="CENTER">
-                    <Button text="Xóa" styleClass="btn-cancel" prefWidth="100" onAction="#handleClearForm"/>
+                    <Button text="Xóa" styleClass="btn-cancel, clear-auction-button"
+                            minWidth="130" prefWidth="130" onAction="#handleClearForm"/>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="Đăng" styleClass="btn-next" prefWidth="120" onAction="#handleSubmitAuction"/>
+                    <Button text="ĐĂNG SẢN PHẨM" styleClass="btn-next, submit-auction-button"
+                            minWidth="190" prefWidth="190" onAction="#handleSubmitAuction"/>
                 </HBox>
 
             </VBox>

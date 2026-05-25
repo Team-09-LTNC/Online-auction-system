@@ -40,9 +40,9 @@ public class UserManager {
     /**
      * Xác thực thông tin và đưa người dùng vào danh sách Online
      */
-    public User dangNhap(String tenDangNhap, String matKhau, String role) throws AuthenticationException {
+    public User login(String tenDangNhap, String matKhau, String role) throws AuthenticationException {
         // 1. Truy vấn Database tìm người dùng (Chỉ chọc xuống DB đúng 1 lần)
-        Optional<User> userOpt = userDao.timTheoTenDangNhap(tenDangNhap);
+        Optional<User> userOpt = userDao.findByUsername(tenDangNhap);
 
         if (userOpt.isEmpty()) {
             throw new AuthenticationException("Tài khoản không tồn tại trong hệ thống!");
@@ -73,27 +73,27 @@ public class UserManager {
     /**
      * Tạo tài khoản mới, từ chối nếu tên đăng nhập đã tồn tại
      */
-    public boolean dangKy(User nguoiDungMoi) {
-        if (userDao.timTheoTenDangNhap(nguoiDungMoi.getUsername()).isPresent()) {
+    public boolean register(User nguoiDungMoi) {
+        if (userDao.findByUsername(nguoiDungMoi.getUsername()).isPresent()) {
             return false;
         }
-        return userDao.luuNguoiDung(nguoiDungMoi);
+        return userDao.saveUser(nguoiDungMoi);
     }
 
     /**
      * Xóa người dùng khỏi danh sách Online khi họ ngắt kết nối Socket
      */
-    public void dangXuat(int idNguoiDung) {
+    public void logout(int idNguoiDung) {
         onlineUsers.remove(idNguoiDung);
     }
 
-    public void dangKyKetNoi(int userId, ClientHandler client) {
+    public void registerConnection(int userId, ClientHandler client) {
         onlineConnections
                 .computeIfAbsent(userId, ignored -> ConcurrentHashMap.newKeySet())
                 .add(client);
     }
 
-    public void huyKetNoi(int userId, ClientHandler client) {
+    public void unregisterConnection(int userId, ClientHandler client) {
         Set<ClientHandler> connections = onlineConnections.get(userId);
         if (connections == null) {
             return;
@@ -104,25 +104,25 @@ public class UserManager {
         }
     }
 
-    public void guiThongBaoHeThong(int userId, JsonObject payload) {
+    public void sendSystemNotification(int userId, JsonObject payload) {
         Set<ClientHandler> connections = onlineConnections.get(userId);
         if (connections == null) {
             return;
         }
         for (ClientHandler client : connections) {
-            client.guiThongBaoHeThong(payload.deepCopy());
+            client.sendSystemNotification(payload.deepCopy());
         }
     }
 
     /**
      * Trích xuất thông tin người dùng đang kết nối
      */
-    public User layNguoiDungOnline(int idNguoiDung) {
+    public User getOnlineUser(int idNguoiDung) {
         return onlineUsers.get(idNguoiDung);
     }
 
-    public boolean capNhatTrangThaiTaiKhoan(int userId, String status) {
-        boolean ok = userDao.capNhatTrangThaiTheoId(userId, status);
+    public boolean updateAccountStatus(int userId, String status) {
+        boolean ok = userDao.updateStatusById(userId, status);
         if (!ok) {
             return false;
         }

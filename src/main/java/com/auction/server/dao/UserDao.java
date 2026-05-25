@@ -9,7 +9,6 @@ package com.auction.server.dao;
 //balance	(BIGINT	DEFAULT 0) : Số dư tài khoản
 
 import com.auction.common.model.user.*;
-import com.auction.server.db.ConnectionProvider;
 import com.auction.server.db.DatabaseConnection;
 import java.sql.*;
 import java.util.ArrayList;
@@ -27,7 +26,7 @@ public class UserDao {
     /**
      * Lấy thông tin User để phục vụ Đăng nhập.
      */
-    public Optional<User> timTheoTenDangNhap(String tenDangNhap) {
+    public Optional<User> findByUsername(String tenDangNhap) {
         // TỐI ƯU: Thêm cột status vào câu truy vấn duy nhất
         String sql = "SELECT id, username, password, full_name, role, balance, status FROM users WHERE username = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -73,7 +72,7 @@ public class UserDao {
     /**
      * Lưu người dùng mới (Đăng ký) với số dư mặc định là 0.
      */
-    public boolean luuNguoiDung(User user) {
+    public boolean saveUser(User user) {
         String sql = "INSERT INTO users (username, password, full_name, role, balance) VALUES (?, ?, ?, ?, 0)";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -93,7 +92,7 @@ public class UserDao {
     /**
      * Cập nhật số dư cho 1 người dùng cụ thể (Dùng khi nạp tiền / rút tiền).
      */
-    public boolean capNhatSoDu(int idUser, long soDuMoi) {
+    public boolean updateBalance(int idUser, long soDuMoi) {
         String sql = "UPDATE users SET balance = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -107,7 +106,7 @@ public class UserDao {
         }
     }
 
-    public List<User> layTatCaBidder() {
+    public List<User> getAllBidders() {
     List<User> list = new ArrayList<>();
     String sql = "SELECT * FROM users WHERE role = 'BIDDER'";
     try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -128,7 +127,7 @@ public class UserDao {
     return list;
 }
 
-    public List<User> layTatCaSeller() {
+    public List<User> getAllSellers() {
         List<User> list = new ArrayList<>();
         String sql = "SELECT * FROM users WHERE role = 'SELLER'";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -150,7 +149,7 @@ public class UserDao {
     }
 
 // Admin có thể khóa tài khoản người dùng (đổi status thành ACTIVE hoặc LOCKED), không xóa hẳn để giữ lịch sử giao dịch.
-    public boolean capNhatTrangThai(String username, String status) {
+    public boolean updateStatus(String username, String status) {
         String sql = "UPDATE users SET status = ? WHERE username = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -163,7 +162,7 @@ public class UserDao {
         }
     }
 
-    public boolean capNhatTrangThaiTheoId(int userId, String status) {
+    public boolean updateStatusById(int userId, String status) {
         String sql = "UPDATE users SET status = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
