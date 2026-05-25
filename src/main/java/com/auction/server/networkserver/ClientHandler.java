@@ -40,26 +40,26 @@ public class ClientHandler implements Runnable, AuctionObserver {
     this.socketClient = socketClient;
   }
 
-  public void datNguoiDungHienTai(User user) {
+  public void setCurrentUser(User user) {
     if (this.nguoiDungHienTai != null) {
-      UserManager.getInstance().huyKetNoi(this.nguoiDungHienTai.getId(), this);
+      UserManager.getInstance().unregisterConnection(this.nguoiDungHienTai.getId(), this);
     }
     this.nguoiDungHienTai = user;
     if (user != null) {
-      UserManager.getInstance().dangKyKetNoi(user.getId(), this);
+      UserManager.getInstance().registerConnection(user.getId(), this);
     }
   }
 
-  public User layNguoiDungHienTai() {
+  public User getCurrentUser() {
     return nguoiDungHienTai;
   }
 
   @Override
   public void run() {
-    thucThiKetNoi();
+    runConnection();
   }
 
-  private void thucThiKetNoi() {
+  private void runConnection() {
     try (BufferedReader in = new BufferedReader(
         new InputStreamReader(socketClient.getInputStream(), StandardCharsets.UTF_8));
          PrintWriter outWriter = new PrintWriter(
@@ -70,39 +70,39 @@ public class ClientHandler implements Runnable, AuctionObserver {
           socketClient.getInetAddress(), socketClient.getPort());
       while ((chuoiJson = in.readLine()) != null) {
         LOGGER.trace("Dữ liệu nhận từ {}: {}", socketClient.getInetAddress(), chuoiJson);
-        xuLyRequest(chuoiJson);
+        processRequest(chuoiJson);
       }
     } catch (IOException e) {
       LOGGER.warn("Client {} đã ngắt kết nối đột ngột.", socketClient.getInetAddress());
     } finally {
-      donDepKetNoi();
+      cleanupConnection();
     }
   }
 
-  private void xuLyRequest(String chuoiJson) {
+  private void processRequest(String chuoiJson) {
     JsonObject yeuCau = null;
     try {
       yeuCau = JsonParser.parseString(chuoiJson).getAsJsonObject();
       if (!yeuCau.has("type") || yeuCau.get("type").isJsonNull()) {
-        out.println(taoPhanHoiLoiYeuCau(yeuCau, "Thiếu trường type trong request."));
+        out.println(buildRequestErrorResponse(yeuCau, "Thiếu trường type trong request."));
         return;
       }
       String loaiYeuCau = yeuCau.get("type").getAsString();
-      String phanHoi = RequestDispatcher.layInstance().dieuPhoi(loaiYeuCau, yeuCau, this);
+      String phanHoi = RequestDispatcher.getInstance().dispatch(loaiYeuCau, yeuCau, this);
       if (phanHoi != null) {
         out.println(phanHoi);
       }
     } catch (RuntimeException e) {
       LOGGER.error("Lỗi xử lý request từ client {}: {}",
           socketClient.getInetAddress(), chuoiJson, e);
-      out.println(taoPhanHoiLoi(yeuCau));
+      out.println(buildErrorResponse(yeuCau));
     }
   }
 
-  private void donDepKetNoi() {
+  private void cleanupConnection() {
     if (nguoiDungHienTai != null) {
-      UserManager.getInstance().huyKetNoi(nguoiDungHienTai.getId(), this);
-      UserManager.getInstance().dangXuat(nguoiDungHienTai.getId());
+      UserManager.getInstance().unregisterConnection(nguoiDungHienTai.getId(), this);
+      UserManager.getInstance().logout(nguoiDungHienTai.getId());
       LOGGER.info("Người dùng {} đã thoát hệ thống.", nguoiDungHienTai.getUsername());
     }
     try {
@@ -112,11 +112,11 @@ public class ClientHandler implements Runnable, AuctionObserver {
     }
   }
 
-  private String taoPhanHoiLoi(JsonObject yeuCau) {
-    return taoPhanHoiLoiYeuCau(yeuCau, "Server không xử lý được yêu cầu.");
+  private String buildErrorResponse(JsonObject yeuCau) {
+    return buildRequestErrorResponse(yeuCau, "Server không xử lý được yêu cầu.");
   }
 
-  private String taoPhanHoiLoiYeuCau(JsonObject yeuCau, String message) {
+  private String buildRequestErrorResponse(JsonObject yeuCau, String message) {
     JsonObject loi = new JsonObject();
     loi.addProperty("type", "ERROR_RESPONSE");
     loi.addProperty("success", false);
@@ -137,7 +137,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
     update.add("transaction", gson.toJsonTree(giaoDich));
     update.addProperty("serverNow", LocalDateTime.now().toString());
 
-    Auction phien = AuctionManager.getInstance().layPhienTheoId(giaoDich.getAuctionId());
+    Auction phien = AuctionManager.getInstance().getAuctionById(giaoDich.getAuctionId());
     if (phien != null) {
       update.addProperty("auctionId", phien.getId());
       update.addProperty("status", phien.getStatus().name());
@@ -171,7 +171,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
     out.println(gson.toJson(update));
   }
 
-  public void guiThongBaoHeThong(JsonObject payload) {
+  public void sendSystemNotification(JsonObject payload) {
     if (out == null) {
       return;
     }

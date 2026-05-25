@@ -102,7 +102,7 @@ public class SellersViewController implements Initializable {
   }
 
   private void loadData() {
-    AdminManager.getInstance().layDanhSachSeller(
+    AdminManager.getInstance().getSellers(
         users -> Platform.runLater(() -> {
           masterList.clear();
           users.forEach(u -> masterList.add(
@@ -142,7 +142,7 @@ public class SellersViewController implements Initializable {
     }
 
     String newStatus = STATUS_LOCKED.equals(selected.getStatus()) ? STATUS_ACTIVE : STATUS_LOCKED;
-    AdminManager.getInstance().toggleKhoaTaiKhoan(
+    AdminManager.getInstance().toggleAccountLock(
         selected.getUsername(),
         newStatus,
         response -> Platform.runLater(() -> {

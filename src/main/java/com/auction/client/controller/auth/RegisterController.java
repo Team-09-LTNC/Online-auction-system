@@ -72,6 +72,7 @@ public class RegisterController {
 
             // [KIẾN TRÚC MỚI] 4. Ép kiểu sang JsonObject để tận dụng cơ chế Fallback Routing
             JsonObject jsonRequest = new Gson().toJsonTree(regReq).getAsJsonObject();
+            jsonRequest.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
             // 5. Gửi JSON qua Socket và định tuyến Callback theo "REGISTER_RESPONSE"
             ClientSocket.getInstance().sendJsonRequest(jsonRequest, "REGISTER_RESPONSE", responseJson -> {

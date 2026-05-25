@@ -72,7 +72,7 @@ public class DatabaseConnection implements ConnectionProvider {
             this.dataSource = new HikariDataSource(config);
 
             // JVM tự động đóng Pool an toàn khi tắt Server
-            Runtime.getRuntime().addShutdownHook(new Thread(this::dongPool));
+            Runtime.getRuntime().addShutdownHook(new Thread(this::closePool));
 
             logger.info("Thiết lập Connection Pool tới Database thành công!");
         } catch (Exception e) {
@@ -130,7 +130,7 @@ public class DatabaseConnection implements ConnectionProvider {
         return null;
     }
 
-    private void dongPool() {
+    private void closePool() {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();
             logger.info("Đã đóng Connection Pool tự động bởi JVM");

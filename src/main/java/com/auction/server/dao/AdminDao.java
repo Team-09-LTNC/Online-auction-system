@@ -29,7 +29,7 @@ public class AdminDao {
      * Lấy danh sách tất cả phiên đấu giá, bao gồm cả thông tin sản phẩm và trạng
      * thái.
      */
-    public List<Auction> layDanhSachTatCaAuctions() {
+    public List<Auction> getAllAuctions() {
         List<Auction> auctions = new ArrayList<>();
         String sql = "SELECT a.id, i.name AS item_name, a.start_time, a.end_time, a.status, i.image_url " +
                 "FROM auctions a JOIN items i ON a.item_id = i.id"; // Câu truy vấn lấy thêm image_url từ bảng items
@@ -65,7 +65,7 @@ public class AdminDao {
     }
 
     // Lấy danh sách phiên chờ duyệt
-    public List<Auction> layDanhSachChoDuyet() {
+    public List<Auction> getPendingAuctions() {
         List<Auction> auctions = new ArrayList<>();
         String sql = "SELECT a.id, a.status, i.seller_id, i.name AS item_name, i.category, " +
                 "i.starting_price, i.description, i.image_url, " +
@@ -109,7 +109,7 @@ public class AdminDao {
     }
 
     // Duyệt hoặc từ chối phiên đấu giá
-    public boolean duyetAuction(int auctionId, String newStatus) {
+    public boolean approveAuction(int auctionId, String newStatus) {
         String sql = "UPDATE auctions SET status = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -126,7 +126,7 @@ public class AdminDao {
      * Lấy danh sách hóa đơn đã thanh toán, bao gồm thông tin về phiên đấu giá, sản
      * phẩm, người bán, người mua và giá cuối cùng.
      */
-    public List<com.auction.common.dto.AdminDTOs.InvoiceDTO> layDanhSachHoaDon() {
+    public List<com.auction.common.dto.AdminDTOs.InvoiceDTO> getInvoices() {
         List<com.auction.common.dto.AdminDTOs.InvoiceDTO> list = new ArrayList<>();
         String sql = "SELECT a.id AS auction_id, a.item_id, i.name AS item_name, " +
                 "       i.seller_id, a.highest_bidder_id AS winner_id, " +
@@ -159,7 +159,7 @@ public class AdminDao {
      * Cập nhật trạng thái của phiên đấu giá (ví dụ: từ OPEN sang CANCELED, hoặc từ
      * RUNNING sang FINISHED)
      */
-    public boolean capNhatTrangThaiAuction(int auctionId, String newStatus) {
+    public boolean updateAuctionStatus(int auctionId, String newStatus) {
         String sql = "UPDATE auctions SET status = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -172,7 +172,7 @@ public class AdminDao {
         }
     }
 
-    public JsonObject layThongTinAuction(int auctionId) {
+    public JsonObject getAuctionInfo(int auctionId) {
         String sql = "SELECT status, start_time, end_time FROM auctions WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {

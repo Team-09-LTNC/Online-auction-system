@@ -14,7 +14,7 @@ class ProductControllerTest {
 
     @Test
     void nullRequestReturnsBadRequestErrorResponse() {
-        String response = controller.xuLy(null, null);
+        String response = controller.handleRequest(null, null);
         JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
         assertEquals("ERROR_RESPONSE", json.get("type").getAsString());
@@ -28,7 +28,7 @@ class ProductControllerTest {
         request.addProperty("type", "UNKNOWN_PRODUCT_ACTION");
         request.addProperty("requestId", "req-product-1");
 
-        String response = controller.xuLy(request, null);
+        String response = controller.handleRequest(request, null);
         JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
         assertEquals("ERROR_RESPONSE", json.get("type").getAsString());
@@ -42,7 +42,7 @@ class ProductControllerTest {
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.SEARCH_PRODUCT);
 
-        String response = controller.xuLy(request, null);
+        String response = controller.handleRequest(request, null);
         JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
         assertEquals(ActionType.SEARCH_PRODUCT, json.get("type").getAsString());
@@ -56,7 +56,7 @@ class ProductControllerTest {
         request.addProperty("type", ActionType.DELETE_PRODUCT);
         request.addProperty("itemId", "x");
 
-        String response = controller.xuLy(request, null);
+        String response = controller.handleRequest(request, null);
         JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
         assertEquals(ActionType.DELETE_PRODUCT, json.get("type").getAsString());
@@ -69,7 +69,7 @@ class ProductControllerTest {
         request.addProperty("type", ActionType.GET_PRODUCT_BY_ID);
         request.addProperty("requestId", "get-item-1");
 
-        String response = controller.xuLy(request, null);
+        String response = controller.handleRequest(request, null);
         JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
         assertEquals(ActionType.GET_PRODUCT_BY_ID, json.get("type").getAsString());

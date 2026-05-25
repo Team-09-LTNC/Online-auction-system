@@ -9,7 +9,6 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -78,6 +77,7 @@ public class LoginController {
 
         AuthDTOs.LoginRequest loginReq = new AuthDTOs.LoginRequest(user, pass, role);
         JsonObject jsonRequest = new Gson().toJsonTree(loginReq).getAsJsonObject();
+        jsonRequest.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
         ClientSocket.getInstance().sendJsonRequest(jsonRequest, "LOGIN_RESPONSE", responseJson -> {
             Platform.runLater(() -> {

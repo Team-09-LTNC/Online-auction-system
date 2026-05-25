@@ -60,6 +60,6 @@
             <Label fx:id="lblTimeRemaining" style="-fx-font-weight: bold; -fx-text-fill: #D32F2F;" text="--:--:--" />
         </VBox>
         <Region HBox.hgrow="ALWAYS" />
-        <Button fx:id="btnBid" mnemonicParsing="false" onAction="#handleBidAction" styleClass="btn-primary" text="Vào phòng" />
+        <Button fx:id="btnBid" minHeight="34.0" minWidth="112.0" mnemonicParsing="false" onAction="#handleBidAction" styleClass="auction-action-button" text="Vào phòng" />
     </HBox>
 </VBox>

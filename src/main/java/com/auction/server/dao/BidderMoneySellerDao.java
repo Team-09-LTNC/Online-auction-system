@@ -62,7 +62,7 @@ public class BidderMoneySellerDao {
     /**
      * Chuyển tiền từ Bidder (người thắng) sang Seller.
      */
-    public boolean thanhToanPhienDauGia(int idBidder, int idSeller, long soTien) {
+    public boolean payAuction(int idBidder, int idSeller, long soTien) {
         // Sử dụng try-with-resources
         try (Connection conn = DatabaseConnection.getInstance().getConnection()) {
 
@@ -133,7 +133,7 @@ public class BidderMoneySellerDao {
      * Quyết toán phiên đã có người thắng. Bidder/seller/số tiền đều được đọc
      * lại từ DB trong transaction để client không thể tự đổi người nhận hoặc giá.
      */
-    public PaymentResult quyetToanMuaDut(int auctionId, int bidderId, boolean thanhToan) {
+    public PaymentResult settleBuyNow(int auctionId, int bidderId, boolean thanhToan) {
         String lockAuction = "SELECT a.status, a.current_price, a.buy_now_price, "
                 + "a.highest_bidder_id, i.seller_id, i.name AS item_name, u.full_name AS bidder_name "
                 + "FROM auctions a JOIN items i ON a.item_id = i.id "
@@ -201,17 +201,17 @@ public class BidderMoneySellerDao {
                 String bidderTransactionType = "PAYMENT_SENT";
                 String sellerTransactionType = "PAYMENT_RECEIVED";
 
-                if (!truTienBidder(conn, bidderId, amount)) {
+                if (!deductBidderBalance(conn, bidderId, amount)) {
                     conn.rollback();
                     return new PaymentResult(false, "Số dư ví bidder không đủ.", status, amount);
                 }
-                if (!congTienSeller(conn, sellerId, amount)) {
+                if (!creditSeller(conn, sellerId, amount)) {
                     conn.rollback();
                     return new PaymentResult(false, "Không tìm thấy seller nhận tiền.", status, amount);
                 }
 
-                ghiLichSuVi(conn, bidderId, bidderTransactionType, amount, bidderDescription);
-                ghiLichSuVi(conn, sellerId, sellerTransactionType, amount, sellerDescription);
+                recordWalletHistory(conn, bidderId, bidderTransactionType, amount, bidderDescription);
+                recordWalletHistory(conn, sellerId, sellerTransactionType, amount, sellerDescription);
 
                 try (PreparedStatement updateStatus =
                              conn.prepareStatement("UPDATE auctions SET status = ? WHERE id = ? AND status = 'FINISHED'")) {
@@ -251,7 +251,7 @@ public class BidderMoneySellerDao {
         }
     }
 
-    private boolean truTienBidder(Connection conn, int bidderId, long amount) throws SQLException {
+    private boolean deductBidderBalance(Connection conn, int bidderId, long amount) throws SQLException {
         String sql = "UPDATE users SET balance = balance - ? "
                 + "WHERE id = ? AND role = 'BIDDER' AND balance >= ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -262,7 +262,7 @@ public class BidderMoneySellerDao {
         }
     }
 
-    private boolean congTienSeller(Connection conn, int sellerId, long amount) throws SQLException {
+    private boolean creditSeller(Connection conn, int sellerId, long amount) throws SQLException {
         String sql = "UPDATE users SET balance = balance + ? WHERE id = ? AND role = 'SELLER'";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, amount);
@@ -271,7 +271,7 @@ public class BidderMoneySellerDao {
         }
     }
 
-    private void ghiLichSuVi(Connection conn, int userId, String type, long amount, String description)
+    private void recordWalletHistory(Connection conn, int userId, String type, long amount, String description)
             throws SQLException {
         String sql = "INSERT INTO wallet_transactions "
                 + "(user_id, transaction_type, amount, description) VALUES (?, ?, ?, ?)";

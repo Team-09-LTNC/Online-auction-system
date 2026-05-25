@@ -12,7 +12,7 @@ class AuthControllerTest {
 
     @Test
     void nullRequestReturnsBadRequestError() {
-        String response = controller.xuLy(null, null);
+        String response = controller.handleRequest(null, null);
         JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
         assertEquals(400, json.get("statusCode").getAsInt());
@@ -24,7 +24,7 @@ class AuthControllerTest {
         JsonObject request = new JsonObject();
         request.addProperty("requestId", "req-auth-1");
 
-        String response = controller.xuLy(request, null);
+        String response = controller.handleRequest(request, null);
         JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
         assertEquals(400, json.get("statusCode").getAsInt());
@@ -36,7 +36,7 @@ class AuthControllerTest {
         JsonObject request = new JsonObject();
         request.addProperty("type", "UNKNOWN_AUTH_ACTION");
 
-        String response = controller.xuLy(request, null);
+        String response = controller.handleRequest(request, null);
         JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
         assertEquals(400, json.get("statusCode").getAsInt());

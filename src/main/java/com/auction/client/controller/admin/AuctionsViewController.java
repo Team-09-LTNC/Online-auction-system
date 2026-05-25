@@ -95,7 +95,7 @@ public class AuctionsViewController implements Initializable {
     }
 
     private void loadData() {
-        AdminManager.getInstance().layDanhSachAuction(
+        AdminManager.getInstance().getAuctions(
                 auctions -> Platform.runLater(() -> {
                     masterList.clear();
                     auctions.forEach(a -> masterList.add(new Auction(
@@ -204,7 +204,7 @@ public class AuctionsViewController implements Initializable {
                 "\" đang " + currentStatus + "\nChọn hành động:");
 
         dialog.showAndWait().ifPresent(action -> {
-            AdminManager.getInstance().thayDoiTrangThaiAuction(
+            AdminManager.getInstance().changeAuctionStatus(
                     Integer.parseInt(selected.getAuctionId()),
                     action,
                     msg -> Platform.runLater(() -> {

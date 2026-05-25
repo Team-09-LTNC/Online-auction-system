@@ -28,6 +28,7 @@
 
 `pom.xml` hiện đã cấu hình đúng:
 - JavaFX plugin chạy `com.auction.client.MainApp`
+- Shade plugin đóng gói client với `com.auction.client.MainApp`
 - Shade plugin đóng gói server với `com.auction.server.ServerApp`
 
 ## Cấu Trúc Thư Mục
@@ -86,6 +87,31 @@ mvn javafx:run
 ```
 
 Chạy server (IDE): chạy class `com.auction.server.ServerApp`.
+
+Build 2 file jar chạy độc lập:
+
+```bash
+mvn package -DskipTests
+```
+
+Sau khi build, Maven tạo các file:
+
+```text
+target/MainApp.jar
+target/ServerApp.jar
+```
+
+Chạy server:
+
+```bash
+java -jar target/ServerApp.jar
+```
+
+Chạy client:
+
+```bash
+java -jar target/MainApp.jar
+```
 
 ## Ghi Chú
 

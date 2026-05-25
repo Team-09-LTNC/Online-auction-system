@@ -9,25 +9,25 @@ final class AuctionNotificationService {
     private AuctionNotificationService() {
     }
 
-    static void guiThongBaoMuaDut(int auctionId, int bidderId, int sellerId, String tenPhien, String tenNguoiThang) {
-        SystemNotificationManager.getInstance().guiThongBaoRieng(
+    static void sendBuyNowNotification(int auctionId, int bidderId, int sellerId, String tenPhien, String tenNguoiThang) {
+        SystemNotificationManager.getInstance().sendPrivateNotification(
                 auctionId,
                 bidderId,
-                taoNoiDungThongBaoThanhToan(tenPhien),
+                buildPaymentNotificationContent(tenPhien),
                 true
         );
 
         if (sellerId > 0) {
-            SystemNotificationManager.getInstance().guiThongBaoRieng(
+            SystemNotificationManager.getInstance().sendPrivateNotification(
                     auctionId,
                     sellerId,
-                    taoNoiDungThongBaoSeller(tenPhien, auctionId, tenNguoiThang),
+                    buildSellerNotificationContent(tenPhien, auctionId, tenNguoiThang),
                     false
             );
         }
     }
 
-    static void guiThongBaoSauQuyetToan(
+    static void sendPostSettlementNotification(
             int auctionId,
             int bidderId,
             int sellerId,
@@ -35,7 +35,7 @@ final class AuctionNotificationService {
             long soTien,
             boolean thanhToan
     ) {
-        String soTienText = dinhDangTien(soTien);
+        String soTienText = formatMoney(soTien);
         SystemNotificationManager notificationManager = SystemNotificationManager.getInstance();
 
         if (sellerId > 0) {
@@ -45,28 +45,28 @@ final class AuctionNotificationService {
             String sellerBalanceMessage = thanhToan
                     ? "Số dư ví của bạn đã tăng " + soTienText + " từ phiên " + tenPhien + "."
                     : "Số dư ví của bạn đã tăng " + soTienText + " từ phí phạt hủy thanh toán của phiên " + tenPhien + ".";
-            notificationManager.guiThongBaoRieng(auctionId, sellerId, sellerStatusMessage, false);
-            notificationManager.guiThongBaoRieng(auctionId, sellerId, sellerBalanceMessage, false);
+            notificationManager.sendPrivateNotification(auctionId, sellerId, sellerStatusMessage, false);
+            notificationManager.sendPrivateNotification(auctionId, sellerId, sellerBalanceMessage, false);
         }
 
         String bidderBalanceMessage = thanhToan
                 ? "Số dư ví của bạn đã giảm " + soTienText + " để thanh toán phiên " + tenPhien + "."
                 : "Số dư ví của bạn đã giảm " + soTienText + " do hủy thanh toán phiên " + tenPhien + ".";
-        notificationManager.guiThongBaoRieng(auctionId, bidderId, bidderBalanceMessage, false);
+        notificationManager.sendPrivateNotification(auctionId, bidderId, bidderBalanceMessage, false);
     }
 
-    private static String dinhDangTien(long amount) {
-        NumberFormat numberFormat = NumberFormat.getInstance(new Locale("vi", "VN"));
+    private static String formatMoney(long amount) {
+        NumberFormat numberFormat = NumberFormat.getInstance(Locale.forLanguageTag("vi-VN"));
         return numberFormat.format(amount) + " VND";
     }
 
-    private static String taoNoiDungThongBaoThanhToan(String tenPhien) {
+    private static String buildPaymentNotificationContent(String tenPhien) {
         return "Chúc mừng bạn đã chiến thắng phiên đấu giá " + tenPhien + ".\n"
                 + "Xác nhận thanh toán để chính thức sở hữu sản phẩm.\n\n"
                 + "Nếu hủy thanh toán, bạn sẽ chịu phạt 10% tiền đặt giá.";
     }
 
-    private static String taoNoiDungThongBaoSeller(String tenPhien, int auctionId, String tenNguoiThang) {
+    private static String buildSellerNotificationContent(String tenPhien, int auctionId, String tenNguoiThang) {
         return "Chúc mừng sản phẩm " + tenPhien + " phiên " + auctionId
                 + " đã được bán thành công, người chiến thắng là " + tenNguoiThang + ".";
     }

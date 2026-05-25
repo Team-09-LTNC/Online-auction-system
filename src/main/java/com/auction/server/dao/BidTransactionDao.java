@@ -20,7 +20,7 @@ public class BidTransactionDao {
   /**
    * Luu 1 dong lich su dat gia.
    */
-  public boolean luuLichSuDatGia(int idPhien, int idNguoiBid, long soTien) {
+  public boolean saveBidHistory(int idPhien, int idNguoiBid, long soTien) {
     String sql = "INSERT INTO bid_history (auction_id, bidder_id, bid_amount, bid_time) "
         + "VALUES (?, ?, ?, NOW())";
 
@@ -39,7 +39,7 @@ public class BidTransactionDao {
   /**
    * Lay lich su bid cua 1 phien theo thu tu tang dan thoi gian.
    */
-  public List<BidLine> layLichSuPhien(int idPhien) {
+  public List<BidLine> getAuctionBidHistory(int idPhien) {
     List<BidLine> danhSach = new ArrayList<>();
     String sql = "SELECT u.full_name, b.bid_amount, b.bid_time "
         + "FROM bid_history b "

@@ -47,13 +47,13 @@ public class DashboardViewController implements Initializable {
 
     private void loadStats() {
         // TODO: thay bằng lời gọi Service / DAO thực tế
-        AdminManager.getInstance().layTongSoBidder(
+        AdminManager.getInstance().getBidderCount(
                 count -> Platform.runLater(() -> lblBidderCount.setText(String.valueOf(count))),
                 error -> System.err.println("Lỗi: " + error));
-        AdminManager.getInstance().layTongSoSeller(
+        AdminManager.getInstance().getSellerCount(
                 count -> Platform.runLater(() -> lblSellerCount.setText(String.valueOf(count))),
                 error -> System.err.println("Lỗi: " + error));
-        AdminManager.getInstance().layTongSoAuction(
+        AdminManager.getInstance().getAuctionCount(
                 count -> Platform.runLater(() -> lblAuctionCount.setText(String.valueOf(count))),
                 error -> System.err.println("Lỗi: " + error));
     }

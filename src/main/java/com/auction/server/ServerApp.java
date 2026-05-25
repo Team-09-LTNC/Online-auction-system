@@ -19,7 +19,7 @@ public class ServerApp {
 //  và không cần sửa đây, code  dưới đọc từ file properties, đây chỉ mặc định khi hệ thống chạy tốt
     private static int PORT = 8080;
 
-    // --- KHỐI STATIC: ĐỌC CẤU HÌNH PORT ---
+    // CẤU HÌNH PORT ---
     static {
         try (InputStream input = ServerApp.class.getClassLoader().getResourceAsStream("application.properties")) {
             if (input != null) {
@@ -34,7 +34,6 @@ public class ServerApp {
             logger.error("Lỗi khi đọc file cấu hình, dùng cổng mặc định 8080", e);
         }
     }
-    // ----------------------------------------
 
     public static int getPort() {
         return PORT;
@@ -46,8 +45,7 @@ public class ServerApp {
         logger.info("   Đang lắng nghe tại cổng: {}                  ", PORT);
         logger.info("==================================================");
 
-        // Khởi tạo và ủy quyền toàn bộ việc quản lý mạng cho ServerManager
         ServerManager quanLyMayChu = new ServerManager(PORT);
-        quanLyMayChu.batDauServer();
+        quanLyMayChu.startServer();
     }
 }

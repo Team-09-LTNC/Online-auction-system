@@ -18,13 +18,13 @@ import java.sql.Types;
 public class SystemNotificationDao {
     private static final Logger logger = LoggerFactory.getLogger(SystemNotificationDao.class);
 
-    public long luuThongBao(int auctionId, int recipientId, String message, boolean paymentRequired) {
-        Integer systemAdminId = timSystemAdminId();
+    public long saveNotification(int auctionId, int recipientId, String message, boolean paymentRequired) {
+        Integer systemAdminId = findSystemAdminId();
         if (systemAdminId == null) {
             logger.error("Cannot find ADMIN user to send system notification.");
             return -1;
         }
-        if (daCoThongBaoTrungGanDay(auctionId, recipientId, message, paymentRequired)) {
+        if (hasRecentDuplicateNotification(auctionId, recipientId, message, paymentRequired)) {
             logger.info("Skip duplicated notification for user {} auction {}.", recipientId, auctionId);
             return -1;
         }
@@ -54,7 +54,7 @@ public class SystemNotificationDao {
         }
     }
 
-    public JsonArray layThongBaoCuaNguoiNhan(int recipientId) {
+    public JsonArray getNotificationsForRecipient(int recipientId) {
         String sql = "SELECT cm.id, cm.auction_id, cm.message, cm.payment_required, cm.send_time, cm.is_read, a.status "
                 + "FROM chat_messages cm "
                 + "LEFT JOIN auctions a ON a.id = cm.auction_id "
@@ -85,7 +85,7 @@ public class SystemNotificationDao {
         return notifications;
     }
 
-    public int demThongBaoChuaDoc(int recipientId) {
+    public int countUnreadNotifications(int recipientId) {
         String sql = "SELECT COUNT(*) FROM chat_messages "
                 + "WHERE recipient_id = ? AND is_read = FALSE";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -100,7 +100,7 @@ public class SystemNotificationDao {
         }
     }
 
-    public boolean danhDauDaDoc(int recipientId) {
+    public boolean markAsRead(int recipientId) {
         String sql = "UPDATE chat_messages SET is_read = TRUE "
                 + "WHERE recipient_id = ? AND is_read = FALSE";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -114,7 +114,7 @@ public class SystemNotificationDao {
         }
     }
 
-    private Integer timSystemAdminId() {
+    private Integer findSystemAdminId() {
         String sql = "SELECT id FROM users WHERE role = 'ADMIN' ORDER BY id LIMIT 1";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -141,7 +141,7 @@ public class SystemNotificationDao {
         return null;
     }
 
-    private boolean daCoThongBaoTrungGanDay(int auctionId, int recipientId, String message, boolean paymentRequired) {
+    private boolean hasRecentDuplicateNotification(int auctionId, int recipientId, String message, boolean paymentRequired) {
         String sql = "SELECT 1 FROM chat_messages "
                 + "WHERE auction_id <=> ? AND recipient_id = ? AND message = ? AND payment_required = ? "
                 + "AND send_time >= DATE_SUB(NOW(), INTERVAL 10 SECOND) LIMIT 1";

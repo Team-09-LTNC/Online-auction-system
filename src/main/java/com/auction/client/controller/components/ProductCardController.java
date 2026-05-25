@@ -20,6 +20,17 @@ import org.slf4j.LoggerFactory;
 
 public class ProductCardController {
     private static final Logger logger = LoggerFactory.getLogger(ProductCardController.class);
+    private static final String ACTION_BUTTON_BASE = "auction-action-button";
+    private static final String ACTION_BUTTON_LIVE = "auction-action-live";
+    private static final String ACTION_BUTTON_WAITING = "auction-action-waiting";
+    private static final String ACTION_BUTTON_EXPIRED = "auction-action-expired";
+    private static final String ACTION_BUTTON_PAID = "auction-action-paid";
+    private static final String ACTION_BUTTON_CANCELED = "auction-action-canceled";
+    private static final String STATUS_LIVE = "status-live";
+    private static final String STATUS_WAITING = "status-waiting";
+    private static final String STATUS_EXPIRED = "status-expired";
+    private static final String STATUS_PAID = "status-paid";
+    private static final String STATUS_CANCELED = "status-canceled";
 
     @FXML private ImageView imgProduct;
     @FXML private Label lblProductName;
@@ -120,17 +131,15 @@ public class ProductCardController {
 
     private void setupStatusUI(String status) {
         if ("OPEN".equalsIgnoreCase(status)) {
-            lblStatus.setText("Sắp diễn ra");
-            btnBid.setDisable(true);
-            btnBid.setText("Chờ mở bán");
+            setStatusBadge("Sắp diễn ra", STATUS_WAITING);
+            setBidButtonState("Chờ mở bán", true, ACTION_BUTTON_WAITING);
         } else if ("RUNNING".equalsIgnoreCase(status)) {
-            lblStatus.setText("Đang diễn ra");
-            btnBid.setDisable(false);
-            btnBid.setText("Vào phòng");
+            setStatusBadge("Đang diễn ra", STATUS_LIVE);
+            setBidButtonState("Vào phòng", false, ACTION_BUTTON_LIVE);
         } else if ("PAID".equalsIgnoreCase(status)) {
-            setClosedUI("Đã thanh toán", "Đã thanh toán");
+            setClosedUI("Đã thanh toán", "Đã thanh toán", STATUS_PAID, ACTION_BUTTON_PAID);
         } else if ("CANCELED".equalsIgnoreCase(status)) {
-            setClosedUI("Đã hủy", "Đã hủy");
+            setClosedUI("Đã hủy", "Đã hủy", STATUS_CANCELED, ACTION_BUTTON_CANCELED);
         } else {
             setExpiredUI();
         }
@@ -170,28 +179,59 @@ public class ProductCardController {
 
     private void setExpiredUI() {
         currentStatus = "FINISHED";
-        setClosedUI("Đã kết thúc", "Hết hạn");
+        setClosedUI("Đã kết thúc", "Hết hạn", STATUS_EXPIRED, ACTION_BUTTON_EXPIRED);
     }
 
     private void setRunningUI() {
         stopTimer();
         currentStatus = "RUNNING";
         lblTimeRemaining.setText("Đang mở");
-        lblStatus.setText("Đang diễn ra");
-        btnBid.setDisable(false);
-        btnBid.setText("Vào phòng");
+        setStatusBadge("Đang diễn ra", STATUS_LIVE);
+        setBidButtonState("Vào phòng", false, ACTION_BUTTON_LIVE);
         hideSellerActions();
     }
 
-    private void setClosedUI(String statusText, String buttonText) {
+    private void setClosedUI(String statusText, String buttonText, String statusVariant, String buttonVariant) {
         stopTimer();
 
         lblTimeRemaining.setText("00:00:00");
-        lblStatus.setText(statusText);
+        setStatusBadge(statusText, statusVariant);
+        setBidButtonState(buttonText, true, buttonVariant);
 
-        btnBid.setDisable(true);
-        btnBid.setText(buttonText);
         hideSellerActions();
+    }
+
+    private void setStatusBadge(String text, String variantStyleClass) {
+        lblStatus.getStyleClass().removeAll(
+                STATUS_LIVE,
+                STATUS_WAITING,
+                STATUS_EXPIRED,
+                STATUS_PAID,
+                STATUS_CANCELED
+        );
+        lblStatus.setText(text);
+        if (variantStyleClass != null && !lblStatus.getStyleClass().contains(variantStyleClass)) {
+            lblStatus.getStyleClass().add(variantStyleClass);
+        }
+    }
+
+    private void setBidButtonState(String text, boolean disabled, String variantStyleClass) {
+        btnBid.getStyleClass().removeAll(
+                "btn-primary",
+                ACTION_BUTTON_LIVE,
+                ACTION_BUTTON_WAITING,
+                ACTION_BUTTON_EXPIRED,
+                ACTION_BUTTON_PAID,
+                ACTION_BUTTON_CANCELED
+        );
+        if (!btnBid.getStyleClass().contains(ACTION_BUTTON_BASE)) {
+            btnBid.getStyleClass().add(ACTION_BUTTON_BASE);
+        }
+        if (variantStyleClass != null) {
+            btnBid.getStyleClass().add(variantStyleClass);
+        }
+        btnBid.setText(text);
+        btnBid.setDisable(disabled);
     }
 
     private void hideSellerActions() {

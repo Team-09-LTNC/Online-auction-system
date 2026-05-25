@@ -3,6 +3,9 @@ package com.auction.client.controller.components;
 import com.auction.client.networkclient.ClientSocket;
 import com.auction.common.enums.ActionType;
 import com.google.gson.JsonObject;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -15,6 +18,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -31,9 +35,18 @@ public class ChatController {
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private static final DateTimeFormatter DB_TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final int PAYMENT_DEADLINE_HOURS = 24;
+    private static final String[] PAYMENT_RULE_LINES = {
+            "Quy định:",
+            "- Hủy thanh toán hoặc quá hạn thanh toán: hệ thống trừ 10% giá chốt.",
+            "- Vi phạm quá hạn lần 1: khóa tài khoản 3 ngày.",
+            "- Vi phạm quá hạn lần 2: khóa tài khoản 7 ngày.",
+            "- Từ lần 3: khóa tài khoản vĩnh viễn."
+    };
 
     private final Set<Long> renderedNotificationIds = new HashSet<>();
     private final Set<Integer> renderedPaymentAuctionIds = new HashSet<>();
+    private final List<Timeline> paymentCountdowns = new ArrayList<>();
 
     @FXML
     private ListView<Node> lvChatMessages;
@@ -45,10 +58,10 @@ public class ChatController {
     @FXML
     public void initialize() {
         instance = this;
-        cauHinhDanhSachThongBao();
-        capNhatTongThongBao();
-        taiThongBaoDaLuu();
-        danhDauThongBaoDaDoc();
+        configureNotificationList();
+        updateNotificationCount();
+        loadSavedNotifications();
+        markNotificationsRead();
         SidebarController.clearUnreadNotifications();
         com.auction.client.networkclient.PushHandler.flushNotifications(this);
     }
@@ -56,17 +69,17 @@ public class ChatController {
     public void receiveNotification(String content) {
         Platform.runLater(() -> {
             if (lvChatMessages != null) {
-                themThongBao(taoThongBaoThuong(content, null));
+                addNotification(createRegularNotification(content, null));
             }
         });
     }
 
     public void receiveNotification(JsonObject payload) {
-        Platform.runLater(() -> hienThiThongBao(payload));
+        Platform.runLater(() -> showNotification(payload));
     }
 
-    private void hienThiThongBao(JsonObject payload) {
-        if (lvChatMessages == null || daHienThi(payload)) {
+    private void showNotification(JsonObject payload) {
+        if (lvChatMessages == null || isDisplayed(payload)) {
             return;
         }
 
@@ -85,40 +98,40 @@ public class ChatController {
             if (!renderedPaymentAuctionIds.add(auctionId)) {
                 return;
             }
-            themThongBao(taoThongBaoThanhToan(auctionId, message, sentAt, auctionStatus));
+            addNotification(createPaymentNotification(auctionId, message, sentAt, auctionStatus));
         } else {
-            themThongBao(taoThongBaoThuong(message, sentAt));
+            addNotification(createRegularNotification(message, sentAt));
         }
     }
 
-    private boolean daHienThi(JsonObject payload) {
+    private boolean isDisplayed(JsonObject payload) {
         if (!payload.has("notificationId") || payload.get("notificationId").isJsonNull()) {
             return false;
         }
         return !renderedNotificationIds.add(payload.get("notificationId").getAsLong());
     }
 
-    private Node taoThongBaoThuong(String content, String sentAt) {
+    private Node createRegularNotification(String content, String sentAt) {
         Label title = new Label("Thông báo hệ thống");
         title.setStyle("-fx-text-fill: #7A1B28; -fx-font-size: 13px; -fx-font-weight: bold;");
 
-        Label time = taoNhanThoiGian(sentAt);
+        Label time = createTimeLabel(sentAt);
 
         Label label = new Label(content);
         label.setWrapText(true);
         label.setMaxWidth(Double.MAX_VALUE);
         label.setStyle("-fx-text-fill: #3E2723; -fx-font-size: 13px; -fx-line-spacing: 2px;");
 
-        VBox card = taoKhungThongBao();
+        VBox card = createNotificationCard();
         card.getChildren().addAll(title, time, label);
-        return bocThongBao("!", card);
+        return unwrapNotification("!", card);
     }
 
-    private Node taoThongBaoThanhToan(int auctionId, String content, String sentAt, String auctionStatus) {
+    private Node createPaymentNotification(int auctionId, String content, String sentAt, String auctionStatus) {
         Label title = new Label("Thông báo chiến thắng");
         title.setStyle("-fx-text-fill: #7A1B28; -fx-font-size: 14px; -fx-font-weight: bold;");
 
-        Label time = taoNhanThoiGian(sentAt);
+        Label time = createTimeLabel(sentAt);
 
         Label body = new Label(content);
         body.setWrapText(true);
@@ -134,9 +147,9 @@ public class ChatController {
             settled.setWrapText(true);
             settled.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #1E8449;");
 
-            VBox card = taoKhungThongBao();
+            VBox card = createNotificationCard();
             card.getChildren().addAll(title, time, body, settled);
-            return bocThongBao("✓", card);
+            return unwrapNotification("✓", card);
         }
 
         Button cancel = new Button("Hủy thanh toán");
@@ -146,44 +159,110 @@ public class ChatController {
         confirm.setStyle("-fx-background-color: #B32638; -fx-text-fill: white; "
                 + "-fx-font-weight: bold; -fx-background-radius: 7; -fx-cursor: hand;");
 
+        Label countdown = createPaymentCountdownLabel(sentAt, cancel, confirm);
+        VBox rule = createPaymentRuleBox();
+
         Label result = new Label();
         result.setWrapText(true);
         result.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
 
-        cancel.setOnAction(event -> guiQuyetToan(auctionId, "CANCEL", cancel, confirm, result));
-        confirm.setOnAction(event -> guiQuyetToan(auctionId, "CONFIRM", cancel, confirm, result));
+        cancel.setOnAction(event -> sendSettlement(auctionId, "CANCEL", cancel, confirm, result));
+        confirm.setOnAction(event -> sendSettlement(auctionId, "CONFIRM", cancel, confirm, result));
 
         HBox actions = new HBox(10, cancel, confirm);
         actions.setAlignment(Pos.CENTER_RIGHT);
 
-        VBox card = taoKhungThongBao();
-        card.getChildren().addAll(title, time, body, result, actions);
-        return bocThongBao("✓", card);
+        VBox card = createNotificationCard();
+        card.getChildren().addAll(title, time, body, countdown, rule, result, actions);
+        return unwrapNotification("✓", card);
     }
 
-    private Label taoNhanThoiGian(String sentAt) {
-        Label time = new Label(dinhDangThoiGian(sentAt));
+    private VBox createPaymentRuleBox() {
+        VBox ruleBox = new VBox(4);
+        ruleBox.setMaxWidth(Double.MAX_VALUE);
+        ruleBox.setStyle("-fx-background-color: #FFF7E8; -fx-background-radius: 7; "
+                + "-fx-border-color: #E7C27D; -fx-border-radius: 7; "
+                + "-fx-padding: 8 10;");
+
+        for (int i = 0; i < PAYMENT_RULE_LINES.length; i++) {
+            Label line = new Label(PAYMENT_RULE_LINES[i]);
+            line.setWrapText(true);
+            line.setMaxWidth(Double.MAX_VALUE);
+            line.setStyle("-fx-text-fill: #7A4B11; -fx-font-size: 12px; "
+                    + "-fx-font-weight: bold; -fx-line-spacing: 2px;");
+            if (i == 0) {
+                line.setStyle(line.getStyle() + "-fx-font-size: 13px;");
+            }
+            ruleBox.getChildren().add(line);
+        }
+
+        return ruleBox;
+    }
+
+    private Label createPaymentCountdownLabel(String sentAt, Button cancel, Button confirm) {
+        Label countdown = new Label();
+        countdown.setWrapText(true);
+        countdown.setStyle("-fx-background-color: #F7EAEC; -fx-background-radius: 7; "
+                + "-fx-padding: 7 10; -fx-text-fill: #A64452; -fx-font-size: 12px; "
+                + "-fx-font-weight: bold;");
+
+        LocalDateTime sentTime = parseSentAtText(sentAt);
+        if (sentTime == LocalDateTime.MIN) {
+            sentTime = LocalDateTime.now();
+        }
+        LocalDateTime deadline = sentTime.plusHours(PAYMENT_DEADLINE_HOURS);
+        updatePaymentCountdownLabel(countdown, deadline, cancel, confirm);
+
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), event ->
+                updatePaymentCountdownLabel(countdown, deadline, cancel, confirm)
+        ));
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.play();
+        paymentCountdowns.add(timeline);
+
+        return countdown;
+    }
+
+    private void updatePaymentCountdownLabel(Label countdown, LocalDateTime deadline, Button cancel, Button confirm) {
+        java.time.Duration remaining = java.time.Duration.between(LocalDateTime.now(), deadline);
+        if (!remaining.isPositive()) {
+            countdown.setText("Đã hết thời hạn thanh toán. Hệ thống sẽ tự động hủy và xử lý phí phạt 10%.");
+            countdown.setStyle("-fx-background-color: #F2EEEB; -fx-background-radius: 7; "
+                    + "-fx-padding: 7 10; -fx-text-fill: #7D6E6A; -fx-font-size: 12px; "
+                    + "-fx-font-weight: bold;");
+            cancel.setDisable(true);
+            confirm.setDisable(true);
+            return;
+        }
+
+        long totalSeconds = remaining.getSeconds();
+        long hours = totalSeconds / 3600;
+        long minutes = (totalSeconds % 3600) / 60;
+        long seconds = totalSeconds % 60;
+        countdown.setText(String.format(
+                "Thời hạn thanh toán còn: %02d:%02d:%02d (hạn cuối %s)",
+                hours,
+                minutes,
+                seconds,
+                deadline.format(DISPLAY_TIME_FORMAT)
+        ));
+    }
+
+    private Label createTimeLabel(String sentAt) {
+        Label time = new Label(formatTime(sentAt));
         time.setStyle("-fx-text-fill: #8A6F66; -fx-font-size: 11px;");
         return time;
     }
 
-    private String dinhDangThoiGian(String sentAt) {
-        if (sentAt == null || sentAt.isBlank()) {
+    private String formatTime(String sentAt) {
+        LocalDateTime parsed = parseSentAtText(sentAt);
+        if (parsed == LocalDateTime.MIN) {
             return LocalDateTime.now().format(DISPLAY_TIME_FORMAT);
         }
-        String normalized = sentAt.trim().replace('T', ' ');
-        int dotIndex = normalized.indexOf('.');
-        if (dotIndex > 0) {
-            normalized = normalized.substring(0, dotIndex);
-        }
-        try {
-            return LocalDateTime.parse(normalized, DB_TIME_FORMAT).format(DISPLAY_TIME_FORMAT);
-        } catch (DateTimeParseException ignored) {
-            return sentAt;
-        }
+        return parsed.format(DISPLAY_TIME_FORMAT);
     }
 
-    private VBox taoKhungThongBao() {
+    private VBox createNotificationCard() {
         VBox card = new VBox(10);
         card.setPadding(new Insets(12));
         card.setMaxWidth(Double.MAX_VALUE);
@@ -192,7 +271,7 @@ public class ChatController {
         return card;
     }
 
-    private Node bocThongBao(String icon, VBox content) {
+    private Node unwrapNotification(String icon, VBox content) {
         Label marker = new Label(icon);
         marker.setAlignment(Pos.CENTER);
         marker.setMinSize(30, 30);
@@ -207,7 +286,7 @@ public class ChatController {
         return row;
     }
 
-    private void cauHinhDanhSachThongBao() {
+    private void configureNotificationList() {
         if (lvChatMessages == null) {
             return;
         }
@@ -222,16 +301,16 @@ public class ChatController {
             }
         });
         lvChatMessages.getItems().addListener(
-                (javafx.collections.ListChangeListener<Node>) change -> capNhatTongThongBao()
+                (javafx.collections.ListChangeListener<Node>) change -> updateNotificationCount()
         );
     }
 
-    private void themThongBao(Node notification) {
+    private void addNotification(Node notification) {
         lvChatMessages.getItems().add(0, notification);
-        capNhatTongThongBao();
+        updateNotificationCount();
     }
 
-    private void capNhatTongThongBao() {
+    private void updateNotificationCount() {
         int tong = lvChatMessages == null ? 0 : lvChatMessages.getItems().size();
         if (lblNotificationCount != null) {
             lblNotificationCount.setText(tong + " thông báo");
@@ -242,7 +321,7 @@ public class ChatController {
         }
     }
 
-    private void taiThongBaoDaLuu() {
+    private void loadSavedNotifications() {
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.GET_SYSTEM_NOTIFICATIONS);
         request.addProperty("requestId", java.util.UUID.randomUUID().toString());
@@ -260,7 +339,7 @@ public class ChatController {
                 sorted.sort(Comparator.comparing(this::parseSentAt));
 
                 for (JsonObject notification : sorted) {
-                    hienThiThongBao(notification);
+                    showNotification(notification);
                 }
             });
         });
@@ -271,7 +350,10 @@ public class ChatController {
             return LocalDateTime.MIN;
         }
 
-        String sentAt = payload.get("sentAt").getAsString();
+        return parseSentAtText(payload.get("sentAt").getAsString());
+    }
+
+    private LocalDateTime parseSentAtText(String sentAt) {
         if (sentAt == null || sentAt.isBlank()) {
             return LocalDateTime.MIN;
         }
@@ -289,14 +371,14 @@ public class ChatController {
         }
     }
 
-    private void danhDauThongBaoDaDoc() {
+    private void markNotificationsRead() {
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.MARK_SYSTEM_NOTIFICATIONS_READ);
         request.addProperty("requestId", java.util.UUID.randomUUID().toString());
         ClientSocket.getInstance().sendJsonRequest(request, "MARK_NOTIFICATIONS_READ_RESPONSE", null);
     }
 
-    private void guiQuyetToan(int auctionId, String decision, Button cancel, Button confirm, Label result) {
+    private void sendSettlement(int auctionId, String decision, Button cancel, Button confirm, Label result) {
         cancel.setDisable(true);
         confirm.setDisable(true);
 
@@ -317,13 +399,13 @@ public class ChatController {
                     cancel.setDisable(false);
                     confirm.setDisable(false);
                 } else {
-                    hienThiKetQua(message);
+                    showResult(message);
                 }
             });
         });
     }
 
-    private void hienThiKetQua(String message) {
+    private void showResult(String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Quyết toán phiên đấu giá");
         alert.setHeaderText(null);
@@ -332,6 +414,10 @@ public class ChatController {
     }
 
     public void shutdown() {
+        for (Timeline timeline : paymentCountdowns) {
+            timeline.stop();
+        }
+        paymentCountdowns.clear();
         instance = null;
     }
 }

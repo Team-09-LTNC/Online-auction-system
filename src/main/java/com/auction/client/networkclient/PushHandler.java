@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.auction.common.enums.ActionType;
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import javafx.application.Platform;
@@ -18,7 +17,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class PushHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PushHandler.class);
-    private static final Gson gson = new Gson();
     private static final List<JsonObject> pendingNotifications = new CopyOnWriteArrayList<>();
 
     public static com.auction.client.controller.bidder.AuctionRoomController currentRoomController;
@@ -36,6 +34,14 @@ public class PushHandler {
         try {
             JsonObject transaction = payload.getAsJsonObject("transaction");
             long newBidAmount = transaction.get("bidAmount").getAsLong();
+            int auctionId = payload.has("auctionId") && !payload.get("auctionId").isJsonNull()
+                    ? payload.get("auctionId").getAsInt()
+                    : transaction.has("auctionId") && !transaction.get("auctionId").isJsonNull()
+                    ? transaction.get("auctionId").getAsInt()
+                    : -1;
+            String bidTime = transaction.has("timestamp") && !transaction.get("timestamp").isJsonNull()
+                    ? transaction.get("timestamp").getAsString()
+                    : null;
 
             JsonObject bidder = transaction.getAsJsonObject("bidder");
             String bidderName = "Unknown";
@@ -62,7 +68,15 @@ public class PushHandler {
             Platform.runLater(() -> {
                 logger.info("[Push] Giá mới: {} đ bởi {}", newBidAmount, finalBidderName);
                 if (currentRoomController != null) {
-                    currentRoomController.updateRealtimeBid(newBidAmount, finalBidderName, endTime, serverNow, status);
+                    currentRoomController.updateRealtimeBid(
+                            newBidAmount,
+                            finalBidderName,
+                            endTime,
+                            serverNow,
+                            status,
+                            auctionId,
+                            bidTime
+                    );
                 }
             });
         } catch (Exception e) {
@@ -84,7 +98,6 @@ public class PushHandler {
         }
     }
     private static void onSystemNotification(JsonObject payload) {
-        String message = payload.has("message") ? payload.get("message").getAsString() : "";
         String targetRole = payload.has("targetRole") ? payload.get("targetRole").getAsString() : "ALL";
         String myRole = com.auction.client.controller.auth.UserSession.getCurrentRole();
         int myUserId = com.auction.client.controller.auth.UserSession.getUserId();

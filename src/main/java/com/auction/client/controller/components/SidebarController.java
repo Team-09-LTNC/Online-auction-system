@@ -34,7 +34,7 @@ public class SidebarController {
         // Kích nổ hàm áp dụng phân quyền ngay khi nạp giao diện ban đầu
         applyRolePermissions();
         updateNotificationBadge();
-        dongBoThongBaoChuaDocTuServer();
+        syncUnreadNotificationsFromServer();
     }
 
     /**
@@ -210,7 +210,7 @@ public class SidebarController {
         lblNotificationBadge.setText(unreadNotifications > 99 ? "99+" : String.valueOf(unreadNotifications));
     }
 
-    private void dongBoThongBaoChuaDocTuServer() {
+    private void syncUnreadNotificationsFromServer() {
         if (UserSession.getUserId() <= 0) {
             return;
         }
@@ -268,7 +268,7 @@ public class SidebarController {
 
             // Nhét form Login vào và ép nó CĂN GIỮA TUYỆT ĐỐI dựa trên kích thước thật vừa lấy
             masterRoot.getChildren().add(loginRoot);
-            masterRoot.setAlignment(loginRoot, javafx.geometry.Pos.CENTER);
+            javafx.scene.layout.StackPane.setAlignment(loginRoot, javafx.geometry.Pos.CENTER);
 
             // 6. Tạo Scene mới từ cái hộp masterRoot đã căn giữa xịn xò này
             javafx.scene.Scene loginScene = new javafx.scene.Scene(masterRoot, actualWidth, actualHeight);

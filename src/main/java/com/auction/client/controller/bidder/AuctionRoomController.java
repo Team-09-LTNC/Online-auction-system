@@ -25,6 +25,7 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 
@@ -33,9 +34,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 public class AuctionRoomController implements Initializable {
     private static final String SELLER_SELF_BID_MESSAGE = "Không được tự bid sản phẩm của chính mình.";
@@ -79,42 +82,113 @@ public class AuctionRoomController implements Initializable {
     private boolean currentUserOwnsAuction = false;
     private boolean ownerBidWarningShown = false;
     private boolean autoBidActive = false;
+    private final Set<String> displayedBidKeys = new HashSet<>();
 
     private static long extractMoneyValue(String text) {
-        return Long.parseLong(text.replaceAll("\\D", ""));
+        return parseMoneyValue(text);
+    }
+
+    private static long parseMoneyValue(String text) {
+        String digits = getDigitsOnly(text);
+        if (digits.isEmpty()) {
+            throw new NumberFormatException("Empty money value");
+        }
+        return Long.parseLong(digits);
+    }
+
+    private static String getDigitsOnly(String text) {
+        return text == null ? "" : text.replaceAll("\\D", "");
+    }
+
+    private static String formatMoney(long value) {
+        return formatDigitsWithDots(String.valueOf(value));
+    }
+
+    private static String formatVnd(long value) {
+        return formatMoney(value) + " đ";
+    }
+
+    private static String formatDigitsWithDots(String digits) {
+        if (digits == null || digits.isBlank()) {
+            return "";
+        }
+
+        String normalized = digits.replaceFirst("^0+(?!$)", "");
+        StringBuilder formatted = new StringBuilder();
+        int firstGroupLength = normalized.length() % 3;
+        if (firstGroupLength == 0) {
+            firstGroupLength = 3;
+        }
+
+        formatted.append(normalized, 0, firstGroupLength);
+        for (int i = firstGroupLength; i < normalized.length(); i += 3) {
+            formatted.append('.').append(normalized, i, i + 3);
+        }
+        return formatted.toString();
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         com.auction.client.networkclient.PushHandler.currentRoomController = this;
 
-        if (txtBidAmount != null) {
-            txtBidAmount.textProperty().addListener((obs, oldVal, newVal) -> {
-                if (!newVal.isEmpty()) {
-                    txtBidAmount.setText(newVal.replaceAll("\\D", ""));
-                }
-            });
-        }
-        if (txtMaxAutoBid != null) {
-            txtMaxAutoBid.textProperty().addListener((obs, oldVal, newVal) -> {
-                if (!newVal.isEmpty()) {
-                    txtMaxAutoBid.setText(newVal.replaceAll("\\D", ""));
-                }
-            });
-        }
-        if (txtAutoBidStep != null) {
-            txtAutoBidStep.textProperty().addListener((obs, oldVal, newVal) -> {
-                if (!newVal.isEmpty()) {
-                    txtAutoBidStep.setText(newVal.replaceAll("\\D", ""));
-                }
-            });
-        }
+        installMoneyFormatter(txtBidAmount);
+        installMoneyFormatter(txtMaxAutoBid);
+        installMoneyFormatter(txtAutoBidStep);
 
         priceSeries = new XYChart.Series<>();
         priceSeries.setName("Giá đấu");
         if (priceChart != null) {
             priceChart.getData().add(priceSeries);
         }
+    }
+
+    private void installMoneyFormatter(TextField textField) {
+        if (textField == null) {
+            return;
+        }
+
+        textField.setTextFormatter(new TextFormatter<String>(change -> {
+            String proposedText = change.getControlNewText();
+            String digits = getDigitsOnly(proposedText);
+            String formatted = formatDigitsWithDots(digits);
+
+            int proposedCaret = Math.max(0, Math.min(change.getCaretPosition(), proposedText.length()));
+            int digitsBeforeCaret = countDigits(proposedText.substring(0, proposedCaret));
+            int newCaret = calculateCaretPosition(formatted, digitsBeforeCaret);
+
+            change.setRange(0, change.getControlText().length());
+            change.setText(formatted);
+            change.setCaretPosition(newCaret);
+            change.setAnchor(newCaret);
+            return change;
+        }));
+    }
+
+    private static int countDigits(String text) {
+        int count = 0;
+        for (int i = 0; i < text.length(); i++) {
+            if (Character.isDigit(text.charAt(i))) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static int calculateCaretPosition(String text, int digitsBeforeCaret) {
+        if (digitsBeforeCaret <= 0) {
+            return 0;
+        }
+
+        int digitsSeen = 0;
+        for (int i = 0; i < text.length(); i++) {
+            if (Character.isDigit(text.charAt(i))) {
+                digitsSeen++;
+                if (digitsSeen == digitsBeforeCaret) {
+                    return i + 1;
+                }
+            }
+        }
+        return text.length();
     }
 
     public void initData(int auctionId, String imageUrl) {
@@ -132,6 +206,7 @@ public class AuctionRoomController implements Initializable {
         JsonObject joinReq = new JsonObject();
         joinReq.addProperty("type", ActionType.JOIN_AUCTION);
         joinReq.addProperty("auctionId", auctionId);
+        joinReq.addProperty("requestId", java.util.UUID.randomUUID().toString());
         ClientSocket.getInstance().sendJsonRequest(joinReq, null, null);
 
         refreshAuctionState();
@@ -155,15 +230,15 @@ public class AuctionRoomController implements Initializable {
         long startingPrice = getLong(snapshot, "startingPrice", getLong(snapshot, "currentPrice", 0));
         long bidIncrement = getLong(snapshot, "bidIncrement", 0);
         if (lblStartingPrice != null) {
-            lblStartingPrice.setText(String.format("%,d đ", startingPrice));
+            lblStartingPrice.setText(formatVnd(startingPrice));
         }
         if (lblBidIncrement != null) {
-            lblBidIncrement.setText(String.format("%,d đ", bidIncrement));
+            lblBidIncrement.setText(formatVnd(bidIncrement));
         }
 
         currentBuyNowPrice = hasValue(snapshot, "buyNowPrice") ? snapshot.get("buyNowPrice").getAsLong() : null;
         if (lblBuyNowPrice != null) {
-            lblBuyNowPrice.setText(currentBuyNowPrice != null ? String.format("%,d đ", currentBuyNowPrice) : "Không hỗ trợ");
+            lblBuyNowPrice.setText(currentBuyNowPrice != null ? formatVnd(currentBuyNowPrice) : "Không hỗ trợ");
         }
         if (lblAntiSniping != null) {
             lblAntiSniping.setText(getBoolean(snapshot, "antiSnipingEnabled", false) ? "Có" : "Không");
@@ -171,7 +246,7 @@ public class AuctionRoomController implements Initializable {
 
         long displayPrice = getLong(snapshot, "currentHighestBid", getLong(snapshot, "currentPrice", startingPrice));
         if (lblCurrentPrice != null) {
-            lblCurrentPrice.setText(String.format("%,d đ", displayPrice));
+            lblCurrentPrice.setText(formatVnd(displayPrice));
         }
         if (lblLeader != null) {
             lblLeader.setText("Chưa có ai đặt giá");
@@ -255,6 +330,7 @@ public class AuctionRoomController implements Initializable {
         JsonObject getReq = new JsonObject();
         getReq.addProperty("type", ActionType.GET_AUCTION_BY_ID);
         getReq.addProperty("auctionId", currentAuctionId);
+        getReq.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
         ClientSocket.getInstance().sendJsonRequest(getReq, ActionType.GET_AUCTION_BY_ID, response ->
                 Platform.runLater(() -> {
@@ -285,17 +361,17 @@ public class AuctionRoomController implements Initializable {
                     long startingPrice = itemData.has("startingPrice") ? itemData.get("startingPrice").getAsLong() : 0;
                     long bidIncrement = itemData.has("bidIncrement") ? itemData.get("bidIncrement").getAsLong() : 0;
                     if (lblStartingPrice != null) {
-                        lblStartingPrice.setText(String.format("%,d đ", startingPrice));
+                        lblStartingPrice.setText(formatVnd(startingPrice));
                     }
                     if (lblBidIncrement != null) {
-                        lblBidIncrement.setText(String.format("%,d đ", bidIncrement));
+                        lblBidIncrement.setText(formatVnd(bidIncrement));
                     }
 
                     currentBuyNowPrice = data.has("buyNowPrice") && !data.get("buyNowPrice").isJsonNull()
                             ? data.get("buyNowPrice").getAsLong()
                             : null;
                     if (lblBuyNowPrice != null) {
-                        lblBuyNowPrice.setText(currentBuyNowPrice != null ? String.format("%,d đ", currentBuyNowPrice) : "Không hỗ trợ");
+                        lblBuyNowPrice.setText(currentBuyNowPrice != null ? formatVnd(currentBuyNowPrice) : "Không hỗ trợ");
                     }
 
                     if (lblAntiSniping != null) {
@@ -320,7 +396,7 @@ public class AuctionRoomController implements Initializable {
                     }
 
                     if (lblCurrentPrice != null) {
-                        lblCurrentPrice.setText(String.format("%,d đ", displayPrice));
+                        lblCurrentPrice.setText(formatVnd(displayPrice));
                     }
                     if (lblLeader != null) {
                         lblLeader.setText(hasWinner ? "Người dẫn đầu: " + leaderText : leaderText);
@@ -421,6 +497,7 @@ public class AuctionRoomController implements Initializable {
         JsonObject historyReq = new JsonObject();
         historyReq.addProperty("type", ActionType.GET_BID_HISTORY);
         historyReq.addProperty("auctionId", currentAuctionId);
+        historyReq.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
         ClientSocket.getInstance().sendJsonRequest(historyReq, ActionType.GET_BID_HISTORY, response ->
                 Platform.runLater(() -> {
@@ -432,6 +509,7 @@ public class AuctionRoomController implements Initializable {
                     if (lvBidHistory != null) {
                         lvBidHistory.getItems().clear();
                     }
+                    displayedBidKeys.clear();
                     if (priceChart != null && priceSeries != null) {
                         priceChart.getData().remove(priceSeries);
                     }
@@ -462,9 +540,7 @@ public class AuctionRoomController implements Initializable {
                             historyTimeStr = LocalDateTime.now().format(historyTimeFormatter);
                         }
 
-                        if (lvBidHistory != null) {
-                            lvBidHistory.getItems().add(0, "(" + historyTimeStr + ") " + name + " đã đặt: " + String.format("%,d đ", amount));
-                        }
+                        addBidHistoryEntry(name, amount, historyTimeStr);
 
                         XYChart.Data<String, Number> dataPoint = new XYChart.Data<>(chartTimeStr, amount);
                         AuctionRoomChartHelper.setupHoverEffect(dataPoint);
@@ -560,18 +636,18 @@ public class AuctionRoomController implements Initializable {
         }
 
         try {
-            long bidAmount = Long.parseLong(input);
+            long bidAmount = parseMoneyValue(input);
             long currentPrice = extractMoneyValue(lblCurrentPrice.getText());
             long stepPrice = extractMoneyValue(lblBidIncrement.getText());
             long minValidBid = currentPrice + stepPrice;
 
             if (bidAmount < minValidBid) {
-                showAlert("Lỗi đặt giá", "Giá tối thiểu: " + String.format("%,d đ", minValidBid));
+                showAlert("Lỗi đặt giá", "Giá tối thiểu: " + formatVnd(minValidBid));
                 return;
             }
             if (currentBuyNowPrice != null && currentBuyNowPrice > 0 && bidAmount >= currentBuyNowPrice) {
-                if (xacNhanMuaDut()) {
-                    guiXacNhanMuaDut();
+                if (confirmBuyNow()) {
+                    sendBuyNowConfirmation();
                 }
                 return;
             }
@@ -580,6 +656,7 @@ public class AuctionRoomController implements Initializable {
             btnPlaceBid.setDisable(true);
             JsonObject jsonRequest = new Gson().toJsonTree(request).getAsJsonObject();
             jsonRequest.addProperty("type", ActionType.PLACE_BID);
+            jsonRequest.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
             ClientSocket.getInstance().sendJsonRequest(jsonRequest, "BID_RESPONSE", response ->
                     Platform.runLater(() -> {
@@ -597,7 +674,7 @@ public class AuctionRoomController implements Initializable {
         }
     }
 
-    private boolean xacNhanMuaDut() {
+    private boolean confirmBuyNow() {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Xác nhận mua đứt");
         dialog.setHeaderText(null);
@@ -626,7 +703,7 @@ public class AuctionRoomController implements Initializable {
         return selected.isPresent() && selected.get() == confirmButton;
     }
 
-    private void guiXacNhanMuaDut() {
+    private void sendBuyNowConfirmation() {
         if (currentUserOwnsAuction) {
             showAlert("Không thể mua đứt", SELLER_SELF_BID_MESSAGE);
             return;
@@ -678,7 +755,7 @@ public class AuctionRoomController implements Initializable {
             return;
         }
         if (btnEnableAutoBid != null && AUTO_BID_REMOVE_TEXT.equals(btnEnableAutoBid.getText())) {
-            xoaAutoBid();
+            removeAutoBid();
             return;
         }
         if (txtMaxAutoBid.getText().trim().isEmpty()) {
@@ -690,19 +767,19 @@ public class AuctionRoomController implements Initializable {
         }
 
         try {
-            long maxPrice = Long.parseLong(txtMaxAutoBid.getText().trim());
-            long bidStep = Long.parseLong(txtAutoBidStep.getText().trim());
+            long maxPrice = parseMoneyValue(txtMaxAutoBid.getText());
+            long bidStep = parseMoneyValue(txtAutoBidStep.getText());
             long currentPrice = extractMoneyValue(lblCurrentPrice.getText());
             long sellerBidStep = extractMoneyValue(lblBidIncrement.getText());
             long minValidBid = currentPrice + sellerBidStep;
 
             if (maxPrice < minValidBid) {
-                showAlert("Lỗi Auto-bid", "Mức giá tối đa phải >= " + String.format("%,d đ", minValidBid));
+                showAlert("Lỗi Auto-bid", "Mức giá tối đa phải >= " + formatVnd(minValidBid));
                 return;
             }
             if (bidStep < sellerBidStep) {
                 showAlert("Lỗi Auto-bid", "Bước giá Auto-bid phải >= bước giá người bán ("
-                        + String.format("%,d đ", sellerBidStep) + ").");
+                        + formatVnd(sellerBidStep) + ").");
                 return;
             }
 
@@ -741,7 +818,7 @@ public class AuctionRoomController implements Initializable {
         }
     }
 
-    private void xoaAutoBid() {
+    private void removeAutoBid() {
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.REMOVE_AUTO_BID);
         request.addProperty("auctionId", currentAuctionId);
@@ -780,29 +857,58 @@ public class AuctionRoomController implements Initializable {
                 }));
     }
 
-    public void updateRealtimeBid(long newPrice, String bidderName, String endTime, String serverNow, String status) {
+    public void updateRealtimeBid(
+            long newPrice,
+            String bidderName,
+            String endTime,
+            String serverNow,
+            String status,
+            int auctionId,
+            String bidTime
+    ) {
+        if (auctionId > 0 && currentAuctionId != auctionId) {
+            return;
+        }
+
         if (lblCurrentPrice != null) {
-            lblCurrentPrice.setText(String.format("%,d đ", newPrice));
+            lblCurrentPrice.setText(formatVnd(newPrice));
         }
         if (lblLeader != null) {
             lblLeader.setText("Người dẫn đầu: " + bidderName);
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        if (lvBidHistory != null) {
-            lvBidHistory.getItems().add(0, "(" + now.format(historyTimeFormatter) + ") " + bidderName + " đã đặt: " + String.format("%,d đ", newPrice));
+        LocalDateTime bidDateTime = AuctionTimeUtil.parse(bidTime);
+        if (bidDateTime == null) {
+            bidDateTime = LocalDateTime.now();
+        }
+        String historyTime = bidDateTime.format(historyTimeFormatter);
+        boolean addedHistoryEntry = addBidHistoryEntry(bidderName, newPrice, historyTime);
+        if (!addedHistoryEntry) {
+            applyServerCountdown(endTime, serverNow, status);
+            return;
         }
 
         applyServerCountdown(endTime, serverNow, status);
 
         if (priceSeries != null) {
-            XYChart.Data<String, Number> dataPoint = new XYChart.Data<>(now.format(timeFormatter), newPrice);
+            XYChart.Data<String, Number> dataPoint = new XYChart.Data<>(bidDateTime.format(timeFormatter), newPrice);
             AuctionRoomChartHelper.setupHoverEffect(dataPoint);
             priceSeries.getData().add(dataPoint);
             if (priceSeries.getData().size() > 30) {
                 priceSeries.getData().remove(0);
             }
         }
+    }
+
+    private boolean addBidHistoryEntry(String bidderName, long bidAmount, String historyTime) {
+        String key = bidderName + "|" + bidAmount + "|" + historyTime;
+        if (!displayedBidKeys.add(key)) {
+            return false;
+        }
+        if (lvBidHistory != null) {
+            lvBidHistory.getItems().add(0, "(" + historyTime + ") " + bidderName + " đã đặt: " + formatVnd(bidAmount));
+        }
+        return true;
     }
 
     private void applyServerCountdown(String endTime, String serverNow, String status) {

@@ -57,7 +57,7 @@ public class ItemDao {
         return item;
     }
 
-    public int luuSanPham(Item item) {
+    public int saveProduct(Item item) {
         String sql = "INSERT INTO items "
                 + "(seller_id, name, description, category, starting_price, bid_increment, image_url) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -86,7 +86,7 @@ public class ItemDao {
         return -1;
     }
 
-    public List<Item> layTatCaSanPham() {
+    public List<Item> getAllProducts() {
         List<Item> danhSach = new ArrayList<>();
         String sql = "SELECT * FROM items";
 
@@ -105,7 +105,7 @@ public class ItemDao {
     }
 
     // Lấy danh sách sản phẩm do một Seller cụ thể đăng bán
-    public List<Item> laySanPhamTheoSellerId(int sellerId) {
+    public List<Item> getProductsBySellerId(int sellerId) {
         List<Item> danhSach = new ArrayList<>();
 
         // SỬA SQL Ở ĐÂY: JOIN thêm bảng auctions để lấy thời gian
@@ -137,7 +137,7 @@ public class ItemDao {
         return danhSach;
     }
 
-    public Item laySanPhamTheoId(int itemId) {
+    public Item getProductById(int itemId) {
         String sql = "SELECT i.*, a.start_time, a.end_time "
                 + "FROM items i "
                 + "LEFT JOIN auctions a ON i.id = a.item_id "
@@ -156,7 +156,7 @@ public class ItemDao {
         return null;
     }
 
-    public List<Item> timSanPhamTheoTukhoa(String keyword) {
+    public List<Item> searchProductsByKeyword(String keyword) {
         List<Item> danhSach = new ArrayList<>();
         String sql = "SELECT * FROM items WHERE name LIKE ? OR description LIKE ?";
 
@@ -179,7 +179,7 @@ public class ItemDao {
         return danhSach;
     }
 
-    public boolean xoaSanPham(int itemId) {
+    public boolean deleteProduct(int itemId) {
         String sql = "DELETE FROM items WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -191,7 +191,7 @@ public class ItemDao {
         }
     }
 
-    public boolean updateSanPham(Item item) {
+    public boolean updateProduct(Item item) {
         String sql = "UPDATE items SET name = ?, description = ?, starting_price = ?, category = ?, image_url = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {

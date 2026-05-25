@@ -16,7 +16,7 @@ final class AuctionControllerUtil {
     private AuctionControllerUtil() {
     }
 
-    static List<AuctionDTOs.AuctionSummaryDTO> taoAuctionSummaries(List<Auction> danhSachPhien) {
+    static List<AuctionDTOs.AuctionSummaryDTO> buildAuctionSummaries(List<Auction> danhSachPhien) {
         List<AuctionDTOs.AuctionSummaryDTO> summaries = new ArrayList<>();
         for (Auction auction : danhSachPhien) {
             summaries.add(new AuctionDTOs.AuctionSummaryDTO(
@@ -39,7 +39,7 @@ final class AuctionControllerUtil {
         return summaries;
     }
 
-    static JsonArray taoFollowedIdsArray(int userId) {
+    static JsonArray buildFollowedIdsArray(int userId) {
         JsonArray followedArray = new JsonArray();
         if (userId <= 0) {
             return followedArray;
@@ -57,7 +57,7 @@ final class AuctionControllerUtil {
         }
     }
 
-    static int layAuctionId(JsonObject yeuCau) {
+    static int getAuctionIdFromRequest(JsonObject yeuCau) {
         if (yeuCau == null || !yeuCau.has("auctionId") || yeuCau.get("auctionId").isJsonNull()) {
             return -1;
         }
@@ -68,19 +68,19 @@ final class AuctionControllerUtil {
         }
     }
 
-    static String taoLoi(Gson gson, JsonObject yeuCau, int statusCode, String message, String errorCode) {
+    static String buildError(Gson gson, JsonObject yeuCau, int statusCode, String message, String errorCode) {
         JsonObject loi = gson.toJsonTree(new BaseDTOs.ErrorResponse(statusCode, message, errorCode)).getAsJsonObject();
         loi.addProperty("type", "ERROR_RESPONSE");
         copyRequestId(yeuCau, loi);
         return gson.toJson(loi);
     }
 
-    static boolean laSellerCuaPhien(AuctionDao auctionDao, int auctionId, int userId) {
-        Auction phien = auctionDao.layPhienTheoId(auctionId);
+    static boolean isAuctionSeller(AuctionDao auctionDao, int auctionId, int userId) {
+        Auction phien = auctionDao.getAuctionById(auctionId);
         return phien != null && phien.getItem() != null && phien.getItem().getSellerId() == userId;
     }
 
-    static JsonObject taoPhanHoiDonGian(String type, boolean success, String message) {
+    static JsonObject buildSimpleResponse(String type, boolean success, String message) {
         JsonObject phanHoi = new JsonObject();
         phanHoi.addProperty("type", type);
         phanHoi.addProperty("success", success);

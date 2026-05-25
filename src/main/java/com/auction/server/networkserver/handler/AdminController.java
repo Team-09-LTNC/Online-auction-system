@@ -1,7 +1,6 @@
 package com.auction.server.networkserver.handler;
 
 import com.auction.common.util.GsonConfig;
-import com.auction.server.dao.AuctionDao;
 import com.auction.server.manager.AuctionManager;
 import com.auction.server.dao.AdminDao;
 import com.auction.server.networkserver.ClientHandler;
@@ -25,7 +24,7 @@ public class AdminController implements RequestHandler {
     private final AdminDao adminDao = new AdminDao();
 
     @Override
-    public String xuLy(JsonObject yeuCau, ClientHandler client) {
+    public String handleRequest(JsonObject yeuCau, ClientHandler client) {
         String loaiYeuCau = yeuCau.get("type").getAsString();
 
         // Trích xuất chung mã requestId từ Client gửi lên
@@ -35,24 +34,24 @@ public class AdminController implements RequestHandler {
 
         switch (loaiYeuCau) {
             case ActionType.ADMIN_GET_ALL_AUCTIONS:
-                return xuLyLayDanhSachAuction(yeuCau, reqId);
+                return handleGetAuctions(yeuCau, reqId);
             case ActionType.ADMIN_GET_PENDING_AUCTIONS:
-                return xuLyLayDanhSachChoDuyet(reqId);
+                return handleGetPendingAuctions(reqId);
             case ActionType.ADMIN_APPROVE_AUCTION:
-                return xuLyDuyetAuction(yeuCau, reqId);
+                return handleApproveAuction(yeuCau, reqId);
             case ActionType.ADMIN_REJECT_AUCTION:
-                return xuLyTuChoiAuction(yeuCau, reqId);
+                return handleRejectAuction(yeuCau, reqId);
             case ActionType.ADMIN_GET_INVOICES:
-                return xuLyLayDanhSachHoaDon(reqId);
+                return handleGetInvoices(reqId);
             case ActionType.ADMIN_CHANGE_AUCTION_STATUS:
-                return xuLyThayDoiTrangThaiAuction(yeuCau, reqId);
+                return handleChangeAuctionStatus(yeuCau, reqId);
             default:
                 return null;
         }
     }
 
-    private String xuLyLayDanhSachAuction(JsonObject yeuCau, String reqId) {
-        List<Auction> auctions = adminDao.layDanhSachTatCaAuctions(); // cần thêm method này vào AdminDao
+    private String handleGetAuctions(JsonObject yeuCau, String reqId) {
+        List<Auction> auctions = adminDao.getAllAuctions(); // cần thêm method này vào AdminDao
         JsonArray array = new JsonArray();
         for (Auction a : auctions) {
             JsonObject obj = new JsonObject();
@@ -73,8 +72,8 @@ public class AdminController implements RequestHandler {
         return gson.toJson(res);
     }
 
-    private String xuLyLayDanhSachChoDuyet(String reqId) {
-        List<Auction> auctions = adminDao.layDanhSachChoDuyet();
+    private String handleGetPendingAuctions(String reqId) {
+        List<Auction> auctions = adminDao.getPendingAuctions();
         JsonArray array = new JsonArray();
         for (Auction a : auctions) {
             JsonObject obj = new JsonObject();
@@ -101,10 +100,10 @@ public class AdminController implements RequestHandler {
         return gson.toJson(res);
     }
 
-    private String xuLyDuyetAuction(JsonObject yeuCau, String reqId) {
+    private String handleApproveAuction(JsonObject yeuCau, String reqId) {
         int auctionId = yeuCau.get("auctionId").getAsInt();
-        //boolean ok = adminDao.duyetAuction(auctionId, "OPEN");
-        boolean ok = AuctionManager.getInstance().duyetPhien(auctionId);
+        //boolean ok = adminDao.approveAuction(auctionId, "OPEN");
+        boolean ok = AuctionManager.getInstance().approveAuctionSession(auctionId);
 
         JsonObject res = new JsonObject();
         res.addProperty("type", "ADMIN_APPROVE_AUCTION_RESPONSE");
@@ -115,9 +114,9 @@ public class AdminController implements RequestHandler {
         return gson.toJson(res);
     }
 
-    private String xuLyTuChoiAuction(JsonObject yeuCau, String reqId) {
+    private String handleRejectAuction(JsonObject yeuCau, String reqId) {
         int auctionId = yeuCau.get("auctionId").getAsInt();
-        boolean ok = adminDao.duyetAuction(auctionId, "REJECTED");
+        boolean ok = adminDao.approveAuction(auctionId, "REJECTED");
 
         JsonObject res = new JsonObject();
         res.addProperty("type", "ADMIN_REJECT_AUCTION_RESPONSE");
@@ -131,8 +130,8 @@ public class AdminController implements RequestHandler {
     /*
      * Xử lý yêu cầu lấy danh sách hóa đơn
      */
-    private String xuLyLayDanhSachHoaDon(String reqId) {
-        List<com.auction.common.dto.AdminDTOs.InvoiceDTO> invoices = adminDao.layDanhSachHoaDon();
+    private String handleGetInvoices(String reqId) {
+        List<com.auction.common.dto.AdminDTOs.InvoiceDTO> invoices = adminDao.getInvoices();
         JsonArray array = new JsonArray();
         long tongDoanhThu = 0;
 
@@ -158,12 +157,12 @@ public class AdminController implements RequestHandler {
         return gson.toJson(res);
     }
 
-    private String xuLyThayDoiTrangThaiAuction(JsonObject yeuCau, String reqId) {
+    private String handleChangeAuctionStatus(JsonObject yeuCau, String reqId) {
         int auctionId = yeuCau.get("auctionId").getAsInt();
         String newStatus = yeuCau.get("newStatus").getAsString();
 
         // Lấy trạng thái hiện tại và thời gian của phiên
-        JsonObject auctionInfo = adminDao.layThongTinAuction(auctionId);
+        JsonObject auctionInfo = adminDao.getAuctionInfo(auctionId);
         if (auctionInfo == null) {
             JsonObject res = new JsonObject();
             res.addProperty("type", "ADMIN_CHANGE_AUCTION_STATUS_RESPONSE");
@@ -179,7 +178,7 @@ public class AdminController implements RequestHandler {
         String endTime = auctionInfo.get("end_time").getAsString();
 
         // Validate chuyển trạng thái
-        String validationError = validateChuyenTrangThai(currentStatus, newStatus);
+        String validationError = validateStatusTransition(currentStatus, newStatus);
         if (validationError != null) {
             JsonObject res = new JsonObject();
             res.addProperty("type", "ADMIN_CHANGE_AUCTION_STATUS_RESPONSE");
@@ -205,8 +204,8 @@ public class AdminController implements RequestHandler {
             }
         }
 
-        boolean ok = adminDao.capNhatTrangThaiAuction(auctionId, newStatus);
-        if (ok) AuctionManager.getInstance().dongBoSauCapNhatTrangThai(auctionId, newStatus);
+        boolean ok = adminDao.updateAuctionStatus(auctionId, newStatus);
+        if (ok) AuctionManager.getInstance().syncAfterStatusUpdate(auctionId, newStatus);
 
         JsonObject res = new JsonObject();
         res.addProperty("type", "ADMIN_CHANGE_AUCTION_STATUS_RESPONSE");
@@ -218,7 +217,7 @@ public class AdminController implements RequestHandler {
         return gson.toJson(res);
     }
 
-    private String validateChuyenTrangThai(String current, String requested) {
+    private String validateStatusTransition(String current, String requested) {
         switch (current) {
             case "OPEN":
             case "RUNNING":

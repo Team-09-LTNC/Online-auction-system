@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 public class PostAuctionController {
   private static final Logger logger = LoggerFactory.getLogger(PostAuctionController.class);
+  private static final int MAX_DESCRIPTION_LENGTH = 3000;
 
   @FXML private TextField txtProductName;
   @FXML private ComboBox<String> cbCategory;
@@ -55,6 +56,7 @@ public class PostAuctionController {
   @FXML private Label lblPreviewBuyNow;
   @FXML private Label lblPreviewTime;
   @FXML private Label lblPreviewAntiSniping;
+  @FXML private Label lblDescriptionCount;
   @FXML private ImageView imgPreview;
   @FXML private Button btnUploadImage;
 
@@ -97,6 +99,29 @@ public class PostAuctionController {
     bindBuyNowPreview();
     bindTimePreview();
     bindAntiSnipingPreview();
+    bindDescriptionCounter();
+  }
+
+  private void bindDescriptionCounter() {
+    if (txtDescription == null || lblDescriptionCount == null) {
+      return;
+    }
+    updateDescriptionCount(txtDescription.getText());
+    txtDescription.textProperty().addListener((obs, oldVal, newVal) -> {
+      if (newVal != null && newVal.length() > MAX_DESCRIPTION_LENGTH) {
+        txtDescription.setText(newVal.substring(0, MAX_DESCRIPTION_LENGTH));
+        return;
+      }
+      updateDescriptionCount(newVal);
+    });
+  }
+
+  private void updateDescriptionCount(String value) {
+    int count = value == null ? 0 : value.length();
+    lblDescriptionCount.setText(count + "/" + MAX_DESCRIPTION_LENGTH);
+    lblDescriptionCount.setStyle("-fx-text-fill: "
+        + (count >= MAX_DESCRIPTION_LENGTH ? "#B32638" : "#A0968C")
+        + "; -fx-font-size: 11px; -fx-padding: 0 5 5 0; -fx-font-weight: bold;");
   }
 
   private void bindCurrencyPreview(TextField source, Label target) {
@@ -185,6 +210,7 @@ public class PostAuctionController {
     if (txtDescription != null) {
       txtDescription.clear();
     }
+    updateDescriptionCount("");
     if (cbCategory != null) {
       cbCategory.getSelectionModel().clearSelection();
     }
@@ -370,8 +396,12 @@ public class PostAuctionController {
     if (button == null) {
       return;
     }
+    button.getStyleClass().remove("submit-auction-button-loading");
+    if (submitting) {
+      button.getStyleClass().add("submit-auction-button-loading");
+    }
     button.setDisable(submitting);
-    button.setText(submitting ? "ĐANG ĐĂNG..." : "ĐĂNG SẢN PHẨM");
+    button.setText(submitting ? "ĐANG ĐĂNG" : "ĐĂNG SẢN PHẨM");
   }
 
   private boolean isInputInvalid() {

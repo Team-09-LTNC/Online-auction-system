@@ -14,7 +14,7 @@ class AuctionControllerTest {
 
     @Test
     void nullRequestReturnsBadRequestErrorResponse() {
-        String response = controller.xuLy(null, null);
+        String response = controller.handleRequest(null, null);
         JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
         assertEquals("ERROR_RESPONSE", json.get("type").getAsString());
@@ -28,7 +28,7 @@ class AuctionControllerTest {
         request.addProperty("type", "UNKNOWN_AUCTION_ACTION");
         request.addProperty("requestId", "req-auction-1");
 
-        String response = controller.xuLy(request, null);
+        String response = controller.handleRequest(request, null);
         JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
         assertEquals("ERROR_RESPONSE", json.get("type").getAsString());
@@ -42,7 +42,7 @@ class AuctionControllerTest {
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.CREATE_AUCTION);
 
-        String response = controller.xuLy(request, null);
+        String response = controller.handleRequest(request, null);
         JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
         assertEquals(400, json.get("statusCode").getAsInt());
@@ -56,7 +56,7 @@ class AuctionControllerTest {
         request.addProperty("type", ActionType.JOIN_AUCTION);
         request.addProperty("requestId", "join-req-1");
 
-        String response = controller.xuLy(request, null);
+        String response = controller.handleRequest(request, null);
         JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
         assertEquals("ERROR_RESPONSE", json.get("type").getAsString());
@@ -70,7 +70,7 @@ class AuctionControllerTest {
         request.addProperty("type", ActionType.LEAVE_AUCTION);
         request.addProperty("auctionId", "abc");
 
-        String response = controller.xuLy(request, null);
+        String response = controller.handleRequest(request, null);
         JsonObject json = JsonParser.parseString(response).getAsJsonObject();
 
         assertEquals("ERROR_RESPONSE", json.get("type").getAsString());

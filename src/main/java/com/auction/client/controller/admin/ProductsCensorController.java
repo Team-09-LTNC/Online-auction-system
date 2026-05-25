@@ -132,7 +132,7 @@ public class ProductsCensorController implements Initializable {
     }
 
     private void loadData() {
-        AdminManager.getInstance().layDanhSachChoDuyet(
+        AdminManager.getInstance().getPendingAuctions(
                 auctions -> javafx.application.Platform.runLater(() -> {
                     masterList.clear();
                     auctions.forEach(a -> masterList.add(new Product(
@@ -184,7 +184,7 @@ public class ProductsCensorController implements Initializable {
 
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            AdminManager.getInstance().duyetAuction(
+            AdminManager.getInstance().approveAuction(
                     Integer.parseInt(selected.getProductId()),
                     msg -> javafx.application.Platform.runLater(() -> {
                         masterList.remove(selected);
@@ -210,7 +210,7 @@ public class ProductsCensorController implements Initializable {
 
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            AdminManager.getInstance().tuChoiAuction(
+            AdminManager.getInstance().rejectAuction(
                     Integer.parseInt(selected.getProductId()),
                     msg -> javafx.application.Platform.runLater(() -> {
                         masterList.remove(selected);
