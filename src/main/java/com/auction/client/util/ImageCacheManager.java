@@ -9,10 +9,13 @@ import java.util.concurrent.Executors;
 
 // Tải sẵn ảnh và lưu trong RAM
 public class ImageCacheManager {
+    private static final double DETAIL_WIDTH = 1080;
+    private static final double DETAIL_HEIGHT = 720;
     private static final double PREVIEW_WIDTH = 480;
     private static final double PREVIEW_HEIGHT = 320;
     private static final ConcurrentHashMap<String, Image> imageCache = new ConcurrentHashMap<>();
     private static final Set<String> inFlightPreviewLoads = ConcurrentHashMap.newKeySet();
+    private static final Set<String> inFlightDetailLoads = ConcurrentHashMap.newKeySet();
     private static final ExecutorService preloadExecutor = Executors.newFixedThreadPool(4, runnable -> {
         Thread thread = new Thread(runnable, "image-preload");
         thread.setDaemon(true);
@@ -27,23 +30,16 @@ public class ImageCacheManager {
         return getSizedImage(imageUrl, PREVIEW_WIDTH, PREVIEW_HEIGHT);
     }
 
-    public static void preloadPreviewImage(String imageUrl) {
-        if (imageUrl == null || imageUrl.trim().isEmpty()) {
-            return;
-        }
-        String normalizedUrl = imageUrl.trim();
-        String cacheKey = normalizedUrl + "#" + (int) PREVIEW_WIDTH + "x" + (int) PREVIEW_HEIGHT;
-        if (imageCache.containsKey(cacheKey) || !inFlightPreviewLoads.add(cacheKey)) {
-            return;
-        }
+    public static Image getDetailImage(String imageUrl) {
+        return getSizedImage(imageUrl, DETAIL_WIDTH, DETAIL_HEIGHT);
+    }
 
-        preloadExecutor.execute(() -> {
-            try {
-                getPreviewImage(normalizedUrl);
-            } finally {
-                inFlightPreviewLoads.remove(cacheKey);
-            }
-        });
+    public static void preloadPreviewImage(String imageUrl) {
+        preloadImage(imageUrl, PREVIEW_WIDTH, PREVIEW_HEIGHT, inFlightPreviewLoads);
+    }
+
+    public static void preloadDetailImage(String imageUrl) {
+        preloadImage(imageUrl, DETAIL_WIDTH, DETAIL_HEIGHT, inFlightDetailLoads);
     }
 
     public static void preloadPreviewImages(Collection<String> imageUrls) {
@@ -55,11 +51,39 @@ public class ImageCacheManager {
         }
     }
 
+    public static boolean isImageReady(Image image) {
+        return image != null && !image.isError() && image.getProgress() >= 1.0;
+    }
+
+    private static void preloadImage(
+            String imageUrl,
+            double requestedWidth,
+            double requestedHeight,
+            Set<String> inFlightLoads
+    ) {
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            return;
+        }
+        String normalizedUrl = imageUrl.trim();
+        String cacheKey = createCacheKey(normalizedUrl, requestedWidth, requestedHeight);
+        if (imageCache.containsKey(cacheKey) || !inFlightLoads.add(cacheKey)) {
+            return;
+        }
+
+        preloadExecutor.execute(() -> {
+            try {
+                getSizedImage(normalizedUrl, requestedWidth, requestedHeight);
+            } finally {
+                inFlightLoads.remove(cacheKey);
+            }
+        });
+    }
+
     private static Image getSizedImage(String imageUrl, double requestedWidth, double requestedHeight) {
         if (imageUrl == null || imageUrl.trim().isEmpty()) return null;
 
         String normalizedUrl = imageUrl.trim();
-        String cacheKey = normalizedUrl + "#" + (int) requestedWidth + "x" + (int) requestedHeight;
+        String cacheKey = createCacheKey(normalizedUrl, requestedWidth, requestedHeight);
         return imageCache.computeIfAbsent(cacheKey, key -> new Image(
                 normalizedUrl,
                 requestedWidth,
@@ -68,5 +92,9 @@ public class ImageCacheManager {
                 true,
                 true
         ));
+    }
+
+    private static String createCacheKey(String normalizedUrl, double requestedWidth, double requestedHeight) {
+        return normalizedUrl + "#" + (int) requestedWidth + "x" + (int) requestedHeight;
     }
 }

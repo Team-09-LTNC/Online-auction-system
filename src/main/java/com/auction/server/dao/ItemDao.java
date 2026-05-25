@@ -5,6 +5,7 @@ import com.auction.server.db.DatabaseConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ItemDao {
     private static final Logger logger = LoggerFactory.getLogger(ItemDao.class);
+    private static final AtomicBoolean checkedImageThumbColumn = new AtomicBoolean(false);
 
     private Item mapResultSetToItem(ResultSet rs) throws SQLException {
         Item item;
@@ -47,6 +49,10 @@ public class ItemDao {
         item.setStartingPrice(rs.getLong("starting_price"));
         item.setCategory(loai);
         item.setImageUrl(rs.getString("image_url"));
+        try {
+            item.setImageThumbUrl(rs.getString("image_thumb_url"));
+        } catch (SQLException ignored) {
+        }
 
         try {
             item.setStartTime(rs.getString("start_time"));
@@ -58,9 +64,10 @@ public class ItemDao {
     }
 
     public int saveProduct(Item item) {
+        ensureImageThumbColumn();
         String sql = "INSERT INTO items "
-                + "(seller_id, name, description, category, starting_price, bid_increment, image_url) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                + "(seller_id, name, description, category, starting_price, bid_increment, image_url, image_thumb_url) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -71,6 +78,7 @@ public class ItemDao {
             pstmt.setLong(5, item.getStartingPrice());
             pstmt.setLong(6, item.getBidIncrement());
             pstmt.setString(7, item.getImageUrl() != null ? item.getImageUrl() : "");
+            pstmt.setString(8, item.getImageThumbUrl() != null ? item.getImageThumbUrl() : "");
 
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
@@ -87,6 +95,7 @@ public class ItemDao {
     }
 
     public List<Item> getAllProducts() {
+        ensureImageThumbColumn();
         List<Item> danhSach = new ArrayList<>();
         String sql = "SELECT * FROM items";
 
@@ -106,6 +115,7 @@ public class ItemDao {
 
     // Lấy danh sách sản phẩm do một Seller cụ thể đăng bán
     public List<Item> getProductsBySellerId(int sellerId) {
+        ensureImageThumbColumn();
         List<Item> danhSach = new ArrayList<>();
 
         // SỬA SQL Ở ĐÂY: JOIN thêm bảng auctions để lấy thời gian
@@ -138,6 +148,7 @@ public class ItemDao {
     }
 
     public Item getProductById(int itemId) {
+        ensureImageThumbColumn();
         String sql = "SELECT i.*, a.start_time, a.end_time "
                 + "FROM items i "
                 + "LEFT JOIN auctions a ON i.id = a.item_id "
@@ -157,6 +168,7 @@ public class ItemDao {
     }
 
     public List<Item> searchProductsByKeyword(String keyword) {
+        ensureImageThumbColumn();
         List<Item> danhSach = new ArrayList<>();
         String sql = "SELECT * FROM items WHERE name LIKE ? OR description LIKE ?";
 
@@ -192,7 +204,9 @@ public class ItemDao {
     }
 
     public boolean updateProduct(Item item) {
-        String sql = "UPDATE items SET name = ?, description = ?, starting_price = ?, category = ?, image_url = ? WHERE id = ?";
+        ensureImageThumbColumn();
+        String sql = "UPDATE items SET name = ?, description = ?, starting_price = ?, "
+                + "category = ?, image_url = ?, image_thumb_url = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -201,12 +215,42 @@ public class ItemDao {
             pstmt.setLong(3, item.getStartingPrice());
             pstmt.setString(4, item.getCategory());
             pstmt.setString(5, item.getImageUrl());
-            pstmt.setInt(6, item.getId());
+            pstmt.setString(6, item.getImageThumbUrl());
+            pstmt.setInt(7, item.getId());
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.error("Lỗi updateSanPham: ", e);
             return false;
+        }
+    }
+
+    private void ensureImageThumbColumn() {
+        if (checkedImageThumbColumn.get()) {
+            return;
+        }
+
+        synchronized (ItemDao.class) {
+            if (checkedImageThumbColumn.get()) {
+                return;
+            }
+
+            try (Connection conn = DatabaseConnection.getInstance().getConnection()) {
+                DatabaseMetaData metaData = conn.getMetaData();
+                try (ResultSet columns = metaData.getColumns(null, null, "items", "image_thumb_url")) {
+                    if (columns.next()) {
+                        checkedImageThumbColumn.set(true);
+                        return;
+                    }
+                }
+
+                try (Statement stmt = conn.createStatement()) {
+                    stmt.executeUpdate("ALTER TABLE items ADD COLUMN image_thumb_url VARCHAR(500) NULL");
+                }
+                checkedImageThumbColumn.set(true);
+            } catch (Exception e) {
+                logger.error("Cannot ensure image_thumb_url column.", e);
+            }
         }
     }
 }

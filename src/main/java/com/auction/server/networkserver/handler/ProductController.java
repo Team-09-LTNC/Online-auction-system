@@ -111,6 +111,7 @@ public class ProductController implements RequestHandler {
             obj.addProperty("status", auction.getStoredStatus().name());
             obj.addProperty("category", item.getCategory());
             obj.addProperty("imageUrl", item.getImageUrl());
+            obj.addProperty("imageThumbUrl", item.getImageThumbUrl());
             obj.addProperty("startTime", auction.getStartTime() != null ? auction.getStartTime().toString() : null);
             obj.addProperty("endTime", auction.getEndTime() != null ? auction.getEndTime().toString() : null);
             data.add(obj);
@@ -145,6 +146,7 @@ public class ProductController implements RequestHandler {
         sanPhamMoi.setCategory(request.getCategory());
         sanPhamMoi.setSellerId(nguoiDung.getId());
         sanPhamMoi.setImageUrl(request.getImageUrl() != null ? request.getImageUrl() : "");
+        sanPhamMoi.setImageThumbUrl(request.getImageThumbUrl() != null ? request.getImageThumbUrl() : "");
         long bidIncrement = yeuCau.has("bidIncrement") && !yeuCau.get("bidIncrement").isJsonNull()
                 ? yeuCau.get("bidIncrement").getAsLong()
                 : 0L;
@@ -325,6 +327,8 @@ public class ProductController implements RequestHandler {
                 sanPham.setCategory(yeuCau.get("category").getAsString().trim().toUpperCase());
             if (yeuCau.has("imageUrl"))
                 sanPham.setImageUrl(yeuCau.get("imageUrl").getAsString().trim());
+            if (yeuCau.has("imageThumbUrl"))
+                sanPham.setImageThumbUrl(yeuCau.get("imageThumbUrl").getAsString().trim());
 
             if (sanPham.getName() == null || sanPham.getName().isBlank() || sanPham.getStartingPrice() <= 0) {
                 return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT,

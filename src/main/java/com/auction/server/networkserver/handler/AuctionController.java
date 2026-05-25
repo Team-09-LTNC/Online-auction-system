@@ -293,7 +293,7 @@ public class AuctionController implements RequestHandler {
         if (yeuCau.has("requestId") && !yeuCau.get("requestId").isJsonNull()) {
             jsonResponse.addProperty("requestId", yeuCau.get("requestId").getAsString());
         }
-        jsonResponse.addProperty("serverNow", LocalDateTime.now().toString());
+        jsonResponse.addProperty("serverNow", auctionDao.getDatabaseNow().toString());
         User user = client.getCurrentUser();
         jsonResponse.add("followedIds", AuctionControllerUtil.buildFollowedIdsArray(user != null ? user.getId() : -1));
         return gson.toJson(jsonResponse);
@@ -314,7 +314,7 @@ public class AuctionController implements RequestHandler {
         if (yeuCau.has("requestId") && !yeuCau.get("requestId").isJsonNull()) {
             jsonResponse.addProperty("requestId", yeuCau.get("requestId").getAsString());
         }
-        jsonResponse.addProperty("serverNow", LocalDateTime.now().toString());
+        jsonResponse.addProperty("serverNow", auctionDao.getDatabaseNow().toString());
         jsonResponse.add("followedIds", AuctionControllerUtil.buildFollowedIdsArray(nguoiDung.getId()));
         return gson.toJson(jsonResponse);
     }
@@ -422,7 +422,7 @@ public class AuctionController implements RequestHandler {
         JsonObject jsonResponse = gson.toJsonTree(response).getAsJsonObject();
         jsonResponse.addProperty("type", "FOLLOWED_AUCTIONS_RESPONSE");
         AuctionControllerUtil.copyRequestId(yeuCau, jsonResponse);
-        jsonResponse.addProperty("serverNow", LocalDateTime.now().toString());
+        jsonResponse.addProperty("serverNow", auctionDao.getDatabaseNow().toString());
         return gson.toJson(jsonResponse);
     }
 
@@ -450,7 +450,7 @@ public class AuctionController implements RequestHandler {
             dataObj.addProperty("currentHighestBid", phien.getCurrentHighestBid());
             dataObj.addProperty("currentPrice", phien.getCurrentHighestBid());
             dataObj.addProperty("antiSnipingEnabled", phien.isAntiSnipingEnabled());
-            phanHoi.addProperty("serverNow", LocalDateTime.now().toString());
+            phanHoi.addProperty("serverNow", auctionDao.getDatabaseNow().toString());
             User user = client.getCurrentUser();
             if (user != null) {
                 long userMaxAutoBid = auctionDao.getMaxAutoBid(idPhien, user.getId());

@@ -76,7 +76,10 @@ public class FollowedAuctionsController implements Initializable, RefreshableCen
                             String name = obj.get("itemName").getAsString();
                             long price = obj.get("currentPrice").getAsLong();
                             String img = obj.get("imageUrl").getAsString();
-                            com.auction.client.util.ImageCacheManager.preloadPreviewImage(img);
+                            String thumb = obj.has("imageThumbUrl") && !obj.get("imageThumbUrl").isJsonNull()
+                                    ? obj.get("imageThumbUrl").getAsString()
+                                    : img;
+                            com.auction.client.util.ImageCacheManager.preloadPreviewImage(thumb);
 
                             String start = obj.has("startTime") ? obj.get("startTime").getAsString() : null;
                             String end = obj.has("endTime") ? obj.get("endTime").getAsString() : null;
@@ -99,6 +102,7 @@ public class FollowedAuctionsController implements Initializable, RefreshableCen
                                     state.countdownSeconds,
                                     resolveDisplayStatus(storedStatus, state.finalStatus),
                                     img,
+                                    thumb,
                                     true
                             );
                             JsonObject roomSnapshot = obj.deepCopy();

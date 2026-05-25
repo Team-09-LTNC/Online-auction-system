@@ -18,6 +18,7 @@ public class AuctionDTOs {
         private final long currentPrice;
         private final String status; // OPEN, RUNNING, FINISHED, PAID, CANCELED
         private final String imageUrl;
+        private final String imageThumbUrl;
         private String startTime;
         private String endTime;
         private String category;
@@ -29,7 +30,7 @@ public class AuctionDTOs {
         private int sellerId;
 
         public AuctionSummaryDTO(int auctionId, String itemName, long currentPrice, String status, String imageUrl, String startTime, String endTime, String category) {
-            this(auctionId, itemName, currentPrice, status, imageUrl, startTime, endTime, category, null, 0, 0, null, false, -1);
+            this(auctionId, itemName, currentPrice, status, imageUrl, null, startTime, endTime, category, null, 0, 0, null, false, -1);
         }
 
         public AuctionSummaryDTO(
@@ -38,6 +39,7 @@ public class AuctionDTOs {
                 long currentPrice,
                 String status,
                 String imageUrl,
+                String imageThumbUrl,
                 String startTime,
                 String endTime,
                 String category,
@@ -53,6 +55,7 @@ public class AuctionDTOs {
             this.currentPrice = currentPrice;
             this.status = status;
             this.imageUrl = imageUrl;
+            this.imageThumbUrl = imageThumbUrl;
             this.startTime = startTime;
             this.endTime = endTime;
             this.category = category;
@@ -69,6 +72,7 @@ public class AuctionDTOs {
         public long getCurrentPrice() { return currentPrice; }
         public String getStatus() { return status; }
         public String getImageUrl() { return imageUrl; }
+        public String getImageThumbUrl() { return imageThumbUrl; }
         public String getStartTime() { return startTime; }
         public void setStartTime(String startTime) { this.startTime = startTime; }
         public String getEndTime() { return endTime; }

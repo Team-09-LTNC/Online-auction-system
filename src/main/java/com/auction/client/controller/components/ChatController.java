@@ -11,7 +11,6 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -69,7 +68,7 @@ public class ChatController {
     public void receiveNotification(String content) {
         Platform.runLater(() -> {
             if (lvChatMessages != null) {
-                addNotification(createRegularNotification(content, null));
+                addNotification(createRegularNotification(content, null), LocalDateTime.now());
             }
         });
     }
@@ -98,9 +97,10 @@ public class ChatController {
             if (!renderedPaymentAuctionIds.add(auctionId)) {
                 return;
             }
-            addNotification(createPaymentNotification(auctionId, message, sentAt, auctionStatus));
+            addNotification(createPaymentNotification(auctionId, message, sentAt, auctionStatus),
+                    parseSentAtForOrder(sentAt));
         } else {
-            addNotification(createRegularNotification(message, sentAt));
+            addNotification(createRegularNotification(message, sentAt), parseSentAtForOrder(sentAt));
         }
     }
 
@@ -166,11 +166,13 @@ public class ChatController {
         result.setWrapText(true);
         result.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
 
-        cancel.setOnAction(event -> sendSettlement(auctionId, "CANCEL", cancel, confirm, result));
-        confirm.setOnAction(event -> sendSettlement(auctionId, "CONFIRM", cancel, confirm, result));
-
         HBox actions = new HBox(10, cancel, confirm);
         actions.setAlignment(Pos.CENTER_RIGHT);
+
+        cancel.setOnAction(event ->
+                sendSettlement(auctionId, "CANCEL", cancel, confirm, result, countdown, rule, actions));
+        confirm.setOnAction(event ->
+                sendSettlement(auctionId, "CONFIRM", cancel, confirm, result, countdown, rule, actions));
 
         VBox card = createNotificationCard();
         card.getChildren().addAll(title, time, body, countdown, rule, result, actions);
@@ -219,6 +221,7 @@ public class ChatController {
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
         paymentCountdowns.add(timeline);
+        countdown.setUserData(timeline);
 
         return countdown;
     }
@@ -232,6 +235,7 @@ public class ChatController {
                     + "-fx-font-weight: bold;");
             cancel.setDisable(true);
             confirm.setDisable(true);
+            stopPaymentCountdown(countdown);
             return;
         }
 
@@ -305,9 +309,35 @@ public class ChatController {
         );
     }
 
-    private void addNotification(Node notification) {
-        lvChatMessages.getItems().add(0, notification);
+    private void addNotification(Node notification, LocalDateTime sentAt) {
+        if (lvChatMessages == null || notification == null) {
+            return;
+        }
+
+        LocalDateTime orderTime = sentAt == null || LocalDateTime.MIN.equals(sentAt)
+                ? LocalDateTime.now()
+                : sentAt;
+        notification.getProperties().put("sentAt", orderTime);
+
+        int insertIndex = 0;
+        while (insertIndex < lvChatMessages.getItems().size()) {
+            LocalDateTime existingTime = getNotificationOrderTime(lvChatMessages.getItems().get(insertIndex));
+            if (existingTime.isBefore(orderTime)) {
+                break;
+            }
+            insertIndex++;
+        }
+
+        lvChatMessages.getItems().add(insertIndex, notification);
         updateNotificationCount();
+    }
+
+    private LocalDateTime getNotificationOrderTime(Node notification) {
+        if (notification != null
+                && notification.getProperties().get("sentAt") instanceof LocalDateTime sentAt) {
+            return sentAt;
+        }
+        return LocalDateTime.MIN;
     }
 
     private void updateNotificationCount() {
@@ -336,7 +366,7 @@ public class ChatController {
                 com.google.gson.JsonArray notifications = response.getAsJsonArray("data");
                 List<JsonObject> sorted = new ArrayList<>();
                 notifications.forEach(element -> sorted.add(element.getAsJsonObject()));
-                sorted.sort(Comparator.comparing(this::parseSentAt));
+                sorted.sort(Comparator.comparing(this::parseSentAt).reversed());
 
                 for (JsonObject notification : sorted) {
                     showNotification(notification);
@@ -351,6 +381,11 @@ public class ChatController {
         }
 
         return parseSentAtText(payload.get("sentAt").getAsString());
+    }
+
+    private LocalDateTime parseSentAtForOrder(String sentAt) {
+        LocalDateTime parsed = parseSentAtText(sentAt);
+        return LocalDateTime.MIN.equals(parsed) ? LocalDateTime.now() : parsed;
     }
 
     private LocalDateTime parseSentAtText(String sentAt) {
@@ -378,7 +413,16 @@ public class ChatController {
         ClientSocket.getInstance().sendJsonRequest(request, "MARK_NOTIFICATIONS_READ_RESPONSE", null);
     }
 
-    private void sendSettlement(int auctionId, String decision, Button cancel, Button confirm, Label result) {
+    private void sendSettlement(
+            int auctionId,
+            String decision,
+            Button cancel,
+            Button confirm,
+            Label result,
+            Label countdown,
+            VBox rule,
+            HBox actions
+    ) {
         cancel.setDisable(true);
         confirm.setDisable(true);
 
@@ -399,18 +443,30 @@ public class ChatController {
                     cancel.setDisable(false);
                     confirm.setDisable(false);
                 } else {
-                    showResult(message);
+                    stopPaymentCountdown(countdown);
+                    hideNode(countdown);
+                    hideNode(rule);
+                    hideNode(actions);
                 }
             });
         });
     }
 
-    private void showResult(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Quyết toán phiên đấu giá");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private void stopPaymentCountdown(Label countdown) {
+        if (countdown == null || !(countdown.getUserData() instanceof Timeline timeline)) {
+            return;
+        }
+        timeline.stop();
+        paymentCountdowns.remove(timeline);
+        countdown.setUserData(null);
+    }
+
+    private void hideNode(Node node) {
+        if (node == null) {
+            return;
+        }
+        node.setVisible(false);
+        node.setManaged(false);
     }
 
     public void shutdown() {

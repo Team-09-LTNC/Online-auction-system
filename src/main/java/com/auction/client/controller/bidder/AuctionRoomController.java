@@ -2,6 +2,7 @@ package com.auction.client.controller.bidder;
 
 import com.auction.client.networkclient.ClientSocket;
 import com.auction.client.util.AuctionTimeUtil;
+import com.auction.client.util.ImageCacheManager;
 import com.auction.common.dto.AuctionDTOs;
 import com.auction.common.enums.ActionType;
 import com.google.gson.Gson;
@@ -11,8 +12,10 @@ import com.google.gson.JsonObject;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
@@ -27,6 +30,11 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.Image;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
 import java.net.URL;
@@ -44,6 +52,7 @@ public class AuctionRoomController implements Initializable {
     private static final String SELLER_SELF_BID_MESSAGE = "Không được tự bid sản phẩm của chính mình.";
     private static final String AUTO_BID_REGISTER_TEXT = "ĐĂNG KÝ AUTO-BID";
     private static final String AUTO_BID_REMOVE_TEXT = "XÓA AUTO-BID";
+    private static final double IMAGE_FRAME_HEIGHT = 260.0;
 
     @FXML private Label lblProductName;
     @FXML private Label lblDescription;
@@ -63,6 +72,7 @@ public class AuctionRoomController implements Initializable {
     @FXML private TextField txtAutoBidStep;
     @FXML private Button btnEnableAutoBid;
     @FXML private ImageView imgProduct;
+    @FXML private StackPane imageFrame;
 
     @FXML private AreaChart<String, Number> priceChart;
     @FXML private CategoryAxis timeAxis;
@@ -83,6 +93,9 @@ public class AuctionRoomController implements Initializable {
     private boolean ownerBidWarningShown = false;
     private boolean autoBidActive = false;
     private final Set<String> displayedBidKeys = new HashSet<>();
+    private Image observedProductImage;
+    private final ChangeListener<Number> productImageDimensionListener =
+            (obs, oldValue, newValue) -> updateProductImageViewport();
 
     private static long extractMoneyValue(String text) {
         return parseMoneyValue(text);
@@ -131,6 +144,7 @@ public class AuctionRoomController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         com.auction.client.networkclient.PushHandler.currentRoomController = this;
 
+        setupProductImageFill();
         installMoneyFormatter(txtBidAmount);
         installMoneyFormatter(txtMaxAutoBid);
         installMoneyFormatter(txtAutoBidStep);
@@ -140,6 +154,78 @@ public class AuctionRoomController implements Initializable {
         if (priceChart != null) {
             priceChart.getData().add(priceSeries);
         }
+    }
+
+    private void setupProductImageFill() {
+        if (imgProduct == null || imageFrame == null) {
+            return;
+        }
+
+        imageFrame.setMinHeight(IMAGE_FRAME_HEIGHT);
+        imageFrame.setPrefHeight(IMAGE_FRAME_HEIGHT);
+        imageFrame.setMaxHeight(IMAGE_FRAME_HEIGHT);
+        imageFrame.setMaxWidth(Double.MAX_VALUE);
+        VBox.setVgrow(imageFrame, Priority.NEVER);
+
+        imgProduct.setManaged(false);
+        imgProduct.setPreserveRatio(false);
+        imgProduct.fitWidthProperty().bind(imageFrame.widthProperty());
+        imgProduct.fitHeightProperty().bind(imageFrame.heightProperty());
+
+        Rectangle clip = new Rectangle();
+        clip.arcWidthProperty().set(20);
+        clip.arcHeightProperty().set(20);
+        clip.widthProperty().bind(imageFrame.widthProperty());
+        clip.heightProperty().bind(imageFrame.heightProperty());
+        imageFrame.setClip(clip);
+
+        imageFrame.widthProperty().addListener(productImageDimensionListener);
+        imageFrame.heightProperty().addListener(productImageDimensionListener);
+        imgProduct.imageProperty().addListener((obs, oldImage, newImage) -> {
+            observeProductImage(oldImage, newImage);
+            updateProductImageViewport();
+        });
+    }
+
+    private void observeProductImage(Image oldImage, Image newImage) {
+        if (oldImage != null && oldImage == observedProductImage) {
+            oldImage.widthProperty().removeListener(productImageDimensionListener);
+            oldImage.heightProperty().removeListener(productImageDimensionListener);
+        }
+        observedProductImage = newImage;
+        if (newImage != null) {
+            newImage.widthProperty().addListener(productImageDimensionListener);
+            newImage.heightProperty().addListener(productImageDimensionListener);
+        }
+    }
+
+    private void updateProductImageViewport() {
+        if (imgProduct == null || imageFrame == null || imgProduct.getImage() == null) {
+            return;
+        }
+
+        Image image = imgProduct.getImage();
+        double imageWidth = image.getWidth();
+        double imageHeight = image.getHeight();
+        double frameWidth = imageFrame.getWidth();
+        double frameHeight = imageFrame.getHeight();
+        if (imageWidth <= 0 || imageHeight <= 0 || frameWidth <= 0 || frameHeight <= 0) {
+            return;
+        }
+
+        double frameRatio = frameWidth / frameHeight;
+        double imageRatio = imageWidth / imageHeight;
+        double viewportWidth = imageWidth;
+        double viewportHeight = imageHeight;
+        if (imageRatio > frameRatio) {
+            viewportWidth = imageHeight * frameRatio;
+        } else {
+            viewportHeight = imageWidth / frameRatio;
+        }
+
+        double x = (imageWidth - viewportWidth) / 2;
+        double y = (imageHeight - viewportHeight) / 2;
+        imgProduct.setViewport(new Rectangle2D(x, y, viewportWidth, viewportHeight));
     }
 
     private void installMoneyFormatter(TextField textField) {
@@ -215,7 +301,8 @@ public class AuctionRoomController implements Initializable {
 
     private void applyAuctionSnapshot(JsonObject snapshot, String fallbackImageUrl) {
         String imageUrl = getString(snapshot, "imageUrl", fallbackImageUrl);
-        loadProductImage(imageUrl);
+        String imageThumbUrl = getString(snapshot, "imageThumbUrl", imageUrl);
+        loadProductImage(imageUrl, imageThumbUrl);
 
         if (lblProductName != null) {
             lblProductName.setText(getString(snapshot, "itemName", getString(snapshot, "name", "Sản phẩm")));
@@ -351,6 +438,14 @@ public class AuctionRoomController implements Initializable {
                     if (lblProductName != null) {
                         lblProductName.setText(itemData.has("name") ? itemData.get("name").getAsString() : "Sản phẩm");
                     }
+                    String imageUrl = itemData.has("imageUrl") && !itemData.get("imageUrl").isJsonNull()
+                            ? itemData.get("imageUrl").getAsString()
+                            : null;
+                    String imageThumbUrl = itemData.has("imageThumbUrl") && !itemData.get("imageThumbUrl").isJsonNull()
+                            ? itemData.get("imageThumbUrl").getAsString()
+                            : imageUrl;
+                    loadProductImage(imageUrl, imageThumbUrl);
+
                     if (lblDescription != null) {
                         lblDescription.setText(itemData.has("description") ? itemData.get("description").getAsString() : "Không có mô tả.");
                     }
@@ -949,14 +1044,69 @@ public class AuctionRoomController implements Initializable {
     }
 
     public void loadProductImage(String urlString) {
-        if (imgProduct == null || urlString == null || urlString.trim().isEmpty()) {
+        loadProductImage(urlString, null);
+    }
+
+    public void loadProductImage(String detailUrl, String fallbackUrl) {
+        if (imgProduct == null) {
             return;
         }
-        try {
-            imgProduct.setImage(com.auction.client.util.ImageCacheManager.getPreviewImage(urlString));
-        } catch (Exception e) {
+
+        String normalizedDetailUrl = normalizeImageUrl(detailUrl);
+        String normalizedFallbackUrl = normalizeImageUrl(fallbackUrl);
+        String primaryUrl = normalizedDetailUrl != null ? normalizedDetailUrl : normalizedFallbackUrl;
+        if (primaryUrl == null) {
             imgProduct.setImage(null);
+            return;
         }
+
+        if (normalizedFallbackUrl != null) {
+            imgProduct.setImage(ImageCacheManager.getPreviewImage(normalizedFallbackUrl));
+        }
+
+        Image image = ImageCacheManager.getDetailImage(primaryUrl);
+        if (image == null) {
+            setFallbackProductImage(normalizedFallbackUrl);
+            return;
+        }
+
+        if (image.isError()) {
+            setFallbackProductImage(normalizedFallbackUrl);
+            return;
+        }
+
+        if (normalizedFallbackUrl == null) {
+            imgProduct.setImage(image);
+        }
+
+        if (ImageCacheManager.isImageReady(image)) {
+            imgProduct.setImage(image);
+            return;
+        }
+
+        image.progressProperty().addListener((obs, oldProgress, newProgress) -> {
+            if (newProgress.doubleValue() >= 1.0 && !image.isError()) {
+                Platform.runLater(() -> imgProduct.setImage(image));
+            }
+        });
+        image.errorProperty().addListener((obs, wasError, isError) -> {
+            if (Boolean.TRUE.equals(isError)) {
+                Platform.runLater(() -> setFallbackProductImage(normalizedFallbackUrl));
+            }
+        });
+    }
+
+    private void setFallbackProductImage(String fallbackUrl) {
+        String normalizedFallbackUrl = normalizeImageUrl(fallbackUrl);
+        if (normalizedFallbackUrl == null) {
+            imgProduct.setImage(null);
+            return;
+        }
+        imgProduct.setImage(ImageCacheManager.getPreviewImage(normalizedFallbackUrl));
+    }
+
+    private String normalizeImageUrl(String url) {
+        return url == null || url.trim().isEmpty() ? null : url.trim();
     }
 
     public void updateRealtimeStatus(String newStatus) {

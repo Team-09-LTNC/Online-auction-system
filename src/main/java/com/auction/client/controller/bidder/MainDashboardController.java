@@ -161,13 +161,14 @@ public class MainDashboardController implements Initializable, RefreshableCenter
             String imageUrl = obj.has("imageUrl")
                     ? obj.get("imageUrl").getAsString()
                     : "";
+            String imageThumbUrl = getString(obj, "imageThumbUrl", imageUrl);
 
             String serverStatus = getString(obj, "status", "");
             if (!"RUNNING".equalsIgnoreCase(serverStatus)) {
                 continue;
             }
 
-            com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageUrl);
+            com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageThumbUrl);
 
             String rawStartTime = obj.has("startTime") && !obj.get("startTime").isJsonNull()
                     ? obj.get("startTime").getAsString()
@@ -180,7 +181,7 @@ public class MainDashboardController implements Initializable, RefreshableCenter
             AuctionTimeUtil.AuctionState state =
                     AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, serverNow);
             if (!"RUNNING".equalsIgnoreCase(state.finalStatus) || state.countdownSeconds <= 0) {
-                logger.warn("Bỏ qua phiên nổi bật không còn RUNNING theo thời gian DB: {}", auctionId);
+                logger.debug("Bo qua phien noi bat da het hieu luc khi dong bo dashboard: {}", auctionId);
                 continue;
             }
             try {
@@ -194,6 +195,7 @@ public class MainDashboardController implements Initializable, RefreshableCenter
                         state.countdownSeconds,
                         serverStatus,
                         imageUrl,
+                        imageThumbUrl,
                         followedIds.contains(auctionId)
                 );
                 JsonObject roomSnapshot = obj.deepCopy();

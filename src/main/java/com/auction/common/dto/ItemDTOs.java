@@ -10,10 +10,15 @@ public class ItemDTOs {
         private final String category;
         private final int sellerId;
         private final String imageUrl;
+        private final String imageThumbUrl;
         private final String startTime;
         private final String endTime;
 
         public CreateItemRequest(String name, String description, long startingPrice, String category, int sellerId, String imageUrl, String startTime, String endTime) {
+            this(name, description, startingPrice, category, sellerId, imageUrl, null, startTime, endTime);
+        }
+
+        public CreateItemRequest(String name, String description, long startingPrice, String category, int sellerId, String imageUrl, String imageThumbUrl, String startTime, String endTime) {
             super("CREATE_ITEM_REQUEST");
             this.name = name;
             this.description = description;
@@ -21,6 +26,7 @@ public class ItemDTOs {
             this.category = category;
             this.sellerId = sellerId;
             this.imageUrl = imageUrl;
+            this.imageThumbUrl = imageThumbUrl;
             this.startTime = startTime;
             this.endTime = endTime;
         }
@@ -31,6 +37,7 @@ public class ItemDTOs {
         public String getCategory() { return category; }
         public int getSellerId() { return sellerId; }
         public String getImageUrl() { return imageUrl; }
+        public String getImageThumbUrl() { return imageThumbUrl; }
         public String getStartTime() { return startTime; }
         public String getEndTime() { return endTime; }
     }

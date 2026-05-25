@@ -240,7 +240,8 @@ public class MyProductsController implements Initializable {
                     int auctionId = itemObj.has("auctionId") ? itemObj.get("auctionId").getAsInt() : -1;
                     double currentPrice = itemObj.has("currentPrice") ? itemObj.get("currentPrice").getAsDouble() : 0.0;
                     String imageUrl = MyProductsHelper.getString(itemObj, "imageUrl", "");
-                    com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageUrl);
+                    String imageThumbUrl = MyProductsHelper.getString(itemObj, "imageThumbUrl", imageUrl);
+                    com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageThumbUrl);
 
                     try {
                         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
@@ -253,6 +254,7 @@ public class MyProductsController implements Initializable {
                                 state.countdownSeconds,
                                 status,
                                 imageUrl,
+                                imageThumbUrl,
                                 false
                         );
                         JsonObject cardData = itemObj.deepCopy();

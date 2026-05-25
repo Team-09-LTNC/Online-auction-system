@@ -1,6 +1,7 @@
 package com.auction.server.dao;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,6 +10,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +27,7 @@ import com.auction.server.db.DatabaseConnection;
  */
 public class AuctionDao {
     private static final Logger logger = LoggerFactory.getLogger(AuctionDao.class);
+    private static final AtomicBoolean checkedImageThumbColumn = new AtomicBoolean(false);
 
     public static class AuctionNotificationTargets {
         public final int auctionId;
@@ -52,6 +55,19 @@ public class AuctionDao {
         return AuctionRowMapper.mapResultSetToAuction(rs, logger);
     }
 
+    public LocalDateTime getDatabaseNow() {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT CURRENT_TIMESTAMP")) {
+            if (rs.next()) {
+                return rs.getObject(1, LocalDateTime.class);
+            }
+        } catch (SQLException e) {
+            logger.warn("Khong lay duoc thoi gian hien tai tu DB, dung thoi gian JVM.", e);
+        }
+        return LocalDateTime.now();
+    }
+
     public void updateStatusByTime() {
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              Statement stmt = conn.createStatement()) {
@@ -77,7 +93,8 @@ public class AuctionDao {
     public List<Auction> getRunningAuctions() {
         updateStatusByTime();
         return executeListQuery(
-                "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
+                "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
+                        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
                         +
                         "FROM auctions a JOIN items i ON a.item_id = i.id "
                         + "WHERE a.status = 'RUNNING' AND a.start_time <= NOW() AND a.end_time > NOW()");
@@ -86,7 +103,8 @@ public class AuctionDao {
     public List<Auction> getPendingAuctionSessions() {
         updateStatusByTime();
         return executeListQuery(
-                "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
+                "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
+                        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
                         +
                         "FROM auctions a JOIN items i ON a.item_id = i.id "
                         + "WHERE a.status = 'OPEN' AND a.start_time > NOW()");
@@ -95,7 +113,8 @@ public class AuctionDao {
     public List<Auction> getAllAuctionSessions() {
         updateStatusByTime();
         return executeListQuery(
-                "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
+                "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
+                        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
                         +
                         "FROM auctions a JOIN items i ON a.item_id = i.id ORDER BY a.start_time DESC, a.id DESC");
     }
@@ -104,6 +123,7 @@ public class AuctionDao {
         updateStatusByTime();
         return executeListQuery(
                 "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url, "
+                        + "i.image_thumb_url, "
                         +
                         "COUNT(b.id) AS bid_count "
                         +
@@ -133,7 +153,7 @@ public class AuctionDao {
 
     private List<Auction> getSellerAuctions(int sellerId) {
         String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-                + "i.bid_increment, i.seller_id, i.image_url "
+                + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
                 + "FROM auctions a "
                 + "JOIN items i ON a.item_id = i.id "
                 + "WHERE i.seller_id = ? "
@@ -143,7 +163,7 @@ public class AuctionDao {
 
     private List<Auction> getBidderJoinedAuctions(int bidderId) {
         String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-                + "i.bid_increment, i.seller_id, i.image_url "
+                + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
                 + "FROM auctions a "
                 + "JOIN items i ON a.item_id = i.id "
                 + "JOIN ("
@@ -157,6 +177,7 @@ public class AuctionDao {
     }
 
     private List<Auction> executeListQuery(String sql) {
+        ensureImageThumbColumn();
         List<Auction> danhSach = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              Statement stmt = conn.createStatement();
@@ -173,6 +194,7 @@ public class AuctionDao {
     }
 
     private List<Auction> executeListQuery(String sql, int param) {
+        ensureImageThumbColumn();
         List<Auction> danhSach = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -390,7 +412,8 @@ public class AuctionDao {
 
     public Auction getAuctionById(int idPhien) {
         updateStatusByTime();
-        String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
+        String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
+                + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
                 + "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = ?";
         List<Auction> danhSach = executeListQuery(sql, idPhien);
         return danhSach.isEmpty() ? null : danhSach.get(0);
@@ -399,7 +422,7 @@ public class AuctionDao {
     public Auction getAuctionByItemId(int itemId) {
         updateStatusByTime();
         String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-                + "i.bid_increment, i.seller_id, i.image_url "
+                + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
                 + "FROM auctions a JOIN items i ON a.item_id = i.id "
                 + "WHERE i.id = ? ORDER BY a.id DESC LIMIT 1";
         List<Auction> danhSach = executeListQuery(sql, itemId);
@@ -439,7 +462,8 @@ public class AuctionDao {
     public List<Auction> searchAndFilterAuctions(String keyword, String status) {
         updateStatusByTime();
         StringBuilder sql = new StringBuilder(
-                "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url "
+                "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
+                        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
                         +
                         "FROM auctions a JOIN items i ON a.item_id = i.id WHERE 1=1 ");
 
@@ -576,5 +600,34 @@ public class AuctionDao {
             logger.error("Lỗi khi lấy danh sách Bot của phiên: ", e);
         }
         return dsBot;
+    }
+
+    private void ensureImageThumbColumn() {
+        if (checkedImageThumbColumn.get()) {
+            return;
+        }
+
+        synchronized (AuctionDao.class) {
+            if (checkedImageThumbColumn.get()) {
+                return;
+            }
+
+            try (Connection conn = DatabaseConnection.getInstance().getConnection()) {
+                DatabaseMetaData metaData = conn.getMetaData();
+                try (ResultSet columns = metaData.getColumns(null, null, "items", "image_thumb_url")) {
+                    if (columns.next()) {
+                        checkedImageThumbColumn.set(true);
+                        return;
+                    }
+                }
+
+                try (Statement stmt = conn.createStatement()) {
+                    stmt.executeUpdate("ALTER TABLE items ADD COLUMN image_thumb_url VARCHAR(500) NULL");
+                }
+                checkedImageThumbColumn.set(true);
+            } catch (Exception e) {
+                logger.error("Cannot ensure image_thumb_url column.", e);
+            }
+        }
     }
 }

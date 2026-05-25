@@ -143,7 +143,8 @@ public class MyAuctionsController implements Initializable, RefreshableCenterCon
                     int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
                     long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
                     String imageUrl = getString(obj, "imageUrl", "");
-                    com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageUrl);
+                    String imageThumbUrl = getString(obj, "imageThumbUrl", imageUrl);
+                    com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageThumbUrl);
 
                     try {
                         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
@@ -156,6 +157,7 @@ public class MyAuctionsController implements Initializable, RefreshableCenterCon
                                 state.countdownSeconds,
                                 statusForUi,
                                 imageUrl,
+                                imageThumbUrl,
                                 followedIds.contains(auctionId)
                         );
                         JsonObject roomSnapshot = obj.deepCopy();

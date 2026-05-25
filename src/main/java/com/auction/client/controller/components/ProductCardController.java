@@ -1,6 +1,7 @@
 package com.auction.client.controller.components;
 
 import com.auction.client.networkclient.ClientSocket;
+import com.auction.client.util.ImageCacheManager;
 import com.auction.common.enums.ActionType;
 import com.google.gson.JsonObject;
 import javafx.animation.Animation;
@@ -47,6 +48,7 @@ public class ProductCardController {
     private Timeline timeline;
     private int auctionId = -1;
     private String imageUrl = "";
+    private String imageThumbUrl = "";
     private boolean isFollowed = false;
     private boolean followRequestPending = false;
     private String currentStatus = "";
@@ -63,14 +65,29 @@ public class ProductCardController {
             String imageUrl,
             boolean isFollowed
     ) {
+        setProductData(auctionId, name, price, countdownSeconds, status, imageUrl, null, isFollowed);
+    }
+
+    public void setProductData(
+            int auctionId,
+            String name,
+            double price,
+            long countdownSeconds,
+            String status,
+            String imageUrl,
+            String imageThumbUrl,
+            boolean isFollowed
+    ) {
         stopTimer();
 
         this.auctionId = auctionId;
         this.imageUrl = imageUrl;
+        this.imageThumbUrl = imageThumbUrl;
         this.isFollowed = isFollowed;
         this.currentStatus = status;
         this.deadlineMillis = System.currentTimeMillis() + Math.max(0, countdownSeconds) * 1000L;
-        this.auctionSnapshot = createBasicSnapshot(auctionId, name, price, countdownSeconds, status, imageUrl);
+        this.auctionSnapshot = createBasicSnapshot(
+                auctionId, name, price, countdownSeconds, status, imageUrl, imageThumbUrl);
 
         lblProductName.setText(name);
         lblCurrentPrice.setText(String.format("%,.0f đ", price));
@@ -115,17 +132,40 @@ public class ProductCardController {
 
     public void setAuctionSnapshot(JsonObject auctionSnapshot) {
         this.auctionSnapshot = auctionSnapshot == null ? null : auctionSnapshot.deepCopy();
+        if (this.auctionSnapshot != null
+                && this.auctionSnapshot.has("imageUrl")
+                && !this.auctionSnapshot.get("imageUrl").isJsonNull()) {
+            this.imageUrl = this.auctionSnapshot.get("imageUrl").getAsString();
+        }
+        if (this.auctionSnapshot != null
+                && this.auctionSnapshot.has("imageThumbUrl")
+                && !this.auctionSnapshot.get("imageThumbUrl").isJsonNull()) {
+            this.imageThumbUrl = this.auctionSnapshot.get("imageThumbUrl").getAsString();
+        }
+        preloadRoomImage();
     }
 
     private void loadImage() {
         if (imgProduct == null) return;
         try {
-            imgProduct.setImage(
-                    com.auction.client.util.ImageCacheManager.getPreviewImage(imageUrl)
-            );
+            imgProduct.setImage(ImageCacheManager.getPreviewImage(resolvePreviewUrl()));
+            preloadRoomImage();
         } catch (Exception e) {
             logger.error("Lỗi load ảnh", e);
             imgProduct.setImage(null);
+        }
+    }
+
+    private String resolvePreviewUrl() {
+        return imageThumbUrl != null && !imageThumbUrl.isBlank() ? imageThumbUrl : imageUrl;
+    }
+
+    private void preloadRoomImage() {
+        if (imageThumbUrl != null && !imageThumbUrl.isBlank()) {
+            ImageCacheManager.preloadPreviewImage(imageThumbUrl);
+        }
+        if (imageUrl != null && !imageUrl.isBlank()) {
+            ImageCacheManager.preloadDetailImage(imageUrl);
         }
     }
 
@@ -343,7 +383,8 @@ public class ProductCardController {
             double price,
             long countdownSeconds,
             String status,
-            String imageUrl
+            String imageUrl,
+            String imageThumbUrl
     ) {
         JsonObject snapshot = new JsonObject();
         snapshot.addProperty("auctionId", auctionId);
@@ -353,6 +394,9 @@ public class ProductCardController {
         snapshot.addProperty("countdownSeconds", countdownSeconds);
         snapshot.addProperty("status", status);
         snapshot.addProperty("imageUrl", imageUrl);
+        if (imageThumbUrl != null && !imageThumbUrl.isBlank()) {
+            snapshot.addProperty("imageThumbUrl", imageThumbUrl);
+        }
         return snapshot;
     }
 

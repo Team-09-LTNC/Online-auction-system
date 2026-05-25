@@ -25,6 +25,7 @@ final class AuctionControllerUtil {
                     auction.getCurrentHighestBid(),
                     auction.getStoredStatus().name(),
                     auction.getItem().getImageUrl(),
+                    auction.getItem().getImageThumbUrl(),
                     auction.getStartTime() != null ? auction.getStartTime().toString() : null,
                     auction.getEndTime() != null ? auction.getEndTime().toString() : null,
                     auction.getItem().getCategory(),

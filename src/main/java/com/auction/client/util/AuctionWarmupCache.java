@@ -117,7 +117,9 @@ public final class AuctionWarmupCache {
                 continue;
             }
             JsonObject auction = element.getAsJsonObject();
-            if (auction.has("imageUrl") && !auction.get("imageUrl").isJsonNull()) {
+            if (auction.has("imageThumbUrl") && !auction.get("imageThumbUrl").isJsonNull()) {
+                imageUrls.add(auction.get("imageThumbUrl").getAsString());
+            } else if (auction.has("imageUrl") && !auction.get("imageUrl").isJsonNull()) {
                 imageUrls.add(auction.get("imageUrl").getAsString());
             }
         }

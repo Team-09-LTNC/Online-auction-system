@@ -40,6 +40,10 @@ final class AuctionRowMapper {
             item.setImageUrl(rs.getString("image_url"));
         } catch (Exception ignored) {
         }
+        try {
+            item.setImageThumbUrl(rs.getString("image_thumb_url"));
+        } catch (Exception ignored) {
+        }
 
         Auction phien = new Auction(item);
         phien.setId(rs.getInt("id"));
