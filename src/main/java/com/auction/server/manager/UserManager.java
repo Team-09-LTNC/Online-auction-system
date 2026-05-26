@@ -114,6 +114,17 @@ public class UserManager {
         }
     }
 
+    public void broadcastPushEvent(JsonObject payload) {
+        Set<ClientHandler> delivered = ConcurrentHashMap.newKeySet();
+        for (Set<ClientHandler> connections : onlineConnections.values()) {
+            for (ClientHandler client : connections) {
+                if (delivered.add(client)) {
+                    client.sendPushEvent(payload.deepCopy());
+                }
+            }
+        }
+    }
+
     /**
      * Trích xuất thông tin người dùng đang kết nối
      */

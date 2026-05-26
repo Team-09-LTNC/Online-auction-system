@@ -46,6 +46,7 @@ public class ActionType {
     // --- SERVER PUSH (server chủ động gửi, không có requestId) ---
     public static final String AUCTION_BID_UPDATE = "AUCTION_BID_UPDATE";
     public static final String AUCTION_RESULT = "AUCTION_RESULT";
+    public static final String AUCTION_CHANGED = "AUCTION_CHANGED";
     public static final String RECEIVE_CHAT_MESSAGE = "CHAT_RECEIVE_MESSAGE";
     // --- Admin ---
     public static final String ADMIN_GET_ALL_BIDDERS = "ADMIN_GET_ALL_BIDDERS";

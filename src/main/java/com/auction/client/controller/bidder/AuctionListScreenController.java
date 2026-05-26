@@ -188,8 +188,9 @@ public class AuctionListScreenController
                     int auctionId = obj.has("auctionId") ? obj.get("auctionId").getAsInt() : -1;
                     long price = obj.has("currentPrice") ? obj.get("currentPrice").getAsLong() : 0;
                     String imageUrl = getString(obj, "imageUrl", "");
+                    String imageThumbUrl = getString(obj, "imageThumbUrl", imageUrl);
                     boolean isFollowed = followedIds.contains(auctionId);
-                    com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageUrl);
+                    com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageThumbUrl);
 
                     try {
                         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
@@ -197,7 +198,7 @@ public class AuctionListScreenController
                         ProductCardController controller = loader.getController();
 
                         controller.setProductData(auctionId, name, price, state.countdownSeconds, statusForUi,
-                                imageUrl, isFollowed);
+                                imageUrl, imageThumbUrl, isFollowed);
                         JsonObject roomSnapshot = obj.deepCopy();
                         roomSnapshot.addProperty("displayStatus", statusForUi);
                         roomSnapshot.addProperty("countdownSeconds", state.countdownSeconds);

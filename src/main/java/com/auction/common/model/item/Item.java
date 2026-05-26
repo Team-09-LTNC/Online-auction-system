@@ -10,6 +10,7 @@ public abstract class Item extends Entity {
     protected int sellerId;
     protected String category;
     protected String imageUrl;
+    protected String imageThumbUrl;
     private String startTime;
     private String endTime;
 
@@ -41,6 +42,7 @@ public abstract class Item extends Entity {
     public int getSellerId() { return sellerId; }
     public String getCategory() { return category; }
     public String getImageUrl() { return imageUrl; }
+    public String getImageThumbUrl() { return imageThumbUrl; }
     public String getStartTime() {
         return startTime;
     }
@@ -64,5 +66,6 @@ public abstract class Item extends Entity {
     public void setSellerId(int sellerId) { this.sellerId = sellerId; }
     public void setCategory(String category) { this.category = category; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public void setImageThumbUrl(String imageThumbUrl) { this.imageThumbUrl = imageThumbUrl; }
 
 }

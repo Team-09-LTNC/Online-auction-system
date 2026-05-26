@@ -20,6 +20,7 @@ public class MainController {
             "/fxml/bidder/AuctionListScreen.fxml",
             "/fxml/bidder/MyAuctions.fxml",
             "/fxml/bidder/FollowedAuctions.fxml",
+            "/fxml/seller/MyProducts.fxml",
             "/fxml/components/Chat.fxml"
     );
 
@@ -73,6 +74,21 @@ public class MainController {
     // Hàm để các Controller khác lấy được cái Controller đang hiện ở giữa
     public Object getCurrentCenterController() {
         return currentCenterController;
+    }
+
+    public void refreshRealtimeContent() {
+        Set<Object> refreshedControllers = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        for (LoadedCenterView loadedView : centerViewCache.values()) {
+            refreshController(loadedView.controller(), refreshedControllers);
+        }
+        refreshController(currentCenterController, refreshedControllers);
+    }
+
+    private void refreshController(Object controller, Set<Object> refreshedControllers) {
+        if (controller instanceof RefreshableCenterContent refreshableContent
+                && refreshedControllers.add(controller)) {
+            refreshableContent.refreshContent();
+        }
     }
 
     private void showCenterNode(Parent newNode) {

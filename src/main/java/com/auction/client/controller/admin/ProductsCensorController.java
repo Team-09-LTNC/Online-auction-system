@@ -1,5 +1,6 @@
 package com.auction.client.controller.admin;
 
+import com.auction.client.interfaces.RefreshableCenterContent;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -25,7 +26,7 @@ import com.auction.client.manager.AdminManager;
  * Controller cho ProductsCensorView.fxml.
  * Hiển thị sản phẩm chưa duyệt; admin có thể duyệt hoặc xoá.
  */
-public class ProductsCensorController implements Initializable {
+public class ProductsCensorController implements Initializable, RefreshableCenterContent {
 
     // ── FXML injections ──────────────────────────────────────
     @FXML
@@ -149,6 +150,11 @@ public class ProductsCensorController implements Initializable {
                 }),
                 error -> javafx.application.Platform
                         .runLater(() -> showInfo("Lỗi", "Không thể tải dữ liệu: " + error)));
+    }
+
+    @Override
+    public void refreshContent() {
+        loadData();
     }
 
     // ── FXML handlers ────────────────────────────────────────

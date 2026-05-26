@@ -1,5 +1,6 @@
 package com.auction.client.controller.admin;
 
+import com.auction.client.interfaces.RefreshableCenterContent;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
  */
 public class AdminLayoutController implements Initializable {
   private static final Logger logger = LoggerFactory.getLogger(AdminLayoutController.class);
+  public static AdminLayoutController instance;
 
   @FXML private Button btnDashboard;
   @FXML private Button btnAuctions;
@@ -36,9 +38,11 @@ public class AdminLayoutController implements Initializable {
   @FXML private Label lblBreadcrumb;
   @FXML private Label lblAdminName;
   @FXML private StackPane contentPane;
+  private Object currentContentController;
 
   @Override
   public void initialize(URL url, ResourceBundle rb) {
+    instance = this;
     loadView("/fxml/admin/DashboardView.fxml", "Dashboard");
     lblAdminName.setText("Super Admin");
   }
@@ -81,12 +85,20 @@ public class AdminLayoutController implements Initializable {
 
   private void loadView(String fxmlPath, String title) {
     try {
-      Parent view = FXMLLoader.load(getClass().getResource(fxmlPath));
+      FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+      Parent view = loader.load();
+      currentContentController = loader.getController();
       contentPane.getChildren().setAll(view);
       lblPageTitle.setText(title);
       lblBreadcrumb.setText(title);
     } catch (IOException e) {
       logger.error("Loi load view {}.", fxmlPath, e);
+    }
+  }
+
+  public void refreshRealtimeContent() {
+    if (currentContentController instanceof RefreshableCenterContent refreshableContent) {
+      refreshableContent.refreshContent();
     }
   }
 

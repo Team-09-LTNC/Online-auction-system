@@ -14,6 +14,7 @@ import com.auction.common.model.item.Item;
 import com.auction.common.model.item.ItemAttributes;
 import com.auction.common.model.user.User;
 import com.auction.server.dao.AuctionDao;
+import com.auction.server.manager.AuctionManager;
 import com.auction.server.manager.ProductManager;
 import com.auction.server.networkserver.ClientHandler;
 import com.google.gson.Gson;
@@ -111,6 +112,7 @@ public class ProductController implements RequestHandler {
             obj.addProperty("status", auction.getStoredStatus().name());
             obj.addProperty("category", item.getCategory());
             obj.addProperty("imageUrl", item.getImageUrl());
+            obj.addProperty("imageThumbUrl", item.getImageThumbUrl());
             obj.addProperty("startTime", auction.getStartTime() != null ? auction.getStartTime().toString() : null);
             obj.addProperty("endTime", auction.getEndTime() != null ? auction.getEndTime().toString() : null);
             data.add(obj);
@@ -145,6 +147,7 @@ public class ProductController implements RequestHandler {
         sanPhamMoi.setCategory(request.getCategory());
         sanPhamMoi.setSellerId(nguoiDung.getId());
         sanPhamMoi.setImageUrl(request.getImageUrl() != null ? request.getImageUrl() : "");
+        sanPhamMoi.setImageThumbUrl(request.getImageThumbUrl() != null ? request.getImageThumbUrl() : "");
         long bidIncrement = yeuCau.has("bidIncrement") && !yeuCau.get("bidIncrement").isJsonNull()
                 ? yeuCau.get("bidIncrement").getAsLong()
                 : 0L;
@@ -195,6 +198,7 @@ public class ProductController implements RequestHandler {
         if (thanhCong) {
             logger.info("xuLyThemSanPham: Thành công - Sản phẩm ID = {} đã được đăng bởi sellerId = {}",
                     sanPhamMoi.getId(), nguoiDung.getId());
+            AuctionManager.getInstance().broadcastAuctionChanged(-1, "PRODUCT_CREATED", "PENDING");
             return buildResponse(yeuCau, ActionType.CREATE_PRODUCT,
                     new ItemDTOs.CreateItemResponse(true, "Đăng sản phẩm thành công!", sanPhamMoi.getId()));
         } else {
@@ -248,6 +252,7 @@ public class ProductController implements RequestHandler {
             successPayload.addProperty("statusCode", StatusCode.OK);
             successPayload.addProperty("success", true);
             successPayload.addProperty("message", "Xóa sản phẩm thành công!");
+            AuctionManager.getInstance().broadcastAuctionChanged(-1, "PRODUCT_DELETED", null);
             return buildResponse(yeuCau, ActionType.DELETE_PRODUCT, successPayload);
         }
         return buildResponse(yeuCau, ActionType.DELETE_PRODUCT,
@@ -325,6 +330,8 @@ public class ProductController implements RequestHandler {
                 sanPham.setCategory(yeuCau.get("category").getAsString().trim().toUpperCase());
             if (yeuCau.has("imageUrl"))
                 sanPham.setImageUrl(yeuCau.get("imageUrl").getAsString().trim());
+            if (yeuCau.has("imageThumbUrl"))
+                sanPham.setImageThumbUrl(yeuCau.get("imageThumbUrl").getAsString().trim());
 
             if (sanPham.getName() == null || sanPham.getName().isBlank() || sanPham.getStartingPrice() <= 0) {
                 return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT,
@@ -358,6 +365,7 @@ public class ProductController implements RequestHandler {
                 JsonObject successPayload = new JsonObject();
                 successPayload.addProperty("success", true);
                 successPayload.addProperty("message", "Cập nhật sản phẩm thành công!");
+                AuctionManager.getInstance().broadcastAuctionChanged(-1, "PRODUCT_UPDATED", null);
                 return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT, successPayload);
             }
             return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT,

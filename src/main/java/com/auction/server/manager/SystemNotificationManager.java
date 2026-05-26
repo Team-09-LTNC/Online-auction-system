@@ -29,7 +29,14 @@ public class SystemNotificationManager {
     }
 
     public void sendPrivateNotification(int auctionId, int recipientId, String message, boolean paymentRequired) {
-        long notificationId = notificationDao.saveNotification(auctionId, recipientId, message, paymentRequired);
+        LocalDateTime sentAt = LocalDateTime.now();
+        long notificationId = notificationDao.saveNotification(
+                auctionId,
+                recipientId,
+                message,
+                paymentRequired,
+                sentAt
+        );
         if (notificationId <= 0) {
             org.slf4j.LoggerFactory.getLogger(getClass())
                     .error("Khong luu duoc thong bao he thong. auctionId={}, recipientId={}", auctionId, recipientId);
@@ -41,7 +48,7 @@ public class SystemNotificationManager {
         payload.addProperty("targetUserId", recipientId);
         payload.addProperty("auctionId", auctionId);
         payload.addProperty("message", message);
-        payload.addProperty("sentAt", LocalDateTime.now().format(NOTIFICATION_TIME_FORMAT));
+        payload.addProperty("sentAt", sentAt.format(NOTIFICATION_TIME_FORMAT));
         payload.addProperty("paymentRequired", paymentRequired);
         UserManager.getInstance().sendSystemNotification(recipientId, payload);
     }

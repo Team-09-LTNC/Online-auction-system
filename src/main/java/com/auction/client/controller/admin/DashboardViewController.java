@@ -1,5 +1,6 @@
 package com.auction.client.controller.admin;
 
+import com.auction.client.interfaces.RefreshableCenterContent;
 import com.auction.client.manager.AdminManager;
 
 import javafx.application.Platform;
@@ -21,7 +22,7 @@ import java.util.ResourceBundle;
  * Controller cho DashboardView.fxml.
  * Hiển thị 3 chỉ số: số người đấu giá, người bán, phiên đấu giá.
  */
-public class DashboardViewController implements Initializable {
+public class DashboardViewController implements Initializable, RefreshableCenterContent {
 
     @FXML
     private StackPane contentPane;
@@ -46,7 +47,6 @@ public class DashboardViewController implements Initializable {
     // ── Load dữ liệu ─────────────────────────────────────────
 
     private void loadStats() {
-        // TODO: thay bằng lời gọi Service / DAO thực tế
         AdminManager.getInstance().getBidderCount(
                 count -> Platform.runLater(() -> lblBidderCount.setText(String.valueOf(count))),
                 error -> System.err.println("Lỗi: " + error));
@@ -62,6 +62,11 @@ public class DashboardViewController implements Initializable {
 
     @FXML
     private void handleRefresh() {
+        loadStats();
+    }
+
+    @Override
+    public void refreshContent() {
         loadStats();
     }
 

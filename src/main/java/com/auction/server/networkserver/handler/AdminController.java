@@ -122,6 +122,9 @@ public class AdminController implements RequestHandler {
         res.addProperty("type", "ADMIN_REJECT_AUCTION_RESPONSE");
         res.addProperty("success", ok);
         res.addProperty("message", ok ? "Đã từ chối phiên đấu giá!" : "Từ chối thất bại!");
+        if (ok) {
+            AuctionManager.getInstance().broadcastAuctionChanged(auctionId, "REJECTED", "REJECTED");
+        }
         if (reqId != null)
             res.addProperty("requestId", reqId);
         return gson.toJson(res);

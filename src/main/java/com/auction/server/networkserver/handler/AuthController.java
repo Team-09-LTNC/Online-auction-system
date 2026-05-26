@@ -18,7 +18,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 public class AuthController implements RequestHandler {
@@ -316,13 +315,32 @@ public class AuthController implements RequestHandler {
         String symbol = ("WITHDRAW".equals(loaiGiaoDich) || "PAYMENT_SENT".equals(loaiGiaoDich))
                 ? "🔻"
                 : "🔹";
-        String noiDung = String.format(Locale.US, "%s %s: %,d đ - %s", symbol, loaiGiaoDich, soTien, moTa);
+        String noiDung = String.format("%s %s: %s đ - %s",
+                symbol,
+                loaiGiaoDich,
+                formatMoney(soTien),
+                moTa);
         SystemNotificationManager.getInstance().sendPrivateNotification(
                 -1,
                 userId,
                 "Biến động số dư\n" + noiDung,
                 false
         );
+    }
+
+    private String formatMoney(long value) {
+        String digits = String.valueOf(value);
+        StringBuilder formatted = new StringBuilder();
+        int firstGroupLength = digits.length() % 3;
+        if (firstGroupLength == 0) {
+            firstGroupLength = 3;
+        }
+
+        formatted.append(digits, 0, firstGroupLength);
+        for (int i = firstGroupLength; i < digits.length(); i += 3) {
+            formatted.append('.').append(digits, i, i + 3);
+        }
+        return formatted.toString();
     }
 
     /*

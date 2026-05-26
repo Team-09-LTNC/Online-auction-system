@@ -254,7 +254,7 @@ public class PostAuctionController {
     }
     selectedImageFile = selectedFile;
     selectedImagePath = selectedFile.toURI().toString();
-    Image image = new Image(selectedImagePath);
+    Image image = new Image(selectedImagePath, 520, 360, true, true, true);
     if (imgPreview != null) {
       imgPreview.setImage(image);
     }
@@ -313,9 +313,9 @@ public class PostAuctionController {
       String startTimeStr = startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
       String endTimeStr = endTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
-      CloudStorageUtil.uploadImageAsync(selectedImageFile).thenAccept(imageUrl ->
+      CloudStorageUtil.uploadProductImageAsync(selectedImageFile).thenAccept(uploadedImage ->
           Platform.runLater(() -> onUploadSuccess(
-              imageUrl, name, description, startPrice, increment, buyNow, category,
+              uploadedImage, name, description, startPrice, increment, buyNow, category,
               startTime, startTimeStr, endTimeStr, submitButton)))
           .exceptionally(ex -> {
             Platform.runLater(() -> {
@@ -337,7 +337,7 @@ public class PostAuctionController {
   }
 
   private void onUploadSuccess(
-      String imageUrl,
+      CloudStorageUtil.UploadedImage uploadedImage,
       String name,
       String description,
       long startPrice,
@@ -349,7 +349,7 @@ public class PostAuctionController {
       String endTimeStr,
       Button submitButton
   ) {
-    if (imageUrl == null) {
+    if (uploadedImage == null || uploadedImage.getImageUrl() == null) {
       showAlert(Alert.AlertType.ERROR, "Lỗi kết nối", "Không thể tải ảnh lên đám mây!");
       isSubmitting = false;
       setSubmitButtonState(submitButton, false);
@@ -357,7 +357,16 @@ public class PostAuctionController {
     }
 
     ItemDTOs.CreateItemRequest requestDto =
-        new ItemDTOs.CreateItemRequest(name, description, startPrice, category, 0, imageUrl, startTimeStr, endTimeStr);
+        new ItemDTOs.CreateItemRequest(
+            name,
+            description,
+            startPrice,
+            category,
+            0,
+            uploadedImage.getImageUrl(),
+            uploadedImage.getThumbnailUrl(),
+            startTimeStr,
+            endTimeStr);
     JsonObject reqJson = new Gson().toJsonTree(requestDto).getAsJsonObject();
     reqJson.addProperty("bidIncrement", increment);
     reqJson.addProperty("buyNowPrice", buyNow);

@@ -24,9 +24,9 @@
 
                 <Label fx:id="lblCategory" text="Danh mục: ..." textFill="#7D6608" style="-fx-font-size: 14px; -fx-font-weight: bold;" />
 
-                <StackPane prefHeight="260.0" style="-fx-background-color: #F9F9F9; -fx-background-radius: 10;">
+                <StackPane fx:id="imageFrame" minHeight="260.0" prefHeight="260.0" maxHeight="260.0" style="-fx-background-color: #F9F9F9; -fx-background-radius: 10;">
                     <children>
-                        <ImageView fx:id="imgProduct" fitHeight="240.0" fitWidth="400.0" pickOnBounds="true" preserveRatio="true" />
+                        <ImageView fx:id="imgProduct" fitHeight="260.0" fitWidth="400.0" managed="false" pickOnBounds="true" preserveRatio="true" />
                     </children>
                 </StackPane>
 

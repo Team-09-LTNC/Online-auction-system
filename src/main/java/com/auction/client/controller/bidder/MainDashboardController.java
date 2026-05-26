@@ -20,11 +20,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
+import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 public class MainDashboardController implements Initializable, RefreshableCenterContent {
 
     private static final Logger logger = LoggerFactory.getLogger(MainDashboardController.class);
+    private static final Set<String> HOME_AUCTION_STATUSES = Set.of("OPEN", "RUNNING", "PAID");
 
     @FXML private FlowPane productFlowPane;
     @FXML private Label lblHeaderName;
@@ -41,7 +44,7 @@ public class MainDashboardController implements Initializable, RefreshableCenter
         logger.info("Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.");
         if (productFlowPane != null) {
             productFlowPane.getChildren().clear();
-            loadFeaturedAuctionsFromServer();
+            loadHomeAuctionsFromServer();
         }
         updateDashboardUserInfo();
         updateStatistics();
@@ -104,28 +107,28 @@ public class MainDashboardController implements Initializable, RefreshableCenter
         );
     }
 
-    private void loadFeaturedAuctionsFromServer() {
-        JsonObject cachedResponse = com.auction.client.util.AuctionWarmupCache.getFeaturedAuctionsResponse();
+    private void loadHomeAuctionsFromServer() {
+        JsonObject cachedResponse = com.auction.client.util.AuctionWarmupCache.getAllAuctionsResponse();
         if (cachedResponse != null) {
-            handleFeaturedAuctionsResponse(cachedResponse);
+            handleHomeAuctionsResponse(cachedResponse);
         }
 
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.GET_ALL_AUCTIONS);
-        request.addProperty("featuredRunning", true);
+        request.addProperty("category", "ALL");
         request.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
         ClientSocket.getInstance().sendJsonRequest(
                 request,
                 "AUCTION_LIST_RESPONSE",
                 response -> {
-                    com.auction.client.util.AuctionWarmupCache.storeFeaturedAuctions(response);
-                    handleFeaturedAuctionsResponse(response);
+                    com.auction.client.util.AuctionWarmupCache.storeAllAuctions(response);
+                    handleHomeAuctionsResponse(response);
                 }
         );
     }
 
-    private void handleFeaturedAuctionsResponse(JsonObject response) {
+    private void handleHomeAuctionsResponse(JsonObject response) {
         if (!(response.has("success")
                 && response.get("success").getAsBoolean()
                 && response.has("auctions"))) {
@@ -161,13 +164,15 @@ public class MainDashboardController implements Initializable, RefreshableCenter
             String imageUrl = obj.has("imageUrl")
                     ? obj.get("imageUrl").getAsString()
                     : "";
+            String imageThumbUrl = getString(obj, "imageThumbUrl", imageUrl);
 
             String serverStatus = getString(obj, "status", "");
-            if (!"RUNNING".equalsIgnoreCase(serverStatus)) {
+            String normalizedStatus = serverStatus.trim().toUpperCase(Locale.ROOT);
+            if (!HOME_AUCTION_STATUSES.contains(normalizedStatus)) {
                 continue;
             }
 
-            com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageUrl);
+            com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageThumbUrl);
 
             String rawStartTime = obj.has("startTime") && !obj.get("startTime").isJsonNull()
                     ? obj.get("startTime").getAsString()
@@ -179,10 +184,7 @@ public class MainDashboardController implements Initializable, RefreshableCenter
 
             AuctionTimeUtil.AuctionState state =
                     AuctionTimeUtil.calculateState(rawStartTime, rawEndTime, serverNow);
-            if (!"RUNNING".equalsIgnoreCase(state.finalStatus) || state.countdownSeconds <= 0) {
-                logger.warn("Bỏ qua phiên nổi bật không còn RUNNING theo thời gian DB: {}", auctionId);
-                continue;
-            }
+            String statusForUi = resolveDisplayStatus(normalizedStatus, state.finalStatus);
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
                 VBox card = loader.load();
@@ -192,12 +194,13 @@ public class MainDashboardController implements Initializable, RefreshableCenter
                         name,
                         price,
                         state.countdownSeconds,
-                        serverStatus,
+                        statusForUi,
                         imageUrl,
+                        imageThumbUrl,
                         followedIds.contains(auctionId)
                 );
                 JsonObject roomSnapshot = obj.deepCopy();
-                roomSnapshot.addProperty("displayStatus", state.finalStatus);
+                roomSnapshot.addProperty("displayStatus", statusForUi);
                 roomSnapshot.addProperty("countdownSeconds", state.countdownSeconds);
                 if (serverNow != null) {
                     roomSnapshot.addProperty("serverNow", serverNow);
@@ -221,7 +224,7 @@ public class MainDashboardController implements Initializable, RefreshableCenter
 
     @Override
     public void refreshContent() {
-        loadFeaturedAuctionsFromServer();
+        loadHomeAuctionsFromServer();
         updateStatistics();
     }
 
@@ -229,6 +232,23 @@ public class MainDashboardController implements Initializable, RefreshableCenter
         return obj.has(key) && !obj.get(key).isJsonNull()
                 ? obj.get(key).getAsString()
                 : fallback;
+    }
+
+    private String resolveDisplayStatus(String storedStatus, String timeStatus) {
+        if (storedStatus == null || storedStatus.isBlank()) {
+            return timeStatus;
+        }
+
+        String normalized = storedStatus.trim().toUpperCase(Locale.ROOT);
+        switch (normalized) {
+            case "PAID":
+                return normalized;
+            case "OPEN":
+            case "RUNNING":
+                return timeStatus;
+            default:
+                return normalized;
+        }
     }
 
 }

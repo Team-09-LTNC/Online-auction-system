@@ -2,6 +2,7 @@ package com.auction.server.manager;
 
 import com.auction.common.exception.AuctionClosedException;
 import com.auction.common.exception.InvalidBidException;
+import com.auction.common.enums.ActionType;
 import com.auction.common.enums.AuctionStatus;
 import com.auction.common.model.bid.Auction;
 import com.auction.common.model.bid.AutoBidConfig;
@@ -11,6 +12,7 @@ import com.auction.common.model.user.User;
 import com.auction.common.observer.AuctionObserver;
 import com.auction.server.dao.AuctionDao;
 import com.auction.server.dao.BidderPenaltyDao;
+import com.google.gson.JsonObject;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -98,6 +100,7 @@ public class AuctionManager {
 
             logger.info("Đã tự động mở phiên đấu giá ID: {}", phien.getId());
             scheduleAuctionClose(phien); // Bắt đầu đếm ngược đến giờ đóng
+            notifyStatusChange(phien.getId(), AuctionStatus.RUNNING);
         }
     }
 
@@ -140,6 +143,7 @@ public class AuctionManager {
                     AuctionSettlementNotifier.sendAuctionEndNotification(targets);
                     schedulePaymentTimeout(idPhien, targets);
                 }
+                notifyStatusChange(idPhien, statusMoi);
 
                 // Xóa phiên khỏi bộ nhớ và dọn dẹp tài nguyên liên quan
                 dsNguoiTheoDoi.remove(idPhien);
@@ -187,15 +191,16 @@ public class AuctionManager {
 
             long giaHienTai = phien.getCurrentHighestBid();
             long buocGia = phien.getItem().getBidIncrement();
+            boolean chuaCoAiDatGia = phien.getCurrentWinner() == null;
 
-            // Áp dụng đúng 1 công thức bắt buộc cho mọi lượt đặt:
-            long giaToiThieu = giaHienTai + buocGia;
+            if (isBuyNowBid(phien, giaoDich.getBidAmount())) {
+                throw new InvalidBidException("Mức giá này đạt giá mua đứt. Hãy xác nhận mua ngay.");
+            }
+
+            long giaToiThieu = chuaCoAiDatGia ? giaHienTai : giaHienTai + buocGia;
 
             if (giaoDich.getBidAmount() < giaToiThieu) {
                 throw new InvalidBidException("Giá đặt tối thiểu: " + giaToiThieu);
-            }
-            if (isBuyNowBid(phien, giaoDich.getBidAmount())) {
-                throw new InvalidBidException("Mức giá này đạt giá mua đứt. Hãy xác nhận mua ngay.");
             }
 
             // Lưu giao dịch vào DB và cập nhật người thắng hiện tại
@@ -203,7 +208,7 @@ public class AuctionManager {
                 phien.updateWinner(giaoDich);
                 extendIfLateBid(phien);
                 notifyNewBid(idPhien, giaoDich);
-                triggerAutoBid(phien); // Kích hoạt auto-bid để đáp trả nếu cần
+                triggerAutoBid(phien, giaoDich.getBidder().getId()); // Kích hoạt auto-bid để đáp trả nếu cần
                 return true;
             }
             return false;
@@ -231,7 +236,7 @@ public class AuctionManager {
             }
 
             long giaMuaDut = phien.getBuyNowPrice();
-            if (giaMuaDut < phien.getCurrentHighestBid() + phien.getItem().getBidIncrement()) {
+            if (giaMuaDut <= phien.getCurrentHighestBid()) {
                 throw new InvalidBidException("Giá mua đứt không còn hợp lệ ở thời điểm hiện tại.");
             }
 
@@ -288,48 +293,138 @@ public class AuctionManager {
                 throw new Exception("Không thể lưu cấu hình Auto-bid. Vui lòng thử lại.");
             }
 
-            triggerAutoBid(phien);
+            triggerAutoBid(phien, null);
         }
     }
 
     // Xử lý auto-bid: bot đại diện người dùng tự động trả giá theo bước giá
-    private void triggerAutoBid(Auction phien) {
-        Queue<AutoBidConfig> queue = phien.getAutoBidders();
-        while (!queue.isEmpty()) {
-            AutoBidConfig topBot = queue.peek();
-            if (phien.getCurrentWinner() != null &&
-                    topBot.getBidder().getId() == phien.getCurrentWinner().getId()) {
-                break;
+    private void triggerAutoBid(Auction phien, Integer manualBidderId) {
+        while (phien.isAcceptingBids()) {
+            List<AutoBidConfig> activeBots = getActiveAutoBids(phien);
+            if (activeBots.isEmpty()) {
+                return;
             }
 
-            long buocGiaNguoiBan = phien.getItem().getBidIncrement();
-            long buocGiaBot = Math.max(topBot.getBidStep(), buocGiaNguoiBan);
-            long giaTiepTheo = phien.getCurrentHighestBid() + buocGiaBot;
-            if (isBuyNowBid(phien, giaTiepTheo)) {
-                break;
+            AutoBidConfig leader = activeBots.get(0);
+            AutoBidConfig challenger = findNextCompetitor(activeBots, leader);
+            if (isCurrentWinner(phien, leader) && challenger == null) {
+                return;
             }
 
-            // Bot không đủ tiền theo bước giá tiếp theo -> loại bỏ
-            if (giaTiepTheo > topBot.getMaxBid()) {
-                queue.poll();
-                continue;
+            long nextBidAmount = calculateAutoBidAmount(
+                    phien,
+                    leader,
+                    challenger,
+                    isManualCurrentWinner(phien, leader, manualBidderId));
+            long minimumNextBid = phien.getCurrentHighestBid() + phien.getItem().getBidIncrement();
+            Long buyNowPrice = phien.getBuyNowPrice();
+            boolean reachedBuyNow = buyNowPrice != null
+                    && buyNowPrice > 0
+                    && phien.getCurrentHighestBid() < buyNowPrice
+                    && nextBidAmount >= buyNowPrice
+                    && leader.getMaxBid() >= buyNowPrice;
+
+            if (!reachedBuyNow && (nextBidAmount < minimumNextBid || nextBidAmount > leader.getMaxBid())) {
+                return;
             }
 
-            // Tạo giao dịch tự động và thực hiện
+            if (reachedBuyNow) {
+                nextBidAmount = buyNowPrice;
+            }
+
             BidTransaction autoTx = new BidTransaction(
                     phien.getId(),
-                    (Bidder) topBot.getBidder(),
-                    giaTiepTheo,
+                    (Bidder) leader.getBidder(),
+                    nextBidAmount,
                     LocalDateTime.now());
 
-            if (auctionDao.executeBidTransaction(phien.getId(), autoTx)) {
-                phien.updateWinner(autoTx);
-                extendIfLateBid(phien);
-                notifyNewBid(phien.getId(), autoTx);
-            } else {
-                break;
+            if (!auctionDao.executeBidTransaction(phien.getId(), autoTx)) {
+                return;
+            }
+
+            phien.updateWinner(autoTx);
+            extendIfLateBid(phien);
+            notifyNewBid(phien.getId(), autoTx);
+
+            if (reachedBuyNow) {
+                finishAuctionAfterAutoBuyNow(phien);
+                return;
             }
         }
+    }
+
+    private List<AutoBidConfig> getActiveAutoBids(Auction phien) {
+        long currentPrice = phien.getCurrentHighestBid();
+        List<AutoBidConfig> activeBots = new ArrayList<>();
+        for (AutoBidConfig bot : phien.getAutoBidders()) {
+            if (bot.getMaxBid() > currentPrice) {
+                activeBots.add(bot);
+            }
+        }
+        Collections.sort(activeBots);
+        return activeBots;
+    }
+
+    private AutoBidConfig findNextCompetitor(List<AutoBidConfig> activeBots, AutoBidConfig leader) {
+        for (AutoBidConfig bot : activeBots) {
+            if (bot.getBidder().getId() != leader.getBidder().getId()) {
+                return bot;
+            }
+        }
+        return null;
+    }
+
+    private long calculateAutoBidAmount(
+            Auction phien,
+            AutoBidConfig leader,
+            AutoBidConfig challenger,
+            boolean currentWinnerIsManualBidder
+    ) {
+        long currentPrice = phien.getCurrentHighestBid();
+        long minimumNextBid = currentPrice + phien.getItem().getBidIncrement();
+        long targetBid;
+        if (currentWinnerIsManualBidder) {
+            targetBid = currentPrice + effectiveAutoBidStep(phien, leader);
+            return targetBid;
+        } else if (challenger == null) {
+            targetBid = currentPrice + effectiveAutoBidStep(phien, leader);
+        } else if (leader.getMaxBid() == challenger.getMaxBid()) {
+            targetBid = currentPrice + effectiveAutoBidStep(phien, leader);
+        } else {
+            targetBid = challenger.getMaxBid() + effectiveAutoBidStep(phien, challenger);
+        }
+        return Math.max(targetBid, minimumNextBid);
+    }
+
+    private boolean isManualCurrentWinner(
+            Auction phien,
+            AutoBidConfig leader,
+            Integer manualBidderId
+    ) {
+        return manualBidderId != null
+                && phien.getCurrentWinner() != null
+                && phien.getCurrentWinner().getId() == manualBidderId
+                && leader.getBidder().getId() != manualBidderId;
+    }
+
+    private long effectiveAutoBidStep(Auction phien, AutoBidConfig bot) {
+        return Math.max(bot.getBidStep(), phien.getItem().getBidIncrement());
+    }
+
+    private boolean isCurrentWinner(Auction phien, AutoBidConfig bot) {
+        return phien.getCurrentWinner() != null
+                && phien.getCurrentWinner().getId() == bot.getBidder().getId();
+    }
+
+    private void finishAuctionAfterAutoBuyNow(Auction phien) {
+        phien.setStatus(AuctionStatus.FINISHED);
+        auctionDao.updateStatus(phien.getId(), AuctionStatus.FINISHED.name());
+        cancelAuctionCloseSchedule(phien.getId());
+        notifyStatusChange(phien.getId(), AuctionStatus.FINISHED);
+        AuctionDao.AuctionNotificationTargets targets =
+                auctionDao.getAuctionEndNotificationTargets(phien.getId());
+        AuctionSettlementNotifier.sendAuctionEndNotification(targets);
+        schedulePaymentTimeout(phien.getId(), targets);
     }
 
     // Đăng ký observer để nhận thông báo khi có bid mới
@@ -347,6 +442,12 @@ public class AuctionManager {
             for (AuctionObserver obs : observers)
                 obs.onNewBid(tx);
         }
+        Auction phien = dsPhienDangChay.get(idPhien);
+        broadcastAuctionChanged(
+                idPhien,
+                "BID",
+                phien != null && phien.getStatus() != null ? phien.getStatus().name() : null
+        );
     }
 
     public void updateStatusAfterPayment(int idPhien, AuctionStatus status) {
@@ -393,37 +494,19 @@ public class AuctionManager {
                 obs.onStatusChanged(status);
             }
         }
+        broadcastAuctionChanged(idPhien, "STATUS", status != null ? status.name() : null);
     }
 
-    private void sendAuctionEndNotification(AuctionDao.AuctionNotificationTargets targets) {
-        if (targets == null || targets.winnerId == null) {
-            logger.warn("Bo qua gui thong bao ket thuc phien vi thieu winner.");
-            return;
+    public void broadcastAuctionChanged(int auctionId, String reason, String status) {
+        JsonObject payload = new JsonObject();
+        payload.addProperty("type", ActionType.AUCTION_CHANGED);
+        payload.addProperty("auctionId", auctionId);
+        payload.addProperty("reason", reason != null ? reason : "UNKNOWN");
+        if (status != null) {
+            payload.addProperty("status", status);
         }
-        String itemName = targets.itemName == null ? "sản phẩm" : targets.itemName;
-        String winnerName = targets.winnerName == null ? "người thắng phiên" : targets.winnerName;
-        SystemNotificationManager.getInstance().sendPrivateNotification(
-                targets.auctionId,
-                targets.winnerId,
-                buildPaymentNotificationContent(itemName, targets.auctionId),
-                true);
-        SystemNotificationManager.getInstance().sendPrivateNotification(
-                targets.auctionId,
-                targets.sellerId,
-                buildSellerNotificationContent(itemName, targets.auctionId, winnerName),
-                false);
-    }
-
-    private String buildPaymentNotificationContent(String itemName, int auctionId) {
-        return "Chúc mừng bạn đã chiến thắng phiên đấu giá " + itemName
-                + " của phiên ID " + auctionId + ".\n"
-                + "Xác nhận thanh toán để chính thức sở hữu sản phẩm.\n\n"
-                + "Nếu hủy thanh toán, bạn sẽ chịu phạt 10% tiền đặt giá.";
-    }
-
-    private String buildSellerNotificationContent(String itemName, int auctionId, String winnerName) {
-        return "Chúc mừng sản phẩm " + itemName + " phiên " + auctionId
-                + " đã được bán thành công, người chiến thắng là " + winnerName + ".";
+        payload.addProperty("serverNow", LocalDateTime.now(SERVER_ZONE).toString());
+        UserManager.getInstance().broadcastPushEvent(payload);
     }
 
     private void cancelAuctionCloseSchedule(int idPhien) {
@@ -432,6 +515,13 @@ public class AuctionManager {
             taskDong.cancel(false);
         }
         dsPhienDangChay.remove(idPhien);
+    }
+
+    private void cancelAuctionStartSchedule(int idPhien) {
+        ScheduledFuture<?> taskMo = tasksMoPhien.remove(idPhien);
+        if (taskMo != null && !taskMo.isDone()) {
+            taskMo.cancel(false);
+        }
     }
 
     private void schedulePaymentTimeout(int auctionId, AuctionDao.AuctionNotificationTargets targets) {
@@ -637,6 +727,7 @@ public class AuctionManager {
         }
 
         logger.info("Admin da duyet phien {} -> {}", auctionId, statusMoi);
+        broadcastAuctionChanged(auctionId, "APPROVED", statusMoi);
         return true;
     }
 
@@ -644,7 +735,9 @@ public class AuctionManager {
     public void syncAfterStatusUpdate(int auctionId, String newStatus) {
         switch (newStatus) {
             case "CANCELED":
-                forceCloseAuction(auctionId);
+                cancelAuctionStartSchedule(auctionId);
+                cancelAuctionCloseSchedule(auctionId);
+                notifyStatusChange(auctionId, AuctionStatus.CANCELED);
                 break;
             case "OPEN":
                 Auction phienOpen = auctionDao.getAuctionById(auctionId);
@@ -652,6 +745,7 @@ public class AuctionManager {
                     dsPhienDangChay.remove(auctionId); // đảm bảo không còn trong RAM cũ
                     loadAutoBidsIntoAuction(phienOpen);
                     scheduleAuctionStart(phienOpen);
+                    notifyStatusChange(auctionId, AuctionStatus.OPEN);
                 }
                 break;
             case "RUNNING":
@@ -660,11 +754,18 @@ public class AuctionManager {
                     loadAutoBidsIntoAuction(phienRunning);
                     dsPhienDangChay.put(auctionId, phienRunning);
                     scheduleAuctionClose(phienRunning);
+                    notifyStatusChange(auctionId, AuctionStatus.RUNNING);
                 }
                 break;
             default:
                 // FINISHED, PAID, REJECTED: chỉ cần xóa khỏi RAM nếu có
+                cancelAuctionStartSchedule(auctionId);
                 cancelAuctionCloseSchedule(auctionId);
+                try {
+                    notifyStatusChange(auctionId, AuctionStatus.valueOf(newStatus));
+                } catch (IllegalArgumentException ignored) {
+                    broadcastAuctionChanged(auctionId, "STATUS", newStatus);
+                }
                 break;
         }
     }

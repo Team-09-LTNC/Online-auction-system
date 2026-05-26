@@ -61,6 +61,9 @@ public class DatabaseConnection implements ConnectionProvider {
             if (props.getProperty("db.driver") != null) {
                 config.setDriverClassName(props.getProperty("db.driver"));
             }
+            if (url.startsWith("jdbc:mysql:")) {
+                config.setConnectionInitSql("SET time_zone = '+07:00'");
+            }
 
             // Cấu hình tối ưu cho môi trường đa luồng (Concurrency)
             config.setMaximumPoolSize(50);      // Tối đa 50 luồng (client) có thể truy vấn cùng lúc

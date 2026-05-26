@@ -7,6 +7,7 @@ import com.auction.common.model.item.Electronics;
 import com.auction.common.model.item.Item;
 import com.auction.common.model.item.OtherItem;
 import com.auction.common.model.item.Vehicle;
+import com.auction.common.model.user.Bidder;
 import org.slf4j.Logger;
 
 import java.sql.ResultSet;
@@ -40,6 +41,10 @@ final class AuctionRowMapper {
             item.setImageUrl(rs.getString("image_url"));
         } catch (Exception ignored) {
         }
+        try {
+            item.setImageThumbUrl(rs.getString("image_thumb_url"));
+        } catch (Exception ignored) {
+        }
 
         Auction phien = new Auction(item);
         phien.setId(rs.getInt("id"));
@@ -47,6 +52,7 @@ final class AuctionRowMapper {
         phien.setStartTime(rs.getObject("start_time", LocalDateTime.class));
         phien.setEndTime(rs.getObject("end_time", LocalDateTime.class));
         phien.setCurrentPrice(rs.getLong("current_price"));
+        hydrateCurrentWinner(rs, phien);
 
         long buyNowPrice = rs.getLong("buy_now_price");
         if (!rs.wasNull()) {
@@ -54,6 +60,38 @@ final class AuctionRowMapper {
         }
         phien.setAntiSnipingEnabled(rs.getBoolean("anti_sniping_enabled"));
         return phien;
+    }
+
+    private static void hydrateCurrentWinner(ResultSet rs, Auction phien) {
+        try {
+            int winnerId = rs.getInt("highest_bidder_id");
+            if (rs.wasNull()) {
+                return;
+            }
+
+            String username = getOptionalString(rs, "highest_bidder_username");
+            String fullName = getOptionalString(rs, "highest_bidder_full_name");
+            if (username == null || username.isBlank()) {
+                username = "bidder_" + winnerId;
+            }
+            if (fullName == null || fullName.isBlank()) {
+                fullName = "Người dùng #" + winnerId;
+            }
+
+            Bidder winner = new Bidder(username, "", fullName);
+            winner.setId(winnerId);
+            phien.setCurrentWinner(winner);
+        } catch (SQLException ignored) {
+            // Một số truy vấn cũ có thể không chọn highest_bidder_id.
+        }
+    }
+
+    private static String getOptionalString(ResultSet rs, String columnName) {
+        try {
+            return rs.getString(columnName);
+        } catch (SQLException ignored) {
+            return null;
+        }
     }
 
     private static Item createItemByType(String loai) {

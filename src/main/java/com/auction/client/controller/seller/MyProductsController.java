@@ -2,6 +2,7 @@ package com.auction.client.controller.seller;
 
 import com.auction.client.controller.auth.UserSession;
 import com.auction.client.controller.components.ProductCardController;
+import com.auction.client.interfaces.RefreshableCenterContent;
 import com.auction.client.networkclient.ClientSocket;
 import com.auction.client.util.AuctionTimeUtil;
 import com.auction.common.enums.ActionType;
@@ -40,7 +41,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class MyProductsController implements Initializable {
+public class MyProductsController implements Initializable, RefreshableCenterContent {
     private static final Logger logger = LoggerFactory.getLogger(MyProductsController.class);
     private static final int CARD_BATCH_SIZE = 10;
 
@@ -151,6 +152,13 @@ public class MyProductsController implements Initializable {
         });
     }
 
+    @Override
+    public void refreshContent() {
+        if (productFlowPane != null) {
+            loadMyPostedProducts();
+        }
+    }
+
     private void updateStatistics() {
         int totalProducts = loadedProducts.size();
         int runningCount = 0;
@@ -240,7 +248,8 @@ public class MyProductsController implements Initializable {
                     int auctionId = itemObj.has("auctionId") ? itemObj.get("auctionId").getAsInt() : -1;
                     double currentPrice = itemObj.has("currentPrice") ? itemObj.get("currentPrice").getAsDouble() : 0.0;
                     String imageUrl = MyProductsHelper.getString(itemObj, "imageUrl", "");
-                    com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageUrl);
+                    String imageThumbUrl = MyProductsHelper.getString(itemObj, "imageThumbUrl", imageUrl);
+                    com.auction.client.util.ImageCacheManager.preloadPreviewImage(imageThumbUrl);
 
                     try {
                         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/ProductCard.fxml"));
@@ -253,6 +262,7 @@ public class MyProductsController implements Initializable {
                                 state.countdownSeconds,
                                 status,
                                 imageUrl,
+                                imageThumbUrl,
                                 false
                         );
                         JsonObject cardData = itemObj.deepCopy();
