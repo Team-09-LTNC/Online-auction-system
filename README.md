@@ -35,10 +35,10 @@ target/MainApp.jar
 target/ServerApp.jar
 ```
 
-Chạy server với file cấu hình database riêng:
+Chạy server:
 
 ```bash
-java -Ddb.config.file=application-local.properties -jar ServerApp.jar
+java -jar ServerApp.jar
 ```
 
 Chạy client:
@@ -47,7 +47,7 @@ Chạy client:
 java -jar MainApp.jar
 ```
 
-Không commit mật khẩu database thật vào repository. File `application.properties` trong source chỉ là cấu hình mẫu; khi triển khai server, tạo file cấu hình riêng có `db.host`, `db.port`, `db.name`, `db.user`, `db.password`, `db.ssl`.
+File `application.properties` đang được đóng gói vào JAR để nhóm có thể chạy server trực tiếp. Nếu cần đổi database khi triển khai, có thể tạo file cấu hình riêng và chạy `java -Ddb.config.file=application-local.properties -jar ServerApp.jar`.
 
 ## Cấu Trúc Tổng Quan
 
