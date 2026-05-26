@@ -1,5 +1,6 @@
 package com.auction.client.controller.admin;
 
+import com.auction.client.interfaces.RefreshableCenterContent;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -21,7 +22,7 @@ import com.auction.client.manager.AdminManager;
  * Controller cho InvoicesView.fxml.
  * Hiển thị danh sách sản phẩm đã thanh toán (status = PAID).
  */
-public class InvoicesController implements Initializable {
+public class InvoicesController implements Initializable, RefreshableCenterContent {
 
     // ── FXML injections ──────────────────────────────────────
     @FXML
@@ -92,6 +93,11 @@ public class InvoicesController implements Initializable {
                 error -> Platform.runLater(() -> lblInvoiceCount.setText("Lỗi: " + error)),
                 tongDoanhThu -> Platform
                         .runLater(() -> lblTotalRevenue.setText("Tổng: ₫ " + String.format("%,d", tongDoanhThu))));
+    }
+
+    @Override
+    public void refreshContent() {
+        loadData();
     }
 
     // ── FXML handlers ────────────────────────────────────────

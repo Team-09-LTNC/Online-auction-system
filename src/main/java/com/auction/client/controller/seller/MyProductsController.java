@@ -2,6 +2,7 @@ package com.auction.client.controller.seller;
 
 import com.auction.client.controller.auth.UserSession;
 import com.auction.client.controller.components.ProductCardController;
+import com.auction.client.interfaces.RefreshableCenterContent;
 import com.auction.client.networkclient.ClientSocket;
 import com.auction.client.util.AuctionTimeUtil;
 import com.auction.common.enums.ActionType;
@@ -40,7 +41,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class MyProductsController implements Initializable {
+public class MyProductsController implements Initializable, RefreshableCenterContent {
     private static final Logger logger = LoggerFactory.getLogger(MyProductsController.class);
     private static final int CARD_BATCH_SIZE = 10;
 
@@ -149,6 +150,13 @@ public class MyProductsController implements Initializable {
                 logger.error("Lỗi phân tích dữ liệu JSON mạng: ", ex);
             }
         });
+    }
+
+    @Override
+    public void refreshContent() {
+        if (productFlowPane != null) {
+            loadMyPostedProducts();
+        }
     }
 
     private void updateStatistics() {

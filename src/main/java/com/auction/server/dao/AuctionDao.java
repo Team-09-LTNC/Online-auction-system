@@ -281,7 +281,8 @@ public class AuctionDao {
 
     public boolean executeBidTransaction(int idPhien, BidTransaction tx) {
         String sqlUpdate = "UPDATE auctions SET current_price = ?, highest_bidder_id = ? " +
-                "WHERE id = ? AND current_price < ? AND status = 'RUNNING' AND end_time > NOW()";
+                "WHERE id = ? AND status = 'RUNNING' AND end_time > NOW() " +
+                "AND (current_price < ? OR (highest_bidder_id IS NULL AND current_price <= ?))";
         String sqlInsert = "INSERT INTO bid_history (auction_id, bidder_id, bid_amount, bid_time) VALUES (?, ?, ?, ?)";
 
         Connection conn = null;
@@ -294,6 +295,7 @@ public class AuctionDao {
                 psUpdate.setInt(2, tx.getBidder().getId());
                 psUpdate.setInt(3, idPhien);
                 psUpdate.setLong(4, tx.getBidAmount());
+                psUpdate.setLong(5, tx.getBidAmount());
                 if (psUpdate.executeUpdate() == 0) {
                     conn.rollback();
                     return false;
@@ -576,7 +578,7 @@ public class AuctionDao {
 
     public List<AutoBidConfig> getAuctionAutoBids(int auctionId) {
         List<AutoBidConfig> dsBot = new ArrayList<>();
-        String sql = "SELECT a.bidder_id, a.max_auto_bid, a.bid_step, u.username, u.full_name " +
+        String sql = "SELECT a.bidder_id, a.max_auto_bid, a.bid_step, a.register_time, u.username, u.full_name " +
                 "FROM auto_bid_settings a " +
                 "JOIN users u ON a.bidder_id = u.id " +
                 "WHERE a.auction_id = ?";
@@ -593,7 +595,12 @@ public class AuctionDao {
                     );
                     u.setId(rs.getInt("bidder_id")); // Kế thừa từ class Entity
 
-                    dsBot.add(new AutoBidConfig(u, rs.getLong("max_auto_bid"), rs.getLong("bid_step")));
+                    Timestamp registerTime = rs.getTimestamp("register_time");
+                    dsBot.add(new AutoBidConfig(
+                            u,
+                            rs.getLong("max_auto_bid"),
+                            rs.getLong("bid_step"),
+                            registerTime != null ? registerTime.toLocalDateTime() : null));
                 }
             }
         } catch (SQLException e) {

@@ -14,6 +14,7 @@ import com.auction.common.model.item.Item;
 import com.auction.common.model.item.ItemAttributes;
 import com.auction.common.model.user.User;
 import com.auction.server.dao.AuctionDao;
+import com.auction.server.manager.AuctionManager;
 import com.auction.server.manager.ProductManager;
 import com.auction.server.networkserver.ClientHandler;
 import com.google.gson.Gson;
@@ -197,6 +198,7 @@ public class ProductController implements RequestHandler {
         if (thanhCong) {
             logger.info("xuLyThemSanPham: Thành công - Sản phẩm ID = {} đã được đăng bởi sellerId = {}",
                     sanPhamMoi.getId(), nguoiDung.getId());
+            AuctionManager.getInstance().broadcastAuctionChanged(-1, "PRODUCT_CREATED", "PENDING");
             return buildResponse(yeuCau, ActionType.CREATE_PRODUCT,
                     new ItemDTOs.CreateItemResponse(true, "Đăng sản phẩm thành công!", sanPhamMoi.getId()));
         } else {
@@ -250,6 +252,7 @@ public class ProductController implements RequestHandler {
             successPayload.addProperty("statusCode", StatusCode.OK);
             successPayload.addProperty("success", true);
             successPayload.addProperty("message", "Xóa sản phẩm thành công!");
+            AuctionManager.getInstance().broadcastAuctionChanged(-1, "PRODUCT_DELETED", null);
             return buildResponse(yeuCau, ActionType.DELETE_PRODUCT, successPayload);
         }
         return buildResponse(yeuCau, ActionType.DELETE_PRODUCT,
@@ -362,6 +365,7 @@ public class ProductController implements RequestHandler {
                 JsonObject successPayload = new JsonObject();
                 successPayload.addProperty("success", true);
                 successPayload.addProperty("message", "Cập nhật sản phẩm thành công!");
+                AuctionManager.getInstance().broadcastAuctionChanged(-1, "PRODUCT_UPDATED", null);
                 return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT, successPayload);
             }
             return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT,

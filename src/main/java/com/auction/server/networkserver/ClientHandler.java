@@ -178,4 +178,11 @@ public class ClientHandler implements Runnable, AuctionObserver {
     payload.addProperty("type", "SYSTEM_NOTIFICATION");
     out.println(gson.toJson(payload));
   }
+
+  public void sendPushEvent(JsonObject payload) {
+    if (out == null) {
+      return;
+    }
+    out.println(gson.toJson(payload));
+  }
 }

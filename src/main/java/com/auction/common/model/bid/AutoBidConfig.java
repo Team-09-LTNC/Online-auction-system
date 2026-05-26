@@ -18,10 +18,14 @@ public class AutoBidConfig implements Comparable<AutoBidConfig> {
     }
 
     public AutoBidConfig(User bidder, long maxBid, long bidStep) {
+        this(bidder, maxBid, bidStep, LocalDateTime.now());
+    }
+
+    public AutoBidConfig(User bidder, long maxBid, long bidStep, LocalDateTime registerTime) {
         this.bidder = bidder;
         this.maxBid = maxBid;
         this.bidStep = bidStep;
-        this.registerTime = LocalDateTime.now();
+        this.registerTime = registerTime == null ? LocalDateTime.now() : registerTime;
     }
 
     public User getBidder() { return bidder; }

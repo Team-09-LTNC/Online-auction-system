@@ -14,11 +14,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class AuctionWarmupCache {
     private static final String ALL_AUCTIONS = "ALL_AUCTIONS";
-    private static final String FEATURED_AUCTIONS = "FEATURED_AUCTIONS";
     private static final Set<String> inFlightRequests = ConcurrentHashMap.newKeySet();
 
     private static volatile JsonObject allAuctionsResponse;
-    private static volatile JsonObject featuredAuctionsResponse;
 
     private AuctionWarmupCache() {
     }
@@ -28,15 +26,10 @@ public final class AuctionWarmupCache {
             return;
         }
         requestAllAuctions();
-        requestFeaturedAuctions();
     }
 
     public static JsonObject getAllAuctionsResponse() {
         return copy(allAuctionsResponse);
-    }
-
-    public static JsonObject getFeaturedAuctionsResponse() {
-        return copy(featuredAuctionsResponse);
     }
 
     public static void storeAllAuctions(JsonObject response) {
@@ -47,17 +40,8 @@ public final class AuctionWarmupCache {
         preloadImages(response);
     }
 
-    public static void storeFeaturedAuctions(JsonObject response) {
-        if (!isSuccessfulAuctionResponse(response)) {
-            return;
-        }
-        featuredAuctionsResponse = copy(response);
-        preloadImages(response);
-    }
-
     public static void clear() {
         allAuctionsResponse = null;
-        featuredAuctionsResponse = null;
         inFlightRequests.clear();
     }
 
@@ -75,24 +59,6 @@ public final class AuctionWarmupCache {
             inFlightRequests.remove(ALL_AUCTIONS);
             if (isSuccessfulAuctionResponse(response)) {
                 storeAllAuctions(response);
-            }
-        });
-    }
-
-    private static void requestFeaturedAuctions() {
-        if (!inFlightRequests.add(FEATURED_AUCTIONS)) {
-            return;
-        }
-
-        JsonObject request = new JsonObject();
-        request.addProperty("type", ActionType.GET_ALL_AUCTIONS);
-        request.addProperty("featuredRunning", true);
-        request.addProperty("requestId", UUID.randomUUID().toString());
-
-        ClientSocket.getInstance().sendJsonRequest(request, "AUCTION_LIST_RESPONSE", response -> {
-            inFlightRequests.remove(FEATURED_AUCTIONS);
-            if (isSuccessfulAuctionResponse(response)) {
-                storeFeaturedAuctions(response);
             }
         });
     }

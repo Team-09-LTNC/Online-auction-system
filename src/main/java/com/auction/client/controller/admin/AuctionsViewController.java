@@ -1,5 +1,6 @@
 package com.auction.client.controller.admin;
 
+import com.auction.client.interfaces.RefreshableCenterContent;
 import com.auction.client.manager.AdminManager;
 import java.net.URL;
 import java.util.List;
@@ -28,7 +29,7 @@ import javafx.scene.layout.StackPane;
 /**
  * Controller for auctions administration view.
  */
-public class AuctionsViewController implements Initializable {
+public class AuctionsViewController implements Initializable, RefreshableCenterContent {
 
     private static final String ALL_STATUS = "Tat ca";
     private static final List<String> STATUS_OPTIONS = List.of(
@@ -108,6 +109,11 @@ public class AuctionsViewController implements Initializable {
                     updateCountLabel();
                 }),
                 error -> Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, error).showAndWait()));
+    }
+
+    @Override
+    public void refreshContent() {
+        loadData();
     }
 
     @FXML

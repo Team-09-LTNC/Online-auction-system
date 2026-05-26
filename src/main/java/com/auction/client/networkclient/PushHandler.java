@@ -7,6 +7,8 @@ import com.auction.common.enums.ActionType;
 import com.google.gson.JsonObject;
 
 import javafx.application.Platform;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -18,6 +20,7 @@ public class PushHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PushHandler.class);
     private static final List<JsonObject> pendingNotifications = new CopyOnWriteArrayList<>();
+    private static boolean auctionRefreshScheduled;
 
     public static com.auction.client.controller.bidder.AuctionRoomController currentRoomController;
 
@@ -25,6 +28,7 @@ public class PushHandler {
         switch (type) {
             case ActionType.AUCTION_BID_UPDATE -> onBidUpdate(payload);
             case ActionType.AUCTION_RESULT -> onAuctionResult(payload);
+            case ActionType.AUCTION_CHANGED -> onAuctionChanged(payload);
             case "SYSTEM_NOTIFICATION" -> onSystemNotification(payload);
             default -> logger.error("[PushHandler] Unknown push type: {}", type);
         }
@@ -78,6 +82,7 @@ public class PushHandler {
                             bidTime
                     );
                 }
+                requestAuctionViewsRefresh();
             });
         } catch (Exception e) {
             logger.error("[PushHandler] Lỗi bóc tách dữ liệu AUCTION_BID_UPDATE: {}", e.getMessage());
@@ -92,10 +97,44 @@ public class PushHandler {
                 if (currentRoomController != null) {
                     currentRoomController.updateRealtimeStatus(newStatus);
                 }
+                requestAuctionViewsRefresh();
             });
         } catch (Exception e) {
             logger.error("[PushHandler] Lỗi bóc tách dữ liệu AUCTION_RESULT: {}", e.getMessage());
         }
+    }
+
+    private static void onAuctionChanged(JsonObject payload) {
+        Platform.runLater(() -> {
+            String reason = payload.has("reason") && !payload.get("reason").isJsonNull()
+                    ? payload.get("reason").getAsString()
+                    : "UNKNOWN";
+            logger.info("[Push] Dữ liệu phiên đấu giá thay đổi: {}", reason);
+            requestAuctionViewsRefresh();
+        });
+    }
+
+    public static void requestAuctionViewsRefresh() {
+        if (!Platform.isFxApplicationThread()) {
+            Platform.runLater(PushHandler::requestAuctionViewsRefresh);
+            return;
+        }
+        if (auctionRefreshScheduled) {
+            return;
+        }
+        auctionRefreshScheduled = true;
+        PauseTransition delay = new PauseTransition(Duration.millis(250));
+        delay.setOnFinished(event -> {
+            auctionRefreshScheduled = false;
+            com.auction.client.util.AuctionWarmupCache.clear();
+            if (com.auction.client.controller.MainController.instance != null) {
+                com.auction.client.controller.MainController.instance.refreshRealtimeContent();
+            }
+            if (com.auction.client.controller.admin.AdminLayoutController.instance != null) {
+                com.auction.client.controller.admin.AdminLayoutController.instance.refreshRealtimeContent();
+            }
+        });
+        delay.play();
     }
     private static void onSystemNotification(JsonObject payload) {
         String targetRole = payload.has("targetRole") ? payload.get("targetRole").getAsString() : "ALL";

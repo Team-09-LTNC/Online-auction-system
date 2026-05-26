@@ -352,6 +352,7 @@ public class ProductCardController {
                         isFollowed = previousFollowState;
                     }
                     updateHeartUI();
+                    com.auction.client.networkclient.PushHandler.requestAuctionViewsRefresh();
                 })
         );
     }

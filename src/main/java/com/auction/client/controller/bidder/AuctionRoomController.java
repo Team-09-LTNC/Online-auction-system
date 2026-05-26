@@ -89,6 +89,9 @@ public class AuctionRoomController implements Initializable {
     private String currentStatus = "OPEN";
     private Long currentBuyNowPrice;
     private int currentSellerId = -1;
+    private long currentDisplayedPrice = 0;
+    private long currentBidIncrement = 0;
+    private boolean hasCurrentWinner = false;
     private boolean currentUserOwnsAuction = false;
     private boolean ownerBidWarningShown = false;
     private boolean autoBidActive = false;
@@ -316,6 +319,7 @@ public class AuctionRoomController implements Initializable {
 
         long startingPrice = getLong(snapshot, "startingPrice", getLong(snapshot, "currentPrice", 0));
         long bidIncrement = getLong(snapshot, "bidIncrement", 0);
+        currentBidIncrement = bidIncrement;
         if (lblStartingPrice != null) {
             lblStartingPrice.setText(formatVnd(startingPrice));
         }
@@ -332,6 +336,8 @@ public class AuctionRoomController implements Initializable {
         }
 
         long displayPrice = getLong(snapshot, "currentHighestBid", getLong(snapshot, "currentPrice", startingPrice));
+        currentDisplayedPrice = displayPrice;
+        hasCurrentWinner = false;
         if (lblCurrentPrice != null) {
             lblCurrentPrice.setText(formatVnd(displayPrice));
         }
@@ -455,6 +461,7 @@ public class AuctionRoomController implements Initializable {
 
                     long startingPrice = itemData.has("startingPrice") ? itemData.get("startingPrice").getAsLong() : 0;
                     long bidIncrement = itemData.has("bidIncrement") ? itemData.get("bidIncrement").getAsLong() : 0;
+                    currentBidIncrement = bidIncrement;
                     if (lblStartingPrice != null) {
                         lblStartingPrice.setText(formatVnd(startingPrice));
                     }
@@ -478,6 +485,7 @@ public class AuctionRoomController implements Initializable {
 
                     long displayPrice = data.has("currentHighestBid") && !data.get("currentHighestBid").isJsonNull()
                             ? data.get("currentHighestBid").getAsLong() : startingPrice;
+                    currentDisplayedPrice = displayPrice;
 
                     String leaderText = "Chưa có ai đặt giá";
                     boolean hasWinner = false;
@@ -486,9 +494,10 @@ public class AuctionRoomController implements Initializable {
                             : data.has("highestBidder") && !data.get("highestBidder").isJsonNull() ? data.getAsJsonObject("highestBidder") : null;
 
                     if (userObj != null) {
-                        leaderText = userObj.has("fullName") ? userObj.get("fullName").getAsString() : userObj.get("username").getAsString();
+                        leaderText = resolveUserDisplayName(userObj);
                         hasWinner = true;
                     }
+                    hasCurrentWinner = hasWinner;
 
                     if (lblCurrentPrice != null) {
                         lblCurrentPrice.setText(formatVnd(displayPrice));
@@ -652,6 +661,7 @@ public class AuctionRoomController implements Initializable {
                                 ? "Người dẫn đầu: " + latestLeader
                                 : "Chưa có ai đặt giá");
                     }
+                    hasCurrentWinner = latestLeader != null && !latestLeader.isBlank();
                 }));
     }
 
@@ -732,18 +742,17 @@ public class AuctionRoomController implements Initializable {
 
         try {
             long bidAmount = parseMoneyValue(input);
-            long currentPrice = extractMoneyValue(lblCurrentPrice.getText());
-            long stepPrice = extractMoneyValue(lblBidIncrement.getText());
-            long minValidBid = currentPrice + stepPrice;
+            long minValidBid = getMinimumManualBid();
 
-            if (bidAmount < minValidBid) {
-                showAlert("Lỗi đặt giá", "Giá tối thiểu: " + formatVnd(minValidBid));
-                return;
-            }
             if (currentBuyNowPrice != null && currentBuyNowPrice > 0 && bidAmount >= currentBuyNowPrice) {
                 if (confirmBuyNow()) {
                     sendBuyNowConfirmation();
                 }
+                return;
+            }
+
+            if (bidAmount < minValidBid) {
+                showAlert("Lỗi đặt giá", "Giá tối thiểu: " + formatVnd(minValidBid));
                 return;
             }
 
@@ -867,8 +876,14 @@ public class AuctionRoomController implements Initializable {
             long currentPrice = extractMoneyValue(lblCurrentPrice.getText());
             long sellerBidStep = extractMoneyValue(lblBidIncrement.getText());
             long minValidBid = currentPrice + sellerBidStep;
+            long autoNextBid = currentPrice + Math.max(bidStep, sellerBidStep);
+            boolean autoBidWouldReachBuyNow = currentBuyNowPrice != null
+                    && currentBuyNowPrice > 0
+                    && currentPrice < currentBuyNowPrice
+                    && autoNextBid >= currentBuyNowPrice
+                    && maxPrice >= currentBuyNowPrice;
 
-            if (maxPrice < minValidBid) {
+            if (!autoBidWouldReachBuyNow && maxPrice < minValidBid) {
                 showAlert("Lỗi Auto-bid", "Mức giá tối đa phải >= " + formatVnd(minValidBid));
                 return;
             }
@@ -968,6 +983,8 @@ public class AuctionRoomController implements Initializable {
         if (lblCurrentPrice != null) {
             lblCurrentPrice.setText(formatVnd(newPrice));
         }
+        currentDisplayedPrice = newPrice;
+        hasCurrentWinner = true;
         if (lblLeader != null) {
             lblLeader.setText("Người dẫn đầu: " + bidderName);
         }
@@ -1004,6 +1021,29 @@ public class AuctionRoomController implements Initializable {
             lvBidHistory.getItems().add(0, "(" + historyTime + ") " + bidderName + " đã đặt: " + formatVnd(bidAmount));
         }
         return true;
+    }
+
+    private long getMinimumManualBid() {
+        long currentPrice = currentDisplayedPrice > 0
+                ? currentDisplayedPrice
+                : extractMoneyValue(lblCurrentPrice.getText());
+        long stepPrice = currentBidIncrement > 0
+                ? currentBidIncrement
+                : extractMoneyValue(lblBidIncrement.getText());
+        return hasCurrentWinner ? currentPrice + stepPrice : currentPrice;
+    }
+
+    private String resolveUserDisplayName(JsonObject userObj) {
+        if (hasValue(userObj, "fullName")) {
+            return userObj.get("fullName").getAsString();
+        }
+        if (hasValue(userObj, "username")) {
+            return userObj.get("username").getAsString();
+        }
+        if (hasValue(userObj, "id")) {
+            return "Người dùng #" + userObj.get("id").getAsInt();
+        }
+        return "Người dùng ẩn danh";
     }
 
     private void applyServerCountdown(String endTime, String serverNow, String status) {
