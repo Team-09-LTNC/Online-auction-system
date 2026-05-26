@@ -80,7 +80,6 @@ public class TransactionsViewController implements Initializable {
     }
 
     private void loadData() {
-        // TODO: thay bằng service call, chỉ lấy phiên đã kết thúc
         masterList.setAll(
                 new Transaction("SP-001", "2025-05-01 09:00", "2025-05-01 12:00",
                         "COMPLETED",      "user_88",  "15.500.000"),
@@ -132,7 +131,6 @@ public class TransactionsViewController implements Initializable {
             if (!newStatus.equals(selected.getStatus())) {
                 selected.setStatus(newStatus);           // cập nhật model
                 txTable.refresh();                       // refresh cell
-                // TODO: gọi service cập nhật lên server
                 showInfo("Cập nhật thành công",
                         "Trạng thái phiên " + selected.getProductId()
                                 + " đã được đổi thành: " + newStatus);

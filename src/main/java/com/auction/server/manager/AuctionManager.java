@@ -395,37 +395,6 @@ public class AuctionManager {
         }
     }
 
-    private void sendAuctionEndNotification(AuctionDao.AuctionNotificationTargets targets) {
-        if (targets == null || targets.winnerId == null) {
-            logger.warn("Bo qua gui thong bao ket thuc phien vi thieu winner.");
-            return;
-        }
-        String itemName = targets.itemName == null ? "sản phẩm" : targets.itemName;
-        String winnerName = targets.winnerName == null ? "người thắng phiên" : targets.winnerName;
-        SystemNotificationManager.getInstance().sendPrivateNotification(
-                targets.auctionId,
-                targets.winnerId,
-                buildPaymentNotificationContent(itemName, targets.auctionId),
-                true);
-        SystemNotificationManager.getInstance().sendPrivateNotification(
-                targets.auctionId,
-                targets.sellerId,
-                buildSellerNotificationContent(itemName, targets.auctionId, winnerName),
-                false);
-    }
-
-    private String buildPaymentNotificationContent(String itemName, int auctionId) {
-        return "Chúc mừng bạn đã chiến thắng phiên đấu giá " + itemName
-                + " của phiên ID " + auctionId + ".\n"
-                + "Xác nhận thanh toán để chính thức sở hữu sản phẩm.\n\n"
-                + "Nếu hủy thanh toán, bạn sẽ chịu phạt 10% tiền đặt giá.";
-    }
-
-    private String buildSellerNotificationContent(String itemName, int auctionId, String winnerName) {
-        return "Chúc mừng sản phẩm " + itemName + " phiên " + auctionId
-                + " đã được bán thành công, người chiến thắng là " + winnerName + ".";
-    }
-
     private void cancelAuctionCloseSchedule(int idPhien) {
         ScheduledFuture<?> taskDong = tasksDongPhien.remove(idPhien);
         if (taskDong != null && !taskDong.isDone()) {

@@ -46,7 +46,6 @@ public class DashboardViewController implements Initializable {
     // ── Load dữ liệu ─────────────────────────────────────────
 
     private void loadStats() {
-        // TODO: thay bằng lời gọi Service / DAO thực tế
         AdminManager.getInstance().getBidderCount(
                 count -> Platform.runLater(() -> lblBidderCount.setText(String.valueOf(count))),
                 error -> System.err.println("Lỗi: " + error));
