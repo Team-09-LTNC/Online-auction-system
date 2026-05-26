@@ -1,6 +1,5 @@
 package com.auction.client.controller.seller;
 
-import com.auction.client.controller.auth.UserSession;
 import com.auction.client.networkclient.ClientSocket;
 import com.auction.client.util.CloudStorageUtil;
 import com.auction.common.dto.ItemDTOs;
@@ -8,9 +7,7 @@ import com.auction.common.enums.ActionType;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import java.io.File;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.UUID;
@@ -34,7 +31,6 @@ import org.slf4j.LoggerFactory;
 
 public class PostAuctionController {
   private static final Logger logger = LoggerFactory.getLogger(PostAuctionController.class);
-  private static final int MAX_DESCRIPTION_LENGTH = 3000;
 
   @FXML private TextField txtProductName;
   @FXML private ComboBox<String> cbCategory;
@@ -78,127 +74,12 @@ public class PostAuctionController {
   }
 
   private void setupLivePreview() {
-    if (lblProfileName != null && UserSession.getUsername() != null) {
-      lblProfileName.setText("Chào, " + UserSession.getUsername());
-    }
-    if (lblProfileRole != null && UserSession.getCurrentRole() != null) {
-      String role = UserSession.getCurrentRole();
-      lblProfileRole.setText(role.substring(0, 1).toUpperCase() + role.substring(1).toUpperCase());
-    }
-
-    if (txtProductName != null && lblPreviewName != null) {
-      txtProductName.textProperty().addListener((obs, oldVal, newVal) ->
-          lblPreviewName.setText(newVal.isEmpty() ? "Tên sản phẩm mẫu..." : newVal));
-    }
-    if (cbCategory != null && lblPreviewCategory != null) {
-      cbCategory.valueProperty().addListener((obs, oldVal, newVal) ->
-          lblPreviewCategory.setText(newVal != null ? newVal : "Chưa chọn"));
-    }
-    bindCurrencyPreview(txtStartingPrice, lblPreviewPrice);
-    bindCurrencyPreview(txtIncrement, lblPreviewIncrement);
-    bindBuyNowPreview();
-    bindTimePreview();
-    bindAntiSnipingPreview();
-    bindDescriptionCounter();
-  }
-
-  private void bindDescriptionCounter() {
-    if (txtDescription == null || lblDescriptionCount == null) {
-      return;
-    }
-    updateDescriptionCount(txtDescription.getText());
-    txtDescription.textProperty().addListener((obs, oldVal, newVal) -> {
-      if (newVal != null && newVal.length() > MAX_DESCRIPTION_LENGTH) {
-        txtDescription.setText(newVal.substring(0, MAX_DESCRIPTION_LENGTH));
-        return;
-      }
-      updateDescriptionCount(newVal);
-    });
-  }
-
-  private void updateDescriptionCount(String value) {
-    int count = value == null ? 0 : value.length();
-    lblDescriptionCount.setText(count + "/" + MAX_DESCRIPTION_LENGTH);
-    lblDescriptionCount.setStyle("-fx-text-fill: "
-        + (count >= MAX_DESCRIPTION_LENGTH ? "#B32638" : "#A0968C")
-        + "; -fx-font-size: 11px; -fx-padding: 0 5 5 0; -fx-font-weight: bold;");
-  }
-
-  private void bindCurrencyPreview(TextField source, Label target) {
-    if (source == null || target == null) {
-      return;
-    }
-    source.textProperty().addListener((obs, oldVal, newVal) -> {
-      if (newVal == null || newVal.isEmpty()) {
-        target.setText("0 đ");
-        return;
-      }
-      try {
-        String clean = newVal.replaceAll("[^\\d]", "");
-        double price = Double.parseDouble(clean);
-        target.setText(String.format("%,.0f đ", price));
-      } catch (NumberFormatException e) {
-        target.setText("Giá không hợp lệ");
-      }
-    });
-  }
-
-  private void bindBuyNowPreview() {
-    if (txtBuyNowPrice == null || lblPreviewBuyNow == null) {
-      return;
-    }
-    txtBuyNowPrice.textProperty().addListener((obs, oldVal, newVal) -> {
-      if (newVal == null || newVal.isEmpty()) {
-        lblPreviewBuyNow.setText("Không có");
-        return;
-      }
-      try {
-        String clean = newVal.replaceAll("[^\\d]", "");
-        double price = Double.parseDouble(clean);
-        lblPreviewBuyNow.setText(String.format("%,.0f đ", price));
-      } catch (NumberFormatException e) {
-        lblPreviewBuyNow.setText("Giá không hợp lệ");
-      }
-    });
-  }
-
-  private void bindTimePreview() {
-    javafx.beans.InvalidationListener listener = obs -> {
-      String startDate = (dpStartDate != null && dpStartDate.getValue() != null)
-          ? dpStartDate.getValue().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-          : "??/??/????";
-      String startTime = (txtStartTime != null && !txtStartTime.getText().isEmpty())
-          ? txtStartTime.getText() : "--:--";
-      String endDate = (dpEndDate != null && dpEndDate.getValue() != null)
-          ? dpEndDate.getValue().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-          : "??/??/????";
-      String endTime = (txtEndTime != null && !txtEndTime.getText().isEmpty())
-          ? txtEndTime.getText() : "--:--";
-      if (lblPreviewTime != null) {
-        lblPreviewTime.setText(String.format("%s %s\nđến %s %s", startDate, startTime, endDate, endTime));
-      }
-    };
-    if (dpStartDate != null) {
-      dpStartDate.valueProperty().addListener(listener);
-    }
-    if (txtStartTime != null) {
-      txtStartTime.textProperty().addListener(listener);
-    }
-    if (dpEndDate != null) {
-      dpEndDate.valueProperty().addListener(listener);
-    }
-    if (txtEndTime != null) {
-      txtEndTime.textProperty().addListener(listener);
-    }
-  }
-
-  private void bindAntiSnipingPreview() {
-    if (chkAntiSniping == null || lblPreviewAntiSniping == null) {
-      return;
-    }
-    lblPreviewAntiSniping.setText(chkAntiSniping.isSelected() ? "Có áp dụng" : "Không áp dụng");
-    chkAntiSniping.selectedProperty().addListener((obs, oldVal, checked) ->
-        lblPreviewAntiSniping.setText(checked ? "Có áp dụng" : "Không áp dụng"));
+    PostAuctionPreviewBinder.bind(new PostAuctionPreviewControls(
+        txtProductName, cbCategory, txtDescription, txtStartingPrice, txtIncrement,
+        txtBuyNowPrice, dpStartDate, txtStartTime, dpEndDate, txtEndTime, chkAntiSniping,
+        lblPreviewName, lblPreviewCategory, lblPreviewPrice, lblPreviewIncrement,
+        lblPreviewBuyNow, lblPreviewTime, lblPreviewAntiSniping, lblDescriptionCount,
+        lblProfileName, lblProfileRole));
   }
 
   @FXML
@@ -210,7 +91,7 @@ public class PostAuctionController {
     if (txtDescription != null) {
       txtDescription.clear();
     }
-    updateDescriptionCount("");
+    PostAuctionPreviewBinder.updateDescriptionCount(lblDescriptionCount, "");
     if (cbCategory != null) {
       cbCategory.getSelectionModel().clearSelection();
     }
@@ -278,13 +159,13 @@ public class PostAuctionController {
 
     try {
       String name = txtProductName.getText();
-      long startPrice = parseMoney(txtStartingPrice.getText());
+      long startPrice = PostAuctionFormMapper.parseMoney(txtStartingPrice.getText());
       if (startPrice <= 0) {
         showAlert(Alert.AlertType.WARNING, "Giá trị không hợp lệ", "Giá khởi điểm phải lớn hơn 0 đ!");
         return;
       }
-      long increment = parseMoney(txtIncrement.getText());
-      long buyNow = parseOptionalMoney(txtBuyNowPrice);
+      long increment = PostAuctionFormMapper.parseMoney(txtIncrement.getText());
+      long buyNow = PostAuctionFormMapper.parseOptionalMoney(txtBuyNowPrice);
       if (increment <= 0) {
         showAlert(Alert.AlertType.WARNING, "Giá trị không hợp lệ", "Bước giá phải lớn hơn 0 đ!");
         return;
@@ -294,10 +175,10 @@ public class PostAuctionController {
         return;
       }
 
-      String category = mapCategoryToEnum(cbCategory.getValue());
+      String category = PostAuctionFormMapper.mapCategoryToEnum(cbCategory.getValue());
       String description = txtDescription.getText() != null ? txtDescription.getText() : "";
-      LocalDateTime startTime = parseDateTime(dpStartDate, txtStartTime);
-      LocalDateTime endTime = parseDateTime(dpEndDate, txtEndTime);
+      LocalDateTime startTime = PostAuctionFormMapper.parseDateTime(dpStartDate, txtStartTime);
+      LocalDateTime endTime = PostAuctionFormMapper.parseDateTime(dpEndDate, txtEndTime);
 
       if (!startTime.isAfter(LocalDateTime.now())) {
         showAlert(Alert.AlertType.WARNING, "Lỗi thời gian", "Thời gian bắt đầu phải lớn hơn hiện tại!");
@@ -390,17 +271,6 @@ public class PostAuctionController {
         }));
   }
 
-  private long parseMoney(String value) {
-    return Long.parseLong(value.replaceAll("[^\\d]", ""));
-  }
-
-  private long parseOptionalMoney(TextField field) {
-    if (field == null || field.getText() == null || field.getText().isEmpty()) {
-      return 0L;
-    }
-    return parseMoney(field.getText());
-  }
-
   private void setSubmitButtonState(Button button, boolean submitting) {
     if (button == null) {
       return;
@@ -428,40 +298,6 @@ public class PostAuctionController {
       return true;
     }
     return false;
-  }
-
-  private String mapCategoryToEnum(String uiCategory) {
-    if (uiCategory == null) {
-      return "OTHER";
-    }
-    switch (uiCategory) {
-      case "Điện tử":
-        return "ELECTRONICS";
-      case "Xe cộ":
-        return "VEHICLE";
-      case "Nghệ thuật":
-        return "ART";
-      default:
-        return "OTHER";
-    }
-  }
-
-  private LocalDateTime parseDateTime(DatePicker datePicker, TextField timeField) throws DateTimeParseException {
-    LocalDate date = datePicker.getValue();
-    if (date == null) {
-      throw new DateTimeParseException("Chua chon ngay", "", 0);
-    }
-    String timeStr = timeField.getText().trim();
-    LocalTime time = LocalTime.of(0, 0);
-    if (!timeStr.isEmpty()) {
-      if (timeStr.length() == 5 && timeStr.contains(":")) {
-        String[] parts = timeStr.split(":");
-        time = LocalTime.of(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
-      } else {
-        throw new DateTimeParseException("Sai dinh dang gio (HH:mm)", timeStr, 0);
-      }
-    }
-    return LocalDateTime.of(date, time);
   }
 
   private void showAlert(Alert.AlertType type, String title, String content) {

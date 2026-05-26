@@ -2,7 +2,6 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
@@ -14,7 +13,7 @@
     Hiển thị 3 KPI: số người đấu giá, số người bán, số phiên đấu giá
 -->
 
-<StackPane fx:id="contentPane" prefHeight="557.0" prefWidth="625.0" style="-fx-background-color: #EDE6DF; -fx-padding: 32;" stylesheets="@/css/admin.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.admin.DashboardViewController">
+<StackPane fx:id="contentPane" prefHeight="557.0" prefWidth="625.0" style="-fx-background-color: #F7F2EC; -fx-padding: 32;" stylesheets="@/css/admin.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.admin.DashboardViewController">
    <VBox prefHeight="200.0" prefWidth="100.0">
       <children>
                  
@@ -36,40 +35,37 @@
                                     <Label fx:id="lblBreadcrumb" styleClass="admin-breadcrumb-active" text="Dashboard" />
                                 </HBox>
                             </VBox>
-            
-                            <!-- Global search -->
-                            <TextField fx:id="globalSearch" onAction="#handleGlobalSearch" promptText="🔍  Tìm người dùng, lot, giao dịch..." styleClass="admin-search" />
                         </HBox>
                     </VBox>
           <VBox spacing="28">
       
               <!-- Page title -->
               <HBox alignment="CENTER_LEFT" spacing="12">
-                  <Region style="-fx-background-color: #8B2C2C;                            -fx-pref-width: 4px; -fx-pref-height: 26px;" />
-                  <Label style="-fx-text-fill: #1A0F0A; -fx-font-size: 20px;                           -fx-font-weight: bold;" text="Tổng quan hệ thống" />
+                  <Region style="-fx-background-color: #8F1D2C;                            -fx-pref-width: 4px; -fx-pref-height: 26px;" />
+                  <Label style="-fx-text-fill: #211713; -fx-font-size: 20px;                           -fx-font-weight: bold;" text="Tổng quan hệ thống" />
               </HBox>
       
               <!-- KPI Cards -->
               <HBox spacing="20">
       
                   <!-- Card: Người đấu giá -->
-                  <VBox spacing="10" style="-fx-background-color: #8B2C2C;                          -fx-background-radius: 12px;                          -fx-padding: 24 28 24 28;                          -fx-effect: dropshadow(gaussian,rgba(139,44,44,0.30),14,0,0,4);" HBox.hgrow="ALWAYS">
-                      <Label style="-fx-text-fill: #C8AFA0; -fx-font-size: 12px;                                -fx-font-weight: bold;" text="👤  Người đấu giá" />
-                      <Label fx:id="lblBidderCount" style="-fx-text-fill: #F0EAE4; -fx-font-size: 40px;                               -fx-font-weight: bold;" text="0" />
-                      <Label style="-fx-text-fill: #C8AFA0; -fx-font-size: 11px;                               " text="tài khoản đã đăng ký" />
+                  <VBox spacing="10" style="-fx-background-color: #8F1D2C;                          -fx-background-radius: 12px;                          -fx-padding: 24 28 24 28;                          -fx-effect: dropshadow(gaussian,rgba(110,28,28,0.24),14,0,0,4);" HBox.hgrow="ALWAYS">
+                      <Label style="-fx-text-fill: #E8DCD2; -fx-font-size: 12px;                                -fx-font-weight: bold;" text="👤  Người đấu giá" />
+                      <Label fx:id="lblBidderCount" style="-fx-text-fill: #FFFCF8; -fx-font-size: 40px;                               -fx-font-weight: bold;" text="0" />
+                      <Label style="-fx-text-fill: #E8DCD2; -fx-font-size: 11px;                               " text="tài khoản đã đăng ký" />
                   </VBox>
       
                   <!-- Card: Người bán -->
-                  <VBox spacing="10" style="-fx-background-color: #F0EAE4;                          -fx-border-color: #C8AFA0; -fx-border-width: 1px;                          -fx-border-radius: 12px; -fx-background-radius: 12px;                          -fx-padding: 24 28 24 28;                          -fx-effect: dropshadow(gaussian,rgba(26,15,10,0.08),10,0,0,3);" HBox.hgrow="ALWAYS">
-                      <Label style="-fx-text-fill: #5C3D30; -fx-font-size: 12px;                                -fx-font-weight: bold;" text="🏪  Người bán" />
-                      <Label fx:id="lblSellerCount" style="-fx-text-fill: #8B2C2C; -fx-font-size: 40px;                               -fx-font-weight: bold;" text="0" />
+                  <VBox spacing="10" style="-fx-background-color: #FFFCF8;                          -fx-border-color: #E8DCD2; -fx-border-width: 1px;                          -fx-border-radius: 12px; -fx-background-radius: 12px;                          -fx-padding: 24 28 24 28;                          -fx-effect: dropshadow(gaussian,rgba(26,15,10,0.08),10,0,0,3);" HBox.hgrow="ALWAYS">
+                      <Label style="-fx-text-fill: #5E4A42; -fx-font-size: 12px;                                -fx-font-weight: bold;" text="🏪  Người bán" />
+                      <Label fx:id="lblSellerCount" style="-fx-text-fill: #8F1D2C; -fx-font-size: 40px;                               -fx-font-weight: bold;" text="0" />
                       <Label style="-fx-text-fill: #8c1e1e; -fx-font-size: 11px;                               " text="tài khoản đã đăng ký" />
                   </VBox>
       
                   <!-- Card: Phiên đấu giá -->
-                  <VBox spacing="10" style="-fx-background-color: #F0EAE4;                          -fx-border-color: #C8AFA0; -fx-border-width: 1px;                          -fx-border-radius: 12px; -fx-background-radius: 12px;                          -fx-padding: 24 28 24 28;                          -fx-effect: dropshadow(gaussian,rgba(26,15,10,0.08),10,0,0,3);" HBox.hgrow="ALWAYS">
-                      <Label style="-fx-text-fill: #5C3D30; -fx-font-size: 12px;                                -fx-font-weight: bold;" text="🔨  Phiên đấu giá" />
-                      <Label fx:id="lblAuctionCount" style="-fx-text-fill: #8B2C2C; -fx-font-size: 40px;                               -fx-font-weight: bold;" text="0" />
+                  <VBox spacing="10" style="-fx-background-color: #FFFCF8;                          -fx-border-color: #E8DCD2; -fx-border-width: 1px;                          -fx-border-radius: 12px; -fx-background-radius: 12px;                          -fx-padding: 24 28 24 28;                          -fx-effect: dropshadow(gaussian,rgba(26,15,10,0.08),10,0,0,3);" HBox.hgrow="ALWAYS">
+                      <Label style="-fx-text-fill: #5E4A42; -fx-font-size: 12px;                                -fx-font-weight: bold;" text="🔨  Phiên đấu giá" />
+                      <Label fx:id="lblAuctionCount" style="-fx-text-fill: #8F1D2C; -fx-font-size: 40px;                               -fx-font-weight: bold;" text="0" />
                       <Label style="-fx-text-fill: #8c1e1e; -fx-font-size: 11px;                               " text="phiên đang &amp; sắp diễn ra" />
                   </VBox>
       
@@ -77,7 +73,7 @@
       
               <!-- Refresh button -->
               <HBox>
-                  <Button fx:id="btnRefresh" onAction="#handleRefresh" style="-fx-background-color: transparent;                            -fx-text-fill: #8B2C2C;                            -fx-font-size: 13px;                            -fx-border-color: #8B2C2C; -fx-border-width: 1px;                            -fx-border-radius: 6px; -fx-background-radius: 6px;                            -fx-padding: 8 18 8 18; -fx-cursor: hand;" text="↻  Làm mới dữ liệu" />
+                  <Button fx:id="btnRefresh" onAction="#handleRefresh" style="-fx-background-color: transparent;                            -fx-text-fill: #8F1D2C;                            -fx-font-size: 13px;                            -fx-border-color: #8F1D2C; -fx-border-width: 1px;                            -fx-border-radius: 6px; -fx-background-radius: 6px;                            -fx-padding: 8 18 8 18; -fx-cursor: hand;" text="↻  Làm mới dữ liệu" />
               </HBox>
       
           </VBox>

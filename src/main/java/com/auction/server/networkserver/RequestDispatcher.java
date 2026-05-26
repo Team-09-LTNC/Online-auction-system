@@ -114,6 +114,8 @@ public class RequestDispatcher {
     danhSachTrinhXuLy.put(ActionType.ADMIN_REJECT_AUCTION, adminController);
     danhSachTrinhXuLy.put(ActionType.ADMIN_GET_INVOICES, adminController);
     danhSachTrinhXuLy.put(ActionType.ADMIN_CHANGE_AUCTION_STATUS, adminController);
+    danhSachTrinhXuLy.put(ActionType.ADMIN_DELETE_AUCTION, adminController);
+    danhSachTrinhXuLy.put(ActionType.ADMIN_GET_TRANSACTIONS, adminController);
   }
 
   private String buildInternalError(JsonObject yeuCau) {

@@ -5,7 +5,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import org.junit.jupiter.api.BeforeAll;
 
-abstract class DaoIntegrationTestSupport {
+public abstract class DaoIntegrationTestSupport {
 
     @BeforeAll
     static void initDatabase() {
@@ -72,10 +72,21 @@ abstract class DaoIntegrationTestSupport {
                 + "auction_id INT NOT NULL, "
                 + "bidder_id INT NOT NULL, "
                 + "max_auto_bid BIGINT NOT NULL, "
+                + "bid_step BIGINT NOT NULL DEFAULT 100000, "
                 + "register_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, "
                 + "PRIMARY KEY (auction_id, bidder_id), "
                 + "FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE, "
                 + "FOREIGN KEY (bidder_id) REFERENCES users(id) ON DELETE CASCADE"
+                + ") ENGINE=InnoDB");
+
+        stmt.execute("CREATE TABLE IF NOT EXISTS wallet_transactions ("
+                + "id INT AUTO_INCREMENT PRIMARY KEY, "
+                + "user_id INT NOT NULL, "
+                + "transaction_type VARCHAR(50) NOT NULL, "
+                + "amount BIGINT NOT NULL, "
+                + "description VARCHAR(255), "
+                + "transaction_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+                + "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
                 + ") ENGINE=InnoDB");
     }
 }

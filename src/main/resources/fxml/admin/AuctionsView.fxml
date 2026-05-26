@@ -12,20 +12,20 @@
            xmlns="http://javafx.com/javafx/17"
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="com.auction.client.controller.admin.AuctionsViewController"
-           style="-fx-background-color: #EDE6DF; -fx-padding: 24;">
+           style="-fx-background-color: #F7F2EC; -fx-padding: 24;">
 
     <VBox spacing="16">
 
         <!-- Header row -->
         <HBox alignment="CENTER_LEFT" spacing="12">
-            <Region style="-fx-background-color: #8B2C2C;
+            <Region style="-fx-background-color: #8F1D2C;
                            -fx-pref-width: 4px; -fx-pref-height: 22px;"/>
             <Label text="Phiên đấu giá đang &amp; sắp diễn ra"
-                   style="-fx-text-fill: #1A0F0A; -fx-font-size: 18px;
+                   style="-fx-text-fill: #211713; -fx-font-size: 18px;
                           -fx-font-weight: bold;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="lblAuctionCount" text="0 phiên"
-                   style="-fx-text-fill: #5C3D30; -fx-font-size: 12px;
+                   style="-fx-text-fill: #5E4A42; -fx-font-size: 12px;
                           "/>
         </HBox>
 
@@ -34,17 +34,17 @@
             <TextField fx:id="tfSearch"
                        promptText="🔍  Tìm theo sản phẩm hoặc trạng thái..."
                        onKeyReleased="#handleSearch"
-                       style="-fx-background-color: #F0EAE4;
-                              -fx-border-color: #C8AFA0; -fx-border-width: 1px;
+                       style="-fx-background-color: #FFFCF8;
+                              -fx-border-color: #E8DCD2; -fx-border-width: 1px;
                               -fx-border-radius: 6px; -fx-background-radius: 6px;
                               -fx-padding: 8 14 8 14;;
                               -fx-font-size: 13px; -fx-pref-width: 300px;
-                              -fx-prompt-text-fill: #C8AFA0;"/>
+                              -fx-prompt-text-fill: #B6A79D;"/>
             <ComboBox fx:id="cbStatusFilter"
                       promptText="Lọc trạng thái"
                       onAction="#handleFilter"
-                      style="-fx-background-color: #F0EAE4;
-                             -fx-border-color: #C8AFA0; -fx-border-width: 1px;
+                      style="-fx-background-color: #FFFCF8;
+                             -fx-border-color: #E8DCD2; -fx-border-width: 1px;
                              -fx-border-radius: 6px; -fx-background-radius: 6px;
                             -fx-font-size: 13px;
                              -fx-pref-width: 160px;"/>
@@ -69,8 +69,8 @@
         <TableView fx:id="auctionTable"
                    VBox.vgrow="ALWAYS"
                    onMouseClicked="#handleTableClick"
-                   style="-fx-background-color: #F0EAE4;
-                          -fx-border-color: #C8AFA0; -fx-border-width: 1px;
+                   style="-fx-background-color: #FFFCF8;
+                          -fx-border-color: #E8DCD2; -fx-border-width: 1px;
                           -fx-border-radius: 10px; -fx-background-radius: 10px;">
             <columns>
                 <TableColumn fx:id="colAuctionId" text="ID Phiên đấu giá" prefWidth="140"/>
@@ -81,7 +81,7 @@
             </columns>
             <placeholder>
                 <Label text="Không có phiên đấu giá nào"
-                       style="-fx-text-fill: #C8AFA0; -fx-font-size: 13px;
+                       style="-fx-text-fill: #B6A79D; -fx-font-size: 13px;
                               "/>
             </placeholder>
         </TableView>

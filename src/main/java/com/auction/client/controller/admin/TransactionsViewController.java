@@ -1,5 +1,8 @@
 package com.auction.client.controller.admin;
 
+import com.auction.client.interfaces.RefreshableCenterContent;
+import com.auction.client.manager.AdminManager;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -21,7 +24,7 @@ import java.util.ResourceBundle;
  * Controller cho TransactionsView.fxml.
  * Phiên đấu giá đã kết thúc; admin có thể thay đổi status.
  */
-public class TransactionsViewController implements Initializable {
+public class TransactionsViewController implements Initializable, RefreshableCenterContent {
 
     // ── FXML injections ──────────────────────────────────────
     @FXML private StackPane                        contentPane;
@@ -41,13 +44,10 @@ public class TransactionsViewController implements Initializable {
     private final ObservableList<Transaction> masterList   = FXCollections.observableArrayList();
     private       FilteredList<Transaction>  filteredList;
 
-    /** Các trạng thái có thể chuyển sang khi admin chỉnh sửa. */
-    private static final List<String> EDITABLE_STATUSES =
-            List.of("COMPLETED", "CANCELLED", "DISPUTED", "PENDING_PAYMENT");
-
     /** Tuỳ chọn lọc trên ComboBox. */
+    private static final String ALL_STATUS = "Tất cả";
     private static final List<String> FILTER_OPTIONS =
-            List.of("Tất cả", "COMPLETED", "CANCELLED", "DISPUTED", "PENDING_PAYMENT");
+            List.of(ALL_STATUS, "FINISHED", "PAID", "CANCELED");
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -80,17 +80,27 @@ public class TransactionsViewController implements Initializable {
     }
 
     private void loadData() {
-        masterList.setAll(
-                new Transaction("SP-001", "2025-05-01 09:00", "2025-05-01 12:00",
-                        "COMPLETED",      "user_88",  "15.500.000"),
-                new Transaction("SP-002", "2025-05-02 14:00", "2025-05-02 18:00",
-                        "CANCELLED",      "",         "0"),
-                new Transaction("SP-003", "2025-05-03 08:00", "2025-05-03 10:00",
-                        "DISPUTED",       "user_44",  "8.200.000"),
-                new Transaction("SP-004", "2025-05-04 10:00", "2025-05-04 14:00",
-                        "PENDING_PAYMENT","user_12",  "22.000.000")
+        AdminManager.getInstance().getTransactions(
+                transactions -> Platform.runLater(() -> {
+                    masterList.clear();
+                    transactions.forEach(tx -> masterList.add(new Transaction(
+                            String.valueOf(tx.getAuctionId()),
+                            String.valueOf(tx.getItemId()),
+                            tx.getItemName(),
+                            tx.getStartTime(),
+                            tx.getEndTime(),
+                            tx.getStatus(),
+                            tx.getWinnerId() > 0 ? String.valueOf(tx.getWinnerId()) : "-",
+                            String.format("%,d", tx.getFinalPrice()))));
+                    applyFilter();
+                }),
+                error -> Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, error).showAndWait())
         );
-        updateCountLabel();
+    }
+
+    @Override
+    public void refreshContent() {
+        loadData();
     }
 
     // ── FXML handlers ────────────────────────────────────────
@@ -120,22 +130,45 @@ public class TransactionsViewController implements Initializable {
         Transaction selected = txTable.getSelectionModel().getSelectedItem();
         if (selected == null) return;
 
-        // Tạo ChoiceDialog để admin chọn status mới
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(selected.getStatus(), EDITABLE_STATUSES);
+        String currentStatus = selected.getStatus();
+        List<String> choices;
+        switch (currentStatus) {
+            case "FINISHED":
+                choices = List.of("PAID");
+                break;
+            case "CANCELED":
+                choices = List.of("REOPEN");
+                break;
+            default:
+                showInfo("Không thể thay đổi", "Phiên đang " + currentStatus + " không thể đổi trạng thái.");
+                return;
+        }
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(choices.get(0), choices);
         dialog.setTitle("Thay đổi trạng thái");
         dialog.setHeaderText("Phiên: " + selected.getProductId());
-        dialog.setContentText("Chọn trạng thái mới:");
+        dialog.setContentText("Phiên đang " + currentStatus + ". Chọn hành động:");
 
         Optional<String> result = dialog.showAndWait();
-        result.ifPresent(newStatus -> {
-            if (!newStatus.equals(selected.getStatus())) {
-                selected.setStatus(newStatus);           // cập nhật model
-                txTable.refresh();                       // refresh cell
-                showInfo("Cập nhật thành công",
-                        "Trạng thái phiên " + selected.getProductId()
-                                + " đã được đổi thành: " + newStatus);
-            }
-        });
+        result.ifPresent(action -> AdminManager.getInstance().changeAuctionStatus(
+                Integer.parseInt(selected.getAuctionId()),
+                action,
+                response -> Platform.runLater(() -> {
+                    String msg = response.has("message")
+                            ? response.get("message").getAsString()
+                            : "Đã cập nhật trạng thái!";
+                    String actualStatus = response.has("newStatus")
+                            ? response.get("newStatus").getAsString()
+                            : action;
+                    selected.setStatus(actualStatus);
+                    if ("OPEN".equals(actualStatus) || "RUNNING".equals(actualStatus)) {
+                        masterList.remove(selected);
+                    }
+                    txTable.refresh();
+                    applyFilter();
+                    showInfo("Cập nhật thành công", msg);
+                }),
+                error -> Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, error).showAndWait())));
     }
 
     // ── Helpers ──────────────────────────────────────────────
@@ -147,9 +180,10 @@ public class TransactionsViewController implements Initializable {
         filteredList.setPredicate(tx -> {
             boolean matchKw = kw.isEmpty()
                     || tx.getProductId().toLowerCase().contains(kw)
+                    || tx.getItemName().toLowerCase().contains(kw)
                     || tx.getWinnerId().toLowerCase().contains(kw)
                     || tx.getStatus().toLowerCase().contains(kw);
-            boolean matchStatus = (status == null || status.equals("Tất cả"))
+            boolean matchStatus = (status == null || status.equals(ALL_STATUS))
                     || tx.getStatus().equalsIgnoreCase(status);
             return matchKw && matchStatus;
         });
@@ -175,16 +209,20 @@ public class TransactionsViewController implements Initializable {
     // ── Model ────────────────────────────────────────────────
 
     public static class Transaction {
+        private final SimpleStringProperty auctionId;
         private final SimpleStringProperty productId;
+        private final SimpleStringProperty itemName;
         private final SimpleStringProperty startTime;
         private final SimpleStringProperty endTime;
         private final SimpleStringProperty status;
         private final SimpleStringProperty winnerId;
         private final SimpleStringProperty finalPrice;
 
-        public Transaction(String productId, String startTime, String endTime,
+        public Transaction(String auctionId, String productId, String itemName, String startTime, String endTime,
                            String status, String winnerId, String finalPrice) {
+            this.auctionId = new SimpleStringProperty(auctionId);
             this.productId  = new SimpleStringProperty(productId);
+            this.itemName = new SimpleStringProperty(itemName);
             this.startTime  = new SimpleStringProperty(startTime);
             this.endTime    = new SimpleStringProperty(endTime);
             this.status     = new SimpleStringProperty(status);
@@ -192,7 +230,9 @@ public class TransactionsViewController implements Initializable {
             this.finalPrice = new SimpleStringProperty(finalPrice);
         }
 
+        public String getAuctionId() { return auctionId.get(); }
         public String getProductId()  { return productId.get();  }
+        public String getItemName() { return itemName.get(); }
         public String getStartTime()  { return startTime.get();  }
         public String getEndTime()    { return endTime.get();    }
         public String getStatus()     { return status.get();     }
@@ -202,7 +242,9 @@ public class TransactionsViewController implements Initializable {
         // status cần setter vì admin có thể thay đổi
         public void setStatus(String v) { status.set(v); }
 
+        public SimpleStringProperty auctionIdProperty() { return auctionId; }
         public SimpleStringProperty productIdProperty()  { return productId;  }
+        public SimpleStringProperty itemNameProperty() { return itemName; }
         public SimpleStringProperty startTimeProperty()  { return startTime;  }
         public SimpleStringProperty endTimeProperty()    { return endTime;    }
         public SimpleStringProperty statusProperty()     { return status;     }

@@ -8,7 +8,6 @@ import com.auction.common.dto.AdminDTOs.UserSummaryDTO;
 import com.auction.common.enums.ActionType;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -54,6 +53,21 @@ public class AdminManager {
         response -> handleAuctionListResponse(response, onSuccess, onError));
   }
 
+  public void getTransactions(
+      Consumer<List<AdminDTOs.TransactionDTO>> onSuccess,
+      Consumer<String> onError) {
+    JsonObject request = buildRequest(ActionType.ADMIN_GET_TRANSACTIONS);
+    ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_GET_TRANSACTIONS_RESPONSE", response -> {
+      boolean ok = response.has("success") && response.get("success").getAsBoolean();
+      if (!ok) {
+        onError.accept(getMessage(response));
+        return;
+      }
+
+      onSuccess.accept(AdminResponseMapper.toTransactions(response.getAsJsonArray("data")));
+    });
+  }
+
   public void toggleAccountLock(
       String username,
       String newStatus,
@@ -88,6 +102,20 @@ public class AdminManager {
     getAuctions(list -> onSuccess.accept(list.size()), onError);
   }
 
+  public void deleteAuction(int auctionId, Consumer<String> onSuccess, Consumer<String> onError) {
+    JsonObject request = buildRequest(ActionType.ADMIN_DELETE_AUCTION);
+    request.addProperty("auctionId", auctionId);
+    ClientSocket.getInstance().sendJsonRequest(request, "ADMIN_DELETE_AUCTION_RESPONSE", response -> {
+      boolean ok = response.has("success") && response.get("success").getAsBoolean();
+      String msg = getMessage(response);
+      if (ok) {
+        onSuccess.accept(msg);
+      } else {
+        onError.accept(msg);
+      }
+    });
+  }
+
   private void handleAuctionListResponse(
       JsonObject response,
       Consumer<List<AuctionSummaryDTO>> onSuccess,
@@ -101,21 +129,7 @@ public class AdminManager {
       return;
     }
 
-    List<AuctionSummaryDTO> list = new ArrayList<>();
-    JsonArray data = response.getAsJsonArray("data");
-    if (data != null) {
-      data.forEach(el -> {
-        JsonObject obj = el.getAsJsonObject();
-        list.add(new AuctionSummaryDTO(
-            obj.get("auctionId").getAsInt(),
-            obj.get("itemname").getAsString(),
-            obj.get("starttime").getAsString(),
-            obj.get("endtime").getAsString(),
-            obj.has("status") ? obj.get("status").getAsString() : "OPEN",
-            obj.has("imageurl") ? obj.get("imageurl").getAsString() : null));
-      });
-    }
-    onSuccess.accept(list);
+    onSuccess.accept(AdminResponseMapper.toAuctions(response.getAsJsonArray("data")));
   }
 
   public void getPendingAuctions(
@@ -132,25 +146,8 @@ public class AdminManager {
         return;
       }
       try {
-        List<PendingAuctionDTO> list = new ArrayList<>();
-        JsonArray data = response.getAsJsonArray("data");
-        if (data != null) {
-          data.forEach(el -> {
-            JsonObject obj = el.getAsJsonObject();
-            list.add(new PendingAuctionDTO(
-                safeGetInt(obj, "id", -1),
-                safeGetString(obj, "itemName", ""),
-                safeGetInt(obj, "sellerId", -1),
-                safeGetString(obj, "description", ""),
-                safeGetLong(obj, "startingPrice", 0L),
-                safeGetString(obj, "category", ""),
-                safeGetString(obj, "startTime", ""),
-                safeGetString(obj, "endTime", ""),
-                safeGetString(obj, "imageUrl", null)));
-          });
-          onSuccess.accept(list);
-          logger.info("Da lay danh sach phien dau gia cho duyet tu server.");
-        }
+        onSuccess.accept(AdminResponseMapper.toPendingAuctions(response.getAsJsonArray("data")));
+        logger.info("Da lay danh sach phien dau gia cho duyet tu server.");
       } catch (Exception e) {
         onError.accept("Du lieu phan hoi khong hop le.");
         logger.error("Loi xu ly response layDanhSachChoDuyet.", e);
@@ -205,21 +202,7 @@ public class AdminManager {
           : 0L;
       onTongDoanhThu.accept(tongDoanhThu);
 
-      List<AdminDTOs.InvoiceDTO> list = new ArrayList<>();
-      JsonArray data = response.getAsJsonArray("data");
-      if (data != null) {
-        data.forEach(el -> {
-          JsonObject obj = el.getAsJsonObject();
-          list.add(new AdminDTOs.InvoiceDTO(
-              obj.get("auctionId").getAsInt(),
-              obj.get("itemId").getAsInt(),
-              obj.get("itemName").getAsString(),
-              obj.get("sellerId").getAsInt(),
-              obj.get("winnerId").getAsInt(),
-              obj.get("highestBid").getAsLong()));
-        });
-      }
-      onSuccess.accept(list);
+      onSuccess.accept(AdminResponseMapper.toInvoices(response.getAsJsonArray("data")));
     });
   }
 
@@ -243,34 +226,11 @@ public class AdminManager {
       return;
     }
 
-    List<UserSummaryDTO> list = new ArrayList<>();
-    JsonArray data = response.getAsJsonArray("data");
-    if (data != null) {
-      data.forEach(el -> {
-        JsonObject obj = el.getAsJsonObject();
-        list.add(new UserSummaryDTO(
-            obj.get("username").getAsString(),
-            obj.get("fullname").getAsString(),
-            obj.has("status") ? obj.get("status").getAsString() : "ACTIVE"));
-      });
-    }
-    onSuccess.accept(list);
-  }
-
-  private String safeGetString(JsonObject obj, String key, String defaultValue) {
-    return (obj.has(key) && !obj.get(key).isJsonNull()) ? obj.get(key).getAsString() : defaultValue;
-  }
-
-  private int safeGetInt(JsonObject obj, String key, int defaultValue) {
-    return (obj.has(key) && !obj.get(key).isJsonNull()) ? obj.get(key).getAsInt() : defaultValue;
-  }
-
-  private long safeGetLong(JsonObject obj, String key, long defaultValue) {
-    return (obj.has(key) && !obj.get(key).isJsonNull()) ? obj.get(key).getAsLong() : defaultValue;
+    onSuccess.accept(AdminResponseMapper.toUsers(response.getAsJsonArray("data")));
   }
 
   public void changeAuctionStatus(int auctionId, String newStatus,
-      Consumer<String> onSuccess, Consumer<String> onError) {
+      Consumer<JsonObject> onSuccess, Consumer<String> onError) {
     JsonObject request = buildRequest(ActionType.ADMIN_CHANGE_AUCTION_STATUS);
     request.addProperty("auctionId", auctionId);
     request.addProperty("newStatus", newStatus);
@@ -279,9 +239,15 @@ public class AdminManager {
           boolean ok = response.has("success") && response.get("success").getAsBoolean();
           String msg = response.has("message") ? response.get("message").getAsString() : "";
           if (ok)
-            onSuccess.accept(msg);
+            onSuccess.accept(response);
           else
             onError.accept(msg);
         });
+  }
+
+  private String getMessage(JsonObject response) {
+    return response.has("message") && !response.get("message").isJsonNull()
+        ? response.get("message").getAsString()
+        : "Loi khong xac dinh";
   }
 }

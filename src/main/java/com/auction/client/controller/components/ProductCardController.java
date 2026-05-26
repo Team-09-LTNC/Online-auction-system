@@ -1,7 +1,6 @@
 package com.auction.client.controller.components;
 
 import com.auction.client.networkclient.ClientSocket;
-import com.auction.client.util.ImageCacheManager;
 import com.auction.common.enums.ActionType;
 import com.google.gson.JsonObject;
 import javafx.animation.Animation;
@@ -21,17 +20,6 @@ import org.slf4j.LoggerFactory;
 
 public class ProductCardController {
     private static final Logger logger = LoggerFactory.getLogger(ProductCardController.class);
-    private static final String ACTION_BUTTON_BASE = "auction-action-button";
-    private static final String ACTION_BUTTON_LIVE = "auction-action-live";
-    private static final String ACTION_BUTTON_WAITING = "auction-action-waiting";
-    private static final String ACTION_BUTTON_EXPIRED = "auction-action-expired";
-    private static final String ACTION_BUTTON_PAID = "auction-action-paid";
-    private static final String ACTION_BUTTON_CANCELED = "auction-action-canceled";
-    private static final String STATUS_LIVE = "status-live";
-    private static final String STATUS_WAITING = "status-waiting";
-    private static final String STATUS_EXPIRED = "status-expired";
-    private static final String STATUS_PAID = "status-paid";
-    private static final String STATUS_CANCELED = "status-canceled";
 
     @FXML private ImageView imgProduct;
     @FXML private Label lblProductName;
@@ -86,7 +74,7 @@ public class ProductCardController {
         this.isFollowed = isFollowed;
         this.currentStatus = status;
         this.deadlineMillis = System.currentTimeMillis() + Math.max(0, countdownSeconds) * 1000L;
-        this.auctionSnapshot = createBasicSnapshot(
+        this.auctionSnapshot = ProductCardSnapshotFactory.create(
                 auctionId, name, price, countdownSeconds, status, imageUrl, imageThumbUrl);
 
         lblProductName.setText(name);
@@ -96,7 +84,7 @@ public class ProductCardController {
         updateHeartUI();
         setupStatusUI(status);
 
-        if (countdownSeconds > 0 && isTimedStatus(status)) {
+        if (countdownSeconds > 0 && ProductCardStatusView.isTimedStatus(status)) {
             updateCountdown();
             startCountdown();
         } else {
@@ -142,51 +130,29 @@ public class ProductCardController {
                 && !this.auctionSnapshot.get("imageThumbUrl").isJsonNull()) {
             this.imageThumbUrl = this.auctionSnapshot.get("imageThumbUrl").getAsString();
         }
-        preloadRoomImage();
+        ProductCardImageLoader.preload(imageUrl, imageThumbUrl);
     }
 
     private void loadImage() {
-        if (imgProduct == null) return;
-        try {
-            imgProduct.setImage(ImageCacheManager.getPreviewImage(resolvePreviewUrl()));
-            preloadRoomImage();
-        } catch (Exception e) {
-            logger.error("Lỗi load ảnh", e);
-            imgProduct.setImage(null);
-        }
-    }
-
-    private String resolvePreviewUrl() {
-        return imageThumbUrl != null && !imageThumbUrl.isBlank() ? imageThumbUrl : imageUrl;
-    }
-
-    private void preloadRoomImage() {
-        if (imageThumbUrl != null && !imageThumbUrl.isBlank()) {
-            ImageCacheManager.preloadPreviewImage(imageThumbUrl);
-        }
-        if (imageUrl != null && !imageUrl.isBlank()) {
-            ImageCacheManager.preloadDetailImage(imageUrl);
-        }
+        ProductCardImageLoader.load(imgProduct, imageUrl, imageThumbUrl, logger);
     }
 
     private void setupStatusUI(String status) {
         if ("OPEN".equalsIgnoreCase(status)) {
-            setStatusBadge("Sắp diễn ra", STATUS_WAITING);
-            setBidButtonState("Chờ mở bán", true, ACTION_BUTTON_WAITING);
+            setStatusBadge("Sắp diễn ra", ProductCardStatusView.STATUS_WAITING);
+            setBidButtonState("Chờ mở bán", true, ProductCardStatusView.ACTION_BUTTON_WAITING);
         } else if ("RUNNING".equalsIgnoreCase(status)) {
-            setStatusBadge("Đang diễn ra", STATUS_LIVE);
-            setBidButtonState("Vào phòng", false, ACTION_BUTTON_LIVE);
+            setStatusBadge("Đang diễn ra", ProductCardStatusView.STATUS_LIVE);
+            setBidButtonState("Vào phòng", false, ProductCardStatusView.ACTION_BUTTON_LIVE);
         } else if ("PAID".equalsIgnoreCase(status)) {
-            setClosedUI("Đã thanh toán", "Đã thanh toán", STATUS_PAID, ACTION_BUTTON_PAID);
+            setClosedUI("Đã thanh toán", "Đã thanh toán",
+                    ProductCardStatusView.STATUS_PAID, ProductCardStatusView.ACTION_BUTTON_PAID);
         } else if ("CANCELED".equalsIgnoreCase(status)) {
-            setClosedUI("Đã hủy", "Đã hủy", STATUS_CANCELED, ACTION_BUTTON_CANCELED);
+            setClosedUI("Đã hủy", "Đã hủy",
+                    ProductCardStatusView.STATUS_CANCELED, ProductCardStatusView.ACTION_BUTTON_CANCELED);
         } else {
             setExpiredUI();
         }
-    }
-
-    private boolean isTimedStatus(String status) {
-        return "OPEN".equalsIgnoreCase(status) || "RUNNING".equalsIgnoreCase(status);
     }
 
     private void startCountdown() {
@@ -210,7 +176,7 @@ public class ProductCardController {
             return;
         }
 
-        lblTimeRemaining.setText(formatTime((int) remaining));
+        lblTimeRemaining.setText(ProductCardStatusView.formatTime((int) remaining));
 
         if ("RUNNING".equalsIgnoreCase(currentStatus) && remaining <= 30) {
             lblTimeRemaining.setStyle("-fx-text-fill: #A64452; -fx-font-weight: bold;");
@@ -219,15 +185,16 @@ public class ProductCardController {
 
     private void setExpiredUI() {
         currentStatus = "FINISHED";
-        setClosedUI("Đã kết thúc", "Hết hạn", STATUS_EXPIRED, ACTION_BUTTON_EXPIRED);
+        setClosedUI("Đã kết thúc", "Hết hạn",
+                ProductCardStatusView.STATUS_EXPIRED, ProductCardStatusView.ACTION_BUTTON_EXPIRED);
     }
 
     private void setRunningUI() {
         stopTimer();
         currentStatus = "RUNNING";
         lblTimeRemaining.setText("Đang mở");
-        setStatusBadge("Đang diễn ra", STATUS_LIVE);
-        setBidButtonState("Vào phòng", false, ACTION_BUTTON_LIVE);
+        setStatusBadge("Đang diễn ra", ProductCardStatusView.STATUS_LIVE);
+        setBidButtonState("Vào phòng", false, ProductCardStatusView.ACTION_BUTTON_LIVE);
         hideSellerActions();
     }
 
@@ -242,36 +209,11 @@ public class ProductCardController {
     }
 
     private void setStatusBadge(String text, String variantStyleClass) {
-        lblStatus.getStyleClass().removeAll(
-                STATUS_LIVE,
-                STATUS_WAITING,
-                STATUS_EXPIRED,
-                STATUS_PAID,
-                STATUS_CANCELED
-        );
-        lblStatus.setText(text);
-        if (variantStyleClass != null && !lblStatus.getStyleClass().contains(variantStyleClass)) {
-            lblStatus.getStyleClass().add(variantStyleClass);
-        }
+        ProductCardStatusView.setStatusBadge(lblStatus, text, variantStyleClass);
     }
 
     private void setBidButtonState(String text, boolean disabled, String variantStyleClass) {
-        btnBid.getStyleClass().removeAll(
-                "btn-primary",
-                ACTION_BUTTON_LIVE,
-                ACTION_BUTTON_WAITING,
-                ACTION_BUTTON_EXPIRED,
-                ACTION_BUTTON_PAID,
-                ACTION_BUTTON_CANCELED
-        );
-        if (!btnBid.getStyleClass().contains(ACTION_BUTTON_BASE)) {
-            btnBid.getStyleClass().add(ACTION_BUTTON_BASE);
-        }
-        if (variantStyleClass != null) {
-            btnBid.getStyleClass().add(variantStyleClass);
-        }
-        btnBid.setText(text);
-        btnBid.setDisable(disabled);
+        ProductCardStatusView.setBidButtonState(btnBid, text, disabled, variantStyleClass);
     }
 
     private void hideSellerActions() {
@@ -369,36 +311,6 @@ public class ProductCardController {
         if (deleteAction != null) {
             deleteAction.run();
         }
-    }
-
-    private String formatTime(int totalSeconds) {
-        int h = totalSeconds / 3600;
-        int m = (totalSeconds % 3600) / 60;
-        int s = totalSeconds % 60;
-        return String.format("%02d:%02d:%02d", h, m, s);
-    }
-
-    private JsonObject createBasicSnapshot(
-            int auctionId,
-            String name,
-            double price,
-            long countdownSeconds,
-            String status,
-            String imageUrl,
-            String imageThumbUrl
-    ) {
-        JsonObject snapshot = new JsonObject();
-        snapshot.addProperty("auctionId", auctionId);
-        snapshot.addProperty("itemName", name);
-        snapshot.addProperty("currentPrice", (long) price);
-        snapshot.addProperty("currentHighestBid", (long) price);
-        snapshot.addProperty("countdownSeconds", countdownSeconds);
-        snapshot.addProperty("status", status);
-        snapshot.addProperty("imageUrl", imageUrl);
-        if (imageThumbUrl != null && !imageThumbUrl.isBlank()) {
-            snapshot.addProperty("imageThumbUrl", imageThumbUrl);
-        }
-        return snapshot;
     }
 
     private void showAlert(String title, String content) {

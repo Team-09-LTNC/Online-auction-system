@@ -8,10 +8,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -34,11 +31,6 @@ public class DashboardViewController implements Initializable, RefreshableCenter
     private Label lblAuctionCount;
     @FXML
     private Button btnRefresh;
-    @FXML
-    private TextField globalSearch;
-
-    private static final Logger logger = LoggerFactory.getLogger(DashboardViewController.class);
-
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         loadStats();
@@ -79,10 +71,4 @@ public class DashboardViewController implements Initializable, RefreshableCenter
         lblAuctionCount.setText(String.valueOf(auctions));
     }
 
-    @FXML
-    private void handleGlobalSearch() {
-        String query = globalSearch.getText();
-        logger.info("Admin thực hiện tìm kiếm toàn cục với từ khóa: {}", query);
-
-    }
 }

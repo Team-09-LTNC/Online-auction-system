@@ -17,31 +17,31 @@
     Danh sách sản phẩm chờ duyệt — admin có thể duyệt hoặc xoá
 -->
 
-<StackPane maxHeight="Infinity" maxWidth="Infinity" style="-fx-background-color: #EDE6DF; -fx-padding: 24;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.admin.ProductsCensorController">
+<StackPane maxHeight="Infinity" maxWidth="Infinity" style="-fx-background-color: #F7F2EC; -fx-padding: 24;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.admin.ProductsCensorController">
 
     <VBox maxHeight="Infinity" spacing="16">
 
         <!-- Header -->
         <HBox alignment="CENTER_LEFT" spacing="12" VBox.vgrow="NEVER">
-            <Region style="-fx-background-color: #8B2C2C;                            -fx-pref-width: 4px; -fx-pref-height: 22px;" />
-            <Label style="-fx-text-fill: #1A0F0A; -fx-font-size: 18px;                           -fx-font-weight: bold;" text="Sản phẩm chờ duyệt" />
+            <Region style="-fx-background-color: #8F1D2C;                            -fx-pref-width: 4px; -fx-pref-height: 22px;" />
+            <Label style="-fx-text-fill: #211713; -fx-font-size: 18px;                           -fx-font-weight: bold;" text="Sản phẩm chờ duyệt" />
             <Region HBox.hgrow="ALWAYS" />
-            <Label fx:id="lblProductCount" style="-fx-text-fill: #5C3D30; -fx-font-size: 12px;" text="0 sản phẩm" />
+            <Label fx:id="lblProductCount" style="-fx-text-fill: #5E4A42; -fx-font-size: 12px;" text="0 sản phẩm" />
         </HBox>
 
         <!-- Toolbar -->
         <HBox alignment="CENTER_LEFT" spacing="10" VBox.vgrow="NEVER">
-            <TextField fx:id="tfSearch" onKeyReleased="#handleSearch" promptText="🔍  Tìm theo tên, seller ID, phân loại..." style="-fx-background-color: #F0EAE4;                               -fx-border-color: #C8AFA0; -fx-border-width: 1px;                               -fx-border-radius: 6px; -fx-background-radius: 6px;                               -fx-padding: 8 14 8 14; -fx-font-size: 13px;                               -fx-pref-width: 300px; -fx-prompt-text-fill: #C8AFA0;" />
-            <ComboBox fx:id="cbCategory" onAction="#handleFilter" promptText="Phân loại" style="-fx-background-color: #F0EAE4;                              -fx-border-color: #C8AFA0; -fx-border-width: 1px;                              -fx-border-radius: 6px; -fx-background-radius: 6px;                              -fx-font-size: 13px; -fx-pref-width: 150px;" />
+            <TextField fx:id="tfSearch" onKeyReleased="#handleSearch" promptText="🔍  Tìm theo tên, seller ID, phân loại..." style="-fx-background-color: #FFFCF8;                               -fx-border-color: #E8DCD2; -fx-border-width: 1px;                               -fx-border-radius: 6px; -fx-background-radius: 6px;                               -fx-padding: 8 14 8 14; -fx-font-size: 13px;                               -fx-pref-width: 300px; -fx-prompt-text-fill: #B6A79D;" />
+            <ComboBox fx:id="cbCategory" onAction="#handleFilter" promptText="Phân loại" style="-fx-background-color: #FFFCF8;                              -fx-border-color: #E8DCD2; -fx-border-width: 1px;                              -fx-border-radius: 6px; -fx-background-radius: 6px;                              -fx-font-size: 13px; -fx-pref-width: 150px;" />
             <Region HBox.hgrow="ALWAYS" />
-            <Button fx:id="btnApprove" disable="true" onAction="#handleApprove" style="-fx-background-color: #27AE60; -fx-text-fill: white;                            -fx-font-size: 13px; -fx-font-weight: bold;                            -fx-padding: 8 18 8 18; -fx-border-radius: 6px;                            -fx-background-radius: 6px; -fx-cursor: hand;                            -fx-border-width: 0;" text="✓  Duyệt" />
-            <Button fx:id="btnDelete" disable="true" onAction="#handleDelete" style="-fx-background-color: #C0392B; -fx-text-fill: white;                            -fx-font-size: 13px; -fx-font-weight: bold;                            -fx-padding: 8 18 8 18; -fx-border-radius: 6px;                            -fx-background-radius: 6px; -fx-cursor: hand;                            -fx-border-width: 0;" text="🗑  Xoá" />
+            <Button fx:id="btnApprove" disable="true" onAction="#handleApprove" style="-fx-background-color: #5DBB82; -fx-text-fill: white;                            -fx-font-size: 13px; -fx-font-weight: bold;                            -fx-padding: 8 18 8 18; -fx-border-radius: 8px;                            -fx-background-radius: 8px; -fx-cursor: hand;                            -fx-border-width: 0;" text="✓  Duyệt" />
+            <Button fx:id="btnDelete" disable="true" onAction="#handleDelete" style="-fx-background-color: #C96B62; -fx-text-fill: white;                            -fx-font-size: 13px; -fx-font-weight: bold;                            -fx-padding: 8 18 8 18; -fx-border-radius: 8px;                            -fx-background-radius: 8px; -fx-cursor: hand;                            -fx-border-width: 0;" text="🗑  Xoá" />
         </HBox>
 
         <!-- Table -->
        <!-- Table -->
-<ScrollPane fitToWidth="false" fitToHeight="true" VBox.vgrow="ALWAYS">
-    <TableView fx:id="productTable" maxHeight="Infinity" onMouseClicked="#handleTableClick" style="-fx-background-color: #F0EAE4;                           -fx-border-color: #C8AFA0; -fx-border-width: 1px;                           -fx-border-radius: 10px; -fx-background-radius: 10px;" VBox.vgrow="ALWAYS">
+<ScrollPane fitToWidth="false" fitToHeight="true" style="-fx-background: transparent; -fx-background-color: transparent;" VBox.vgrow="ALWAYS">
+    <TableView fx:id="productTable" maxHeight="Infinity" onMouseClicked="#handleTableClick" style="-fx-background-color: #FFFCF8;                           -fx-border-color: #E8DCD2; -fx-border-width: 1px;                           -fx-border-radius: 10px; -fx-background-radius: 10px;" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn fx:id="colProductId" prefWidth="100" text="ID Sản phẩm" />
             <TableColumn fx:id="colProductName" prefWidth="150" text="Tên sản phẩm" />
@@ -54,7 +54,7 @@
             <TableColumn fx:id="colImage" prefWidth="200" text="IMG" />
         </columns>
         <placeholder>
-            <Label style="-fx-text-fill: #C8AFA0; -fx-font-size: 13px;" text="Không có sản phẩm nào chờ duyệt" />
+            <Label style="-fx-text-fill: #B6A79D; -fx-font-size: 13px;" text="Không có sản phẩm nào chờ duyệt" />
         </placeholder>
     </TableView>
 </ScrollPane>

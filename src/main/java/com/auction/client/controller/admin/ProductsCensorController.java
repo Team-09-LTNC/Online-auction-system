@@ -1,7 +1,6 @@
 package com.auction.client.controller.admin;
 
 import com.auction.client.interfaces.RefreshableCenterContent;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -81,15 +80,15 @@ public class ProductsCensorController implements Initializable, RefreshableCente
     // ── Setup ────────────────────────────────────────────────
 
     private void setupColumns() {
-        colProductId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getProductId()));
-        colProductName.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getName()));
-        colSellerId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getSellerId()));
-        colDescription.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDescription()));
-        colStartPrice.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStartPrice()));
-        colCategory.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCategory()));
-        colStartTime.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStartTime()));
-        colEndTime.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEndTime()));
-        colImage.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getImageUrl()));
+        colProductId.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getProductId()));
+        colProductName.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getName()));
+        colSellerId.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getSellerId()));
+        colDescription.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getDescription()));
+        colStartPrice.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getStartPrice()));
+        colCategory.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getCategory()));
+        colStartTime.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getStartTime()));
+        colEndTime.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getEndTime()));
+        colImage.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getImageUrl()));
 
         // Cột hình ảnh: hiển thị thumbnail nếu có URL, fallback về text
         colImage.setCellFactory(col -> new TableCell<>() {
@@ -118,7 +117,7 @@ public class ProductsCensorController implements Initializable, RefreshableCente
                 }
             }
         });
-        colImage.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getImageUrl()));
+        colImage.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getImageUrl()));
     }
 
     private void setupCategoryFilter() {
@@ -269,102 +268,4 @@ public class ProductsCensorController implements Initializable, RefreshableCente
         alert.showAndWait();
     }
 
-    // ── Model ────────────────────────────────────────────────
-
-    public static class Product {
-        private final SimpleStringProperty productId;
-        private final SimpleStringProperty name;
-        private final SimpleStringProperty sellerId;
-        private final SimpleStringProperty description;
-        private final SimpleStringProperty startPrice;
-        private final SimpleStringProperty category;
-        private final SimpleStringProperty startTime;
-        private final SimpleStringProperty endTime;
-        private final SimpleStringProperty imageUrl;
-
-        public Product(String productId, String name, String sellerId, String description, String category,
-                String startPrice, String startTime, String endTime, String imageUrl) {
-            this.productId = new SimpleStringProperty(productId);
-            this.name = new SimpleStringProperty(name);
-            this.sellerId = new SimpleStringProperty(sellerId);
-            this.description = new SimpleStringProperty(description);
-            this.category = new SimpleStringProperty(category);
-            this.startPrice = new SimpleStringProperty(startPrice);
-            this.startTime = new SimpleStringProperty(startTime);
-            this.endTime = new SimpleStringProperty(endTime);
-            this.imageUrl = new SimpleStringProperty(imageUrl);
-        }
-
-        public String getProductId() {
-            return productId.get();
-        }
-
-        public String getName() {
-            return name.get();
-        }
-
-        public String getSellerId() {
-            return sellerId.get();
-        }
-
-        public String getDescription() {
-            return description.get();
-        }
-
-        public String getStartPrice() {
-            return startPrice.get();
-        }
-
-        public String getCategory() {
-            return category.get();
-        }
-
-        public String getStartTime() {
-            return startTime.get();
-        }
-
-        public String getEndTime() {
-            return endTime.get();
-        }
-
-        public String getImageUrl() {
-            return imageUrl.get();
-        }
-
-        public SimpleStringProperty productIdProperty() {
-            return productId;
-        }
-
-        public SimpleStringProperty sellerIdProperty() {
-            return sellerId;
-        }
-
-        public SimpleStringProperty nameProperty() {
-            return name;
-        }
-
-        public SimpleStringProperty descriptionProperty() {
-            return description;
-        }
-
-        public SimpleStringProperty categoryProperty() {
-            return category;
-        }
-
-        public SimpleStringProperty startPriceProperty() {
-            return startPrice;
-        }
-
-        public SimpleStringProperty startTimeProperty() {
-            return startTime;
-        }
-
-        public SimpleStringProperty endTimeProperty() {
-            return endTime;
-        }
-
-        public SimpleStringProperty imageUrlProperty() {
-            return imageUrl;
-        }
-    }
 }
