@@ -147,9 +147,16 @@ public class AuctionsViewController implements Initializable, RefreshableCenterC
 
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            masterList.remove(selected);
-            btnDelete.setDisable(true);
-            updateCountLabel();
+            AdminManager.getInstance().deleteAuction(
+                    Integer.parseInt(selected.getAuctionId()),
+                    msg -> Platform.runLater(() -> {
+                        masterList.remove(selected);
+                        btnDelete.setDisable(true);
+                        btnChangeStatus.setDisable(true);
+                        applyFilter();
+                        new Alert(Alert.AlertType.INFORMATION, msg).showAndWait();
+                    }),
+                    error -> Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, error).showAndWait()));
         }
     }
 
@@ -213,14 +220,17 @@ public class AuctionsViewController implements Initializable, RefreshableCenterC
             AdminManager.getInstance().changeAuctionStatus(
                     Integer.parseInt(selected.getAuctionId()),
                     action,
-                    msg -> Platform.runLater(() -> {
-                        // Lấy status thực từ response nếu là REOPEN
-                        String displayStatus = action.equals("REOPEN")
-                                ? msg.replace("Đã cập nhật thành ", "").replace("!", "")
+                    response -> Platform.runLater(() -> {
+                        String message = response.has("message")
+                                ? response.get("message").getAsString()
+                                : "Đã cập nhật trạng thái!";
+                        String displayStatus = response.has("newStatus")
+                                ? response.get("newStatus").getAsString()
                                 : action;
                         selected.setStatus(displayStatus);
                         auctionTable.refresh();
-                        new Alert(Alert.AlertType.INFORMATION, msg).showAndWait();
+                        applyFilter();
+                        new Alert(Alert.AlertType.INFORMATION, message).showAndWait();
                     }),
                     error -> Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, error).showAndWait()));
         });

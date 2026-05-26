@@ -23,10 +23,10 @@ final class AuctionRoomViewHelper {
         int s = totalSeconds % 60;
 
         if (!started) {
-            lblCountdown.setText(String.format("Sap mo: %02d:%02d:%02d", h, m, s));
+            lblCountdown.setText(String.format("Sắp mở: %02d:%02d:%02d", h, m, s));
             lblCountdown.setStyle("-fx-text-fill: #E65100; -fx-font-weight: bold;");
         } else {
-            lblCountdown.setText(String.format("Con lai: %02d:%02d:%02d", h, m, s));
+            lblCountdown.setText(String.format("Còn lại: %02d:%02d:%02d", h, m, s));
             lblCountdown.setStyle("-fx-text-fill: #2E7D32; -fx-font-weight: bold;");
         }
     }
@@ -38,12 +38,12 @@ final class AuctionRoomViewHelper {
             TextField txtBidAmount
     ) {
         if (lblCountdown != null) {
-            lblCountdown.setText("DA KET THUC!");
+            lblCountdown.setText("ĐÃ KẾT THÚC!");
             lblCountdown.setStyle("-fx-text-fill: #888888; -fx-font-weight: bold;");
         }
         if (btnPlaceBid != null) {
             btnPlaceBid.setDisable(true);
-            btnPlaceBid.setText("HET HAN");
+            btnPlaceBid.setText("HẾT HẠN");
         }
         if (btnEnableAutoBid != null) {
             btnEnableAutoBid.setDisable(true);
@@ -79,17 +79,17 @@ final class AuctionRoomViewHelper {
 
     static boolean confirmBuyNow() {
         Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Xac nhan mua dut");
+        dialog.setTitle("Xác nhận mua đứt");
         dialog.setHeaderText(null);
 
-        ButtonType cancelButton = new ButtonType("Huy", ButtonBar.ButtonData.CANCEL_CLOSE);
-        ButtonType confirmButton = new ButtonType("Xac nhan", ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelButton = new ButtonType("Hủy", ButtonBar.ButtonData.CANCEL_CLOSE);
+        ButtonType confirmButton = new ButtonType("Xác nhận", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().setAll(cancelButton, confirmButton);
 
         Label message = new Label(
-                "Ban da dat gia vuot qua gia mua dut cua san pham.\n\n"
-                        + "Xac nhan neu ban muon so huu san pham nay ngay lap tuc.\n\n"
-                        + "Huy neu ban muon dat muc gia thap hon."
+                "Bạn đã đặt giá vượt quá giá mua đứt của sản phẩm.\n\n"
+                        + "Xác nhận nếu bạn muốn sở hữu sản phẩm này ngay lập tức.\n\n"
+                        + "Hủy nếu bạn muốn đặt mức giá thấp hơn."
         );
         message.setWrapText(true);
         message.setStyle("-fx-font-size: 14px; -fx-text-fill: #342724; -fx-line-spacing: 2px;");

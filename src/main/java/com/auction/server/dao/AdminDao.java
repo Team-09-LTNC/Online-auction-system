@@ -29,6 +29,7 @@ public class AdminDao {
      * thái.
      */
     public List<Auction> getAllAuctions() {
+        new AuctionDao().updateStatusByTime();
         List<Auction> auctions = new ArrayList<>();
         String sql = "SELECT a.id, i.name AS item_name, a.start_time, a.end_time, a.status, i.image_url " +
                 "FROM auctions a JOIN items i ON a.item_id = i.id"; // Câu truy vấn lấy thêm image_url từ bảng items
@@ -126,6 +127,7 @@ public class AdminDao {
      * phẩm, người bán, người mua và giá cuối cùng.
      */
     public List<com.auction.common.dto.AdminDTOs.InvoiceDTO> getInvoices() {
+        new AuctionDao().updateStatusByTime();
         List<com.auction.common.dto.AdminDTOs.InvoiceDTO> list = new ArrayList<>();
         String sql = "SELECT a.id AS auction_id, a.item_id, i.name AS item_name, " +
                 "       i.seller_id, a.highest_bidder_id AS winner_id, " +
@@ -152,6 +154,51 @@ public class AdminDao {
             logger.error("Lỗi layDanhSachHoaDon: ", e);
         }
         return list;
+    }
+
+    public List<com.auction.common.dto.AdminDTOs.TransactionDTO> getTransactions() {
+        new AuctionDao().updateStatusByTime();
+        List<com.auction.common.dto.AdminDTOs.TransactionDTO> list = new ArrayList<>();
+        String sql = "SELECT a.id AS auction_id, a.item_id, i.name AS item_name, "
+                + "a.start_time, a.end_time, a.status, "
+                + "COALESCE(a.highest_bidder_id, 0) AS winner_id, "
+                + "a.current_price AS final_price "
+                + "FROM auctions a "
+                + "JOIN items i ON a.item_id = i.id "
+                + "WHERE a.status IN ('FINISHED', 'PAID', 'CANCELED') "
+                + "ORDER BY a.end_time DESC, a.id DESC";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                list.add(new com.auction.common.dto.AdminDTOs.TransactionDTO(
+                        rs.getInt("auction_id"),
+                        rs.getInt("item_id"),
+                        rs.getString("item_name"),
+                        rs.getTimestamp("start_time").toLocalDateTime().toString(),
+                        rs.getTimestamp("end_time").toLocalDateTime().toString(),
+                        rs.getString("status"),
+                        rs.getInt("winner_id"),
+                        rs.getLong("final_price")));
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi layDanhSachGiaoDich: ", e);
+        }
+        return list;
+    }
+
+    public boolean deleteAuction(int auctionId) {
+        String sql = "DELETE FROM auctions WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, auctionId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.error("Lỗi xoaPhienDauGia: ", e);
+            return false;
+        }
     }
 
     /*

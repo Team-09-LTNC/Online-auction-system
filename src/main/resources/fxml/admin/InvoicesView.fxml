@@ -12,20 +12,20 @@
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="com.auction.client.controller.admin.InvoicesController"
            maxWidth="Infinity" maxHeight="Infinity"
-           style="-fx-background-color: #EDE6DF; -fx-padding: 24;">
+           style="-fx-background-color: #F7F2EC; -fx-padding: 24;">
 
     <VBox spacing="16" maxHeight="Infinity">
 
         <!-- Header -->
         <HBox alignment="CENTER_LEFT" spacing="12" VBox.vgrow="NEVER">
-            <Region style="-fx-background-color: #8B2C2C;
+            <Region style="-fx-background-color: #8F1D2C;
                            -fx-pref-width: 4px; -fx-pref-height: 22px;"/>
             <Label text="Hoá đơn đã thanh toán"
-                   style="-fx-text-fill: #1A0F0A; -fx-font-size: 18px;
+                   style="-fx-text-fill: #211713; -fx-font-size: 18px;
                           -fx-font-weight: bold;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="lblInvoiceCount" text="0 hoá đơn"
-                   style="-fx-text-fill: #5C3D30; -fx-font-size: 12px;"/>
+                   style="-fx-text-fill: #5E4A42; -fx-font-size: 12px;"/>
         </HBox>
 
         <!-- Toolbar -->
@@ -33,14 +33,14 @@
             <TextField fx:id="tfSearch"
                        promptText="🔍  Tìm theo ID, tên sản phẩm, seller, winner..."
                        onKeyReleased="#handleSearch"
-                       style="-fx-background-color: #F0EAE4;
-                              -fx-border-color: #C8AFA0; -fx-border-width: 1px;
+                       style="-fx-background-color: #FFFCF8;
+                              -fx-border-color: #E8DCD2; -fx-border-width: 1px;
                               -fx-border-radius: 6px; -fx-background-radius: 6px;
                               -fx-padding: 8 14 8 14; -fx-font-size: 13px;
-                              -fx-pref-width: 340px; -fx-prompt-text-fill: #C8AFA0;"/>
+                              -fx-pref-width: 340px; -fx-prompt-text-fill: #B6A79D;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="lblTotalRevenue" text="Tổng: ₫ 0"
-                   style="-fx-text-fill: #8B2C2C; -fx-font-size: 14px;
+                   style="-fx-text-fill: #8F1D2C; -fx-font-size: 14px;
                           -fx-font-weight: bold;"/>
         </HBox>
 
@@ -48,8 +48,8 @@
         <TableView fx:id="invoiceTable"
                    VBox.vgrow="ALWAYS"
                    maxHeight="Infinity"
-                   style="-fx-background-color: #F0EAE4;
-                          -fx-border-color: #C8AFA0; -fx-border-width: 1px;
+                   style="-fx-background-color: #FFFCF8;
+                          -fx-border-color: #E8DCD2; -fx-border-width: 1px;
                           -fx-border-radius: 10px; -fx-background-radius: 10px;">
             <columns>
                 <TableColumn fx:id="colProductId"  text="ID Sản phẩm"  prefWidth="130"/>
@@ -61,7 +61,7 @@
             </columns>
             <placeholder>
                 <Label text="Chưa có hoá đơn nào"
-                       style="-fx-text-fill: #C8AFA0; -fx-font-size: 13px;"/>
+                       style="-fx-text-fill: #B6A79D; -fx-font-size: 13px;"/>
             </placeholder>
         </TableView>
 

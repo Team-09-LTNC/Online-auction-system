@@ -1,7 +1,6 @@
 package com.auction.server.dao;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -10,7 +9,6 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import com.auction.common.model.bid.Auction;
 import com.auction.common.model.bid.BidTransaction;
 import com.auction.common.model.bid.AutoBidConfig;
-import com.auction.common.model.user.Bidder;
 
 import com.auction.server.db.DatabaseConnection;
 
@@ -27,7 +24,8 @@ import com.auction.server.db.DatabaseConnection;
  */
 public class AuctionDao {
     private static final Logger logger = LoggerFactory.getLogger(AuctionDao.class);
-    private static final AtomicBoolean checkedImageThumbColumn = new AtomicBoolean(false);
+    private final AutoBidDao autoBidDao = new AutoBidDao();
+    private final AuctionQueryDao queryDao = new AuctionQueryDao();
 
     public static class AuctionNotificationTargets {
         public final int auctionId;
@@ -49,10 +47,6 @@ public class AuctionDao {
             this.itemName = itemName;
             this.winnerName = winnerName;
         }
-    }
-
-    private Auction mapResultSetToAuction(ResultSet rs) throws SQLException {
-        return AuctionRowMapper.mapResultSetToAuction(rs, logger);
     }
 
     public LocalDateTime getDatabaseNow() {
@@ -92,191 +86,46 @@ public class AuctionDao {
 
     public List<Auction> getRunningAuctions() {
         updateStatusByTime();
-        return executeListQuery(
-                "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-                        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
-                        +
-                        "FROM auctions a JOIN items i ON a.item_id = i.id "
-                        + "WHERE a.status = 'RUNNING' AND a.start_time <= NOW() AND a.end_time > NOW()");
+        return queryDao.getRunningAuctions();
     }
 
     public List<Auction> getPendingAuctionSessions() {
         updateStatusByTime();
-        return executeListQuery(
-                "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-                        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
-                        +
-                        "FROM auctions a JOIN items i ON a.item_id = i.id "
-                        + "WHERE a.status = 'OPEN' AND a.start_time > NOW()");
+        return queryDao.getPendingAuctionSessions();
     }
 
     public List<Auction> getAllAuctionSessions() {
         updateStatusByTime();
-        return executeListQuery(
-                "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-                        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
-                        +
-                        "FROM auctions a JOIN items i ON a.item_id = i.id ORDER BY a.start_time DESC, a.id DESC");
+        return queryDao.getAllAuctionSessions();
     }
 
     public List<Auction> getTopRunningAuctionsByBids() {
         updateStatusByTime();
-        return executeListQuery(
-                "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, i.seller_id, i.image_url, "
-                        + "i.image_thumb_url, "
-                        +
-                        "COUNT(b.id) AS bid_count "
-                        +
-                        "FROM auctions a "
-                        +
-                        "JOIN items i ON a.item_id = i.id "
-                        +
-                        "LEFT JOIN bid_history b ON a.id = b.auction_id "
-                        +
-                        "WHERE a.status = 'RUNNING' AND a.start_time <= NOW() AND a.end_time > NOW() "
-                        +
-                        "GROUP BY a.id, i.id "
-                        +
-                        "ORDER BY bid_count DESC, a.id DESC "
-                        +
-                        "LIMIT 6");
+        return queryDao.getTopRunningAuctionsByBids();
     }
 
     // Lấy danh sách các phiên mà User đã tham gia đặt giá (hoặc là người bán)
     public List<Auction> getJoinedAuctions(int userId, String role) {
-        if ("SELLER".equals(role)) {
-            return getSellerAuctions(userId);
-        }
-
-        return getBidderJoinedAuctions(userId);
-    }
-
-    private List<Auction> getSellerAuctions(int sellerId) {
-        String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-                + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
-                + "FROM auctions a "
-                + "JOIN items i ON a.item_id = i.id "
-                + "WHERE i.seller_id = ? "
-                + "ORDER BY a.start_time DESC, a.id DESC";
-        return executeListQuery(sql, sellerId);
-    }
-
-    private List<Auction> getBidderJoinedAuctions(int bidderId) {
-        String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-                + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
-                + "FROM auctions a "
-                + "JOIN items i ON a.item_id = i.id "
-                + "JOIN ("
-                + "  SELECT auction_id, MAX(bid_time) AS latest_bid_time "
-                + "  FROM bid_history "
-                + "  WHERE bidder_id = ? "
-                + "  GROUP BY auction_id"
-                + ") joined ON joined.auction_id = a.id "
-                + "ORDER BY joined.latest_bid_time DESC, a.id DESC";
-        return executeListQuery(sql, bidderId);
-    }
-
-    private List<Auction> executeListQuery(String sql) {
-        ensureImageThumbColumn();
-        List<Auction> danhSach = new ArrayList<>();
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                Auction phien = mapResultSetToAuction(rs);
-                if (phien != null)
-                    danhSach.add(phien);
-            }
-        } catch (SQLException e) {
-            logger.error("Lỗi truy vấn danh sách: ", e);
-        }
-        return danhSach;
-    }
-
-    private List<Auction> executeListQuery(String sql, int param) {
-        ensureImageThumbColumn();
-        List<Auction> danhSach = new ArrayList<>();
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, param);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    Auction phien = mapResultSetToAuction(rs);
-                    if (phien != null)
-                        danhSach.add(phien);
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("Lỗi truy vấn danh sách có tham số: ", e);
-        }
-        return danhSach;
+        return queryDao.getJoinedAuctions(userId, role);
     }
 
     public int countRunningAuctions() {
         updateStatusByTime();
-        return countBySql(
-                "SELECT COUNT(*) FROM auctions WHERE status = 'RUNNING' AND start_time <= NOW() AND end_time > NOW()");
+        return queryDao.countRunningAuctions();
     }
 
     public int countEndingSoonAuctions() {
         updateStatusByTime();
-        return countBySql(
-                "SELECT COUNT(*) FROM auctions "
-                        +
-                        "WHERE status = 'RUNNING' AND start_time <= NOW() "
-                        +
-                        "AND end_time > NOW() AND end_time <= DATE_ADD(NOW(), INTERVAL 1 HOUR)");
+        return queryDao.countEndingSoonAuctions();
     }
 
     public int countJoinedAuctions(int bidderId) {
-        String sql = "SELECT COUNT(*) "
-                + "FROM ("
-                + "  SELECT DISTINCT b.auction_id "
-                + "  FROM bid_history b "
-                + "  JOIN auctions a ON a.id = b.auction_id "
-                + "  WHERE b.bidder_id = ?"
-                + ") joined";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, bidderId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                return rs.next() ? rs.getInt(1) : 0;
-            }
-        } catch (SQLException e) {
-            logger.error("Lỗi đếm phiên bidder đã tham gia: ", e);
-            return 0;
-        }
+        return queryDao.countJoinedAuctions(bidderId);
     }
 
     public int countActiveJoinedAuctions(int bidderId) {
         updateStatusByTime();
-        String sql = "SELECT COUNT(DISTINCT b.auction_id) "
-                + "FROM bid_history b "
-                + "JOIN auctions a ON a.id = b.auction_id "
-                + "WHERE b.bidder_id = ? "
-                + "AND a.status IN ('OPEN', 'RUNNING') "
-                + "AND a.end_time > NOW()";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, bidderId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                return rs.next() ? rs.getInt(1) : 0;
-            }
-        } catch (SQLException e) {
-            logger.error("Lỗi đếm phiên bidder đang tham gia: ", e);
-            return 0;
-        }
-    }
-
-    private int countBySql(String sql) {
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            return rs.next() ? rs.getInt(1) : 0;
-        } catch (SQLException e) {
-            logger.error("Lỗi truy vấn số lượng phiên đấu giá: ", e);
-            return 0;
-        }
+        return queryDao.countActiveJoinedAuctions(bidderId);
     }
 
     public boolean executeBidTransaction(int idPhien, BidTransaction tx) {
@@ -414,21 +263,12 @@ public class AuctionDao {
 
     public Auction getAuctionById(int idPhien) {
         updateStatusByTime();
-        String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-                + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
-                + "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = ?";
-        List<Auction> danhSach = executeListQuery(sql, idPhien);
-        return danhSach.isEmpty() ? null : danhSach.get(0);
+        return queryDao.getAuctionById(idPhien);
     }
 
     public Auction getAuctionByItemId(int itemId) {
         updateStatusByTime();
-        String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-                + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
-                + "FROM auctions a JOIN items i ON a.item_id = i.id "
-                + "WHERE i.id = ? ORDER BY a.id DESC LIMIT 1";
-        List<Auction> danhSach = executeListQuery(sql, itemId);
-        return danhSach.isEmpty() ? null : danhSach.get(0);
+        return queryDao.getAuctionByItemId(itemId);
     }
 
     public AuctionNotificationTargets getAuctionEndNotificationTargets(int auctionId) {
@@ -463,178 +303,25 @@ public class AuctionDao {
 
     public List<Auction> searchAndFilterAuctions(String keyword, String status) {
         updateStatusByTime();
-        StringBuilder sql = new StringBuilder(
-                "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-                        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
-                        +
-                        "FROM auctions a JOIN items i ON a.item_id = i.id WHERE 1=1 ");
-
-        List<Object> params = new ArrayList<>();
-
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append("AND i.name LIKE ? ");
-            params.add("%" + keyword.trim() + "%");
-        }
-
-        if (status != null && !status.equalsIgnoreCase("ALL") && !status.equalsIgnoreCase("Tất cả")) {
-            sql.append("AND a.status = ? ");
-            params.add(status.toUpperCase());
-        }
-
-        List<Auction> danhSach = new ArrayList<>();
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
-            for (int j = 0; j < params.size(); j++) {
-                pstmt.setObject(j + 1, params.get(j));
-            }
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    Auction phien = mapResultSetToAuction(rs);
-                    if (phien != null)
-                        danhSach.add(phien);
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("Lỗi timKiemVaLocPhienDauGia: ", e);
-        }
-        return danhSach;
+        return queryDao.searchAndFilterAuctions(keyword, status);
     }
-
-    /**
-     * Lưu hoặc cập nhật cấu hình Auto-Bid của người dùng (Dùng cơ chế UPSERT của MySQL)
-     */
     public boolean saveOrUpdateAutoBid(int auctionId, int bidderId, long maxAutoBid, long bidStep) {
-        String sql = "INSERT INTO auto_bid_settings (auction_id, bidder_id, max_auto_bid, bid_step) "
-                + "VALUES (?, ?, ?, ?) "
-                + "ON DUPLICATE KEY UPDATE max_auto_bid = ?, bid_step = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstm = conn.prepareStatement(sql)) {
-            pstm.setInt(1, auctionId);
-            pstm.setInt(2, bidderId);
-            pstm.setLong(3, maxAutoBid);
-            pstm.setLong(4, bidStep);
-            pstm.setLong(5, maxAutoBid);
-            pstm.setLong(6, bidStep);
-            return pstm.executeUpdate() > 0;
-        } catch (SQLException e) {
-            logger.error("Lỗi khi lưu/cập nhật Auto-Bid: ", e);
-            return false;
-        }
+        return autoBidDao.saveOrUpdateAutoBid(auctionId, bidderId, maxAutoBid, bidStep);
     }
 
-    /**
-     * Lấy giá trần Auto-Bid của 1 user cụ thể trong 1 phiên (để Client gọi hiển thị lại lên UI)
-     */
     public long getMaxAutoBid(int auctionId, int bidderId) {
-        String sql = "SELECT max_auto_bid FROM auto_bid_settings WHERE auction_id = ? AND bidder_id = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstm = conn.prepareStatement(sql)) {
-            pstm.setInt(1, auctionId);
-            pstm.setInt(2, bidderId);
-            try (ResultSet rs = pstm.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getLong("max_auto_bid");
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("Lỗi khi lấy giá trần Auto-Bid: ", e);
-        }
-        return -1; // Trả về -1 nếu user chưa cài đặt auto-bid
+        return autoBidDao.getMaxAutoBid(auctionId, bidderId);
     }
 
-    /**
-     * Lấy TOÀN BỘ cấu hình Bot của 1 phiên đấu giá
-     */
     public long getAutoBidStep(int auctionId, int bidderId) {
-        String sql = "SELECT bid_step FROM auto_bid_settings WHERE auction_id = ? AND bidder_id = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstm = conn.prepareStatement(sql)) {
-            pstm.setInt(1, auctionId);
-            pstm.setInt(2, bidderId);
-            try (ResultSet rs = pstm.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getLong("bid_step");
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("Loi khi lay buoc gia Auto-Bid: ", e);
-        }
-        return -1;
+        return autoBidDao.getAutoBidStep(auctionId, bidderId);
     }
 
     public boolean removeAutoBid(int auctionId, int bidderId) {
-        String sql = "DELETE FROM auto_bid_settings WHERE auction_id = ? AND bidder_id = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstm = conn.prepareStatement(sql)) {
-            pstm.setInt(1, auctionId);
-            pstm.setInt(2, bidderId);
-            pstm.executeUpdate();
-            return true;
-        } catch (SQLException e) {
-            logger.error("Loi khi xoa Auto-Bid: ", e);
-            return false;
-        }
+        return autoBidDao.removeAutoBid(auctionId, bidderId);
     }
 
     public List<AutoBidConfig> getAuctionAutoBids(int auctionId) {
-        List<AutoBidConfig> dsBot = new ArrayList<>();
-        String sql = "SELECT a.bidder_id, a.max_auto_bid, a.bid_step, a.register_time, u.username, u.full_name " +
-                "FROM auto_bid_settings a " +
-                "JOIN users u ON a.bidder_id = u.id " +
-                "WHERE a.auction_id = ?";
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement pstm = conn.prepareStatement(sql)) {
-            pstm.setInt(1, auctionId);
-            try (ResultSet rs = pstm.executeQuery()) {
-                while (rs.next()) {
-                    // Sử dụng đúng constructor của Bidder
-                    Bidder u = new Bidder(
-                            rs.getString("username"),
-                            "",
-                            rs.getString("full_name")
-                    );
-                    u.setId(rs.getInt("bidder_id")); // Kế thừa từ class Entity
-
-                    Timestamp registerTime = rs.getTimestamp("register_time");
-                    dsBot.add(new AutoBidConfig(
-                            u,
-                            rs.getLong("max_auto_bid"),
-                            rs.getLong("bid_step"),
-                            registerTime != null ? registerTime.toLocalDateTime() : null));
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("Lỗi khi lấy danh sách Bot của phiên: ", e);
-        }
-        return dsBot;
-    }
-
-    private void ensureImageThumbColumn() {
-        if (checkedImageThumbColumn.get()) {
-            return;
-        }
-
-        synchronized (AuctionDao.class) {
-            if (checkedImageThumbColumn.get()) {
-                return;
-            }
-
-            try (Connection conn = DatabaseConnection.getInstance().getConnection()) {
-                DatabaseMetaData metaData = conn.getMetaData();
-                try (ResultSet columns = metaData.getColumns(null, null, "items", "image_thumb_url")) {
-                    if (columns.next()) {
-                        checkedImageThumbColumn.set(true);
-                        return;
-                    }
-                }
-
-                try (Statement stmt = conn.createStatement()) {
-                    stmt.executeUpdate("ALTER TABLE items ADD COLUMN image_thumb_url VARCHAR(500) NULL");
-                }
-                checkedImageThumbColumn.set(true);
-            } catch (Exception e) {
-                logger.error("Cannot ensure image_thumb_url column.", e);
-            }
-        }
+        return autoBidDao.getAuctionAutoBids(auctionId);
     }
 }

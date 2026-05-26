@@ -179,4 +179,59 @@ public class AdminDTOs {
             return highestBid;
         }
     }
+
+    public static class TransactionDTO {
+        private final int auctionId;
+        private final int itemId;
+        private final String itemName;
+        private final String startTime;
+        private final String endTime;
+        private final String status;
+        private final int winnerId;
+        private final long finalPrice;
+
+        public TransactionDTO(int auctionId, int itemId, String itemName, String startTime,
+                String endTime, String status, int winnerId, long finalPrice) {
+            this.auctionId = auctionId;
+            this.itemId = itemId;
+            this.itemName = itemName;
+            this.startTime = startTime;
+            this.endTime = endTime;
+            this.status = status;
+            this.winnerId = winnerId;
+            this.finalPrice = finalPrice;
+        }
+
+        public int getAuctionId() {
+            return auctionId;
+        }
+
+        public int getItemId() {
+            return itemId;
+        }
+
+        public String getItemName() {
+            return itemName;
+        }
+
+        public String getStartTime() {
+            return startTime;
+        }
+
+        public String getEndTime() {
+            return endTime;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public int getWinnerId() {
+            return winnerId;
+        }
+
+        public long getFinalPrice() {
+            return finalPrice;
+        }
+    }
 }

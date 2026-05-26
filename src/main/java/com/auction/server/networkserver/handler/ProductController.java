@@ -18,12 +18,12 @@ import com.auction.server.manager.AuctionManager;
 import com.auction.server.manager.ProductManager;
 import com.auction.server.networkserver.ClientHandler;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 public class ProductController implements RequestHandler {
     private final Gson gson = new Gson();
     private final AuctionDao auctionDao = new AuctionDao();
+    private final ProductQueryHandler queryHandler = new ProductQueryHandler(gson, this::buildResponse);
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProductController.class);
 
     @Override
@@ -38,11 +38,11 @@ public class ProductController implements RequestHandler {
             case ActionType.CREATE_PRODUCT:
                 return handleCreateProduct(yeuCau, client);
             case ActionType.GET_ALL_PRODUCTS:
-                return handleGetAllProducts(yeuCau);
+                return queryHandler.handleGetAllProducts(yeuCau);
             case ActionType.DELETE_PRODUCT:
                 return handleDeleteProduct(yeuCau, client);
             case ActionType.SEARCH_PRODUCT:
-                return handleSearchProduct(yeuCau);
+                return queryHandler.handleSearchProduct(yeuCau);
             case ActionType.GET_PRODUCT_BY_ID:
                 return handleGetProductById(yeuCau);
             case ActionType.UPDATE_PRODUCT:
@@ -91,33 +91,10 @@ public class ProductController implements RequestHandler {
 
         JsonObject dataPayload = new JsonObject();
         dataPayload.addProperty("success", true);
-        dataPayload.add("data", buildSellerProductList(danhSach));
+        dataPayload.add("data", ProductResponseMapper.buildSellerProductList(danhSach));
         dataPayload.addProperty("serverNow", LocalDateTime.now().toString());
 
         return buildResponse(yeuCau, ActionType.GET_MY_PRODUCTS, dataPayload);
-    }
-
-    private JsonArray buildSellerProductList(List<Auction> auctions) {
-        JsonArray data = new JsonArray();
-        for (Auction auction : auctions) {
-            Item item = auction.getItem();
-            JsonObject obj = new JsonObject();
-            obj.addProperty("id", item.getId());
-            obj.addProperty("itemId", item.getId());
-            obj.addProperty("auctionId", auction.getId());
-            obj.addProperty("name", item.getName());
-            obj.addProperty("description", item.getDescription());
-            obj.addProperty("startingPrice", item.getStartingPrice());
-            obj.addProperty("currentPrice", auction.getCurrentHighestBid());
-            obj.addProperty("status", auction.getStoredStatus().name());
-            obj.addProperty("category", item.getCategory());
-            obj.addProperty("imageUrl", item.getImageUrl());
-            obj.addProperty("imageThumbUrl", item.getImageThumbUrl());
-            obj.addProperty("startTime", auction.getStartTime() != null ? auction.getStartTime().toString() : null);
-            obj.addProperty("endTime", auction.getEndTime() != null ? auction.getEndTime().toString() : null);
-            data.add(obj);
-        }
-        return data;
     }
 
     private String handleCreateProduct(JsonObject yeuCau, ClientHandler client) {
@@ -208,16 +185,8 @@ public class ProductController implements RequestHandler {
         }
     }
 
-    private String handleGetAllProducts(JsonObject yeuCau) {
-        List<Item> danhSach = ProductManager.getInstance().getAllProducts();
-        JsonObject dataPayload = new JsonObject();
-        dataPayload.addProperty("success", true);
-        dataPayload.add("data", gson.toJsonTree(danhSach));
-        return buildResponse(yeuCau, ActionType.GET_ALL_PRODUCTS, dataPayload);
-    }
-
     private String handleDeleteProduct(JsonObject yeuCau, ClientHandler client) {
-        int idSanPham = getItemIdFromRequest(yeuCau);
+        int idSanPham = ProductResponseMapper.getItemIdFromRequest(yeuCau);
         if (idSanPham <= 0) {
             return buildResponse(yeuCau, ActionType.DELETE_PRODUCT,
                     new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu itemId hop le.", ErrorCode.BAD_REQUEST));
@@ -260,25 +229,9 @@ public class ProductController implements RequestHandler {
                         "Chỉ có thể xóa sản phẩm khi phiên còn OPEN và chưa mở.", ErrorCode.FORBIDDEN));
     }
 
-    private String handleSearchProduct(JsonObject yeuCau) {
-        if (!yeuCau.has("keyword") || yeuCau.get("keyword").isJsonNull()) {
-            return buildResponse(yeuCau, ActionType.SEARCH_PRODUCT,
-                    new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu keyword.", ErrorCode.BAD_REQUEST));
-        }
-        String tuKhoa = yeuCau.get("keyword").getAsString();
-        List<Item> ketQua = ProductManager.getInstance().searchProductsByKeyword(tuKhoa);
-
-        JsonObject dataPayload = new JsonObject();
-        dataPayload.addProperty("success", true);
-        dataPayload.addProperty("message", "Tìm thấy " + ketQua.size() + " sản phẩm.");
-        dataPayload.add("data", gson.toJsonTree(ketQua));
-
-        return buildResponse(yeuCau, ActionType.SEARCH_PRODUCT, dataPayload);
-    }
-
     private String handleGetProductById(JsonObject yeuCau) {
         try {
-            int itemId = getItemIdFromRequest(yeuCau);
+            int itemId = ProductResponseMapper.getItemIdFromRequest(yeuCau);
             if (itemId <= 0) {
                 return buildResponse(yeuCau, ActionType.GET_PRODUCT_BY_ID,
                         new BaseDTOs.ErrorResponse(StatusCode.BAD_REQUEST, "Thieu itemId hop le.",
@@ -307,7 +260,7 @@ public class ProductController implements RequestHandler {
                         "Chỉ Seller mới được cập nhật!", ErrorCode.UNAUTHORIZED));
             }
 
-            int itemId = getItemIdFromRequest(yeuCau);
+            int itemId = ProductResponseMapper.getItemIdFromRequest(yeuCau);
             if (itemId <= 0) {
                 return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT, new BaseDTOs.ErrorResponse(
                         StatusCode.BAD_REQUEST, "Thieu itemId hop le.", ErrorCode.BAD_REQUEST));
@@ -377,14 +330,4 @@ public class ProductController implements RequestHandler {
         }
     }
 
-    private int getItemIdFromRequest(JsonObject yeuCau) {
-        if (yeuCau == null || !yeuCau.has("itemId") || yeuCau.get("itemId").isJsonNull()) {
-            return -1;
-        }
-        try {
-            return yeuCau.get("itemId").getAsInt();
-        } catch (RuntimeException e) {
-            return -1;
-        }
-    }
 }

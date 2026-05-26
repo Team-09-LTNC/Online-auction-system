@@ -45,6 +45,10 @@ public class AdminController implements RequestHandler {
                 return handleGetInvoices(reqId);
             case ActionType.ADMIN_CHANGE_AUCTION_STATUS:
                 return handleChangeAuctionStatus(yeuCau, reqId);
+            case ActionType.ADMIN_DELETE_AUCTION:
+                return handleDeleteAuction(yeuCau, reqId);
+            case ActionType.ADMIN_GET_TRANSACTIONS:
+                return handleGetTransactions(reqId);
             default:
                 return null;
         }
@@ -67,6 +71,48 @@ public class AdminController implements RequestHandler {
         res.addProperty("type", "GET_ALL_AUCTIONS_RESPONSE");
         res.addProperty("success", true);
         res.add("data", array);
+        if (reqId != null)
+            res.addProperty("requestId", reqId);
+        return gson.toJson(res);
+    }
+
+    private String handleGetTransactions(String reqId) {
+        List<com.auction.common.dto.AdminDTOs.TransactionDTO> transactions = adminDao.getTransactions();
+        JsonArray array = new JsonArray();
+
+        for (com.auction.common.dto.AdminDTOs.TransactionDTO tx : transactions) {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("auctionId", tx.getAuctionId());
+            obj.addProperty("itemId", tx.getItemId());
+            obj.addProperty("itemName", tx.getItemName());
+            obj.addProperty("startTime", tx.getStartTime());
+            obj.addProperty("endTime", tx.getEndTime());
+            obj.addProperty("status", tx.getStatus());
+            obj.addProperty("winnerId", tx.getWinnerId());
+            obj.addProperty("finalPrice", tx.getFinalPrice());
+            array.add(obj);
+        }
+
+        JsonObject res = new JsonObject();
+        res.addProperty("type", "ADMIN_GET_TRANSACTIONS_RESPONSE");
+        res.addProperty("success", true);
+        res.add("data", array);
+        if (reqId != null)
+            res.addProperty("requestId", reqId);
+        return gson.toJson(res);
+    }
+
+    private String handleDeleteAuction(JsonObject yeuCau, String reqId) {
+        int auctionId = yeuCau.get("auctionId").getAsInt();
+        boolean ok = adminDao.deleteAuction(auctionId);
+        if (ok) {
+            AuctionManager.getInstance().syncAfterAuctionDeleted(auctionId);
+        }
+
+        JsonObject res = new JsonObject();
+        res.addProperty("type", "ADMIN_DELETE_AUCTION_RESPONSE");
+        res.addProperty("success", ok);
+        res.addProperty("message", ok ? "Đã xoá phiên đấu giá!" : "Xoá phiên thất bại!");
         if (reqId != null)
             res.addProperty("requestId", reqId);
         return gson.toJson(res);
