@@ -118,6 +118,22 @@ Trường hợp muốn chạy `ServerApp.jar` trên máy chủ ảo Azure, máy 
 server public. Các máy client ở bất kỳ mạng nào có Internet sẽ chạy `MainApp.jar` và kết nối
 vào public IP của máy Azure.
 
+### Thông tin server ảo của nhóm
+
+| Mục | Giá trị |
+|---|---|
+| Cloud | Azure VM |
+| Tên máy ảo | `AuctionServer` |
+| Public IP ví dụ | `4.194.28.97` |
+| User SSH | `admin_btl` |
+| Port app | `8080` |
+| File server cần chạy | `ServerApp.jar` |
+| Java runtime | OpenJDK 21 |
+| Mật khẩu SSH | Điền mật khẩu nội bộ của nhóm tại đây nếu cần chia sẻ trong repo nội bộ. |
+
+Nếu Azure đổi public IP, thay toàn bộ `4.194.28.97` trong các lệnh bên dưới bằng IP mới
+hiển thị ở Azure Portal.
+
 ### 1. Trên Azure Portal
 
 Vào máy ảo `AuctionServer` và kiểm tra:
@@ -140,7 +156,8 @@ Kết nối SSH vào VM:
 ssh admin_btl@4.194.28.97
 ```
 
-Nhập mật khẩu khi terminal hỏi. Không ghi mật khẩu vào README hoặc commit lên Git.
+Nhập mật khẩu nội bộ của nhóm khi terminal hỏi. Nếu terminal hỏi xác nhận host lần đầu,
+gõ `yes` rồi Enter.
 
 Cài Java 21 nếu máy chưa có:
 
@@ -149,13 +166,35 @@ sudo apt update
 sudo apt install -y openjdk-21-jre
 ```
 
-Upload `ServerApp.jar` lên máy Azure. Chạy lệnh này từ máy local đang có file JAR:
+Kiểm tra Java:
+
+```bash
+java -version
+```
+
+### 3. Upload JAR từ máy local lên Azure
+
+Trên máy local, build lại JAR trước:
+
+```bash
+mvn clean package
+```
+
+Sau đó upload `ServerApp.jar` lên máy Azure:
 
 ```bash
 scp target/ServerApp.jar admin_btl@4.194.28.97:~/ServerApp.jar
 ```
 
-Sau đó trên máy Azure chạy server:
+Nếu muốn upload cả client để lưu bản phát hành trên server:
+
+```bash
+scp target/MainApp.jar admin_btl@4.194.28.97:~/MainApp.jar
+```
+
+### 4. Chạy server trên Azure
+
+SSH vào Azure rồi chạy:
 
 ```bash
 java -jar ServerApp.jar
@@ -163,7 +202,31 @@ java -jar ServerApp.jar
 
 Server sẽ lắng nghe ở port `8080`.
 
-### 3. Trên các máy client
+Nếu muốn để server tiếp tục chạy sau khi đóng SSH, dùng `nohup`:
+
+```bash
+nohup java -jar ServerApp.jar > auction-server.log 2>&1 &
+```
+
+Xem log:
+
+```bash
+tail -f auction-server.log
+```
+
+Kiểm tra process server:
+
+```bash
+ps aux | grep ServerApp
+```
+
+Dừng server đang chạy nền:
+
+```bash
+pkill -f ServerApp.jar
+```
+
+### 5. Trên các máy client
 
 Các máy client chạy `MainApp.jar` và truyền public IP của Azure VM:
 
@@ -177,12 +240,28 @@ Ví dụ: nếu Azure VM chạy `ServerApp.jar` có public IP là `4.194.28.97`,
 java -jar MainApp.jar --server-ip=4.194.28.97
 ```
 
+Nếu không muốn truyền tham số mỗi lần chạy, tạo file `client.properties` đặt cạnh
+`MainApp.jar`:
+
+```properties
+server.ip=4.194.28.97
+server.port=8080
+```
+
+Rồi chạy:
+
+```bash
+java -Dnetwork.config.file=client.properties -jar MainApp.jar
+```
+
 ### Lưu ý khi dùng Azure
 
 - Azure VM phải đang chạy, không được ở trạng thái `Stopped (deallocated)`.
 - Azure Network Security Group phải mở inbound TCP port `8080`.
 - Nếu trong Linux có bật firewall như `ufw`, cần cho phép port `8080`.
 - Public IP của VM có thể thay đổi nếu chưa cấu hình static IP. Nếu IP thay đổi, client phải chạy lại với IP mới.
+- Database trong `application.properties` của server phải truy cập được từ Azure VM.
+- Nếu client báo không kết nối được, kiểm tra theo thứ tự: server process còn chạy không, port `8080` đã mở chưa, public IP có đổi không, firewall Linux/Azure có chặn không.
 
 File `application.properties` đang được đóng gói vào JAR để nhóm có thể chạy server trực tiếp. Nếu cần đổi database khi triển khai, có thể tạo file cấu hình riêng và chạy `java -Ddb.config.file=application-local.properties -jar ServerApp.jar`.
 
