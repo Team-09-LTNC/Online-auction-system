@@ -35,17 +35,233 @@ target/MainApp.jar
 target/ServerApp.jar
 ```
 
-Chạy server:
+## Chạy Server Và Client Trên Cùng Một Máy
+
+Nếu chạy cả `ServerApp.jar` và `MainApp.jar` trên cùng một máy, không cần truyền IP server.
+
+Mở terminal thứ nhất và chạy server:
 
 ```bash
 java -jar ServerApp.jar
 ```
 
-Chạy client:
+Mở terminal thứ hai trên cùng máy đó và chạy client:
 
 ```bash
 java -jar MainApp.jar
 ```
+
+Trường hợp này app sẽ dùng mặc định `127.0.0.1:8080`, tức là kết nối về server đang chạy
+trên chính máy hiện tại.
+
+## Chạy Trên Nhiều Máy Cùng Wi-Fi/LAN
+
+Chọn 1 máy làm server. Máy này sẽ chạy `ServerApp.jar` và các máy còn lại sẽ chạy
+`MainApp.jar` để kết nối vào server.
+
+### 1. Trên máy làm server
+
+Lấy địa chỉ IPv4 của máy server:
+
+```bash
+ipconfig
+```
+
+Tìm dòng `IPv4 Address`, ví dụ máy server có IP là:
+
+```text
+192.168.1.15
+```
+
+Sau đó chạy server:
+
+```bash
+java -jar ServerApp.jar
+```
+
+Server mặc định lắng nghe ở port `8080`.
+
+### 2. Trên các máy client
+
+Các máy khác trong cùng Wi-Fi/LAN chạy `MainApp.jar` và truyền IP của máy server:
+
+```bash
+java -jar MainApp.jar --server-ip=192.168.1.15
+```
+
+Ví dụ: nếu máy chạy `ServerApp.jar` có IP là `192.168.1.15`, thì mọi máy client đều chạy:
+
+```bash
+java -jar MainApp.jar --server-ip=192.168.1.15
+```
+
+Có thể dùng cách tương đương bằng system property:
+
+```bash
+java -Dserver.ip=192.168.1.15 -jar MainApp.jar
+```
+
+### Lưu ý khi không kết nối được
+
+- Các máy phải cùng mạng Wi-Fi/LAN.
+- Máy server phải đang chạy `ServerApp.jar`.
+- Windows Firewall trên máy server phải cho phép TCP port `8080`.
+- Không dùng `127.0.0.1` cho máy client khác, vì `127.0.0.1` chỉ là chính máy đang chạy client.
+
+App cũng đọc `server.ip` và `server.port` từ file `application.properties` đặt cạnh file JAR,
+biến môi trường `AUCTION_SERVER_IP` / `AUCTION_SERVER_PORT`, hoặc file chỉ định bằng
+`-Dnetwork.config.file=client.properties`.
+
+## Chạy Server Trên Máy Chủ Ảo Azure
+
+Trường hợp muốn chạy `ServerApp.jar` trên máy chủ ảo Azure, máy Azure sẽ đóng vai trò
+server public. Các máy client ở bất kỳ mạng nào có Internet sẽ chạy `MainApp.jar` và kết nối
+vào public IP của máy Azure.
+
+### Thông tin server ảo của nhóm
+
+| Mục | Giá trị |
+|---|---|
+| Cloud | Azure VM |
+| Tên máy ảo | `AuctionServer` |
+| Public IP ví dụ | `4.194.28.97` |
+| User SSH | `admin_btl` |
+| Port app | `8080` |
+| File server cần chạy | `ServerApp.jar` |
+| Java runtime | OpenJDK 21 |
+| Mật khẩu SSH | Điền mật khẩu nội bộ. |
+
+Nếu Azure đổi public IP, thay toàn bộ `4.194.28.97` trong các lệnh bên dưới bằng IP mới
+hiển thị ở Azure Portal.
+
+### 1. Trên Azure Portal
+
+Vào máy ảo `AuctionServer` và kiểm tra:
+
+- VM phải ở trạng thái `Running`. Nếu đang `Stopped (deallocated)` thì bấm `Start`.
+- Ghi lại `Public IP address` của VM.
+- Vào `Networking` / `Network settings`, thêm inbound rule cho TCP port `8080`.
+
+Ví dụ trong Azure Portal, public IP của máy server là:
+
+```text
+4.194.28.97
+```
+
+### 2. Trên máy Azure Linux
+
+Kết nối SSH vào VM:
+
+```bash
+ssh admin_btl@4.194.28.97
+```
+
+Nhập mật khẩu nội bộ của nhóm khi terminal hỏi. Nếu terminal hỏi xác nhận host lần đầu,
+gõ `yes` rồi Enter.
+
+Cài Java 21 nếu máy chưa có:
+
+```bash
+sudo apt update
+sudo apt install -y openjdk-21-jre
+```
+
+Kiểm tra Java:
+
+```bash
+java -version
+```
+
+### 3. Upload JAR từ máy local lên Azure
+
+Trên máy local, build lại JAR trước:
+
+```bash
+mvn clean package
+```
+
+Sau đó upload `ServerApp.jar` lên máy Azure:
+
+```bash
+scp target/ServerApp.jar admin_btl@4.194.28.97:~/ServerApp.jar
+```
+
+Nếu muốn upload cả client để lưu bản phát hành trên server:
+
+```bash
+scp target/MainApp.jar admin_btl@4.194.28.97:~/MainApp.jar
+```
+
+### 4. Chạy server trên Azure
+
+SSH vào Azure rồi chạy:
+
+```bash
+java -jar ServerApp.jar
+```
+
+Server sẽ lắng nghe ở port `8080`.
+
+Nếu muốn để server tiếp tục chạy sau khi đóng SSH, dùng `nohup`:
+
+```bash
+nohup java -jar ServerApp.jar > auction-server.log 2>&1 &
+```
+
+Xem log:
+
+```bash
+tail -f auction-server.log
+```
+
+Kiểm tra process server:
+
+```bash
+ps aux | grep ServerApp
+```
+
+Dừng server đang chạy nền:
+
+```bash
+pkill -f ServerApp.jar
+```
+
+### 5. Trên các máy client
+
+Các máy client chạy `MainApp.jar` và truyền public IP của Azure VM:
+
+```bash
+java -jar MainApp.jar --server-ip=4.194.28.97
+```
+
+Ví dụ: nếu Azure VM chạy `ServerApp.jar` có public IP là `4.194.28.97`, thì mọi client chạy:
+
+```bash
+java -jar MainApp.jar --server-ip=4.194.28.97
+```
+
+Nếu không muốn truyền tham số mỗi lần chạy, tạo file `client.properties` đặt cạnh
+`MainApp.jar`:
+
+```properties
+server.ip=4.194.28.97
+server.port=8080
+```
+
+Rồi chạy:
+
+```bash
+java -Dnetwork.config.file=client.properties -jar MainApp.jar
+```
+
+### Lưu ý khi dùng Azure
+
+- Azure VM phải đang chạy, không được ở trạng thái `Stopped (deallocated)`.
+- Azure Network Security Group phải mở inbound TCP port `8080`.
+- Nếu trong Linux có bật firewall như `ufw`, cần cho phép port `8080`.
+- Public IP của VM có thể thay đổi nếu chưa cấu hình static IP. Nếu IP thay đổi, client phải chạy lại với IP mới.
+- Database trong `application.properties` của server phải truy cập được từ Azure VM.
+- Nếu client báo không kết nối được, kiểm tra theo thứ tự: server process còn chạy không, port `8080` đã mở chưa, public IP có đổi không, firewall Linux/Azure có chặn không.
 
 File `application.properties` đang được đóng gói vào JAR để nhóm có thể chạy server trực tiếp. Nếu cần đổi database khi triển khai, có thể tạo file cấu hình riêng và chạy `java -Ddb.config.file=application-local.properties -jar ServerApp.jar`.
 
@@ -277,15 +493,15 @@ server/
 | `db/ConnectionProvider.java` | Interface cung cấp connection. |
 | `db/DatabaseConnection.java` | Cấu hình HikariCP/MySQL, đọc `application.properties`. |
 | `db/SetupDatabase.java` | Khởi tạo schema/database khi cần. |
-| `dao/UserDao.java` | CRUD user, tìm user theo username/id, cập nhật trạng thái. |
+| `dao/UserDao.java` | CRUD user, tìm user theo username/id, cập nhật trạng thái khóa và mốc `lock_until`. |
 | `dao/AdminDao.java` | Query phục vụ admin dashboard, user summary, transaction, invoice, pending auction. |
 | `dao/AuctionDao.java` | Ghi/cập nhật phiên: tạo phiên, trạng thái/end time, bid transaction và delegate auto-bid/query. |
 | `dao/AuctionQueryDao.java` | Query/list/count/search phiên đấu giá. |
 | `dao/AutoBidDao.java` | SQL riêng cho cấu hình auto-bid: upsert, xóa, lấy bot theo phiên. |
 | `dao/AuctionRowMapper.java` | Map `ResultSet` sang `Auction`. |
 | `dao/BidTransactionDao.java` | Lịch sử bid và thống kê bid. |
-| `dao/BidderMoneySellerDao.java` | Giao dịch tiền giữa bidder/seller và thanh toán. |
-| `dao/BidderPenaltyDao.java` | Phạt/khóa tạm bidder khi vi phạm thanh toán. |
+| `dao/BidderMoneySellerDao.java` | Giao dịch tiền giữa bidder/seller, thanh toán và trừ phí phạt 10% khi hủy/quá hạn. |
+| `dao/BidderPenaltyDao.java` | Ghi nhận vi phạm thanh toán, cập nhật khóa tạm/vĩnh viễn cho bidder. |
 | `dao/FollowDao.java` | Theo dõi/hủy theo dõi phiên đấu giá. |
 | `dao/ItemDao.java` | CRUD sản phẩm. |
 | `dao/SystemNotificationDao.java` | Lưu và đọc notification hệ thống. |
@@ -365,6 +581,16 @@ Client UI
   -> MySQL/H2
 ```
 
+## Quy Tắc Thanh Toán Và Khóa Tài Khoản
+
+- Khi bidder thắng phiên nhưng hủy hoặc quá hạn thanh toán, hệ thống kiểm tra ví để xử lý phí phạt 10% giá chốt.
+- Nếu ví đủ tiền, hệ thống tự trừ 10%, hủy phiên và ghi biến động số dư; bidder không bị khóa tài khoản.
+- Nếu ví không đủ tiền, hệ thống hủy phiên và ghi nhận vi phạm thanh toán.
+- Vi phạm lần 1 khóa tài khoản 3 ngày, lần 2 khóa 7 ngày, từ lần 3 khóa vĩnh viễn.
+- Trạng thái khóa được lưu trực tiếp trong bảng `users.status`. Khóa tạm thời lưu thêm mốc mở lại ở `users.lock_until` để admin xem được.
+- Khi bidder đăng nhập trong thời gian khóa tạm, server trả thông báo còn bao lâu và thời điểm được đăng nhập lại. Nếu `lock_until` đã hết hạn, login sẽ tự mở lại tài khoản.
+- Khóa vĩnh viễn hoặc khóa thủ công bởi admin có `users.status = LOCKED` và `users.lock_until = NULL`; khi login sẽ báo tài khoản bị khóa vĩnh viễn và cần liên hệ Admin.
+
 ## Kiểm Thử
 
 - Unit test và integration test nằm trong `src/test/java`.
@@ -402,7 +628,8 @@ Client UI
 | `FollowAndBidHistoryDaoIntegrationTest.java` | `FollowDao` và `BidTransactionDao` với H2 | Follow/unfollow/count phiên theo dõi, lưu và đọc lịch sử bid của một phiên. |
 | `AdminDaoIntegrationTest.java` | `AdminDao` với H2 | Lọc pending auctions, chỉ lấy hóa đơn `PAID`, chỉ lấy giao dịch terminal `FINISHED/PAID/CANCELED`. |
 | `AdminDaoWriteActionsIntegrationTest.java` | `AdminDao` write-actions với H2 | Duyệt phiên, đổi trạng thái, đọc thông tin phiên và xóa phiên đấu giá. |
-| `BidderMoneySellerDaoIntegrationTest.java` | Quyết toán tiền bidder-seller với H2 | Bidder thắng thanh toán thành công, cập nhật balance, wallet history, status `PAID`; chặn người không thắng thanh toán. |
+| `BidderMoneySellerDaoIntegrationTest.java` | Quyết toán tiền bidder-seller với H2 | Bidder thắng thanh toán thành công, cập nhật balance, wallet history, status `PAID`; xử lý phí phạt 10% khi hủy/quá hạn; chặn người không thắng thanh toán. |
+| `UserLockIntegrationTest.java` | Khóa tài khoản với H2 | Vi phạm thanh toán ghi `users.status/lock_until`, login báo khóa tạm kèm mốc mở lại, khóa vĩnh viễn báo liên hệ Admin và khóa tạm hết hạn tự mở. |
 | `AdminControllerReadActionsTest.java` | Read-actions admin qua controller + H2 | Response cho pending auctions, invoices, transactions có đúng `type`, `success`, `requestId` và data liên quan. |
 
 ### Server Manager Tests

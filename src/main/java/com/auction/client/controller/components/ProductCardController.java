@@ -273,7 +273,7 @@ public class ProductCardController {
         isFollowed = !isFollowed;
         followRequestPending = true;
         updateHeartUI();
-        btnFollow.setDisable(true);
+        btnFollow.setMouseTransparent(true);
 
         JsonObject req = new JsonObject();
         req.addProperty("type",
@@ -286,15 +286,22 @@ public class ProductCardController {
                 null,
                 response -> Platform.runLater(() -> {
                     followRequestPending = false;
-                    btnFollow.setDisable(false);
+                    btnFollow.setMouseTransparent(false);
 
+                    boolean confirmedFollowState = isFollowed;
                     if (response.has("isFollowed") && !response.get("isFollowed").isJsonNull()) {
-                        isFollowed = response.get("isFollowed").getAsBoolean();
+                        confirmedFollowState = response.get("isFollowed").getAsBoolean();
                     } else if (!(response.has("success") && response.get("success").getAsBoolean())) {
-                        isFollowed = previousFollowState;
+                        confirmedFollowState = previousFollowState;
+                    }
+
+                    isFollowed = confirmedFollowState;
+                    if (isFollowed != previousFollowState) {
+                        com.auction.client.controller.bidder.MainDashboardController
+                                .applyFollowedCountDelta(isFollowed ? 1 : -1);
                     }
                     updateHeartUI();
-                    com.auction.client.networkclient.PushHandler.requestAuctionViewsRefresh();
+                    com.auction.client.networkclient.PushHandler.requestAuctionViewsRefresh(false);
                 })
         );
     }
@@ -326,6 +333,10 @@ public class ProductCardController {
         if (sellerActions != null) {
             sellerActions.setVisible(false);
             sellerActions.setManaged(false);
+        }
+
+        if (btnFollow != null) {
+            btnFollow.setFocusTraversable(false);
         }
 
         if (lblProductName != null) {

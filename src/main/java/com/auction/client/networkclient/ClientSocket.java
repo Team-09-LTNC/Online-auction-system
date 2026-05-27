@@ -2,20 +2,19 @@ package com.auction.client.networkclient;
 
 import com.auction.common.dto.BaseDTOs;
 import com.auction.common.util.GsonConfig;
+import com.auction.common.util.NetworkConfig;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -28,18 +27,9 @@ public class ClientSocket {
   private static int serverPort = 8080;
 
   static {
-    try (InputStream input = ClientSocket.class.getClassLoader()
-        .getResourceAsStream("application.properties")) {
-      if (input != null) {
-        Properties props = new Properties();
-        props.load(input);
-        serverIp = props.getProperty("server.ip", "127.0.0.1");
-        serverPort = Integer.parseInt(props.getProperty("server.port", "8080"));
-        logger.info("Da nap cau hinh mang: IP = {}, Port = {}", serverIp, serverPort);
-      }
-    } catch (Exception e) {
-      logger.error("Loi khi doc cau hinh mang, su dung mac dinh.", e);
-    }
+    serverIp = NetworkConfig.getServerIp();
+    serverPort = NetworkConfig.getServerPort();
+    logger.info("Da nap cau hinh mang: IP = {}, Port = {}", serverIp, serverPort);
   }
 
   private static ClientSocket instance;

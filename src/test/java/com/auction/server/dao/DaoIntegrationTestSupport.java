@@ -29,7 +29,8 @@ public abstract class DaoIntegrationTestSupport {
                 + "full_name VARCHAR(100) NOT NULL, "
                 + "role VARCHAR(20) NOT NULL, "
                 + "balance BIGINT DEFAULT 0, "
-                + "status VARCHAR(20) DEFAULT 'ACTIVE'"
+                + "status VARCHAR(20) DEFAULT 'ACTIVE', "
+                + "lock_until DATETIME NULL"
                 + ") ENGINE=InnoDB");
 
         stmt.execute("CREATE TABLE IF NOT EXISTS items ("

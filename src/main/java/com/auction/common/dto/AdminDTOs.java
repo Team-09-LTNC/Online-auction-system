@@ -5,11 +5,17 @@ public class AdminDTOs {
         private final String username;
         private final String fullname;
         private final String status;
+        private final String lockUntil;
 
         public UserSummaryDTO(String username, String fullname, String status) {
+            this(username, fullname, status, null);
+        }
+
+        public UserSummaryDTO(String username, String fullname, String status, String lockUntil) {
             this.username = username;
             this.fullname = fullname;
             this.status = status;
+            this.lockUntil = lockUntil;
         }
 
         public String getUsername() {
@@ -22,6 +28,10 @@ public class AdminDTOs {
 
         public String getStatus() {
             return status;
+        }
+
+        public String getLockUntil() {
+            return lockUntil;
         }
     }
 

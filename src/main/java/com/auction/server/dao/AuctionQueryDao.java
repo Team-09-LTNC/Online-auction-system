@@ -21,32 +21,42 @@ final class AuctionQueryDao {
   List<Auction> getRunningAuctions() {
     return executeListQuery(
         "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-            + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
+            + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url, "
+            + "hb.username AS highest_bidder_username, hb.full_name AS highest_bidder_full_name "
             + "FROM auctions a JOIN items i ON a.item_id = i.id "
+            + "LEFT JOIN users hb ON hb.id = a.highest_bidder_id "
             + "WHERE a.status = 'RUNNING' AND a.start_time <= NOW() AND a.end_time > NOW()");
   }
 
   List<Auction> getPendingAuctionSessions() {
     return executeListQuery(
         "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-            + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
+            + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url, "
+            + "hb.username AS highest_bidder_username, hb.full_name AS highest_bidder_full_name "
             + "FROM auctions a JOIN items i ON a.item_id = i.id "
+            + "LEFT JOIN users hb ON hb.id = a.highest_bidder_id "
             + "WHERE a.status = 'OPEN' AND a.start_time > NOW()");
   }
 
   List<Auction> getAllAuctionSessions() {
     return executeListQuery(
         "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-            + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
-            + "FROM auctions a JOIN items i ON a.item_id = i.id ORDER BY a.start_time DESC, a.id DESC");
+            + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url, "
+            + "hb.username AS highest_bidder_username, hb.full_name AS highest_bidder_full_name "
+            + "FROM auctions a JOIN items i ON a.item_id = i.id "
+            + "LEFT JOIN users hb ON hb.id = a.highest_bidder_id "
+            + "ORDER BY a.start_time DESC, a.id DESC");
   }
 
   List<Auction> getTopRunningAuctionsByBids() {
     return executeListQuery(
         "SELECT a.*, i.name, i.description, i.category, i.starting_price, i.bid_increment, "
-            + "i.seller_id, i.image_url, i.image_thumb_url, COUNT(b.id) AS bid_count "
+            + "i.seller_id, i.image_url, i.image_thumb_url, "
+            + "hb.username AS highest_bidder_username, hb.full_name AS highest_bidder_full_name, "
+            + "COUNT(b.id) AS bid_count "
             + "FROM auctions a "
             + "JOIN items i ON a.item_id = i.id "
+            + "LEFT JOIN users hb ON hb.id = a.highest_bidder_id "
             + "LEFT JOIN bid_history b ON a.id = b.auction_id "
             + "WHERE a.status = 'RUNNING' AND a.start_time <= NOW() AND a.end_time > NOW() "
             + "GROUP BY a.id, i.id "
@@ -96,16 +106,21 @@ final class AuctionQueryDao {
 
   Auction getAuctionById(int idPhien) {
     String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
-        + "FROM auctions a JOIN items i ON a.item_id = i.id WHERE a.id = ?";
+        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url, "
+        + "hb.username AS highest_bidder_username, hb.full_name AS highest_bidder_full_name "
+        + "FROM auctions a JOIN items i ON a.item_id = i.id "
+        + "LEFT JOIN users hb ON hb.id = a.highest_bidder_id "
+        + "WHERE a.id = ?";
     List<Auction> result = executeListQuery(sql, idPhien);
     return result.isEmpty() ? null : result.get(0);
   }
 
   Auction getAuctionByItemId(int itemId) {
     String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
+        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url, "
+        + "hb.username AS highest_bidder_username, hb.full_name AS highest_bidder_full_name "
         + "FROM auctions a JOIN items i ON a.item_id = i.id "
+        + "LEFT JOIN users hb ON hb.id = a.highest_bidder_id "
         + "WHERE i.id = ? ORDER BY a.id DESC LIMIT 1";
     List<Auction> result = executeListQuery(sql, itemId);
     return result.isEmpty() ? null : result.get(0);
@@ -114,8 +129,10 @@ final class AuctionQueryDao {
   List<Auction> searchAndFilterAuctions(String keyword, String status) {
     StringBuilder sql = new StringBuilder(
         "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-            + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
-            + "FROM auctions a JOIN items i ON a.item_id = i.id WHERE 1=1 ");
+            + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url, "
+            + "hb.username AS highest_bidder_username, hb.full_name AS highest_bidder_full_name "
+            + "FROM auctions a JOIN items i ON a.item_id = i.id "
+            + "LEFT JOIN users hb ON hb.id = a.highest_bidder_id WHERE 1=1 ");
     List<Object> params = new ArrayList<>();
 
     if (keyword != null && !keyword.trim().isEmpty()) {
@@ -149,9 +166,11 @@ final class AuctionQueryDao {
 
   private List<Auction> getSellerAuctions(int sellerId) {
     String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
+        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url, "
+        + "hb.username AS highest_bidder_username, hb.full_name AS highest_bidder_full_name "
         + "FROM auctions a "
         + "JOIN items i ON a.item_id = i.id "
+        + "LEFT JOIN users hb ON hb.id = a.highest_bidder_id "
         + "WHERE i.seller_id = ? "
         + "ORDER BY a.start_time DESC, a.id DESC";
     return executeListQuery(sql, sellerId);
@@ -159,9 +178,11 @@ final class AuctionQueryDao {
 
   private List<Auction> getBidderJoinedAuctions(int bidderId) {
     String sql = "SELECT a.*, i.name, i.description, i.category, i.starting_price, "
-        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url "
+        + "i.bid_increment, i.seller_id, i.image_url, i.image_thumb_url, "
+        + "hb.username AS highest_bidder_username, hb.full_name AS highest_bidder_full_name "
         + "FROM auctions a "
         + "JOIN items i ON a.item_id = i.id "
+        + "LEFT JOIN users hb ON hb.id = a.highest_bidder_id "
         + "JOIN ("
         + "  SELECT auction_id, MAX(bid_time) AS latest_bid_time "
         + "  FROM bid_history "

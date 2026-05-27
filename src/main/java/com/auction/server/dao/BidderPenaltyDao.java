@@ -84,6 +84,11 @@ public class BidderPenaltyDao {
                     update.executeUpdate();
                 }
             }
+            if (permanent) {
+                new UserDao().updateStatusById(bidderId, "LOCKED");
+            } else {
+                new UserDao().updateTemporaryLockById(bidderId, lockUntil);
+            }
             return new SanctionResult(newCount, permanent, lockUntil);
         } catch (Exception e) {
             logger.error("Khong the ghi nhan vi pham bidder {}.", bidderId, e);

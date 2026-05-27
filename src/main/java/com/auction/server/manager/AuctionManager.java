@@ -33,7 +33,8 @@ public class AuctionManager {
     private final ExecutorService notifierPool = Executors.newFixedThreadPool(50);
     private final AuctionRealtimeNotifier realtimeNotifier =
             new AuctionRealtimeNotifier(dsNguoiTheoDoi, dsPhienDangChay, notifierPool, SERVER_ZONE);
-    private final AuctionPaymentTimeoutService paymentTimeoutService = new AuctionPaymentTimeoutService(scheduler);
+    private final AuctionPaymentTimeoutService paymentTimeoutService =
+            new AuctionPaymentTimeoutService(scheduler, auctionDao);
     private final AuctionLifecycleService lifecycleService = new AuctionLifecycleService(
             auctionDao,
             dsPhienDangChay,
@@ -96,6 +97,7 @@ public class AuctionManager {
 
             lifecycleService.scheduleAuctionStart(a);
         }
+        paymentTimeoutService.startOverduePaymentSweep();
     }
 
     // Double-checked locking: đảm bảo thread-safe cho Singleton

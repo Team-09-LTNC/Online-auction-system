@@ -20,9 +20,9 @@ final class ChatNotificationRenderer {
   private static final String[] PAYMENT_RULE_LINES = {
       "Quy định:",
       "- Hủy thanh toán hoặc quá hạn thanh toán: hệ thống trừ 10% giá chốt.",
-      "- Vi phạm quá hạn lần 1: khóa tài khoản 3 ngày.",
-      "- Vi phạm quá hạn lần 2: khóa tài khoản 7 ngày.",
-      "- Từ lần 3: khóa tài khoản vĩnh viễn."
+      "- Nếu ví đủ để trừ 10%: không bị khóa tài khoản.",
+      "- Nếu ví không đủ: lần 1 khóa 3 ngày, lần 2 khóa 7 ngày.",
+      "- Từ lần 3 không đủ phí phạt: khóa tài khoản vĩnh viễn."
   };
 
   private final List<Timeline> paymentCountdowns = new ArrayList<>();

@@ -1,6 +1,7 @@
 package com.auction.common.model.user;
 
 import com.auction.common.model.entity.Entity;
+import java.time.LocalDateTime;
 
 public abstract class User extends Entity {
     protected String username;
@@ -8,6 +9,7 @@ public abstract class User extends Entity {
     protected String fullName;
     protected long balance;
     protected String status; // ACTIVE, LOCKED
+    protected LocalDateTime lockUntil;
 
     public User(String username, String password, String fullName) {
         super();
@@ -16,6 +18,7 @@ public abstract class User extends Entity {
         this.fullName = fullName;
         this.balance = 0;
         this.status = "ACTIVE"; // Mặc định là hoạt động
+        this.lockUntil = null;
     }
 
     // public User(String username, String fullName) {
@@ -31,6 +34,8 @@ public abstract class User extends Entity {
     public String getFullName() { return fullName; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public LocalDateTime getLockUntil() { return lockUntil; }
+    public void setLockUntil(LocalDateTime lockUntil) { this.lockUntil = lockUntil; }
     public String getPassword() { return password; }
 
     // Đảm bảo Thread-safety cho số dư
