@@ -39,6 +39,53 @@ class BidderMoneySellerDaoIntegrationTest extends DaoIntegrationTestSupport {
     }
 
     @Test
+    void cancelSettlementChargesTenPercentAndDoesNotNeedPenaltyBanWhenBalanceIsEnough() throws Exception {
+        AdminTestData.Seed seed = AdminTestData.createAuction("FINISHED", 1_000_000L, 1_700_000L, true);
+
+        try {
+            long expectedPenalty = 170_000L;
+
+            PaymentResult result = paymentDao.settleBuyNow(seed.auctionId(), seed.bidderId(), false);
+
+            assertThat(result.success).isTrue();
+            assertThat(result.auctionStatus).isEqualTo("CANCELED");
+            assertThat(result.amount).isEqualTo(expectedPenalty);
+            assertThat(result.bidderTransactionType).isEqualTo("PAYMENT_SENT");
+            assertThat(result.sellerTransactionType).isEqualTo("PAYMENT_RECEIVED");
+
+            assertThat(balanceOf(seed.bidderId())).isEqualTo(INITIAL_BALANCE - expectedPenalty);
+            assertThat(balanceOf(seed.sellerId())).isEqualTo(INITIAL_BALANCE + expectedPenalty);
+            assertThat(auctionStatus(seed.auctionId())).isEqualTo("CANCELED");
+            assertThat(walletTransactionCount(seed.bidderId())).isEqualTo(1);
+            assertThat(walletTransactionCount(seed.sellerId())).isEqualTo(1);
+        } finally {
+            AdminTestData.cleanup(seed);
+        }
+    }
+
+    @Test
+    void cancelSettlementRejectsWhenBidderCannotCoverTenPercentPenalty() throws Exception {
+        AdminTestData.Seed seed = AdminTestData.createAuction("FINISHED", 1_000_000L, 1_700_000L, true);
+
+        try {
+            updateBalance(seed.bidderId(), 169_999L);
+
+            PaymentResult result = paymentDao.settleBuyNow(seed.auctionId(), seed.bidderId(), false);
+
+            assertThat(result.success).isFalse();
+            assertThat(result.message).contains("không đủ");
+            assertThat(result.amount).isEqualTo(170_000L);
+            assertThat(balanceOf(seed.bidderId())).isEqualTo(169_999L);
+            assertThat(balanceOf(seed.sellerId())).isEqualTo(INITIAL_BALANCE);
+            assertThat(auctionStatus(seed.auctionId())).isEqualTo("FINISHED");
+            assertThat(walletTransactionCount(seed.bidderId())).isZero();
+            assertThat(walletTransactionCount(seed.sellerId())).isZero();
+        } finally {
+            AdminTestData.cleanup(seed);
+        }
+    }
+
+    @Test
     void settleBuyNowRejectsNonWinningBidderWithoutChangingAuction() throws Exception {
         AdminTestData.Seed seed = AdminTestData.createAuction("FINISHED", 1_000_000L, 1_700_000L, true);
 
@@ -61,6 +108,15 @@ class BidderMoneySellerDaoIntegrationTest extends DaoIntegrationTestSupport {
 
     private int walletTransactionCount(int userId) throws Exception {
         return (int) queryLong("SELECT COUNT(*) FROM wallet_transactions WHERE user_id = ?", userId);
+    }
+
+    private void updateBalance(int userId, long balance) throws Exception {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement("UPDATE users SET balance = ? WHERE id = ?")) {
+            ps.setLong(1, balance);
+            ps.setInt(2, userId);
+            assertThat(ps.executeUpdate()).isEqualTo(1);
+        }
     }
 
     private String auctionStatus(int auctionId) throws Exception {

@@ -82,7 +82,6 @@ final class AuctionRowMapper {
             winner.setId(winnerId);
             phien.setCurrentWinner(winner);
         } catch (SQLException ignored) {
-            // Một số truy vấn cũ có thể không chọn highest_bidder_id.
         }
     }
 

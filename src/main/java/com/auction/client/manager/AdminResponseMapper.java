@@ -21,7 +21,8 @@ final class AdminResponseMapper {
         list.add(new UserSummaryDTO(
             obj.get("username").getAsString(),
             obj.get("fullname").getAsString(),
-            obj.has("status") ? obj.get("status").getAsString() : "ACTIVE"));
+            safeGetString(obj, "status", "ACTIVE"),
+            safeGetString(obj, "lockUntil", null)));
       });
     }
     return list;

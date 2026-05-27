@@ -11,6 +11,7 @@ package com.auction.server.dao;
 import com.auction.common.model.user.*;
 import com.auction.server.db.DatabaseConnection;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,8 +28,10 @@ public class UserDao {
      * Lấy thông tin User để phục vụ Đăng nhập.
      */
     public Optional<User> findByUsername(String tenDangNhap) {
-        // TỐI ƯU: Thêm cột status vào câu truy vấn duy nhất
-        String sql = "SELECT id, username, password, full_name, role, balance, status FROM users WHERE username = ?";
+        ensureLockUntilColumn();
+        //Thêm cột status vào câu truy vấn duy nhất
+        String sql = "SELECT id, username, password, full_name, role, balance, status, lock_until "
+                + "FROM users WHERE username = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -41,6 +44,7 @@ public class UserDao {
                     String hoTen = rs.getString("full_name");
                     long soDu = rs.getLong("balance");
                     String trangThai = rs.getString("status"); // Đọc trạng thái
+                    Timestamp lockUntil = rs.getTimestamp("lock_until");
 
                     User user;
                     switch (vaiTro) {
@@ -60,6 +64,7 @@ public class UserDao {
                     }
                     user.setId(id);
                     user.setStatus(trangThai != null ? trangThai : "ACTIVE");
+                    user.setLockUntil(lockUntil != null ? lockUntil.toLocalDateTime() : null);
                     return Optional.of(user);
                 }
             }
@@ -107,8 +112,10 @@ public class UserDao {
     }
 
     public List<User> getAllBidders() {
+    ensureLockUntilColumn();
     List<User> list = new ArrayList<>();
-    String sql = "SELECT * FROM users WHERE role = 'BIDDER'";
+    String sql = "SELECT id, username, password, full_name, balance, status, lock_until "
+            + "FROM users WHERE role = 'BIDDER'";
     try (Connection conn = DatabaseConnection.getInstance().getConnection();
          PreparedStatement ps = conn.prepareStatement(sql);
          ResultSet rs = ps.executeQuery()) {
@@ -118,7 +125,11 @@ public class UserDao {
                 rs.getString("password"),
                 rs.getString("full_name")
             );
+            b.setId(rs.getInt("id"));
+            b.setBalance(rs.getLong("balance"));
             b.setStatus(rs.getString("status") != null ? rs.getString("status") : "ACTIVE"); // ← THÊM
+            Timestamp lockUntil = rs.getTimestamp("lock_until");
+            b.setLockUntil(lockUntil != null ? lockUntil.toLocalDateTime() : null);
             list.add(b);
         }
     } catch (SQLException e) {
@@ -128,8 +139,10 @@ public class UserDao {
 }
 
     public List<User> getAllSellers() {
+        ensureLockUntilColumn();
         List<User> list = new ArrayList<>();
-        String sql = "SELECT * FROM users WHERE role = 'SELLER'";
+        String sql = "SELECT id, username, password, full_name, balance, status, lock_until "
+                + "FROM users WHERE role = 'SELLER'";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -139,7 +152,11 @@ public class UserDao {
                     rs.getString("password"),
                     rs.getString("full_name")
                 );
+                s.setId(rs.getInt("id"));
+                s.setBalance(rs.getLong("balance"));
                 s.setStatus(rs.getString("status") != null ? rs.getString("status") : "ACTIVE"); // ← THÊM
+                Timestamp lockUntil = rs.getTimestamp("lock_until");
+                s.setLockUntil(lockUntil != null ? lockUntil.toLocalDateTime() : null);
                 list.add(s);
             }
         } catch (SQLException e) {
@@ -150,7 +167,8 @@ public class UserDao {
 
 // Admin có thể khóa tài khoản người dùng (đổi status thành ACTIVE hoặc LOCKED), không xóa hẳn để giữ lịch sử giao dịch.
     public boolean updateStatus(String username, String status) {
-        String sql = "UPDATE users SET status = ? WHERE username = ?";
+        ensureLockUntilColumn();
+        String sql = "UPDATE users SET status = ?, lock_until = NULL WHERE username = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
@@ -163,7 +181,8 @@ public class UserDao {
     }
 
     public boolean updateStatusById(int userId, String status) {
-        String sql = "UPDATE users SET status = ? WHERE id = ?";
+        ensureLockUntilColumn();
+        String sql = "UPDATE users SET status = ?, lock_until = NULL WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
@@ -172,6 +191,46 @@ public class UserDao {
         } catch (SQLException e) {
             logger.error("Loi cap nhat trang thai user theo id: {}", e.getMessage());
             return false;
+        }
+    }
+
+    public boolean updateTemporaryLockById(int userId, LocalDateTime lockUntil) {
+        ensureLockUntilColumn();
+        String sql = "UPDATE users SET status = 'LOCKED', lock_until = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setTimestamp(1, Timestamp.valueOf(lockUntil));
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.error("Loi cap nhat thoi gian khoa tam thoi user theo id: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    public void ensureLockUntilColumn() {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection()) {
+            if (hasColumn(conn, "users", "lock_until")) {
+                return;
+            }
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("ALTER TABLE users ADD COLUMN lock_until DATETIME NULL");
+            }
+        } catch (SQLException e) {
+            logger.error("Khong the dam bao cot lock_until trong bang users: {}", e.getMessage());
+        }
+    }
+
+    private boolean hasColumn(Connection conn, String tableName, String columnName) throws SQLException {
+        DatabaseMetaData meta = conn.getMetaData();
+        try (ResultSet rs = meta.getColumns(conn.getCatalog(), null, tableName, columnName)) {
+            if (rs.next()) {
+                return true;
+            }
+        }
+        try (ResultSet rs = meta.getColumns(conn.getCatalog(), null,
+                tableName.toUpperCase(), columnName.toUpperCase())) {
+            return rs.next();
         }
     }
 }

@@ -115,8 +115,12 @@ public class PushHandler {
     }
 
     public static void requestAuctionViewsRefresh() {
+        requestAuctionViewsRefresh(true);
+    }
+
+    public static void requestAuctionViewsRefresh(boolean includeCurrentBidderContent) {
         if (!Platform.isFxApplicationThread()) {
-            Platform.runLater(PushHandler::requestAuctionViewsRefresh);
+            Platform.runLater(() -> requestAuctionViewsRefresh(includeCurrentBidderContent));
             return;
         }
         if (auctionRefreshScheduled) {
@@ -128,7 +132,8 @@ public class PushHandler {
             auctionRefreshScheduled = false;
             com.auction.client.util.AuctionWarmupCache.clear();
             if (com.auction.client.controller.MainController.instance != null) {
-                com.auction.client.controller.MainController.instance.refreshRealtimeContent();
+                com.auction.client.controller.MainController.instance
+                        .refreshRealtimeContent(includeCurrentBidderContent);
             }
             if (com.auction.client.controller.admin.AdminLayoutController.instance != null) {
                 com.auction.client.controller.admin.AdminLayoutController.instance.refreshRealtimeContent();

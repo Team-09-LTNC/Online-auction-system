@@ -1,11 +1,9 @@
 package com.auction.server;
 
+import com.auction.common.util.NetworkConfig;
 import com.auction.server.networkserver.ServerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.InputStream;
-import java.util.Properties;
 
 /**
  * ServerApplication: Điểm khởi chạy (Entry Point) của toàn bộ hệ thống Server.
@@ -21,18 +19,8 @@ public class ServerApp {
 
     // CẤU HÌNH PORT ---
     static {
-        try (InputStream input = ServerApp.class.getClassLoader().getResourceAsStream("application.properties")) {
-            if (input != null) {
-                Properties props = new Properties();
-                props.load(input);
-                PORT = Integer.parseInt(props.getProperty("server.port", "8080"));
-                logger.info("Đã nạp cấu hình cổng từ application.properties: {}", PORT);
-            } else {
-                logger.warn("Không tìm thấy application.properties, dùng cổng mặc định 8080");
-            }
-        } catch (Exception e) {
-            logger.error("Lỗi khi đọc file cấu hình, dùng cổng mặc định 8080", e);
-        }
+        PORT = NetworkConfig.getServerPort();
+        logger.info("Đã nạp cấu hình cổng server: {}", PORT);
     }
 
     public static int getPort() {
@@ -40,6 +28,7 @@ public class ServerApp {
     }
 
     public static void main(String[] args) {
+        applyNetworkArgs(args);
         logger.info("==================================================");
         logger.info("   HỆ THỐNG MÁY CHỦ ĐẤU GIÁ ĐANG KHỞI ĐỘNG...   ");
         logger.info("   Đang lắng nghe tại cổng: {}                  ", PORT);
@@ -47,5 +36,26 @@ public class ServerApp {
 
         ServerManager quanLyMayChu = new ServerManager(PORT);
         quanLyMayChu.startServer();
+    }
+
+    private static void applyNetworkArgs(String[] args) {
+        if (args == null) {
+            return;
+        }
+        for (String arg : args) {
+            if (arg.startsWith("--server-port=")) {
+                PORT = parsePort(arg.substring("--server-port=".length()), PORT);
+            } else if (arg.startsWith("--server.port=")) {
+                PORT = parsePort(arg.substring("--server.port=".length()), PORT);
+            }
+        }
+    }
+
+    private static int parsePort(String value, int fallback) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
     }
 }

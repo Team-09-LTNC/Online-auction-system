@@ -52,6 +52,7 @@ public class SetupDatabase {
                 + "role ENUM('ADMIN', 'SELLER', 'BIDDER') NOT NULL, "
                 + "balance BIGINT DEFAULT 0, "
                 + "status VARCHAR(20) DEFAULT 'ACTIVE', "
+                + "lock_until DATETIME NULL, "
                 + "KEY idx_user_status (status)"
                 + ") ENGINE=InnoDB");
 

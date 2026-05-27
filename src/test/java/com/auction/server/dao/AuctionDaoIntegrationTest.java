@@ -74,6 +74,17 @@ class AuctionDaoIntegrationTest extends DaoIntegrationTestSupport {
                     mucGiaTiepTheo,
                     phienDauGiaDaCapNhat.getCurrentHighestBid(),
                     "Giá hiện tại của phiên phải được cập nhật đúng");
+            assertNotNull(
+                    phienDauGiaDaCapNhat.getCurrentWinner(),
+                    "Người dẫn đầu phải được hydrate từ highest_bidder_id");
+            assertEquals(
+                    "Test Bidder",
+                    phienDauGiaDaCapNhat.getCurrentWinner().getFullName(),
+                    "Tên người dẫn đầu phải lấy từ bảng users, không fallback thành Người dùng #id");
+            assertEquals(
+                    nguoiMua.getUsername(),
+                    phienDauGiaDaCapNhat.getCurrentWinner().getUsername(),
+                    "Username người dẫn đầu phải được hydrate từ bảng users");
 
         } finally {
             if (maSanPham != -1) {

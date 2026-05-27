@@ -71,6 +71,7 @@
                 <TableColumn fx:id="colUsername" text="Tên đăng nhập" prefWidth="220"/>
                 <TableColumn fx:id="colFullname" text="Họ và tên"     prefWidth="260"/>
                 <TableColumn fx:id="colStatus"   text="Trạng thái"    prefWidth="160"/>
+                <TableColumn fx:id="colLockUntil" text="Mở lại lúc"    prefWidth="180"/>
             </columns>
             <placeholder>
                 <Label text="Chưa có người đấu giá nào"

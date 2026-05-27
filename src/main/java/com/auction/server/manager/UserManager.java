@@ -1,10 +1,14 @@
 package com.auction.server.manager;
 
 import com.auction.common.model.user.User;
+import com.auction.server.dao.BidderPenaltyDao;
 import com.auction.server.dao.UserDao;
 import com.auction.common.exception.AuthenticationException;
 import com.auction.server.networkserver.ClientHandler;
 import com.google.gson.JsonObject;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -16,6 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class UserManager {
     private static volatile UserManager instance;
+    private static final DateTimeFormatter LOCK_TIME_FORMAT =
+            DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
     private final UserDao userDao;
 
     // Lưu trữ danh sách người dùng đang kết nối để gửi dữ liệu Real-time
@@ -61,13 +67,64 @@ public class UserManager {
 
         // 4. TỐI ƯU: Lấy trực tiếp trạng thái từ RAM, xóa bỏ hoàn toàn truy vấn DB lần 2
         String status = user.getStatus() != null ? user.getStatus() : "ACTIVE";
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime lockUntil = user.getLockUntil();
+        if ("BIDDER".equalsIgnoreCase(role)) {
+            BidderPenaltyDao.LockInfo lockInfo = new BidderPenaltyDao().getTemporaryLockInfo(user.getId());
+            if (lockInfo.locked && (lockUntil == null || lockInfo.lockUntil.isAfter(lockUntil))) {
+                lockUntil = lockInfo.lockUntil;
+            }
+            if (lockUntil != null && lockUntil.isAfter(now)) {
+                if (!"LOCKED".equals(status) || !lockUntil.equals(user.getLockUntil())) {
+                    userDao.updateTemporaryLockById(user.getId(), lockUntil);
+                }
+                throw new AuthenticationException(buildTemporaryLockMessage(lockUntil));
+            }
+            if ("LOCKED".equals(status) && user.getLockUntil() != null
+                    && !user.getLockUntil().isAfter(now)) {
+                userDao.updateStatusById(user.getId(), "ACTIVE");
+                user.setStatus("ACTIVE");
+                user.setLockUntil(null);
+                status = "ACTIVE";
+            }
+            if (lockInfo.locked) {
+                throw new AuthenticationException(buildTemporaryLockMessage(lockInfo.lockUntil));
+            }
+        }
         if ("LOCKED".equals(status)) {
-            throw new AuthenticationException("Tài khoản đã bị khoá, vui lòng liên hệ Admin!");
+            throw new AuthenticationException(
+                    "Tài khoản đang bị khóa vĩnh viễn, vui lòng liên hệ Admin.");
         }
 
         // 5. Đăng nhập thành công -> Cập nhật trạng thái Online
         onlineUsers.put(user.getId(), user);
         return user;
+    }
+
+    private String buildTemporaryLockMessage(LocalDateTime lockUntil) {
+        return "Tài khoản đang bị khóa tạm thời do vi phạm thanh toán. Thời gian còn lại: "
+                + formatRemainingLockTime(lockUntil)
+                + ". Bạn có thể đăng nhập lại lúc "
+                + lockUntil.format(LOCK_TIME_FORMAT)
+                + ".";
+    }
+
+    private String formatRemainingLockTime(LocalDateTime lockUntil) {
+        Duration remaining = Duration.between(LocalDateTime.now(), lockUntil);
+        if (remaining.isNegative() || remaining.isZero()) {
+            return "dưới 1 phút";
+        }
+        long totalMinutes = remaining.toMinutes();
+        long days = totalMinutes / (24 * 60);
+        long hours = (totalMinutes % (24 * 60)) / 60;
+        long minutes = totalMinutes % 60;
+        if (days > 0) {
+            return days + " ngày " + hours + " giờ";
+        }
+        if (hours > 0) {
+            return hours + " giờ " + minutes + " phút";
+        }
+        return Math.max(1, minutes) + " phút";
     }
 
     /**

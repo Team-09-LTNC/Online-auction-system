@@ -2,6 +2,8 @@ package com.auction.client.controller.admin;
 
 import com.auction.client.manager.AdminManager;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
@@ -36,6 +38,8 @@ public class BiddersViewController implements Initializable {
       STATUS_ACTIVE,
       STATUS_LOCKED
   );
+  private static final DateTimeFormatter LOCK_TIME_FORMAT =
+      DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
   @FXML
   private StackPane contentPane;
@@ -47,6 +51,8 @@ public class BiddersViewController implements Initializable {
   private TableColumn<Bidder, String> colFullname;
   @FXML
   private TableColumn<Bidder, String> colStatus;
+  @FXML
+  private TableColumn<Bidder, String> colLockUntil;
   @FXML
   private Label lblBidderCount;
   @FXML
@@ -88,6 +94,7 @@ public class BiddersViewController implements Initializable {
             : "-fx-text-fill: #27AE60; -fx-font-weight: bold; -fx-font-size: 12px;");
       }
     });
+    colLockUntil.setCellValueFactory(c -> new SimpleStringProperty(formatLockUntil(c.getValue())));
   }
 
   private void setupStatusFilter() {
@@ -106,7 +113,7 @@ public class BiddersViewController implements Initializable {
         users -> Platform.runLater(() -> {
           masterList.clear();
           users.forEach(u -> masterList.add(
-              new Bidder(u.getUsername(), u.getFullname(), u.getStatus())));
+              new Bidder(u.getUsername(), u.getFullname(), u.getStatus(), u.getLockUntil())));
           updateCountLabel();
         }),
         error -> Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, error).showAndWait())
@@ -147,6 +154,7 @@ public class BiddersViewController implements Initializable {
         newStatus,
         response -> Platform.runLater(() -> {
           selected.setStatus(newStatus);
+          selected.setLockUntil(null);
           bidderTable.refresh();
           refreshLockButtonText(selected);
           applyFilter();
@@ -197,6 +205,21 @@ public class BiddersViewController implements Initializable {
         : shown + " / " + total + " nguoi dung");
   }
 
+  private String formatLockUntil(Bidder bidder) {
+    if (!STATUS_LOCKED.equals(bidder.getStatus())) {
+      return "-";
+    }
+    String lockUntil = bidder.getLockUntil();
+    if (lockUntil == null || lockUntil.isBlank()) {
+      return "Vinh vien";
+    }
+    try {
+      return LocalDateTime.parse(lockUntil).format(LOCK_TIME_FORMAT);
+    } catch (Exception ignored) {
+      return lockUntil;
+    }
+  }
+
   /**
    * Table item model.
    */
@@ -204,11 +227,13 @@ public class BiddersViewController implements Initializable {
     private final SimpleStringProperty username;
     private final SimpleStringProperty fullname;
     private final SimpleStringProperty status;
+    private final SimpleStringProperty lockUntil;
 
-    public Bidder(String username, String fullname, String status) {
+    public Bidder(String username, String fullname, String status, String lockUntil) {
       this.username = new SimpleStringProperty(username);
       this.fullname = new SimpleStringProperty(fullname);
       this.status = new SimpleStringProperty(status);
+      this.lockUntil = new SimpleStringProperty(lockUntil);
     }
 
     public String getUsername() {
@@ -227,6 +252,14 @@ public class BiddersViewController implements Initializable {
       status.set(value);
     }
 
+    public String getLockUntil() {
+      return lockUntil.get();
+    }
+
+    public void setLockUntil(String value) {
+      lockUntil.set(value);
+    }
+
     public SimpleStringProperty usernameProperty() {
       return username;
     }
@@ -237,6 +270,10 @@ public class BiddersViewController implements Initializable {
 
     public SimpleStringProperty statusProperty() {
       return status;
+    }
+
+    public SimpleStringProperty lockUntilProperty() {
+      return lockUntil;
     }
   }
 }

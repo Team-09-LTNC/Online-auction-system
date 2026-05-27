@@ -28,6 +28,7 @@ public class MainDashboardController implements Initializable, RefreshableCenter
 
     private static final Logger logger = LoggerFactory.getLogger(MainDashboardController.class);
     private static final Set<String> HOME_AUCTION_STATUSES = Set.of("OPEN", "RUNNING", "PAID");
+    private static MainDashboardController instance;
 
     @FXML private FlowPane productFlowPane;
     @FXML private Label lblHeaderName;
@@ -39,8 +40,11 @@ public class MainDashboardController implements Initializable, RefreshableCenter
     @FXML private Label lblFollowedAuctions;
     @FXML private Label lblMyBidsCount;
 
+    private Integer lastFollowedCount;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        instance = this;
         logger.info("Bidder đã vào Dashboard chính - Đang nạp danh sách sản phẩm.");
         if (productFlowPane != null) {
             productFlowPane.getChildren().clear();
@@ -97,6 +101,7 @@ public class MainDashboardController implements Initializable, RefreshableCenter
 
                         if (lblFollowedAuctions != null)
                             lblFollowedAuctions.setText(String.valueOf(followedCount));
+                        lastFollowedCount = followedCount;
 
                         if (lblMyBidsCount != null)
                             lblMyBidsCount.setText(String.valueOf(myBidsCount));
@@ -226,6 +231,47 @@ public class MainDashboardController implements Initializable, RefreshableCenter
     public void refreshContent() {
         loadHomeAuctionsFromServer();
         updateStatistics();
+    }
+
+    public static void applyFollowedCountDelta(int delta) {
+        if (delta == 0) {
+            return;
+        }
+
+        MainDashboardController controller = instance;
+        if (controller == null) {
+            return;
+        }
+
+        if (!Platform.isFxApplicationThread()) {
+            Platform.runLater(() -> applyFollowedCountDelta(delta));
+            return;
+        }
+
+        controller.applyFollowedDelta(delta);
+    }
+
+    private void applyFollowedDelta(int delta) {
+        int current = lastFollowedCount != null
+                ? lastFollowedCount
+                : parseCountLabel(lblFollowedAuctions);
+        int updated = Math.max(0, current + delta);
+        lastFollowedCount = updated;
+        if (lblFollowedAuctions != null) {
+            lblFollowedAuctions.setText(String.valueOf(updated));
+        }
+    }
+
+    private int parseCountLabel(Label label) {
+        if (label == null || label.getText() == null || label.getText().isBlank()) {
+            return 0;
+        }
+
+        try {
+            return Integer.parseInt(label.getText().trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private String getString(JsonObject obj, String key, String fallback) {

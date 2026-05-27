@@ -77,11 +77,20 @@ public class MainController {
     }
 
     public void refreshRealtimeContent() {
+        refreshRealtimeContent(true);
+    }
+
+    public void refreshRealtimeContent(boolean includeCurrentContent) {
         Set<Object> refreshedControllers = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         for (LoadedCenterView loadedView : centerViewCache.values()) {
+            if (!includeCurrentContent && loadedView.controller() == currentCenterController) {
+                continue;
+            }
             refreshController(loadedView.controller(), refreshedControllers);
         }
-        refreshController(currentCenterController, refreshedControllers);
+        if (includeCurrentContent) {
+            refreshController(currentCenterController, refreshedControllers);
+        }
     }
 
     private void refreshController(Object controller, Set<Object> refreshedControllers) {

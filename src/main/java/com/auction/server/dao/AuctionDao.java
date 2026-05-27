@@ -196,6 +196,21 @@ public class AuctionDao {
         }
     }
 
+    public boolean updateStatusIfCurrent(int auctionId, String expectedStatus, String newStatus) {
+        String sql = "UPDATE auctions SET status = ? WHERE id = ? AND status = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, newStatus.toUpperCase());
+            pstmt.setInt(2, auctionId);
+            pstmt.setString(3, expectedStatus.toUpperCase());
+            return pstmt.executeUpdate() == 1;
+        } catch (SQLException e) {
+            logger.error("Không cập nhật được trạng thái phiên {} từ {} sang {}.",
+                    auctionId, expectedStatus, newStatus, e);
+            return false;
+        }
+    }
+
     public boolean updateEndTime(int idPhien, LocalDateTime thoiGianMoi) {
         String sql = "UPDATE auctions SET end_time = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -299,6 +314,65 @@ public class AuctionDao {
             logger.error("Không lấy được người nhận thông báo kết thúc phiên {}.", auctionId, e);
             return null;
         }
+    }
+
+    public List<AuctionNotificationTargets> getOverduePaymentTargets(LocalDateTime cutoffTime) {
+        String sql = "SELECT a.id, a.highest_bidder_id, i.seller_id, i.name, u.full_name "
+                + "FROM auctions a "
+                + "JOIN items i ON i.id = a.item_id "
+                + "LEFT JOIN users u ON u.id = a.highest_bidder_id "
+                + "WHERE a.status = 'FINISHED' "
+                + "AND a.highest_bidder_id IS NOT NULL "
+                + "AND (a.end_time <= ? OR EXISTS ("
+                + "  SELECT 1 FROM chat_messages cm "
+                + "  WHERE cm.auction_id = a.id "
+                + "  AND cm.recipient_id = a.highest_bidder_id "
+                + "  AND cm.payment_required = TRUE "
+                + "  AND cm.send_time <= ?"
+                + "))";
+        List<AuctionNotificationTargets> targets = queryOverduePaymentTargets(sql, cutoffTime, true);
+        if (!targets.isEmpty()) {
+            return targets;
+        }
+
+        String fallbackSql = "SELECT a.id, a.highest_bidder_id, i.seller_id, i.name, u.full_name "
+                + "FROM auctions a "
+                + "JOIN items i ON i.id = a.item_id "
+                + "LEFT JOIN users u ON u.id = a.highest_bidder_id "
+                + "WHERE a.status = 'FINISHED' "
+                + "AND a.highest_bidder_id IS NOT NULL "
+                + "AND a.end_time <= ?";
+        return queryOverduePaymentTargets(fallbackSql, cutoffTime, false);
+    }
+
+    private List<AuctionNotificationTargets> queryOverduePaymentTargets(
+            String sql,
+            LocalDateTime cutoffTime,
+            boolean hasNotificationCutoff
+    ) {
+        List<AuctionNotificationTargets> targets = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            Timestamp cutoff = Timestamp.valueOf(cutoffTime);
+            pstmt.setTimestamp(1, cutoff);
+            if (hasNotificationCutoff) {
+                pstmt.setTimestamp(2, cutoff);
+            }
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    targets.add(new AuctionNotificationTargets(
+                            rs.getInt("id"),
+                            rs.getInt("seller_id"),
+                            rs.getInt("highest_bidder_id"),
+                            rs.getString("name"),
+                            rs.getString("full_name")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            logger.warn("Không truy vấn được danh sách phiên quá hạn thanh toán.", e);
+        }
+        return targets;
     }
 
     public List<Auction> searchAndFilterAuctions(String keyword, String status) {

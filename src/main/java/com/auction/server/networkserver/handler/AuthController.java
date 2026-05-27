@@ -73,6 +73,9 @@ public class AuthController implements RequestHandler {
             obj.addProperty("username", u.getUsername());
             obj.addProperty("fullname", u.getFullName());
             obj.addProperty("status", u.getStatus() != null ? u.getStatus() : "ACTIVE");
+            if (u.getLockUntil() != null) {
+                obj.addProperty("lockUntil", u.getLockUntil().toString());
+            }
             array.add(obj);
         }
         JsonObject res = new JsonObject();
@@ -93,6 +96,9 @@ public class AuthController implements RequestHandler {
             obj.addProperty("username", u.getUsername());
             obj.addProperty("fullname", u.getFullName());
             obj.addProperty("status", u.getStatus() != null ? u.getStatus() : "ACTIVE");
+            if (u.getLockUntil() != null) {
+                obj.addProperty("lockUntil", u.getLockUntil().toString());
+            }
             array.add(obj);
         }
         JsonObject res = new JsonObject();
@@ -120,7 +126,7 @@ public class AuthController implements RequestHandler {
 
         } catch (Exception e) {
             JsonObject errorJson = new JsonObject();
-            errorJson.addProperty("type", "LOGIN_RESPONSE"); // Bắt buộc phải có dòng này
+            errorJson.addProperty("type", "LOGIN_RESPONSE"); 
             errorJson.addProperty("success", false);
             errorJson.addProperty("message", e.getMessage());
 
