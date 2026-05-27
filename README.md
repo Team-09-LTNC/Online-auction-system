@@ -129,7 +129,7 @@ vào public IP của máy Azure.
 | Port app | `8080` |
 | File server cần chạy | `ServerApp.jar` |
 | Java runtime | OpenJDK 21 |
-| Mật khẩu SSH | Điền mật khẩu nội bộ của nhóm tại đây nếu cần chia sẻ trong repo nội bộ. |
+| Mật khẩu SSH | Điền mật khẩu nội bộ. |
 
 Nếu Azure đổi public IP, thay toàn bộ `4.194.28.97` trong các lệnh bên dưới bằng IP mới
 hiển thị ở Azure Portal.
