@@ -1,0 +1,112 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag v1.0.3"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build release (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            label: Linux
+          - os: windows-latest
+            platform: windows
+            label: Windows
+          - os: macos-latest
+            platform: macos
+            label: macOS
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "maven"
+
+      - name: Build and run tests
+        run: mvn -B -ntp clean verify
+
+      - name: Verify executable jar manifests
+        shell: pwsh
+        run: |
+          $clientDir = "target/verify-client"
+          $serverDir = "target/verify-server"
+          New-Item -ItemType Directory -Force $clientDir | Out-Null
+          New-Item -ItemType Directory -Force $serverDir | Out-Null
+
+          Push-Location $clientDir
+          jar xf ../MainApp.jar META-INF/MANIFEST.MF
+          $clientManifest = Get-Content META-INF/MANIFEST.MF -Raw
+          Pop-Location
+          if ($clientManifest -notmatch "Main-Class: com.auction.client.MainApp") {
+            throw "MainApp.jar does not point to com.auction.client.MainApp"
+          }
+
+          Push-Location $serverDir
+          jar xf ../ServerApp.jar META-INF/MANIFEST.MF
+          $serverManifest = Get-Content META-INF/MANIFEST.MF -Raw
+          Pop-Location
+          if ($serverManifest -notmatch "Main-Class: com.auction.server.ServerApp") {
+            throw "ServerApp.jar does not point to com.auction.server.ServerApp"
+          }
+
+      - name: Prepare release jars
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $tag = "${{ inputs.tag }}"
+          }
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item target/MainApp.jar "dist/MainApp-${{ matrix.label }}.jar"
+          Copy-Item target/ServerApp.jar "dist/ServerApp-${{ matrix.label }}.jar"
+
+      - name: Upload release jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-jars-${{ matrix.platform }}
+          path: dist/*.jar
+          if-no-files-found: error
+
+  publish-release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: build-release
+    if: ${{ success() }}
+    steps:
+      - name: Download release jars
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-jars-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          name: Online Auction System ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          files: dist/*.jar
+          fail_on_unmatched_files: true

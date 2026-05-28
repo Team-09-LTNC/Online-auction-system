@@ -606,6 +606,8 @@ Client UI
 | `UserSessionTest.java` | Session đăng nhập phía client | Set/get thông tin user hiện tại và `clear()` reset toàn bộ session. |
 | `AuctionTimeUtilTest.java` | Tiện ích thời gian đấu giá | Parse thời gian ISO và tính countdown theo server clock cho trạng thái chưa mở/đang chạy. |
 | `AdminResponseMapperTest.java` | Mapping response admin phía client | Map danh sách user với status mặc định, map pending auctions với fallback an toàn, map transactions cho báo cáo admin. |
+| `PostAuctionFormMapperTest.java` | Form đăng sản phẩm seller | Parse tiền VND từ input form và map danh mục hiển thị sang enum sản phẩm. |
+| `MyProductsHelperTest.java` | Helper màn hình sản phẩm seller | Parse ngày giờ sửa phiên và resolve trạng thái hiển thị theo trạng thái lưu trong DB/thời gian hiện tại. |
 
 ### Common Tests
 
@@ -647,6 +649,8 @@ Client UI
 | `AuthControllerTest.java` | `AuthController` | Request `null`, thiếu `type`, action không hỗ trợ đều trả lỗi bad request. |
 | `AuctionControllerTest.java` | `AuctionController` | Validate request đấu giá lỗi: request null, action không hỗ trợ, tạo auction trực tiếp, join/leave thiếu hoặc sai auction id. |
 | `ProductControllerTest.java` | `ProductController` | Validate request sản phẩm lỗi: request null, action không hỗ trợ, search thiếu keyword, delete/get thiếu item id hợp lệ. |
+| `ProductControllerCreateGetFlowTest.java` | Luồng sản phẩm seller qua `ProductController` + H2 | Seller tạo sản phẩm thành công qua `CREATE_PRODUCT` và `GET_MY_PRODUCTS` chỉ trả sản phẩm của seller hiện tại. |
+| `ProductControllerMutationFlowTest.java` | Luồng cập nhật sản phẩm seller qua `ProductController` + H2 | Seller cập nhật sản phẩm/phiên đang mở của chính mình qua `UPDATE_PRODUCT`. |
 | `AdminControllerTest.java` | `AdminController` với H2 | Kiểm tra payload admin cho pending auctions, tổng doanh thu invoices và transactions terminal. |
 
 ### Test Suite Và Helper
@@ -656,3 +660,5 @@ Client UI
 | `AllTestSuite.java` | Gom nhóm chạy test suite JUnit. |
 | `DaoIntegrationTestSupport.java` | Khởi tạo H2 schema dùng chung cho integration test DAO/controller. |
 | `AdminTestData.java` | Helper tạo và cleanup seller, bidder, item, auction cho test admin. |
+| `ProductControllerFlowSupport.java` | Helper test flow sản phẩm seller qua controller. |
+| `ProductControllerSeedData.java` | Helper seed seller/item/auction cho test cập nhật sản phẩm. |
