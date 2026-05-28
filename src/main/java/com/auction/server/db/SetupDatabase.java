@@ -6,7 +6,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 /**
- * Script khoi tao database mot lan voi schema moi nhat cua he thong.
+ * Script khởi tạo cơ sở dữ liệu một lần với nạp dữ liệu mẫu, sau đó sử dụng dữ liệu thật từ user.
  */
 public class SetupDatabase {
     public static void main(String[] args) {

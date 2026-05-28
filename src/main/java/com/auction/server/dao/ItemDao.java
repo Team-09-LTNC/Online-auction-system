@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * ItemDao: Chịu trách nhiệm tương tác với bảng 'items' trong Database.
+ * ItemDao: Chịu trách nhiệm tương tác với bảng 'items' trong cơ sở dữ liệu.
  * Lớp này thực hiện các thao tác CRUD và tìm kiếm sản phẩm.
  */
 public class ItemDao {
@@ -113,12 +113,11 @@ public class ItemDao {
         return danhSach;
     }
 
-    // Lấy danh sách sản phẩm do một Seller cụ thể đăng bán
+    // Lấy danh sách sản phẩm do một người bán cụ thể đăng bán
     public List<Item> getProductsBySellerId(int sellerId) {
         ensureImageThumbColumn();
         List<Item> danhSach = new ArrayList<>();
 
-        // SỬA SQL Ở ĐÂY: JOIN thêm bảng auctions để lấy thời gian
         String sql = "SELECT i.*, a.start_time, a.end_time " +
                 "FROM items i " +
                 "LEFT JOIN auctions a ON i.id = a.item_id " +
@@ -130,10 +129,10 @@ public class ItemDao {
             pstmt.setInt(1, sellerId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    // Bước 1: Map các thông tin cơ bản
+                    // Ánh xạ các thông tin cơ bản
                     Item item = mapResultSetToItem(rs);
 
-                    // Bước 2: Map thêm thời gian vào đối tượng Item
+                    // Ánh xạ thêm thời gian vào đối tượng Item
                     if (item != null) {
                         item.setStartTime(rs.getString("start_time"));
                         item.setEndTime(rs.getString("end_time"));

@@ -17,14 +17,14 @@ import java.util.ResourceBundle;
 import com.auction.client.manager.AdminManager;
 
 /**
- * InvoicesController
+ * Bộ điều khiển InvoicesController
  * ─────────────────────────────────────────────────────────────
- * Controller cho InvoicesView.fxml.
- * Hiển thị danh sách sản phẩm đã thanh toán (status = PAID).
+ * Bộ điều khiển cho InvoicesView.fxml.
+ * Hiển thị danh sách sản phẩm đã thanh toán (trạng thái = PAID).
  */
 public class InvoicesController implements Initializable, RefreshableCenterContent {
 
-    // ── FXML injections ──────────────────────────────────────
+    // ── Thành phần FXML được inject ───────────────────────────
     @FXML
     private StackPane contentPane;
     @FXML
@@ -48,7 +48,7 @@ public class InvoicesController implements Initializable, RefreshableCenterConte
     @FXML
     private TextField tfSearch;
 
-    // ── Data ─────────────────────────────────────────────────
+    // ── Dữ liệu ───────────────────────────────────────────────
     private final ObservableList<Invoice> masterList = FXCollections.observableArrayList();
     private FilteredList<Invoice> filteredList;
 
@@ -59,7 +59,7 @@ public class InvoicesController implements Initializable, RefreshableCenterConte
         loadData();
     }
 
-    // ── Setup ────────────────────────────────────────────────
+    // ── Thiết lập ─────────────────────────────────────────────
 
     private void setupColumns() {
         colProductId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getProductId()));
@@ -81,12 +81,12 @@ public class InvoicesController implements Initializable, RefreshableCenterConte
                 invoices -> Platform.runLater(() -> {
                     masterList.clear();
                     invoices.forEach(inv -> masterList.add(new Invoice(
-                            String.valueOf(inv.getItemId()), // itemId → productId
-                            inv.getItemName(), // itemName → name
+                            String.valueOf(inv.getItemId()),
+                            inv.getItemName(), 
                             String.valueOf(inv.getAuctionId()),
                             String.valueOf(inv.getSellerId()),
                             String.valueOf(inv.getWinnerId()),
-                            String.format("%,d", inv.getHighestBid()) // highestBid → finalPrice
+                            String.format("%,d", inv.getHighestBid()) 
                     )));
                     updateSummary();
                 }),
@@ -100,7 +100,7 @@ public class InvoicesController implements Initializable, RefreshableCenterConte
         loadData();
     }
 
-    // ── FXML handlers ────────────────────────────────────────
+    // ── Hàm xử lý FXML ────────────────────────────────────────
 
     @FXML
     private void handleSearch() {
@@ -114,7 +114,7 @@ public class InvoicesController implements Initializable, RefreshableCenterConte
         updateSummary();
     }
 
-    // ── Helpers ──────────────────────────────────────────────
+    // ── Hàm hỗ trợ ────────────────────────────────────────────
 
     private void updateSummary() {
         int shown = filteredList.size();
@@ -122,10 +122,10 @@ public class InvoicesController implements Initializable, RefreshableCenterConte
         lblInvoiceCount.setText(shown == total
                 ? total + " hoá đơn"
                 : shown + " / " + total + " hoá đơn");
-        // Bỏ phần tính sum — đã có server tính sẵn qua callback tongDoanhThu
+        // Bỏ phần tính tổng — server đã tính sẵn qua callback tongDoanhThu
     }
 
-    // ── Model ────────────────────────────────────────────────
+    // ── Model dữ liệu ─────────────────────────────────────────
 
     public static class Invoice {
         private final SimpleStringProperty productId;

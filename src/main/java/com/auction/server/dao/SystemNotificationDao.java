@@ -18,7 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * System notifications are stored in chat_messages with an ADMIN sender.
+ * Thông báo hệ thống được lưu trong chat_messages với người gửi ADMIN.
  */
 public class SystemNotificationDao {
     private static final Logger logger = LoggerFactory.getLogger(SystemNotificationDao.class);

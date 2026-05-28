@@ -19,14 +19,14 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 
 /**
- * TransactionsViewController
+ * Bộ điều khiển TransactionsViewController
  * ─────────────────────────────────────────────────────────────
- * Controller cho TransactionsView.fxml.
- * Phiên đấu giá đã kết thúc; admin có thể thay đổi status.
+ * Bộ điều khiển cho TransactionsView.fxml.
+ * Phiên đấu giá đã kết thúc; admin có thể thay đổi trạng thái.
  */
 public class TransactionsViewController implements Initializable, RefreshableCenterContent {
 
-    // ── FXML injections ──────────────────────────────────────
+    // ── Thành phần FXML được inject ───────────────────────────
     @FXML private StackPane                        contentPane;
     @FXML private TableView<Transaction>           txTable;
     @FXML private TableColumn<Transaction, String> colProductId;
@@ -40,7 +40,7 @@ public class TransactionsViewController implements Initializable, RefreshableCen
     @FXML private ComboBox<String>                 cbStatusFilter;
     @FXML private Button                           btnChangeStatus;
 
-    // ── Data ─────────────────────────────────────────────────
+    // ── Dữ liệu ───────────────────────────────────────────────
     private final ObservableList<Transaction> masterList   = FXCollections.observableArrayList();
     private       FilteredList<Transaction>  filteredList;
 
@@ -57,7 +57,7 @@ public class TransactionsViewController implements Initializable, RefreshableCen
         loadData();
     }
 
-    // ── Setup ────────────────────────────────────────────────
+    // ── Thiết lập ─────────────────────────────────────────────
 
     private void setupColumns() {
         colProductId .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getProductId()));
@@ -103,7 +103,7 @@ public class TransactionsViewController implements Initializable, RefreshableCen
         loadData();
     }
 
-    // ── FXML handlers ────────────────────────────────────────
+    // ── Hàm xử lý FXML ────────────────────────────────────────
 
     @FXML
     private void handleTableClick(MouseEvent e) {
@@ -171,7 +171,7 @@ public class TransactionsViewController implements Initializable, RefreshableCen
                 error -> Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, error).showAndWait())));
     }
 
-    // ── Helpers ──────────────────────────────────────────────
+    // ── Hàm hỗ trợ ────────────────────────────────────────────
 
     private void applyFilter() {
         String kw     = tfSearch.getText().trim().toLowerCase();
@@ -206,7 +206,7 @@ public class TransactionsViewController implements Initializable, RefreshableCen
         alert.showAndWait();
     }
 
-    // ── Model ────────────────────────────────────────────────
+    // ── Model dữ liệu ─────────────────────────────────────────
 
     public static class Transaction {
         private final SimpleStringProperty auctionId;
@@ -239,7 +239,7 @@ public class TransactionsViewController implements Initializable, RefreshableCen
         public String getWinnerId()   { return winnerId.get();   }
         public String getFinalPrice() { return finalPrice.get(); }
 
-        // status cần setter vì admin có thể thay đổi
+        // Trạng thái cần setter vì admin có thể thay đổi
         public void setStatus(String v) { status.set(v); }
 
         public SimpleStringProperty auctionIdProperty() { return auctionId; }

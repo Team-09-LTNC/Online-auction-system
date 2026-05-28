@@ -26,7 +26,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 
 /**
- * Controller for bidders administration view.
+ * Bộ điều khiển cho màn hình quản trị người đặt giá.
  */
 public class BiddersViewController implements Initializable {
 
@@ -221,7 +221,7 @@ public class BiddersViewController implements Initializable {
   }
 
   /**
-   * Table item model.
+   * Model dữ liệu cho từng dòng bảng.
    */
   public static class Bidder {
     private final SimpleStringProperty username;

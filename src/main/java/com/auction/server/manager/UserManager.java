@@ -15,8 +15,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Quản lý đăng nhập và trạng thái Online của người dùng
- * Dùng Singleton để đảm bảo chỉ có 1 instance trên toàn Server
+ * Quản lý đăng nhập và trạng thái trực tuyến của người dùng
+ * Dùng Singleton để đảm bảo chỉ có một phiên bản trên toàn server
  */
 public class UserManager {
     private static volatile UserManager instance;
@@ -24,7 +24,7 @@ public class UserManager {
             DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
     private final UserDao userDao;
 
-    // Lưu trữ danh sách người dùng đang kết nối để gửi dữ liệu Real-time
+    // Lưu trữ danh sách người dùng đang kết nối để gửi dữ liệu thời gian thực
     private final Map<Integer, User> onlineUsers = new ConcurrentHashMap<>();
     private final Map<Integer, Set<ClientHandler>> onlineConnections = new ConcurrentHashMap<>();
 
@@ -44,10 +44,10 @@ public class UserManager {
     }
 
     /**
-     * Xác thực thông tin và đưa người dùng vào danh sách Online
+     * Xác thực thông tin và đưa người dùng vào danh sách trực tuyến
      */
     public User login(String tenDangNhap, String matKhau, String role) throws AuthenticationException {
-        // 1. Truy vấn Database tìm người dùng (Chỉ chọc xuống DB đúng 1 lần)
+        // 1. Truy vấn cơ sở dữ liệu tìm người dùng (chỉ chọc xuống DB đúng 1 lần)
         Optional<User> userOpt = userDao.findByUsername(tenDangNhap);
 
         if (userOpt.isEmpty()) {
@@ -60,12 +60,12 @@ public class UserManager {
             throw new AuthenticationException("Sai mật khẩu, vui lòng thử lại!");
         }
 
-        // 3. Kiểm tra xem Role có khớp không
+        // 3. Kiểm tra xem vai trò có khớp không
         if (!user.getRoleName().equalsIgnoreCase(role)) {
             throw new AuthenticationException("Tài khoản này không có quyền truy cập với vai trò " + role + "!");
         }
 
-        // 4. TỐI ƯU: Lấy trực tiếp trạng thái từ RAM, xóa bỏ hoàn toàn truy vấn DB lần 2
+        // 4.Lấy trực tiếp trạng thái từ RAM
         String status = user.getStatus() != null ? user.getStatus() : "ACTIVE";
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime lockUntil = user.getLockUntil();
@@ -96,7 +96,7 @@ public class UserManager {
                     "Tài khoản đang bị khóa vĩnh viễn, vui lòng liên hệ Admin.");
         }
 
-        // 5. Đăng nhập thành công -> Cập nhật trạng thái Online
+        // 5. Đăng nhập thành công -> cập nhật trạng thái trực tuyến
         onlineUsers.put(user.getId(), user);
         return user;
     }
@@ -138,7 +138,7 @@ public class UserManager {
     }
 
     /**
-     * Xóa người dùng khỏi danh sách Online khi họ ngắt kết nối Socket
+     * Xóa người dùng khỏi danh sách trực tuyến khi họ ngắt kết nối socket
      */
     public void logout(int idNguoiDung) {
         onlineUsers.remove(idNguoiDung);

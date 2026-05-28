@@ -20,7 +20,7 @@ import com.auction.server.db.DatabaseConnection;
 
 /**
  * Điều phối các nghiệp vụ liên quan đến sản phẩm
- * Khởi tạo đối tượng thông qua Factory Pattern
+ * Khởi tạo đối tượng thông qua mẫu Factory
  */
 public class ProductManager {
     private static volatile ProductManager instance;
@@ -44,7 +44,7 @@ public class ProductManager {
     }
 
     /**
-     * Factory Method: Sinh ra đúng loại đối tượng con dựa trên phân loại
+     * Phương thức Factory: Sinh ra đúng loại đối tượng con dựa trên phân loại
      */
     public Item createProduct(String loai, ItemAttributes thuocTinh) {
         if (thuocTinh == null) {
@@ -66,8 +66,7 @@ public class ProductManager {
     }
 
     /**
-     * Kiểm tra tính hợp lệ trước khi cho phép Seller đăng bán
-     * NẾU THÀNH CÔNG -> Tự động sinh ra phiên đấu giá và NẠP VÀO LỊCH TRÌNH
+     * Kiểm tra tính hợp lệ trước khi cho phép người bán đăng bán
      */
     public boolean listProductForAuction(Item sanPham, LocalDateTime startTime, LocalDateTime endTime) {
         return listProductForAuction(sanPham, startTime, endTime, null);
@@ -131,7 +130,7 @@ public class ProductManager {
     }
 
     /**
-     * Lấy sản phẩm theo sellerID
+     * Lấy sản phẩm theo ID người bán
      */
     public List<Item> getProductsBySellerId(int sellerId) {
         return itemDao.getProductsBySellerId(sellerId);
@@ -169,7 +168,7 @@ public class ProductManager {
     }
 
     /**
-     * Chỉ cho phép cập nhật khi phiên của sản phẩm còn ở OPEN và chưa có bid.
+     * Chỉ cho phép cập nhật khi phiên của sản phẩm còn ở OPEN và chưa có giá đặt.
      */
     public boolean updatePendingProduct(
             Item sanPham,

@@ -142,8 +142,8 @@ public class AuctionListScreenController
     }
 
     /**
-     * Hàm lõi xử lý Lọc (Category, Status) và Tìm kiếm (Keyword) trực tiếp trên
-     * Client
+     * Hàm lõi xử lý lọc theo phân loại/trạng thái và tìm kiếm theo từ khóa trực tiếp trên
+     * client
      */
     private void applyFiltersAndRender() {
         int currentRenderVersion = renderVersion.incrementAndGet();

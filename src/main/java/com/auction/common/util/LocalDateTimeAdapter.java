@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Adapter dùng để chuyển đổi qua lại giữa LocalDateTime và JSON String
+ * Bộ chuyển đổi dùng để chuyển đổi qua lại giữa LocalDateTime và chuỗi JSON
  */
 public class LocalDateTimeAdapter implements JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
 

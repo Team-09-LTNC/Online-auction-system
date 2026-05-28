@@ -11,21 +11,21 @@
 
 <!--
   ════════════════════════════════════════════════════
-  AdminLayout 
-  Mô tả      : Sidebar + Header + ContentPane động.
-                Các màn hình con được load vào #contentPane
+  Giao diện AdminLayout
+  Mô tả      : Thanh bên + tiêu đề + vùng nội dung động.
+                Các màn hình con được tải vào #contentPane
   ════════════════════════════════════════════════════
 -->
 
 <BorderPane prefHeight="860" prefWidth="1400" style="-fx-background-color: #F7F2EC;" stylesheets="@/css/admin.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.admin.AdminLayoutController">
 
     <!-- ══════════════════════════════════
-         SIDEBAR
+         THANH BÊN
          ══════════════════════════════════ -->
     <left>
         <VBox prefWidth="248" styleClass="admin-sidebar">
 
-            <!-- ─ Logo / Brand ─ -->
+            <!-- ─ Logo / Thương hiệu ─ -->
             <VBox spacing="6" styleClass="admin-sidebar-header">
                 <HBox alignment="CENTER_LEFT" spacing="8">
                     <VBox spacing="0">
@@ -40,7 +40,7 @@
                 </HBox>
             </VBox>
 
-            <!-- ─ Navigation ─ -->
+            <!-- ─ Điều hướng ─ -->
             <ScrollPane fitToWidth="true" styleClass="admin-scroll" VBox.vgrow="ALWAYS">
                 <VBox alignment="CENTER_LEFT" spacing="5.0" style="-fx-padding: 10 8 10 8;">
 
@@ -77,7 +77,7 @@
                 </VBox>
             </ScrollPane>
 
-            <!-- ─ Admin Footer ─ -->
+            <!-- ─ Chân trang quản trị ─ -->
             <HBox alignment="CENTER_LEFT" spacing="10" styleClass="admin-sidebar-footer">
                 <StackPane alignment="CENTER" style="-fx-background-color:#8F1D2C; -fx-background-radius:20px;                                   -fx-pref-width:36px; -fx-pref-height:36px;">
                     <Label style="-fx-text-fill:#FFFCF8; -fx-font-size:12px;                                            -fx-font-weight:bold;" text="SA" />
@@ -96,23 +96,23 @@
     </left>
 
     <!-- ══════════════════════════════════
-         CENTER  (Header + dynamic content)
+         TRUNG TÂM (tiêu đề + nội dung động)
          ══════════════════════════════════ -->
     <center>
       <StackPane fx:id="contentPane" style="-fx-background-color: #F7F2EC;">
          <children>
               <VBox>
       
-                  <!-- Top Header -->
+                  <!-- Tiêu đề trên cùng -->
                   <HBox alignment="CENTER_LEFT" spacing="14" styleClass="admin-header" VBox.vgrow="NEVER">
       
-                    <!-- Hamburger (collapse sidebar) -->
-                    <!--Sau có thể thêm onAction="#toggleSidebar đang cmt trong ctrler" -->
+                    <!-- Nút thu gọn thanh bên -->
+                    <!-- Sau có thể thêm onAction="#toggleSidebar" đang ghi chú trong bộ điều khiển -->
                       <Button style="-fx-font-size:17px;" styleClass="btn-admin-ghost" text="☰" />
                         
                       <VBox alignment="CENTER_LEFT" spacing="1" HBox.hgrow="ALWAYS">
                           <Label fx:id="lblPageTitle" styleClass="admin-page-title" text="Dashboard" />
-                          <!-- Breadcrumb -->
+                          <!-- Điều hướng phân cấp -->
                           <HBox alignment="BOTTOM_LEFT" spacing="4">
                               <Label styleClass="admin-breadcrumb" text="Admin" />
                               <Label styleClass="admin-breadcrumb" text="›" />

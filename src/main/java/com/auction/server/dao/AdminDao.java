@@ -32,8 +32,7 @@ public class AdminDao {
         new AuctionDao().updateStatusByTime();
         List<Auction> auctions = new ArrayList<>();
         String sql = "SELECT a.id, i.name AS item_name, a.start_time, a.end_time, a.status, i.image_url " +
-                "FROM auctions a JOIN items i ON a.item_id = i.id"; // Câu truy vấn lấy thêm image_url từ bảng items
-        // ... rest of the method implementation
+                "FROM auctions a JOIN items i ON a.item_id = i.id"; 
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {
@@ -46,9 +45,9 @@ public class AdminDao {
                 String statusStr = rs.getString("status");
                 AuctionStatus status = statusStr != null ? AuctionStatus.valueOf(statusStr) : AuctionStatus.OPEN;
                 String imageUrl = rs.getString("image_url");
-                // TẠM THỜI: Chỉ tạo đối tượng Auction với thông tin cơ bản, không nạp đầy đủ
-                // Item
-                OtherItem item = new OtherItem(itemName, imageUrl); // Giá và hình ảnh tạm thời
+                // Chỉ tạo đối tượng Auction với thông tin cơ bản
+                // Sản phẩm
+                OtherItem item = new OtherItem(itemName, imageUrl); 
                 Auction auction = new Auction(item);
                 auction.setId(auctionId);
                 auction.setStartTime(startTime);
@@ -80,8 +79,8 @@ public class AdminDao {
 
             while (rs.next()) {
                 int auctionId = rs.getInt("id");
-                int sellerId = rs.getInt("seller_id"); // ← THÊM
-                String imageUrl = rs.getString("image_url"); // ← THÊM
+                int sellerId = rs.getInt("seller_id"); 
+                String imageUrl = rs.getString("image_url");
                 String itemName = rs.getString("item_name");
                 String description = rs.getString("description");
                 long startingPrice = rs.getLong("starting_price");
@@ -91,7 +90,7 @@ public class AdminDao {
                 AuctionStatus status = AuctionStatus.valueOf(rs.getString("status"));
 
                 OtherItem item = new OtherItem(itemName, sellerId, description, startingPrice, category, imageUrl);
-                item.setImageUrl(imageUrl); // ← THÊM nếu Item có field này
+                item.setImageUrl(imageUrl); 
 
                 Auction auction = new Auction(item);
                 auction.setId(auctionId);
@@ -146,7 +145,7 @@ public class AdminDao {
                         rs.getInt("auction_id"),
                         rs.getInt("item_id"),
                         rs.getString("item_name"),
-                        rs.getInt("seller_id"), // ← lấy từ items
+                        rs.getInt("seller_id"),
                         rs.getInt("winner_id"),
                         rs.getLong("final_price")));
             }
@@ -223,9 +222,9 @@ public class AdminDao {
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, auctionId); // ← set tham số TRƯỚC
+            ps.setInt(1, auctionId); 
 
-            try (ResultSet rs = ps.executeQuery()) { // ← executeQuery SAU
+            try (ResultSet rs = ps.executeQuery()) { 
                 if (rs.next()) {
                     JsonObject obj = new JsonObject();
                     obj.addProperty("status", rs.getString("status"));

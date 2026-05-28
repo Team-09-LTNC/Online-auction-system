@@ -12,13 +12,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Quan ly lich su dat gia (bid history).
+ * Quản lý lịch sử đặt giá.
  */
 public class BidTransactionDao {
   private static final Logger logger = LoggerFactory.getLogger(BidTransactionDao.class);
 
   /**
-   * Luu 1 dong lich su dat gia.
+   * Lưu một dòng lịch sử đặt giá.
    */
   public boolean saveBidHistory(int idPhien, int idNguoiBid, long soTien) {
     String sql = "INSERT INTO bid_history (auction_id, bidder_id, bid_amount, bid_time) "
@@ -37,7 +37,7 @@ public class BidTransactionDao {
   }
 
   /**
-   * Lay lich su bid cua 1 phien theo thu tu tang dan thoi gian.
+   * Lấy lịch sử đặt giá của một phiên theo thứ tự thời gian tăng dần.
    */
   public List<BidLine> getAuctionBidHistory(int idPhien) {
     List<BidLine> danhSach = new ArrayList<>();

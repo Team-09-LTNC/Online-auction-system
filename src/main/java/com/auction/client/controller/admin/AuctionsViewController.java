@@ -27,7 +27,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 
 /**
- * Controller for auctions administration view.
+ * Bộ điều khiển cho màn hình quản trị phiên đấu giá.
  */
 public class AuctionsViewController implements Initializable, RefreshableCenterContent {
 
@@ -63,7 +63,7 @@ public class AuctionsViewController implements Initializable, RefreshableCenterC
     @FXML
     private Button btnDelete;
     @FXML
-    private Button btnChangeStatus; // ← THÊM
+    private Button btnChangeStatus;
 
     private final ObservableList<Auction> masterList = FXCollections.observableArrayList();
     private FilteredList<Auction> filteredList;
@@ -191,7 +191,7 @@ public class AuctionsViewController implements Initializable, RefreshableCenterC
 
         String currentStatus = selected.getStatus();
 
-        // Xác định các lựa chọn hợp lệ theo status hiện tại
+        // Xác định các lựa chọn hợp lệ theo trạng thái hiện tại
         List<String> choices;
         switch (currentStatus) {
             case "OPEN":
@@ -237,10 +237,10 @@ public class AuctionsViewController implements Initializable, RefreshableCenterC
     }
 
     /**
-     * Table item model.
+     * Model dữ liệu cho từng dòng bảng.
      */
     public static class Auction {
-        private final SimpleStringProperty auctionId; // ← THÊM
+        private final SimpleStringProperty auctionId; 
         private final SimpleStringProperty productName;
         private final SimpleStringProperty startTime;
         private final SimpleStringProperty endTime;
@@ -249,7 +249,7 @@ public class AuctionsViewController implements Initializable, RefreshableCenterC
 
         public Auction(String auctionId, String productName, String startTime,
                 String endTime, String status, String imageUrl) {
-            this.auctionId = new SimpleStringProperty(auctionId); // ← THÊM
+            this.auctionId = new SimpleStringProperty(auctionId);
             this.productName = new SimpleStringProperty(productName);
             this.startTime = new SimpleStringProperty(startTime);
             this.endTime = new SimpleStringProperty(endTime);
@@ -259,7 +259,7 @@ public class AuctionsViewController implements Initializable, RefreshableCenterC
 
         public String getAuctionId() {
             return auctionId.get();
-        } // ← THÊM
+        } 
 
         public String getProductName() {
             return productName.get();
@@ -283,6 +283,6 @@ public class AuctionsViewController implements Initializable, RefreshableCenterC
 
         public void setStatus(String s) {
             status.set(s);
-        } // ← THÊM để cập nhật UI
+        }
     }
 }

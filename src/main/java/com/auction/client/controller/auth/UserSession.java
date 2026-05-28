@@ -1,8 +1,7 @@
 package com.auction.client.controller.auth;
 
 /**
- * UserSession: Quản lý phiên làm việc tập trung tại Client.
- * Đã cấu trúc lại để lưu trữ thêm ID người dùng từ hệ thống.
+ * UserSession: Quản lý phiên làm việc tập trung tại client.
  */
 public class UserSession {
     private static int userId;

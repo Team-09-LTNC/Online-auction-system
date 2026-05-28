@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Controller chinh cho man hinh admin layout.
+ * Bộ điều khiển chính cho màn hình bố cục admin.
  */
 public class AdminLayoutController implements Initializable {
   private static final Logger logger = LoggerFactory.getLogger(AdminLayoutController.class);

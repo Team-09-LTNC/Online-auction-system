@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Lưu notification trước khi đẩy realtime cho user đang online.
+ * Lưu thông báo trước khi đẩy thời gian thực cho người dùng đang trực tuyến.
  */
 public class SystemNotificationManager {
     private static volatile SystemNotificationManager instance;

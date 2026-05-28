@@ -18,7 +18,7 @@ public class ClientApplication extends Application {
         primaryStage.setTitle("AuctionHub - Bảng Điều Khiển");
         primaryStage.setScene(scene);
 
-        //  Ép cửa sổ bung tràn toàn màn hình ngay khi vừa khởi động
+        //  Ép cửa sổ toàn màn hình ngay khi vừa khởi động
         primaryStage.setMaximized(true);
 
         // Hiển thị cửa sổ lên màn hình
@@ -26,9 +26,9 @@ public class ClientApplication extends Application {
     }
 
     public static void main(String[] args) {
-        //  Ép Java dùng chuẩn UTF-8 để hiện tiếng Việt và Emoji
+        // dùng chuẩn UTF-8 để hiện tiếng Việt và Emoji
         System.setProperty("file.encoding", "UTF-8");
 
-        launch(args); // Nút kích nổ của JavaFX
+        launch(args); 
     }
 }

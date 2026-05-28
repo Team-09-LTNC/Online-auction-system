@@ -38,7 +38,7 @@ public abstract class User extends Entity {
     public void setLockUntil(LocalDateTime lockUntil) { this.lockUntil = lockUntil; }
     public String getPassword() { return password; }
 
-    // Đảm bảo Thread-safety cho số dư
+    // Đảm bảo an toàn luồng cho số dư
     public synchronized long getBalance() { return balance; }
     public synchronized void setBalance(long balance) { this.balance = balance; }
 
@@ -46,7 +46,7 @@ public abstract class User extends Entity {
         return this.balance >= amount;
     }
 
-    // Đồng bộ hóa để tránh Lost Update
+    // Đồng bộ hóa để tránh mất cập nhật
     public synchronized boolean deductBalance(long amount) {
         if (hasEnoughBalance(amount)) {
             this.balance -= amount;

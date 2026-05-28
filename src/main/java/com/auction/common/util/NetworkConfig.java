@@ -51,7 +51,7 @@ public final class NetworkConfig {
                 props.load(input);
             }
         } catch (IOException ignored) {
-            // Fallback defaults are enough for local development.
+            // Giá trị mặc định dự phòng là đủ cho môi trường phát triển cục bộ.
         }
         return props;
     }

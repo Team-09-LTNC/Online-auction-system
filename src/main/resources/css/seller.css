@@ -41,7 +41,7 @@
     -fx-padding: 15 0 5 0;
 }
 
-/* Nút bấm Menu thông thường */
+/* Nút bấm menu thông thường */
 .menu-btn, .category-btn {
     -fx-background-color: transparent;
     -fx-text-fill: #5D4037; /* Nâu trầm */
@@ -53,11 +53,11 @@
 }
 
 .menu-btn:hover, .category-btn:hover {
-    -fx-background-color: rgba(110, 28, 28, 0.05); /* Hover đỏ nhạt */
+    -fx-background-color: rgba(110, 28, 28, 0.05); /* Màu đỏ nhạt khi di chuột */
     -fx-text-fill: #6E1C1C;
 }
 
-/* Nút Menu Đang chọn (Active) - Như nút "Đăng sản phẩm" trong ảnh */
+/* Nút menu đang chọn - như nút "Đăng sản phẩm" trong ảnh */
 .menu-btn-active {
     -fx-background-color: #F5EBEB; /* Nền đỏ cực nhạt */
     -fx-text-fill: #6E1C1C;
@@ -139,7 +139,7 @@
 /* ==========================================================
    THẺ NỘI DUNG (CARDS) & FORM NHẬP LIỆU
    ========================================================== */
-/* Form bọc các khối Thông tin cơ bản, Thời gian... */
+/* Biểu mẫu bọc các khối Thông tin cơ bản, Thời gian... */
 .card {
     -fx-background-color: #FDFBF7; /* Nền khối form hơi khác màu nền trang */
     -fx-background-radius: 12;
@@ -153,14 +153,14 @@
     -fx-text-fill: #1A0F0A;
 }
 
-/* Các nhãn (Label) của ô nhập liệu */
+/* Các nhãn của ô nhập liệu */
 .card .label {
     -fx-text-fill: #1A0F0A;
     -fx-font-size: 13px;
     -fx-font-weight: bold;
 }
 
-/* TextFields, ComboBoxes, DatePickers */
+/* Ô nhập, hộp chọn và bộ chọn ngày */
 .modern-input, .modern-combo, .modern-date {
     -fx-background-color: #FFFFFF;
     -fx-border-color: #EAE3D3;
@@ -176,7 +176,7 @@
     -fx-background-color: #FFFFFF;
 }
 
-/* Khu vực TextArea (Mô tả sản phẩm) */
+/* Khu vực nhập văn bản nhiều dòng (mô tả sản phẩm) */
 .editor-box {
     -fx-background-color: #FFFFFF;
     -fx-border-color: #EAE3D3;
@@ -344,7 +344,7 @@
     -fx-text-fill: #1A0F0A;
 }
 
-/* Thẻ Tag "Có áp dụng" xanh lá */
+/* Thẻ nhãn "Có áp dụng" xanh lá */
 .tag-success {
     -fx-background-color: #E8F5E9;
     -fx-text-fill: #2E7D32;

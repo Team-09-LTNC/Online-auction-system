@@ -5,7 +5,7 @@ public abstract class Entity {
     protected int id;
 
     public Entity() {
-        // Khi INSERT đối tượng này xuống Database,
+        // Khi INSERT đối tượng này xuống cơ sở dữ liệu,
         // MySQL sẽ tự động sinh ID thật
     }
 

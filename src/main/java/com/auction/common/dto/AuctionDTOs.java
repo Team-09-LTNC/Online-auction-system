@@ -116,15 +116,16 @@ public class AuctionDTOs {
         public int getBidderId() { return bidderId; }
     }
 
-    // --- CẬP NHẬT REAL-TIME (OBSERVER) ---
-    // Gói tin này Server tự chủ động gửi xuống Client, không cần Request
+    // --- CẬP NHẬT THỜI GIAN THỰC (OBSERVER) ---
+    // Gói tin này server tự chủ động gửi xuống client, không cần request
     public static class AuctionUpdateDTO extends BaseDTOs.Response {
         private final int auctionId;
         private final long currentPrice;
         private final String highestBidderName;
 
         public AuctionUpdateDTO(int auctionId, long currentPrice, String highestBidderName) {
-            super("NEW_BID_UPDATE", StatusCode.OK, true, "Có người đặt giá mới");            this.auctionId = auctionId;
+            super("NEW_BID_UPDATE", StatusCode.OK, true, "Có người đặt giá mới");   
+            this.auctionId = auctionId;
             this.currentPrice = currentPrice;
             this.highestBidderName = highestBidderName;
         }

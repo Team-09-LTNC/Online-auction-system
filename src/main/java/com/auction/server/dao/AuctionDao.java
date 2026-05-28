@@ -104,7 +104,7 @@ public class AuctionDao {
         return queryDao.getTopRunningAuctionsByBids();
     }
 
-    // Lấy danh sách các phiên mà User đã tham gia đặt giá (hoặc là người bán)
+    // Lấy danh sách các phiên mà người dùng đã tham gia đặt giá (hoặc là người bán)
     public List<Auction> getJoinedAuctions(int userId, String role) {
         return queryDao.getJoinedAuctions(userId, role);
     }

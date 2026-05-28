@@ -27,7 +27,7 @@ public class AdminController implements RequestHandler {
     public String handleRequest(JsonObject yeuCau, ClientHandler client) {
         String loaiYeuCau = yeuCau.get("type").getAsString();
 
-        // Trích xuất chung mã requestId từ Client gửi lên
+        // Trích xuất chung mã requestId từ client gửi lên
         String reqId = yeuCau.has("requestId") && !yeuCau.get("requestId").isJsonNull()
                 ? yeuCau.get("requestId").getAsString()
                 : null;
@@ -55,7 +55,7 @@ public class AdminController implements RequestHandler {
     }
 
     private String handleGetAuctions(JsonObject yeuCau, String reqId) {
-        List<Auction> auctions = adminDao.getAllAuctions(); // cần thêm method này vào AdminDao
+        List<Auction> auctions = adminDao.getAllAuctions(); 
         JsonArray array = new JsonArray();
         for (Auction a : auctions) {
             JsonObject obj = new JsonObject();
@@ -226,7 +226,7 @@ public class AdminController implements RequestHandler {
         String startTime = auctionInfo.get("start_time").getAsString();
         String endTime = auctionInfo.get("end_time").getAsString();
 
-        // Validate chuyển trạng thái
+        // Kiểm tra tính hợp lệ khi chuyển trạng thái
         String validationError = validateStatusTransition(currentStatus, newStatus);
         if (validationError != null) {
             JsonObject res = new JsonObject();
@@ -238,7 +238,7 @@ public class AdminController implements RequestHandler {
             return gson.toJson(res);
         }
 
-        // Xử lý CANCELED → reopen: tự tính status đúng theo thời gian
+        // Xử lý CANCELED → mở lại: tự tính trạng thái đúng theo thời gian
         if ("CANCELED".equals(currentStatus) && "REOPEN".equals(newStatus)) {
             java.time.LocalDateTime now = java.time.LocalDateTime.now();
             java.time.LocalDateTime start = java.time.LocalDateTime.parse(startTime);
@@ -260,7 +260,7 @@ public class AdminController implements RequestHandler {
         res.addProperty("type", "ADMIN_CHANGE_AUCTION_STATUS_RESPONSE");
         res.addProperty("success", ok);
         res.addProperty("message", ok ? "Đã cập nhật thành " + newStatus + "!" : "Cập nhật thất bại!");
-        res.addProperty("newStatus", newStatus); // trả về status thực tế đã set
+        res.addProperty("newStatus", newStatus); // trả về trạng thái thực tế đã đặt
         if (reqId != null)
             res.addProperty("requestId", reqId);
         return gson.toJson(res);
@@ -289,6 +289,6 @@ public class AdminController implements RequestHandler {
             default:
                 return "Trạng thái không hợp lệ!";
         }
-        return null; // hợp lệ
+        return null;
     }
 }

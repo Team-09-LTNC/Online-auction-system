@@ -107,7 +107,7 @@ public class AdminDTOs {
             this.category = category;
             this.startTime = startTime;
             this.endTime = endTime;
-            this.imageUrl = imageUrl; // Placeholder, cần sửa lại sau
+            this.imageUrl = imageUrl; 
         }
 
         public int getId() {

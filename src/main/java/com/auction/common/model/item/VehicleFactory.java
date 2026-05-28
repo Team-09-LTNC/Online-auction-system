@@ -4,7 +4,7 @@ public class VehicleFactory extends ItemFactory {
 
     @Override
     public Item createItem(ItemAttributes item) {
-        // Check lỗi nếu null
+        // Kiểm tra lỗi nếu null
         if (item == null) {
             return null;
         }

@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 /**
  * Cấu hình đấu giá tự động của một người dùng.
- * Implements Comparable để sử dụng cho PriorityQueue.
+ * Cài đặt Comparable để sử dụng cho PriorityQueue.
  */
 public class AutoBidConfig implements Comparable<AutoBidConfig> {
     private final User bidder;
@@ -35,11 +35,11 @@ public class AutoBidConfig implements Comparable<AutoBidConfig> {
 
     @Override
     public int compareTo(AutoBidConfig other) {
-        // 1. Ưu tiên người có MaxBid cao hơn
+        // 1. Ưu tiên người có giá tự động tối đa cao hơn
         int bidCompare = Long.compare(other.maxBid, this.maxBid);
         if (bidCompare != 0) return bidCompare;
 
-        // 2. Nếu MaxBid bằng nhau, ưu tiên người đăng ký trước (registerTime nhỏ hơn)
+        // 2. Nếu giá tự động tối đa bằng nhau, ưu tiên người đăng ký trước (thời gian đăng ký nhỏ hơn)
         return this.registerTime.compareTo(other.registerTime);
     }
 }

@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class StatusMappingTest {
 
-    // Hàm giả lập việc dịch mã lỗi từ Server
+    // Hàm giả lập việc dịch mã lỗi từ server
     String getErrorMessage(int code) {
         switch (code) {
             case 401: return "Sai tài khoản hoặc mật khẩu!";

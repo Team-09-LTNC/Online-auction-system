@@ -24,7 +24,7 @@ public abstract class Item extends Entity {
     }
 
     /**
-     * Constructor tạo item để hiển thị lên trang duyệt của admin.
+     * Hàm khởi tạo item để hiển thị lên trang duyệt của admin.
      */
     public Item(String name, int sellerId, String description, long startingPrice) {
         this.name = name;

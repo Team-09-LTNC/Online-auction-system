@@ -20,14 +20,14 @@ import java.util.ResourceBundle;
 import com.auction.client.manager.AdminManager;
 
 /**
- * ProductsCensorController
+ * Bộ điều khiển ProductsCensorController
  * ─────────────────────────────────────────────────────────────
- * Controller cho ProductsCensorView.fxml.
+ * Bộ điều khiển cho ProductsCensorView.fxml.
  * Hiển thị sản phẩm chưa duyệt; admin có thể duyệt hoặc xoá.
  */
 public class ProductsCensorController implements Initializable, RefreshableCenterContent {
 
-    // ── FXML injections ──────────────────────────────────────
+    // ── Thành phần FXML được inject ───────────────────────────
     @FXML
     private StackPane contentPane;
     @FXML
@@ -62,7 +62,7 @@ public class ProductsCensorController implements Initializable, RefreshableCente
     @FXML
     private Button btnDelete;
 
-    // ── Data ─────────────────────────────────────────────────
+    // ── Dữ liệu ───────────────────────────────────────────────
     private final ObservableList<Product> masterList = FXCollections.observableArrayList();
     private FilteredList<Product> filteredList;
 
@@ -77,7 +77,7 @@ public class ProductsCensorController implements Initializable, RefreshableCente
         loadData();
     }
 
-    // ── Setup ────────────────────────────────────────────────
+    // ── Thiết lập ─────────────────────────────────────────────
 
     private void setupColumns() {
         colProductId.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getProductId()));
@@ -90,7 +90,7 @@ public class ProductsCensorController implements Initializable, RefreshableCente
         colEndTime.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getEndTime()));
         colImage.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getImageUrl()));
 
-        // Cột hình ảnh: hiển thị thumbnail nếu có URL, fallback về text
+        // Cột hình ảnh: hiển thị ảnh thu nhỏ nếu có URL, dự phòng bằng chữ
         colImage.setCellFactory(col -> new TableCell<>() {
             private final ImageView imageView = new ImageView();
             {
@@ -156,7 +156,7 @@ public class ProductsCensorController implements Initializable, RefreshableCente
         loadData();
     }
 
-    // ── FXML handlers ────────────────────────────────────────
+    // ── Hàm xử lý FXML ────────────────────────────────────────
 
     @FXML
     private void handleTableClick(MouseEvent e) {
@@ -227,7 +227,7 @@ public class ProductsCensorController implements Initializable, RefreshableCente
         }
     }
 
-    // ── Helpers ──────────────────────────────────────────────
+    // ── Hàm hỗ trợ ────────────────────────────────────────────
 
     private void applyFilter() {
         String kw = tfSearch.getText().trim().toLowerCase();

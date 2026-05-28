@@ -6,18 +6,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * ServerApplication: Điểm khởi chạy (Entry Point) của toàn bộ hệ thống Server.
- * Nhiệm vụ chính: Cấu hình cổng kết nối và kích hoạt ServerManager.
+ * Ứng dụng server: Điểm khởi chạy của toàn bộ hệ thống server.
+ * Nhiệm vụ chính: Cấu hình cổng kết nối và kích hoạt bộ quản lý server.
  */
 public class ServerApp {
     private static final Logger logger = LoggerFactory.getLogger(ServerApp.class);
 
-    //  giá trị mặc định của server,
-//  nếu muốn test xem chạy oke không ae cứ sửa địa chỉ thành localhost máy mình trong application.properties trước để test
-//  và không cần sửa đây, code  dưới đọc từ file properties, đây chỉ mặc định khi hệ thống chạy tốt
+    // Giá trị mặc định của server,
+// Nếu muốn kiểm thử chạy ổn không thì sửa địa chỉ thành localhost máy mình trong application.properties trước để kiểm thử
+// Và không cần sửa ở đây, code dưới đọc từ file cấu hình, đây chỉ là mặc định khi hệ thống chạy tốt
     private static int PORT = 8080;
 
-    // CẤU HÌNH PORT ---
+    // CẤU HÌNH CỔNG 
     static {
         PORT = NetworkConfig.getServerPort();
         logger.info("Đã nạp cấu hình cổng server: {}", PORT);

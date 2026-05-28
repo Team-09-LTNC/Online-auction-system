@@ -13,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * DatabaseConnection: Quản lý kết nối CSDL sử dụng HikariCP (Singleton Pattern).
- * Đã tích hợp tính năng đọc cấu hình bảo mật từ file properties.
+ * DatabaseConnection: Quản lý kết nối CSDL sử dụng HikariCP theo mẫu Singleton.
+ * Đã tích hợp tính năng đọc cấu hình bảo mật từ file cấu hình.
  */
 public class DatabaseConnection implements ConnectionProvider {
 
@@ -25,7 +25,7 @@ public class DatabaseConnection implements ConnectionProvider {
     private DatabaseConnection() {
         logger.info("Đang khởi tạo Connection Pool (HikariCP)...");
         try {
-            // 1. Tải cấu hình từ file properties (mặc định application.properties)
+            // 1. Tải cấu hình từ file cấu hình (mặc định application.properties)
             String configFile = System.getProperty("db.config.file", "application.properties");
             Properties props = new Properties();
             try (InputStream input = openConfig(configFile)) {
@@ -65,8 +65,8 @@ public class DatabaseConnection implements ConnectionProvider {
                 config.setConnectionInitSql("SET time_zone = '+07:00'");
             }
 
-            // Cấu hình tối ưu cho môi trường đa luồng (Concurrency)
-            config.setMaximumPoolSize(50);      // Tối đa 50 luồng (client) có thể truy vấn cùng lúc
+            // Cấu hình tối ưu cho môi trường đa luồng
+            config.setMaximumPoolSize(50);      // Tối đa 50 luồng client có thể truy vấn cùng lúc
             config.setMinimumIdle(10);           // Luôn giữ ít nhất 10 kết nối sẵn sàng
             config.setIdleTimeout(30000);       // Đóng kết nối nếu k dùng sau 30 giây
             config.setMaxLifetime(1800000);     // Đóng và tạo lại kết nối sau 30 phút để tránh lỗi mạng
@@ -74,7 +74,7 @@ public class DatabaseConnection implements ConnectionProvider {
 
             this.dataSource = new HikariDataSource(config);
 
-            // JVM tự động đóng Pool an toàn khi tắt Server
+            // JVM tự động đóng nhóm kết nối an toàn khi tắt server
             Runtime.getRuntime().addShutdownHook(new Thread(this::closePool));
 
             logger.info("Thiết lập Connection Pool tới Database thành công!");

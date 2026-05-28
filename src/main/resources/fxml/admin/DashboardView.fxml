@@ -19,16 +19,16 @@
                  
              <VBox>
             
-                        <!-- Top Header -->
+                        <!-- Tiêu đề trên cùng -->
                         <HBox alignment="CENTER_LEFT" spacing="14" styleClass="admin-header" VBox.vgrow="NEVER">
             
-                            <!-- Hamburger (collapse sidebar) -->
-                            <!-- sau có thể thêm onAction="#toggleSidebar" đang cmt trong ctrler -->
+                            <!-- Nút thu gọn thanh bên -->
+                            <!-- Sau có thể thêm onAction="#toggleSidebar" đang ghi chú trong bộ điều khiển -->
                             <Button style="-fx-font-size:17px;" styleClass="btn-admin-ghost" text="☰" translateX="-20.0" />
             
                             <VBox alignment="CENTER_LEFT" spacing="1" translateX="-30.0" HBox.hgrow="ALWAYS">
                                 <Label fx:id="lblPageTitle" styleClass="admin-page-title" text="Dashboard" />
-                                <!-- Breadcrumb -->
+                                <!-- Điều hướng phân cấp -->
                                 <HBox alignment="BOTTOM_LEFT" spacing="4">
                                     <Label styleClass="admin-breadcrumb" text="Admin" />
                                     <Label styleClass="admin-breadcrumb" text="›" />
@@ -39,30 +39,30 @@
                     </VBox>
           <VBox spacing="28">
       
-              <!-- Page title -->
+              <!-- Tiêu đề trang -->
               <HBox alignment="CENTER_LEFT" spacing="12">
                   <Region style="-fx-background-color: #8F1D2C;                            -fx-pref-width: 4px; -fx-pref-height: 26px;" />
                   <Label style="-fx-text-fill: #211713; -fx-font-size: 20px;                           -fx-font-weight: bold;" text="Tổng quan hệ thống" />
               </HBox>
       
-              <!-- KPI Cards -->
+              <!-- Thẻ chỉ số KPI -->
               <HBox spacing="20">
       
-                  <!-- Card: Người đấu giá -->
+                  <!-- Thẻ: Người đấu giá -->
                   <VBox spacing="10" style="-fx-background-color: #8F1D2C;                          -fx-background-radius: 12px;                          -fx-padding: 24 28 24 28;                          -fx-effect: dropshadow(gaussian,rgba(110,28,28,0.24),14,0,0,4);" HBox.hgrow="ALWAYS">
                       <Label style="-fx-text-fill: #E8DCD2; -fx-font-size: 12px;                                -fx-font-weight: bold;" text="👤  Người đấu giá" />
                       <Label fx:id="lblBidderCount" style="-fx-text-fill: #FFFCF8; -fx-font-size: 40px;                               -fx-font-weight: bold;" text="0" />
                       <Label style="-fx-text-fill: #E8DCD2; -fx-font-size: 11px;                               " text="tài khoản đã đăng ký" />
                   </VBox>
       
-                  <!-- Card: Người bán -->
+                  <!-- Thẻ: Người bán -->
                   <VBox spacing="10" style="-fx-background-color: #FFFCF8;                          -fx-border-color: #E8DCD2; -fx-border-width: 1px;                          -fx-border-radius: 12px; -fx-background-radius: 12px;                          -fx-padding: 24 28 24 28;                          -fx-effect: dropshadow(gaussian,rgba(26,15,10,0.08),10,0,0,3);" HBox.hgrow="ALWAYS">
                       <Label style="-fx-text-fill: #5E4A42; -fx-font-size: 12px;                                -fx-font-weight: bold;" text="🏪  Người bán" />
                       <Label fx:id="lblSellerCount" style="-fx-text-fill: #8F1D2C; -fx-font-size: 40px;                               -fx-font-weight: bold;" text="0" />
                       <Label style="-fx-text-fill: #8c1e1e; -fx-font-size: 11px;                               " text="tài khoản đã đăng ký" />
                   </VBox>
       
-                  <!-- Card: Phiên đấu giá -->
+                  <!-- Thẻ: Phiên đấu giá -->
                   <VBox spacing="10" style="-fx-background-color: #FFFCF8;                          -fx-border-color: #E8DCD2; -fx-border-width: 1px;                          -fx-border-radius: 12px; -fx-background-radius: 12px;                          -fx-padding: 24 28 24 28;                          -fx-effect: dropshadow(gaussian,rgba(26,15,10,0.08),10,0,0,3);" HBox.hgrow="ALWAYS">
                       <Label style="-fx-text-fill: #5E4A42; -fx-font-size: 12px;                                -fx-font-weight: bold;" text="🔨  Phiên đấu giá" />
                       <Label fx:id="lblAuctionCount" style="-fx-text-fill: #8F1D2C; -fx-font-size: 40px;                               -fx-font-weight: bold;" text="0" />
@@ -71,7 +71,7 @@
       
               </HBox>
       
-              <!-- Refresh button -->
+              <!-- Nút làm mới -->
               <HBox>
                   <Button fx:id="btnRefresh" onAction="#handleRefresh" style="-fx-background-color: transparent;                            -fx-text-fill: #8F1D2C;                            -fx-font-size: 13px;                            -fx-border-color: #8F1D2C; -fx-border-width: 1px;                            -fx-border-radius: 6px; -fx-background-radius: 6px;                            -fx-padding: 8 18 8 18; -fx-cursor: hand;" text="↻  Làm mới dữ liệu" />
               </HBox>

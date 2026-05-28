@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.*;
 
 /**
- * Nhiệm vụ: Xử lý giao dịch tiền giữa Bidder và Seller một cách an toàn.
+ * Nhiệm vụ: Xử lý giao dịch tiền giữa người đặt giá và người bán một cách an toàn.
  */
 public class BidderMoneySellerDao {
     private static final Logger logger = LoggerFactory.getLogger(BidderMoneySellerDao.class);
@@ -60,21 +60,21 @@ public class BidderMoneySellerDao {
     }
 
     /**
-     * Chuyển tiền từ Bidder (người thắng) sang Seller.
+     * Chuyển tiền từ người đặt giá thắng phiên sang người bán.
      */
     public boolean payAuction(int idBidder, int idSeller, long soTien) {
-        // Sử dụng try-with-resources
+        // Sử dụng khối try tự đóng tài nguyên
         try (Connection conn = DatabaseConnection.getInstance().getConnection()) {
 
-            //Tắt AutoCommit để bắt đầu một Transaction thủ công
+            // Tắt tự động commit để bắt đầu một giao dịch thủ công
             conn.setAutoCommit(false);
 
             try {
-                // Trừ tiền Bidder (Chỉ trừ nếu đủ số dư)
+                // Trừ tiền người đặt giá (chỉ trừ nếu đủ số dư)
                 String sqlTruTien = "UPDATE users SET balance = balance - ? " +
                         "WHERE id = ? AND role = 'BIDDER' AND balance >= ?";
                 try (PreparedStatement p1 = conn.prepareStatement(sqlTruTien)) {
-                    p1.setLong(1, soTien); // Sử dụng setLong
+                    p1.setLong(1, soTien); // Gán tham số kiểu long
                     p1.setInt(2, idBidder);
                     p1.setLong(3, soTien);
 
@@ -84,16 +84,16 @@ public class BidderMoneySellerDao {
                     }
                 }
 
-                // Cộng tiền Seller
+                // Cộng tiền người bán
                 String sqlCongTien = "UPDATE users SET balance = balance + ? " +
                         "WHERE id = ? AND role = 'SELLER'";
                 try (PreparedStatement p2 = conn.prepareStatement(sqlCongTien)) {
-                    p2.setLong(1, soTien); // Sử dụng setLong
+                    p2.setLong(1, soTien); // Gán tham số kiểu long
                     p2.setInt(2, idSeller);
                     p2.executeUpdate();
                 }
 
-                // Ghi log biến động số dư cho Bidder
+                // Ghi log biến động số dư cho người đặt giá
                 String sqlLogBidder = "INSERT INTO wallet_transactions (user_id, transaction_type, amount, description) VALUES (?, 'PAYMENT_SENT', ?, 'Thanh toán đấu giá')";
                 try (PreparedStatement p3 = conn.prepareStatement(sqlLogBidder)) {
                     p3.setInt(1, idBidder);
@@ -101,7 +101,7 @@ public class BidderMoneySellerDao {
                     p3.executeUpdate();
                 }
 
-                // Ghi log biến động số dư cho Seller
+                // Ghi log biến động số dư cho người bán
                 String sqlLogSeller = "INSERT INTO wallet_transactions (user_id, transaction_type, amount, description) VALUES (?, 'PAYMENT_RECEIVED', ?, 'Nhận tiền bán đấu giá')";
                 try (PreparedStatement p4 = conn.prepareStatement(sqlLogSeller)) {
                     p4.setInt(1, idSeller);
@@ -114,12 +114,12 @@ public class BidderMoneySellerDao {
                 return true;
 
             } catch (SQLException e) {
-                // Nếu có bất kỳ lỗi SQL nào, hoàn tác (rollback) để tránh mất tiền oan
+                // Nếu có bất kỳ lỗi SQL nào, hoàn tác để tránh mất tiền oan
                 conn.rollback();
                 logger.error("[Transaction Error] Lỗi thanh toán: ", e);
                 return false;
             } finally {
-                // Trả trạng thái AutoCommit về mặc định trước khi trả kết nối về Pool
+                // Trả trạng thái tự động commit về mặc định trước khi trả kết nối về nhóm kết nối
                 conn.setAutoCommit(true);
             }
 
@@ -130,8 +130,8 @@ public class BidderMoneySellerDao {
     }
 
     /**
-     * Quyết toán phiên đã có người thắng. Bidder/seller/số tiền đều được đọc
-     * lại từ DB trong transaction để client không thể tự đổi người nhận hoặc giá.
+     * Quyết toán phiên đã có người thắng. Người đặt giá/người bán/số tiền đều được đọc
+     * lại từ DB trong giao dịch để client không thể tự đổi người nhận hoặc giá.
      */
     public PaymentResult settleBuyNow(int auctionId, int bidderId, boolean thanhToan) {
         String lockAuction = "SELECT a.status, a.current_price, a.buy_now_price, "

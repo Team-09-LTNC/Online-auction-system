@@ -4,9 +4,9 @@
 <?import javafx.scene.control.*?>
 
 <!--
-    TransactionsView.fxml
-    Controller: com.auction.client.controller.admin.TransactionsViewController
-    Phiên đấu giá đã kết thúc — admin có thể thay đổi status
+    Giao diện TransactionsView.fxml
+    Bộ điều khiển: com.auction.client.controller.admin.TransactionsViewController
+    Phiên đấu giá đã kết thúc — admin có thể thay đổi trạng thái
 -->
 <StackPane fx:id="contentPane"
            xmlns="http://javafx.com/javafx/17"
@@ -16,7 +16,7 @@
 
     <VBox spacing="16">
 
-        <!-- Header row -->
+        <!-- Dòng tiêu đề -->
         <HBox alignment="CENTER_LEFT" spacing="12">
             <Region style="-fx-background-color: #8F1D2C;
                            -fx-pref-width: 4px; -fx-pref-height: 22px;"/>
@@ -29,7 +29,7 @@
                           "/>
         </HBox>
 
-        <!-- Toolbar -->
+        <!-- Thanh công cụ -->
         <HBox spacing="10" alignment="CENTER_LEFT">
             <TextField fx:id="tfSearch"
                        promptText="🔍  Tìm theo ID sản phẩm hoặc người thắng..."
@@ -58,7 +58,7 @@
                            -fx-background-radius: 6px; -fx-cursor: hand;"/>
         </HBox>
 
-        <!-- Table -->
+        <!-- Bảng dữ liệu -->
         <TableView fx:id="txTable"
                    VBox.vgrow="ALWAYS"
                    onMouseClicked="#handleTableClick"

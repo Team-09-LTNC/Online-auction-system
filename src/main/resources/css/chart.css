@@ -17,19 +17,19 @@
     -fx-stroke-dash-array: 2 2;
 }
 
-/* 1. Đường Line chính màu đỏ thẫm */
+/* 1. Đường chính màu đỏ thẫm */
 .default-color0.chart-series-area-line {
     -fx-stroke: #A64452;
     -fx-stroke-width: 3px;
     -fx-effect: dropshadow(three-pass-box, rgba(166, 68, 82, 0.3), 10, 0, 0, 3);
 }
 
-/* 2. Vùng đổ bóng (Area Fill) - Hiệu ứng Gradient */
+/* 2. Vùng đổ bóng - hiệu ứng chuyển màu */
 .default-color0.chart-series-area-fill {
     -fx-fill: linear-gradient(to bottom, rgba(166, 68, 82, 0.2) 0%, rgba(166, 68, 82, 0.0) 100%);
 }
 
-/* 3. Điểm nút (Symbols) */
+/* 3. Điểm nút dữ liệu */
 .default-color0.chart-area-symbol {
     -fx-background-color: #A64452, white;
     -fx-background-insets: 0, 2;

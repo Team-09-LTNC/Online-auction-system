@@ -88,7 +88,7 @@ public class LoginController {
                     if (responseJson.has("userData")) {
                         JsonObject userData = responseJson.getAsJsonObject("userData");
 
-                        // ĐỒNG BỘ QUAN TRỌNG: Lấy ID người dùng thực từ Server trả về để gán vào Client Session
+                        // ĐỒNG BỘ QUAN TRỌNG: Lấy ID người dùng thực từ server trả về để gán vào phiên client
                         if (userData.has("id")) {
                             UserSession.setUserId(userData.get("id").getAsInt());
                         }

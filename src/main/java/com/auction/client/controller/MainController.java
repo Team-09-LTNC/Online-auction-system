@@ -27,7 +27,7 @@ public class MainController {
     @FXML
     private StackPane mainContentArea;
 
-    // Biến này để lưu Controller của trang đang hiện ở Center (ví dụ DashboardController)
+    // Biến này để lưu controller của trang đang hiện ở giữa (ví dụ DashboardController)
     private Object currentCenterController;
     private final Map<String, LoadedCenterView> centerViewCache = new HashMap<>();
 
@@ -71,7 +71,7 @@ public class MainController {
         }
     }
 
-    // Hàm để các Controller khác lấy được cái Controller đang hiện ở giữa
+    // Hàm để các controller khác lấy được controller đang hiện ở giữa
     public Object getCurrentCenterController() {
         return currentCenterController;
     }

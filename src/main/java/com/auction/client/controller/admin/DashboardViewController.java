@@ -14,9 +14,9 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 /**
- * DashboardViewController
+ * Bộ điều khiển DashboardViewController
  * ─────────────────────────────────────────────────────────────
- * Controller cho DashboardView.fxml.
+ * Bộ điều khiển cho DashboardView.fxml.
  * Hiển thị 3 chỉ số: số người đấu giá, người bán, phiên đấu giá.
  */
 public class DashboardViewController implements Initializable, RefreshableCenterContent {
@@ -50,7 +50,7 @@ public class DashboardViewController implements Initializable, RefreshableCenter
                 error -> System.err.println("Lỗi: " + error));
     }
 
-    // ── FXML handlers ────────────────────────────────────────
+    // ── Hàm xử lý FXML ────────────────────────────────────────
 
     @FXML
     private void handleRefresh() {
@@ -62,7 +62,7 @@ public class DashboardViewController implements Initializable, RefreshableCenter
         loadStats();
     }
 
-    // ── Public API ───────────────────────────────────────────
+    // ── API công khai ─────────────────────────────────────────
 
     /** Cập nhật từng chỉ số thủ công (dùng khi có broadcast từ nơi khác). */
     public void updateCounts(int bidders, int sellers, int auctions) {

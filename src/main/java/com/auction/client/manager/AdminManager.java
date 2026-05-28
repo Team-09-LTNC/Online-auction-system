@@ -6,7 +6,6 @@ import com.auction.common.dto.AdminDTOs.AuctionSummaryDTO;
 import com.auction.common.dto.AdminDTOs.PendingAuctionDTO;
 import com.auction.common.dto.AdminDTOs.UserSummaryDTO;
 import com.auction.common.enums.ActionType;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +29,7 @@ public class AdminManager {
   }
 
   /**
-   * Lay danh sach Bidder tu server.
+   * Lấy danh sách người đặt giá từ server.
    */
   public void getBidders(Consumer<List<UserSummaryDTO>> onSuccess, Consumer<String> onError) {
     JsonObject request = buildRequest(ActionType.ADMIN_GET_ALL_BIDDERS);
@@ -39,7 +38,7 @@ public class AdminManager {
   }
 
   /**
-   * Lay danh sach Seller tu server.
+   * Lấy danh sách người bán từ server.
    */
   public void getSellers(Consumer<List<UserSummaryDTO>> onSuccess, Consumer<String> onError) {
     JsonObject request = buildRequest(ActionType.ADMIN_GET_ALL_SELLERS);

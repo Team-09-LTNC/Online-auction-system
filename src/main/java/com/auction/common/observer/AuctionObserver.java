@@ -10,6 +10,6 @@ public interface AuctionObserver {
     /** Gọi khi trạng thái phiên đấu giá thay đổi (OPEN -> RUNNING -> FINISHED -> PAID/CANCELED) */
     void onStatusChanged(AuctionStatus newStatus);
 
-    /** Gọi khi có tin nhắn chat mới trong phòng */
+    /** Gọi khi có thông báo mới */
     void onChatMessage(String senderName, String message, boolean isSystem);
 }

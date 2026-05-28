@@ -69,7 +69,7 @@ public class ProductController implements RequestHandler {
     // --- CÁC HÀM XỬ LÝ NGHIỆP VỤ ---
 
     private String handleGetMyProducts(JsonObject yeuCau, ClientHandler client) {
-        // LUÔN lấy thông tin người dùng đang đăng nhập trên hệ thống Server
+        // LUÔN lấy thông tin người dùng đang đăng nhập trên hệ thống server
         User nguoiDung = client.getCurrentUser();
 
         if (nguoiDung == null) {

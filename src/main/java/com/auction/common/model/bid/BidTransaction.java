@@ -6,10 +6,10 @@ import com.auction.common.model.user.Bidder;
 
 /**
  * Đại diện cho một bản ghi đặt giá trong hệ thống.
- * Tương ứng với bảng 'bid_history' trong Database.
+ * Tương ứng với bảng 'bid_history' trong cơ sở dữ liệu.
  */
 public class BidTransaction extends Entity {
-    private int auctionId;   // xác định bid này của phiên nào
+    private int auctionId;   // xác định lượt đặt giá này của phiên nào
     private Bidder bidder;   // người đặt giá
     private long bidAmount;   //
     private LocalDateTime timestamp;
@@ -22,7 +22,7 @@ public class BidTransaction extends Entity {
         this.timestamp = LocalDateTime.now();
     }
 
-    // Getters
+    // Phương thức lấy giá trị
     public int getAuctionId() { return auctionId; }
     public Bidder getBidder() { return bidder; }
     public long getBidAmount() { return bidAmount; }

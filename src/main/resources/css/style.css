@@ -2,7 +2,7 @@
    PHẦN 1: THIẾT LẬP TỔNG THỂ (DÙNG CHUNG TOÀN APP)
    ========================================================== */
 .root {
-    /* Font chữ chủ đạo và màu nền kem nhạt cho toàn bộ ứng dụng */
+    /* Phông chữ chủ đạo và màu nền kem nhạt cho toàn bộ ứng dụng */
     -fx-font-family: "Segoe UI", Arial, sans-serif;
     -fx-background-color: #FDFBF9; /* Chuyển sang màu trắng kem cực nhẹ */
 }
@@ -19,10 +19,10 @@
     /* Màu kem hồng nhạt rất dịu để tạo chiều sâu */
     -fx-background-color: #FAF6F3;
     -fx-border-color: #F0EAE5;
-    -fx-border-width: 0 1 0 0; /* Kẻ vạch ngăn cách bên phải thanh Sidebar */
+    -fx-border-width: 0 1 0 0; /* Kẻ vạch ngăn cách bên phải thanh bên */
 }
 
-/* Các nút bấm điều hướng trên Sidebar */
+/* Các nút bấm điều hướng trên thanh bên */
 .nav-button {
     -fx-background-color: transparent;
     /* Màu chữ nâu trầm khi ở trạng thái bình thường */
@@ -33,7 +33,7 @@
     -fx-background-radius: 12;
 }
 
-/* Hiệu ứng khi di chuột qua hoặc khi nút đó đang được chọn (Active) */
+/* Hiệu ứng khi di chuột qua hoặc khi nút đó đang được chọn */
 .nav-button:hover {
     -fx-background-color: #F2E8E4; /* Hồng nhạt nhẹ nhàng */
     -fx-text-fill: #A64452; /* Chữ màu đỏ hồng đất */
@@ -219,7 +219,7 @@
 
 /* Ngoại lệ cho ô đăng sản phẩm */
 .post-product-button {
-    -fx-background-color: #A64452; /* Màu nhạt đồng bộ app */
+    -fx-background-color: #A64452; /* Màu nhạt đồng bộ ứng dụng */
 }
 
 .post-product-button .label {
@@ -231,14 +231,14 @@
     -fx-font-size: 10px;
 }
 
-/* Logo hình cái khiên (Chỉ lấy khung) */
+/* Logo hình cái khiên (chỉ lấy khung) */
 .shield-logo {
     -fx-fill: transparent !important;
     -fx-stroke: #A64452;
     -fx-stroke-width: 2;
 }
 
-/* Style cho thanh Banner gộp mới */
+/* Kiểu cho thanh banner gộp mới */
 .combined-banner {
     -fx-background-color: #FFFFFF;
     -fx-background-radius: 20;
@@ -271,12 +271,12 @@
    PHẦN 5: GIAO DIỆN LOGIN
    ========================================================== */
 
-/* Nền chuyển màu Gradient cho trang Login */
+/* Nền chuyển màu cho trang đăng nhập */
 .main-background {
     -fx-background-color: #EDE6DF;
 }
 
-/* Thẻ trắng bọc toàn bộ Form đăng nhập */
+/* Thẻ trắng bọc toàn bộ biểu mẫu đăng nhập */
 .white-card {
     -fx-background-color: white;
 
@@ -284,22 +284,22 @@
     -fx-effect: dropshadow(three-pass-box, rgba(70,30,15,0.20), 30, 0, 0, 6);
 }
 
-/* Panel bên phải - Màu xám kem  */
+/* Khung bên phải - màu xám kem */
 .right-panel {
     -fx-background-color: #F0EAE4;
     -fx-background-radius: 0 20 20 0;
 }
 
-/* Chỉnh chữ AuctionHub  */
+/* Chỉnh chữ AuctionHub */
 .logo-text-large {
     -fx-font-weight: bold;
-    /* Tăng font-size lên 48px cho nó to nạc hẳn ra */
+    /* Tăng cỡ chữ lên 48px cho nó nổi bật hơn */
     -fx-font-size: 45px;
     -fx-text-fill: #6E1C1C;
     -fx-padding: 0 0 5 0;
 }
 
-/* Dòng slogan đi kèm */
+/* Dòng khẩu hiệu đi kèm */
 .illustration-text {
     -fx-text-fill: #5C3D30;
     -fx-font-size: 14px;
@@ -324,7 +324,7 @@
     -fx-font-size: 13px;
 }
 
-/* --- LOGIC CHO Ô NHẬP LIỆU  --- */
+/* --- XỬ LÝ HIỂN THỊ Ô NHẬP LIỆU --- */
 
 /* 1. Khung bao bên ngoài (HBox bọc ngoài ô nhập) */
 .input-field {
@@ -351,7 +351,7 @@
     -fx-padding: 0 0 0 5;
 }
 
-/* Icon emoji 👤 🔒 bên trái ô nhập */
+/* Biểu tượng emoji 👤 🔒 bên trái ô nhập */
 .field-icon {
     -fx-font-size: 16px;
     -fx-text-fill: #6E1C1C;
@@ -377,7 +377,7 @@
     -fx-background-color: #4A1010;
 }
 
-/* Link quên mật khẩu/đăng ký */
+/* Liên kết quên mật khẩu/đăng ký */
 .forgot-password-link {
     -fx-text-fill: #6E1C1C;
     -fx-font-size: 13px;

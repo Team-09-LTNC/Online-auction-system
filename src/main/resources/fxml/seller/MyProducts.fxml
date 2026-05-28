@@ -18,7 +18,7 @@
       xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1">
 
-    <!-- PHẦN 1: HEADER (Tìm kiếm + User) - Đã thu hẹp chiều cao -->
+    <!-- PHẦN 1: TIÊU ĐỀ (Tìm kiếm + người dùng) - Đã thu hẹp chiều cao -->
     <HBox alignment="CENTER_LEFT" prefHeight="70.0" spacing="20.0" style="-fx-padding: 10 30 10 30;">
         <TextField fx:id="txtSearch" prefHeight="40.0" prefWidth="450.0" promptText="Tìm kiếm sản phẩm..." style="-fx-background-color: #FFFFFF; -fx-background-radius: 25; -fx-border-color: #EEEEEE; -fx-border-radius: 25; -fx-padding: 0 15;" />
         <Region HBox.hgrow="ALWAYS" />
@@ -37,7 +37,7 @@
     <!-- PHẦN 2: NỘI DUNG CUỘN -->
     <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
         <content>
-            <!-- Giảm spacing giữa các dòng từ 30 xuống 20 để khít hơn -->
+            <!-- Giảm khoảng cách giữa các dòng từ 30 xuống 20 để khít hơn -->
             <VBox spacing="20.0" style="-fx-padding: 10 30 30 30;">
 
                 <HBox alignment="CENTER_LEFT" spacing="20.0" style="-fx-background-color: #FFFFFF; -fx-background-radius: 20; -fx-padding: 15 25; -fx-border-color: #F0F0F0; -fx-border-radius: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.03), 10, 0, 0, 5);">

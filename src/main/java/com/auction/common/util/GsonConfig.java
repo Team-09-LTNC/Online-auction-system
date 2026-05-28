@@ -5,14 +5,14 @@ import com.google.gson.GsonBuilder;
 import java.time.LocalDateTime;
 
 /**
- * Lớp cung cấp đối tượng Gson đã được cấu hình sẵn các Adapter cần thiết.
- * Đảm bảo tính nhất quán dữ liệu giữa Client và Server.
+ * Lớp cung cấp đối tượng Gson đã được cấu hình sẵn các bộ chuyển đổi cần thiết.
+ * Đảm bảo tính nhất quán dữ liệu giữa client và server.
  */
 public class GsonConfig {
     private static volatile Gson instance;
 
     private GsonConfig() {
-        // Private constructor để chặn khởi tạo tự do (Singleton Pattern)
+        // Constructor private để chặn khởi tạo tự do theo mẫu Singleton
     }
 
     public static Gson getInstance() {

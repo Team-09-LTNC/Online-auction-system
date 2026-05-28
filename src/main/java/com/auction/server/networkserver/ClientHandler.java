@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Handles one client socket connection lifecycle.
+ * Xử lý vòng đời của một kết nối socket từ client.
  */
 public class ClientHandler implements Runnable, AuctionObserver {
   private static final Logger LOGGER = LoggerFactory.getLogger(ClientHandler.class);
@@ -108,7 +108,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
     try {
       socketClient.close();
     } catch (IOException ignored) {
-      // no-op
+      // Không cần xử lý gì
     }
   }
 

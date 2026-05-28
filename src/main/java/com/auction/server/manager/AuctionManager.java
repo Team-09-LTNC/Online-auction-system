@@ -2,7 +2,6 @@ package com.auction.server.manager;
 
 import com.auction.common.exception.AuctionClosedException;
 import com.auction.common.exception.InvalidBidException;
-import com.auction.common.enums.ActionType;
 import com.auction.common.enums.AuctionStatus;
 import com.auction.common.model.bid.Auction;
 import com.auction.common.model.bid.AutoBidConfig;
@@ -11,7 +10,6 @@ import com.auction.common.model.user.Bidder;
 import com.auction.common.model.user.User;
 import com.auction.common.observer.AuctionObserver;
 import com.auction.server.dao.AuctionDao;
-import com.google.gson.JsonObject;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -85,7 +83,6 @@ public class AuctionManager {
     private AuctionManager() {
         // Khôi phục các phiên đang chạy
         for (Auction a : auctionDao.getRunningAuctions()) {
-            // ---> PHỤC HỒI BOT TỪ DATABASE LÊN RAM
             loadAutoBidsIntoAuction(a);
 
             dsPhienDangChay.put(a.getId(), a);
@@ -100,7 +97,7 @@ public class AuctionManager {
         paymentTimeoutService.startOverduePaymentSweep();
     }
 
-    // Double-checked locking: đảm bảo thread-safe cho Singleton
+    // Khóa kiểm tra hai lần: đảm bảo an toàn luồng cho Singleton
     public static AuctionManager getInstance() {
         if (instance == null) {
             synchronized (AuctionManager.class) {
@@ -111,23 +108,23 @@ public class AuctionManager {
         return instance;
     }
 
-    // Lên lịch mở phiên vào thời điểm startTime
+    // Lên lịch mở phiên vào thời điểm bắt đầu
     public void scheduleAuctionStart(Auction phien) {
         lifecycleService.scheduleAuctionStart(phien);
     }
 
-    // Lên lịch đóng phiên, hủy task cũ nếu có (dùng cho Anti-sniping khi gia hạn)
+    // Lên lịch đóng phiên, hủy tác vụ cũ nếu có (dùng cho chống đặt giá phút chót khi gia hạn)
     public void scheduleAuctionClose(Auction phien) {
         lifecycleService.scheduleAuctionClose(phien);
     }
 
-    // Đóng phiên: xác định trạng thái FINISHED/CANCELED, dọn dẹp tài nguyên
+    // Đóng phiên: xác định trạng thái kết thúc/bị hủy, dọn dẹp tài nguyên
     private void closeAuction(int idPhien) {
         lifecycleService.closeAuction(idPhien);
     }
 
-    // Xử lý đặt giá: kiểm tra điều kiện, chống sniping, lưu DB và kích hoạt
-    // auto-bid
+    // Xử lý đặt giá: kiểm tra điều kiện, chống đặt giá phút chót, lưu DB và kích hoạt
+    // đặt giá tự động
     public boolean handlePlaceBid(int idPhien, BidTransaction giaoDich) throws InvalidBidException, AuctionClosedException {
         Auction phien = dsPhienDangChay.get(idPhien);
         if (phien == null) {
@@ -153,13 +150,13 @@ public class AuctionManager {
             }
         }
 
-        synchronized (phien) { // Đồng bộ trên phiên để tránh race condition
+        synchronized (phien) { // Đồng bộ trên phiên để tránh tranh chấp luồng
             if (!phien.isAcceptingBids()) {
                 closeAuction(idPhien);
                 throw new AuctionClosedException("Phiên đã kết thúc!");
             }
 
-            // Chặn seller tự bid sản phẩm của mình
+            // Chặn người bán tự đặt giá sản phẩm của mình
             if (giaoDich.getBidder().getId() == phien.getItem().getSellerId())
                 throw new InvalidBidException("Không được tự bid sản phẩm của mình!");
 
@@ -182,7 +179,7 @@ public class AuctionManager {
                 phien.updateWinner(giaoDich);
                 extendIfLateBid(phien);
                 notifyNewBid(idPhien, giaoDich);
-                autoBidService.triggerAutoBid(phien, giaoDich.getBidder().getId()); // Kích hoạt auto-bid để đáp trả nếu cần
+                autoBidService.triggerAutoBid(phien, giaoDich.getBidder().getId()); // Kích hoạt đặt giá tự động để đáp trả nếu cần
                 return true;
             }
             return false;
@@ -195,7 +192,7 @@ public class AuctionManager {
         return bidCommandService.handleBuyNow(idPhien, bidder);
     }
 
-    // Đăng ký auto-bid: đặt giá tự động đến mức tối đa cho phép
+    // Đăng ký đặt giá tự động: đặt giá tự động đến mức tối đa cho phép
     public void registerAutoBid(int idPhien, User bidder, long maxBid, long bidStep) throws Exception {
         bidCommandService.registerAutoBid(idPhien, bidder, maxBid, bidStep);
     }
@@ -211,12 +208,12 @@ public class AuctionManager {
         paymentTimeoutService.schedulePaymentTimeout(phien.getId(), targets);
     }
 
-    // Đăng ký observer để nhận thông báo khi có bid mới
+    // Đăng ký đối tượng quan sát để nhận thông báo khi có giá đặt mới
     public void subscribe(int idPhien, AuctionObserver obs) {
         realtimeNotifier.subscribe(idPhien, obs);
     }
 
-    // Gửi thông báo đến tất cả observer đang theo dõi phiên
+    // Gửi thông báo đến tất cả đối tượng quan sát đang theo dõi phiên
     private void notifyNewBid(int idPhien, BidTransaction tx) {
         realtimeNotifier.notifyNewBid(idPhien, tx);
     }
@@ -278,7 +275,7 @@ public class AuctionManager {
         bidCommandService.removeAutoBid(idPhien, bidder);
     }
 
-    // Gửi tin nhắn chat đến tất cả observer trong phiên
+    // Gửi tin nhắn chat đến tất cả đối tượng quan sát trong phiên
     public void broadcastChatMessage(int idPhien, String senderName, String message, boolean isSystem) {
         realtimeNotifier.broadcastChatMessage(idPhien, senderName, message, isSystem);
     }
@@ -320,9 +317,9 @@ public class AuctionManager {
         return false;
     }
     
-    //-----------ADMIN FUNCTION: QUẢN LÝ PHIÊN ĐẤU GIÁ -----------/
+    //-----------CHỨC NĂNG ADMIN: QUẢN LÝ PHIÊN ĐẤU GIÁ -----------/
     /**
-     * Duyệt phiên PENDING: tính đúng status theo thời gian rồi lên lịch scheduler
+     * Duyệt phiên PENDING: tính đúng trạng thái theo thời gian rồi lên lịch bộ lập lịch
      */
     public boolean approveAuctionSession(int auctionId) {
         boolean approved = adminSyncService.approveAuctionSession(auctionId);

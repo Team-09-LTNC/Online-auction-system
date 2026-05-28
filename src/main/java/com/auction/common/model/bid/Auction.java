@@ -48,7 +48,7 @@ public class Auction extends Entity {
                 : this.endTime.plusSeconds(extraSeconds);
     }
 
-    // --- Getters & Setters ---
+    // --- Phương thức lấy/gán giá trị ---
     public Item getItem() { return item; }
 
     public long getCurrentHighestBid() { return currentHighestBid; }
@@ -84,7 +84,7 @@ public class Auction extends Entity {
 
     public List<BidTransaction> getBidHistory() { return bidHistory; }
 
-    // --- GETTER/SETTER CHO GIÁ MUA ĐỨT ---
+    // --- PHƯƠNG THỨC LẤY/GÁN GIÁ MUA ĐỨT ---
     public Long getBuyNowPrice() { return buyNowPrice; }
     public void setBuyNowPrice(Long buyNowPrice) { this.buyNowPrice = buyNowPrice; }
 

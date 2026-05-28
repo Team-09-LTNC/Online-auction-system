@@ -2,14 +2,14 @@ package com.auction.common.enums;
 
 public class ActionType {
 
-    // --- AUTH & USER ---
+    // --- XÁC THỰC & NGƯỜI DÙNG ---
     public static final String REGISTER = "AUTH_REGISTER";
     public static final String LOGIN = "AUTH_LOGIN";
     public static final String LOGOUT = "AUTH_LOGOUT";
     public static final String TOP_UP_MONEY = "USER_TOP_UP";
     public static final String WITHDRAW_MONEY = "USER_WITHDRAW";
 
-    // --- PRODUCT ---
+    // --- SẢN PHẨM ---
     public static final String CREATE_PRODUCT = "CREATE_PRODUCT";
     public static final String GET_ALL_PRODUCTS = "PRODUCT_GET_ALL";
     public static final String GET_PRODUCT_BY_ID = "PRODUCT_GET_BY_ID";
@@ -17,7 +17,7 @@ public class ActionType {
     public static final String DELETE_PRODUCT = "PRODUCT_DELETE";
     public static final String SEARCH_PRODUCT = "PRODUCT_SEARCH";
     public static final String GET_MY_PRODUCTS = "GET_MY_PRODUCTS";
-    // --- AUCTION ---
+    // --- ĐẤU GIÁ ---
     public static final String CREATE_AUCTION = "AUCTION_CREATE";
     public static final String GET_ALL_AUCTIONS = "AUCTION_GET_ALL";
     public static final String GET_JOINED_AUCTIONS = "AUCTION_GET_JOINED";
@@ -38,17 +38,17 @@ public class ActionType {
     public static final String UNFOLLOW_AUCTION = "AUCTION_UNFOLLOW";
     public static final String GET_FOLLOWED_AUCTIONS = "AUCTION_GET_FOLLOWED";
 
-    // --- CHAT REAL-TIME ---
+    // --- CHAT THỜI GIAN THỰC ---
     public static final String SEND_CHAT_MESSAGE = "CHAT_SEND_MESSAGE";
     public static final String GET_SYSTEM_NOTIFICATIONS = "CHAT_GET_SYSTEM_NOTIFICATIONS";
     public static final String MARK_SYSTEM_NOTIFICATIONS_READ = "CHAT_MARK_SYSTEM_NOTIFICATIONS_READ";
 
-    // --- SERVER PUSH (server chủ động gửi, không có requestId) ---
+    // --- ĐẨY TỪ SERVER (server chủ động gửi, không có requestId) ---
     public static final String AUCTION_BID_UPDATE = "AUCTION_BID_UPDATE";
     public static final String AUCTION_RESULT = "AUCTION_RESULT";
     public static final String AUCTION_CHANGED = "AUCTION_CHANGED";
     public static final String RECEIVE_CHAT_MESSAGE = "CHAT_RECEIVE_MESSAGE";
-    // --- Admin ---
+    // --- Quản trị ---
     public static final String ADMIN_GET_ALL_BIDDERS = "ADMIN_GET_ALL_BIDDERS";
     public static final String ADMIN_GET_ALL_SELLERS = "ADMIN_GET_ALL_SELLERS";
     public static final String ADMIN_GET_ALL_AUCTIONS = "ADMIN_GET_ALL_AUCTIONS";

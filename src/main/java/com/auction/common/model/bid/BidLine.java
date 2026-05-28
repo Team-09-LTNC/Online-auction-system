@@ -1,14 +1,14 @@
-package com.auction.common.model.bid; // Nên đưa vào package dto
+package com.auction.common.model.bid; 
 
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 /**
- * DTO (Data Transfer Object) dùng để gửi dữ liệu vẽ biểu đồ về Client.
+ * DTO (đối tượng truyền dữ liệu) dùng để gửi dữ liệu vẽ biểu đồ về client.
  */
 public class BidLine implements Serializable {
-    private String bidderName; // Tên bidder
+    private String bidderName; // Tên người đặt giá
     private long bidAmount;     // Số tiền
     private LocalDateTime bidTime; // Thời điểm
 
@@ -21,7 +21,7 @@ public class BidLine implements Serializable {
         this.bidTime = bidTime;
     }
 
-    // Getters & Setters (dùng cho GSON)
+    // Phương thức lấy/gán giá trị (dùng cho GSON)
     public String getBidderName() {
         return bidderName;
     }

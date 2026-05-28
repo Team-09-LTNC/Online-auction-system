@@ -15,53 +15,48 @@ import java.util.List;
 
 public class SidebarController {
 
-    // Biến static công khai để LoginController có thể bốc và điều khiển từ xa!
     public static SidebarController instance;
     private static int unreadNotifications;
     @FXML private Button btnDashboard, btnAuctions, btnMyAuctions, btnMyProducts, btnFollowed, btnPostAuction, btnChat;
     @FXML private Label lblNotificationBadge;
-    // Khai báo thêm biến nút Ví tiền kết nối với file FXML
     @FXML private Button btnWallet;
 
     private List<Button> allButtons;
 
     @FXML
     public void initialize() {
-        // GÁN INSTANCE: Ghi nhận chính bộ điều khiển này ngay khi thanh Sidebar được nạp lên giao diện
         instance = this;
         allButtons = List.of(btnDashboard, btnAuctions, btnMyAuctions, btnMyProducts, btnFollowed, btnWallet, btnPostAuction, btnChat);
 
-        // Kích nổ hàm áp dụng phân quyền ngay khi nạp giao diện ban đầu
+        //hàm áp dụng phân quyền ngay khi nạp giao diện ban đầu
         applyRolePermissions();
         updateNotificationBadge();
         syncUnreadNotificationsFromServer();
     }
 
     /**
-     * HÀM PHÂN QUYỀN CÔNG KHAI (PUBLIC):
-     * LoginController hoặc bất kỳ đâu đều có thể gọi qua: SidebarController.instance.applyRolePermissions();
+     * HÀM PHÂN QUYỀN 
      */
     public void applyRolePermissions() {
         Platform.runLater(() -> {
             try {
-                // Lấy vai trò chuẩn ENUM viết hoa từ UserSession
+                // Lấy vai trò chuẩn enum 
                 String currentRole = UserSession.getCurrentRole();
                 org.slf4j.LoggerFactory.getLogger(getClass()).info("[Sidebar] Đang tiến hành áp dụng phân quyền cho vai trò: {}", currentRole);
 
                 if (currentRole != null && "SELLER".equalsIgnoreCase(currentRole)) {
                     org.slf4j.LoggerFactory.getLogger(getClass()).info("[Sidebar] Vai trò: SELLER - Tiến hành thu gọn menu Bidder.");
 
-                    // Ẩn sạch các tính năng không liên quan đến người bán (setManaged giúp dồn dòng menu khít rịt)
+                    // Ẩn sạch các tính năng không liên quan đến người bán 
                     if (btnDashboard != null) { btnDashboard.setVisible(false); btnDashboard.setManaged(false); }
                     if (btnAuctions != null) { btnAuctions.setVisible(false); btnAuctions.setManaged(false); }
                     if (btnMyAuctions != null) { btnMyAuctions.setVisible(false); btnMyAuctions.setManaged(false); }
                     if (btnFollowed != null) { btnFollowed.setVisible(false); btnFollowed.setManaged(false); }
 
-                    // Hiện các tính năng của Seller chính hiệu
+                    // Hiện các tính năng của người bán
                     if (btnPostAuction != null) { btnPostAuction.setVisible(true); btnPostAuction.setManaged(true); }
                     if (btnMyProducts != null) { btnMyProducts.setVisible(true); btnMyProducts.setManaged(true); }
 
-                    // Ép ruột mặc định bên phải nhảy thẳng vào trang quản lý sản phẩm của người bán
                     MainController.instance.setCenterContent("/fxml/seller/MyProducts.fxml");
                     setButtonActive(btnMyProducts);
                 } else {
@@ -71,7 +66,7 @@ public class SidebarController {
                     if (btnPostAuction != null) { btnPostAuction.setVisible(false); btnPostAuction.setManaged(false); }
                     if (btnMyProducts != null) { btnMyProducts.setVisible(false); btnMyProducts.setManaged(false); }
 
-                    // Hiện đầy đủ các tính năng của Bidder
+                    // Hiện đầy đủ các tính năng của người đặt giá
                     if (btnDashboard != null) { btnDashboard.setVisible(true); btnDashboard.setManaged(true); }
                     if (btnAuctions != null) { btnAuctions.setVisible(true); btnAuctions.setManaged(true); }
                     if (btnMyAuctions != null) { btnMyAuctions.setVisible(true); btnMyAuctions.setManaged(true); }
@@ -83,20 +78,17 @@ public class SidebarController {
         });
     }
 
-    // Hàm lõi: Chuyển class "nav-button-active" sang nút được bấm
     private void setButtonActive(Button activeBtn) {
         if (allButtons == null) return;
-        // Duyệt qua tất cả các nút
         for (Button btn : allButtons) {
             if (btn != null) {
-                // Xóa sạch cả 2 class để đưa về trạng thái "trắng"
                 btn.getStyleClass().removeAll("nav-button", "nav-button-active");
 
                 // Nếu nút này là nút đang được bấm
                 if (btn == activeBtn) {
-                    btn.getStyleClass().add("nav-button-active"); // Gán màu active
+                    btn.getStyleClass().add("nav-button-active"); 
                 } else {
-                    btn.getStyleClass().add("nav-button"); // Gán màu bình thường
+                    btn.getStyleClass().add("nav-button"); 
                 }
             }
         }
@@ -106,13 +98,12 @@ public class SidebarController {
     @FXML
     private void handleFilterCategory(ActionEvent event) {
         Button clickedBtn = (Button) event.getSource();
-        // 1. Đổi màu nút đang được bấm
         setButtonActive(clickedBtn);
 
         String buttonText = clickedBtn.getText().trim();
         String category = mapCategory(buttonText);
 
-        // 2. Ép hệ thống chuyển hướng sang màn hình "Tất cả phiên"
+        //Ép hệ thống chuyển hướng sang màn hình "Tất cả phiên"
         boolean alreadyShowingAuctionList = MainController.instance.getCurrentCenterController()
                 instanceof com.auction.client.controller.bidder.AuctionListScreenController;
         MainController.instance.setCenterContent(
@@ -120,10 +111,10 @@ public class SidebarController {
                 !alreadyShowingAuctionList
         );
 
-        // 3. Lấy ra Controller của màn hình vừa được load lên
+        //Lấy ra controller của màn hình vừa được tải lên
         Object currentCtrl = MainController.instance.getCurrentCenterController();
 
-        // 4. Kiểm tra Đa hình: Truyền lệnh lọc qua Interface
+        // Truyền lệnh lọc qua Interface
         if (currentCtrl instanceof com.auction.client.interfaces.CategoryFilterListener) {
             ((com.auction.client.interfaces.CategoryFilterListener) currentCtrl).onCategorySelected(category);
         }
@@ -229,9 +220,7 @@ public class SidebarController {
         });
     }
 
-    // =========================================================================
-    // LOGIC ĐĂNG XUẤT (LOGOUT) CHUẨN KIẾN TRÚC MỚI
-    // =========================================================================
+    // XỬ LÝ ĐĂNG XUẤT 
     @FXML
     private void handleLogout(ActionEvent event) {
         org.slf4j.LoggerFactory.getLogger(getClass()).info("Người dùng bấm nút Đăng xuất hệ thống.");
@@ -252,7 +241,7 @@ public class SidebarController {
             // 2. Lấy Stage (cửa sổ Windows) hiện tại từ nút bấm
             javafx.stage.Stage currentStage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
 
-            // 3. Ép cái Stage phải ở trạng thái Maximized TRƯỚC để lấy đúng kích thước màn hình thật
+            // 3. Ép Stage về trạng thái phóng to trước để lấy đúng kích thước màn hình thật
             currentStage.setMaximized(true);
             currentStage.show();
 
@@ -262,15 +251,15 @@ public class SidebarController {
 
             // 5. Tạo một hộp StackPane động bằng code Java để bao bọc, ép màu nền khít toàn màn hình
             javafx.scene.layout.StackPane masterRoot = new javafx.scene.layout.StackPane();
-            masterRoot.setStyle("-fx-background-color: #FDFBF9;"); // Màu nền chủ đạo của app
+            masterRoot.setStyle("-fx-background-color: #FDFBF9;"); 
             masterRoot.setPrefWidth(actualWidth);
             masterRoot.setPrefHeight(actualHeight);
 
-            // Nhét form Login vào và ép nó CĂN GIỮA TUYỆT ĐỐI dựa trên kích thước thật vừa lấy
+            // Nhét biểu mẫu đăng nhập vào và ép nó căn giữa tuyệt đối dựa trên kích thước thật vừa lấy
             masterRoot.getChildren().add(loginRoot);
             javafx.scene.layout.StackPane.setAlignment(loginRoot, javafx.geometry.Pos.CENTER);
 
-            // 6. Tạo Scene mới từ cái hộp masterRoot đã căn giữa xịn xò này
+            // 6. Tạo Scene mới từ hộp masterRoot đã căn giữa này
             javafx.scene.Scene loginScene = new javafx.scene.Scene(masterRoot, actualWidth, actualHeight);
             currentStage.setScene(loginScene);
 

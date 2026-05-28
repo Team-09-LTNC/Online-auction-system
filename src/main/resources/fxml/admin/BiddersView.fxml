@@ -16,7 +16,7 @@
 
     <VBox spacing="16" maxHeight="Infinity">
 
-        <!-- Header -->
+        <!-- Tiêu đề -->
         <HBox alignment="CENTER_LEFT" spacing="12" VBox.vgrow="NEVER">
             <Region style="-fx-background-color: #8F1D2C;
                            -fx-pref-width: 4px; -fx-pref-height: 22px;"/>
@@ -28,7 +28,7 @@
                    style="-fx-text-fill: #5E4A42; -fx-font-size: 12px;"/>
         </HBox>
 
-        <!-- Toolbar -->
+        <!-- Thanh công cụ -->
         <HBox spacing="10" alignment="CENTER_LEFT" VBox.vgrow="NEVER">
             <TextField fx:id="tfSearch"
                        promptText="🔍  Tìm theo username hoặc họ tên..."
@@ -59,7 +59,7 @@
             
         </HBox>
 
-        <!-- Table -->
+        <!-- Bảng dữ liệu -->
         <TableView fx:id="bidderTable"
                    VBox.vgrow="ALWAYS"
                    maxHeight="Infinity"

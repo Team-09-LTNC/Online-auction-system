@@ -1,7 +1,7 @@
 package com.auction.common.model.item;
-// sản phẩm (người dùng tự nhập)
+// sản phẩm khác
 public class OtherItem extends Item {
-    private String customCategoryName; // Tên loại do người dùng tự nhập (VD: "Thời trang")
+    private String customCategoryName; 
 
     public OtherItem() {}
 

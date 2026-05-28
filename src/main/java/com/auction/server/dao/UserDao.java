@@ -19,17 +19,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Lớp này được thiết kế cho cả 3 vai trò (riêng admin thì k xử lý phần số dư, k hiển thị số dư)
- * Phần BidderSellerMoney mới thực hiện giao dịch tiền bạc giưa bidder vs seller
+ * Lớp này được thiết kế cho cả 3 vai trò (riêng admin thì không xử lý phần số dư, không hiển thị số dư)
+ * Phần BidderSellerMoney mới thực hiện giao dịch tiền bạc giữa người đặt giá và người bán
  */
 public class UserDao {
     private static final Logger logger = LoggerFactory.getLogger(UserDao.class);
     /**
-     * Lấy thông tin User để phục vụ Đăng nhập.
+     * Lấy thông tin người dùng để phục vụ đăng nhập.
      */
     public Optional<User> findByUsername(String tenDangNhap) {
         ensureLockUntilColumn();
-        //Thêm cột status vào câu truy vấn duy nhất
+        // Thêm cột trạng thái vào câu truy vấn duy nhất
         String sql = "SELECT id, username, password, full_name, role, balance, status, lock_until "
                 + "FROM users WHERE username = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
@@ -165,7 +165,7 @@ public class UserDao {
         return list;
     }
 
-// Admin có thể khóa tài khoản người dùng (đổi status thành ACTIVE hoặc LOCKED), không xóa hẳn để giữ lịch sử giao dịch.
+// Admin có thể khóa tài khoản người dùng (đổi trạng thái thành ACTIVE hoặc LOCKED), không xóa hẳn để giữ lịch sử giao dịch.
     public boolean updateStatus(String username, String status) {
         ensureLockUntilColumn();
         String sql = "UPDATE users SET status = ?, lock_until = NULL WHERE username = ?";

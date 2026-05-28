@@ -26,7 +26,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 
 /**
- * Controller for sellers administration view.
+ * Bộ điều khiển cho màn hình quản trị người bán.
  */
 public class SellersViewController implements Initializable {
 
@@ -221,7 +221,7 @@ public class SellersViewController implements Initializable {
   }
 
   /**
-   * Table item model.
+   * Model dữ liệu cho từng dòng bảng.
    */
   public static class Seller {
     private final SimpleStringProperty username;

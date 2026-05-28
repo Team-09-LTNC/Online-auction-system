@@ -32,7 +32,6 @@ public class RegisterController {
     @FXML
     public void initialize() {
         if (roleComboBox != null) {
-            // Đã xóa Role "Admin" theo yêu cầu
             roleComboBox.getItems().addAll("Bidder", "Seller");
         }
     }
@@ -46,13 +45,13 @@ public class RegisterController {
         String confirm = confirmPasswordField.isVisible() ? confirmPasswordField.getText() : confirmPasswordTextField.getText();
         String role = roleComboBox.getValue();
 
-        // 1. Validate dữ liệu trống
+        // 1. Kiểm tra dữ liệu trống
         if (fullName.isEmpty() || user.isEmpty() || pass.isEmpty() || role == null) {
             updateStatus("Thiếu thông tin!", "red");
             return;
         }
 
-        // 2. Validate xác nhận mật khẩu
+        // 2. Kiểm tra xác nhận mật khẩu
         if (!pass.equals(confirm)) {
             updateStatus("Mật khẩu xác nhận không khớp!", "red");
             return;
@@ -70,18 +69,17 @@ public class RegisterController {
             AuthDTOs.RegisterRequest regReq = new AuthDTOs.RegisterRequest(user, pass, fullName, role);
             updateStatus("Đang gửi yêu cầu đăng ký...", "blue");
 
-            // [KIẾN TRÚC MỚI] 4. Ép kiểu sang JsonObject để tận dụng cơ chế Fallback Routing
+            //4. Ép kiểu sang JsonObject 
             JsonObject jsonRequest = new Gson().toJsonTree(regReq).getAsJsonObject();
             jsonRequest.addProperty("requestId", java.util.UUID.randomUUID().toString());
 
-            // 5. Gửi JSON qua Socket và định tuyến Callback theo "REGISTER_RESPONSE"
+            // 5. Gửi JSON qua socket và định tuyến callback theo "REGISTER_RESPONSE"
             ClientSocket.getInstance().sendJsonRequest(jsonRequest, "REGISTER_RESPONSE", responseJson -> {
-                // Thread-safety: Trả kết quả về luồng UI chính
                 Platform.runLater(() -> {
                     boolean success = responseJson.has("success") && responseJson.get("success").getAsBoolean();
                     if (success) {
                         updateStatus("Đăng ký thành công!", "green");
-                        onLoginLinkClick(event); // Chuyển về trang đăng nhập
+                        onLoginLinkClick(event); 
                     } else {
                         String msg = responseJson.has("message") ? responseJson.get("message").getAsString() : "Đăng ký thất bại!";
                         updateStatus(msg, "red");
@@ -105,7 +103,7 @@ public class RegisterController {
     }
 
     /**
-     * Logic dùng chung để ẩn/hiện mật khẩu
+     * Xử lý dùng chung để ẩn/hiện mật khẩu
      */
     private void togglePassword(PasswordField pf, TextField tf) {
         if (pf.isVisible()) {

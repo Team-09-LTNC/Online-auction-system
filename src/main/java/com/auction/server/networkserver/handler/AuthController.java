@@ -32,7 +32,7 @@ public class AuthController implements RequestHandler {
         }
         String loaiYeuCau = yeuCau.get("type").getAsString();
 
-        // Trích xuất chung mã requestId từ Client gửi lên
+        // Trích xuất chung mã requestId từ client gửi lên
         String reqId = yeuCau.has("requestId") && !yeuCau.get("requestId").isJsonNull()
                 ? yeuCau.get("requestId").getAsString()
                 : null;
@@ -52,7 +52,7 @@ public class AuthController implements RequestHandler {
             case "GET_WALLET_HISTORY":
                 return walletHandler.handleGetWalletHistory(client, reqId);
 
-            // Thêm vào switch trong handleRequest() để xử lý các yêu cầu admin mới
+            // Thêm vào switch trong handleRequest() để xử lý các yêu cầu quản trị mới
             case ActionType.ADMIN_GET_ALL_BIDDERS:
                 return handleGetBidders(reqId);
             case ActionType.ADMIN_GET_ALL_SELLERS:
@@ -64,9 +64,9 @@ public class AuthController implements RequestHandler {
         }
     }
 
-    // Xử lý yêu cầu lấy danh sách Bidder (Admin)
+    // Xử lý yêu cầu lấy danh sách người đặt giá (admin)
     private String handleGetBidders(String reqId) {
-        List<User> bidders = userDao.getAllBidders(); // cần thêm method này vào UserDao
+        List<User> bidders = userDao.getAllBidders(); 
         JsonArray array = new JsonArray();
         for (User u : bidders) {
             JsonObject obj = new JsonObject();
@@ -87,9 +87,9 @@ public class AuthController implements RequestHandler {
         return gson.toJson(res);
     }
 
-    // Tương tự như trên nhưng lấy danh sách Seller
+    // Tương tự như trên nhưng lấy danh sách người bán
     private String handleGetSellers(String reqId) {
-        List<User> sellers = userDao.getAllSellers(); // cần thêm method này vào UserDao
+        List<User> sellers = userDao.getAllSellers(); 
         JsonArray array = new JsonArray();
         for (User u : sellers) {
             JsonObject obj = new JsonObject();
@@ -172,13 +172,13 @@ public class AuthController implements RequestHandler {
     }
 
     /*
-     * Xử lý yêu cầu khoá tài khoản từ Admin. Yêu cầu này sẽ nhận vào username và
-     * trạng thái mới (LOCKED/ACTIVE), cập nhật vào DB, và trả về kết quả cho Admin.
-     * Lưu ý: Chỉ Admin mới có quyền gửi yêu cầu này, nên controller không cần kiểm
-     * tra role ở đây mà sẽ dựa vào việc route yêu cầu từ ClientHandler đã đảm bảo
-     * chỉ Admin mới có thể gọi đến phương thức này.
-     * Response sẽ bao gồm thông tin username, trạng thái mới, và message phản hồi
-     * để Admin có thể hiển thị thông báo phù hợp trên UI.
+     * Xử lý yêu cầu khoá tài khoản từ admin. Yêu cầu này sẽ nhận vào username và
+     * trạng thái mới (LOCKED/ACTIVE), cập nhật vào DB, và trả về kết quả cho admin.
+     * Lưu ý: Chỉ admin mới có quyền gửi yêu cầu này, nên controller không cần kiểm
+     * tra vai trò ở đây mà sẽ dựa vào việc định tuyến yêu cầu từ ClientHandler đã đảm bảo
+     * chỉ admin mới có thể gọi đến phương thức này.
+     * Phản hồi sẽ bao gồm thông tin username, trạng thái mới, và thông điệp phản hồi
+     * để admin có thể hiển thị thông báo phù hợp trên giao diện.
      */
     private String handleToggleAccountLock(JsonObject yeuCau, String reqId) {
         if (!yeuCau.has("username") || yeuCau.get("username").isJsonNull()

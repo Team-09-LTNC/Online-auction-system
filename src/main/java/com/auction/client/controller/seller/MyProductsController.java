@@ -18,7 +18,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MyProductsController implements Initializable, RefreshableCenterContent {
     private static final Logger logger = LoggerFactory.getLogger(MyProductsController.class);
-    private static final int CARD_BATCH_SIZE = 10;
 
     @FXML private FlowPane productFlowPane;
     @FXML private Label lblHeaderName;

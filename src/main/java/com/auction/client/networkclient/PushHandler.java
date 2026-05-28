@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Xử lý các gói tin server tự gửi về (không kèm requestId)
- * Tách riêng khỏi Socket để dễ mở rộng
+ * Xử lý các gói tin server tự gửi về 
+ * Tách riêng khỏi socket để dễ mở rộng
  */
 public class PushHandler {
 
