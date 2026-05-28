@@ -63,6 +63,52 @@ class UserLockIntegrationTest extends DaoIntegrationTestSupport {
     }
 
     @Test
+    void thirdPenaltyPermanentlyLocksBidderAndClearsLockUntil() throws Exception {
+        String username = "third_penalty_" + System.nanoTime();
+        int userId = insertUser(username, "BIDDER", "ACTIVE", null);
+
+        try {
+            new BidderPenaltyDao().recordLatePaymentViolation(userId, "first");
+            new BidderPenaltyDao().recordLatePaymentViolation(userId, "second");
+            BidderPenaltyDao.SanctionResult third =
+                    new BidderPenaltyDao().recordLatePaymentViolation(userId, "third");
+
+            assertThat(third.violationCount).isEqualTo(3);
+            assertThat(third.permanentLock).isTrue();
+            assertThat(third.lockUntil).isNull();
+            assertThat(userStatus(userId)).isEqualTo("LOCKED");
+            assertThat(userLockUntil(userId)).isNull();
+            assertThat(penaltyLockUntil(userId)).isNull();
+        } finally {
+            deleteUser(userId);
+        }
+    }
+
+    @Test
+    void loginRejectsBidderWhenPenaltyCountIsPermanentEvenIfUserStatusIsActive() throws Exception {
+        String username = "active_but_penalized_" + System.nanoTime();
+        int userId = insertUser(username, "BIDDER", "ACTIVE", null);
+
+        try {
+            new BidderPenaltyDao().recordLatePaymentViolation(userId, "first");
+            new BidderPenaltyDao().recordLatePaymentViolation(userId, "second");
+            new BidderPenaltyDao().recordLatePaymentViolation(userId, "third");
+            new UserDao().updateStatusById(userId, "ACTIVE");
+
+            AuthenticationException ex = assertThrows(
+                    AuthenticationException.class,
+                    () -> UserManager.getInstance().login(username, "pw", "BIDDER"));
+
+            assertThat(ex.getMessage())
+                    .isEqualTo("Tài khoản đang bị khóa vĩnh viễn, vui lòng liên hệ Admin.");
+            assertThat(userStatus(userId)).isEqualTo("LOCKED");
+            assertThat(userLockUntil(userId)).isNull();
+        } finally {
+            deleteUser(userId);
+        }
+    }
+
+    @Test
     void permanentLockReportsContactAdmin() throws Exception {
         String username = "permanent_locked_" + System.nanoTime();
         int userId = insertUser(username, "SELLER", "LOCKED", null);
@@ -139,6 +185,18 @@ class UserLockIntegrationTest extends DaoIntegrationTestSupport {
     private LocalDateTime userLockUntil(int userId) throws Exception {
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement("SELECT lock_until FROM users WHERE id = ?")) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                assertThat(rs.next()).isTrue();
+                Timestamp ts = rs.getTimestamp("lock_until");
+                return ts != null ? ts.toLocalDateTime() : null;
+            }
+        }
+    }
+
+    private LocalDateTime penaltyLockUntil(int userId) throws Exception {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT lock_until FROM bidder_penalties WHERE bidder_id = ?")) {
             ps.setInt(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 assertThat(rs.next()).isTrue();

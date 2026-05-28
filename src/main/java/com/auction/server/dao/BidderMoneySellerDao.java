@@ -203,7 +203,20 @@ public class BidderMoneySellerDao {
 
                 if (!deductBidderBalance(conn, bidderId, amount)) {
                     conn.rollback();
-                    return new PaymentResult(false, "Số dư ví bidder không đủ.", status, amount);
+                    return new PaymentResult(
+                            false,
+                            "Số dư ví bidder không đủ.",
+                            status,
+                            amount,
+                            bidderId,
+                            sellerId,
+                            itemName,
+                            bidderName,
+                            bidderTransactionType,
+                            sellerTransactionType,
+                            bidderDescription,
+                            sellerDescription
+                    );
                 }
                 if (!creditSeller(conn, sellerId, amount)) {
                     conn.rollback();

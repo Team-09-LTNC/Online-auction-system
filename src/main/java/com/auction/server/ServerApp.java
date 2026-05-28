@@ -1,6 +1,7 @@
 package com.auction.server;
 
 import com.auction.common.util.NetworkConfig;
+import com.auction.server.manager.AuctionManager;
 import com.auction.server.networkserver.ServerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +13,7 @@ import org.slf4j.LoggerFactory;
 public class ServerApp {
     private static final Logger logger = LoggerFactory.getLogger(ServerApp.class);
 
-    // Giá trị mặc định của server,
-// Nếu muốn kiểm thử chạy ổn không thì sửa địa chỉ thành localhost máy mình trong application.properties trước để kiểm thử
-// Và không cần sửa ở đây, code dưới đọc từ file cấu hình, đây chỉ là mặc định khi hệ thống chạy tốt
+    // Giá trị mặc định của server
     private static int PORT = 8080;
 
     // CẤU HÌNH CỔNG 
@@ -34,6 +33,7 @@ public class ServerApp {
         logger.info("   Đang lắng nghe tại cổng: {}                  ", PORT);
         logger.info("==================================================");
 
+        AuctionManager.getInstance();
         ServerManager quanLyMayChu = new ServerManager(PORT);
         quanLyMayChu.startServer();
     }

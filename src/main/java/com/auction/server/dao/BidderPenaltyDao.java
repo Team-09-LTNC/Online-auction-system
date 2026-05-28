@@ -27,11 +27,19 @@ public class BidderPenaltyDao {
 
     public static class LockInfo {
         public final boolean locked;
+        public final boolean permanentLock;
         public final LocalDateTime lockUntil;
+        public final int violationCount;
 
         public LockInfo(boolean locked, LocalDateTime lockUntil) {
+            this(locked, false, lockUntil, 0);
+        }
+
+        public LockInfo(boolean locked, boolean permanentLock, LocalDateTime lockUntil, int violationCount) {
             this.locked = locked;
+            this.permanentLock = permanentLock;
             this.lockUntil = lockUntil;
+            this.violationCount = violationCount;
         }
     }
 
@@ -98,7 +106,7 @@ public class BidderPenaltyDao {
 
     public LockInfo getTemporaryLockInfo(int bidderId) {
         createTableIfMissing();
-        String sql = "SELECT lock_until FROM bidder_penalties WHERE bidder_id = ?";
+        String sql = "SELECT violation_count, lock_until FROM bidder_penalties WHERE bidder_id = ?";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, bidderId);
@@ -106,12 +114,16 @@ public class BidderPenaltyDao {
                 if (!rs.next()) {
                     return new LockInfo(false, null);
                 }
+                int violationCount = rs.getInt("violation_count");
+                if (violationCount >= 3) {
+                    return new LockInfo(true, true, null, violationCount);
+                }
                 Timestamp ts = rs.getTimestamp("lock_until");
                 if (ts == null) {
-                    return new LockInfo(false, null);
+                    return new LockInfo(false, false, null, violationCount);
                 }
                 LocalDateTime until = ts.toLocalDateTime();
-                return new LockInfo(until.isAfter(LocalDateTime.now()), until);
+                return new LockInfo(until.isAfter(LocalDateTime.now()), false, until, violationCount);
             }
         } catch (Exception e) {
             logger.error("Khong the lay trang thai tam khoa bidder {}.", bidderId, e);

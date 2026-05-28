@@ -93,18 +93,21 @@ final class AuctionPaymentTimeoutService {
             if (!ketQua.success) {
                 logger.info("Auto settlement skipped for auction {}: {}", auctionId, ketQua.message);
                 if (isInsufficientBalanceMessage(ketQua.message)) {
+                    int winnerId = ketQua.bidderId > 0 ? ketQua.bidderId : targets.winnerId;
+                    int sellerId = ketQua.sellerId > 0 ? ketQua.sellerId : targets.sellerId;
+                    String itemName = safeItemName(ketQua.itemName != null ? ketQua.itemName : targets.itemName);
                     cancelFinishedAuctionAfterUnpaidPenalty(auctionId);
                     notifyInsufficientPenaltyBalance(
                             auctionId,
-                            targets.winnerId,
-                            targets.sellerId,
-                            safeItemName(targets.itemName),
+                            winnerId,
+                            sellerId,
+                            itemName,
                             ketQua.amount
                     );
                     applyLatePaymentPenalty(
                             auctionId,
-                            targets.winnerId,
-                            targets.sellerId,
+                            winnerId,
+                            sellerId,
                             "Không đủ số dư để thanh toán quá hạn."
                     );
                 }

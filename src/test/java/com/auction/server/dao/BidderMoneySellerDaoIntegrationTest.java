@@ -75,11 +75,15 @@ class BidderMoneySellerDaoIntegrationTest extends DaoIntegrationTestSupport {
             assertThat(result.success).isFalse();
             assertThat(result.message).contains("không đủ");
             assertThat(result.amount).isEqualTo(170_000L);
+            assertThat(result.bidderId).isEqualTo(seed.bidderId());
+            assertThat(result.sellerId).isEqualTo(seed.sellerId());
+            assertThat(result.itemName).isNotBlank();
             assertThat(balanceOf(seed.bidderId())).isEqualTo(169_999L);
             assertThat(balanceOf(seed.sellerId())).isEqualTo(INITIAL_BALANCE);
             assertThat(auctionStatus(seed.auctionId())).isEqualTo("FINISHED");
             assertThat(walletTransactionCount(seed.bidderId())).isZero();
             assertThat(walletTransactionCount(seed.sellerId())).isZero();
+            assertThat(penaltyCount(seed.bidderId())).isZero();
         } finally {
             AdminTestData.cleanup(seed);
         }
@@ -108,6 +112,11 @@ class BidderMoneySellerDaoIntegrationTest extends DaoIntegrationTestSupport {
 
     private int walletTransactionCount(int userId) throws Exception {
         return (int) queryLong("SELECT COUNT(*) FROM wallet_transactions WHERE user_id = ?", userId);
+    }
+
+    private int penaltyCount(int userId) throws Exception {
+        new BidderPenaltyDao().getTemporaryLockInfo(userId);
+        return (int) queryLong("SELECT COUNT(*) FROM bidder_penalties WHERE bidder_id = ?", userId);
     }
 
     private void updateBalance(int userId, long balance) throws Exception {

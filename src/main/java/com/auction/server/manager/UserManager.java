@@ -71,7 +71,15 @@ public class UserManager {
         LocalDateTime lockUntil = user.getLockUntil();
         if ("BIDDER".equalsIgnoreCase(role)) {
             BidderPenaltyDao.LockInfo lockInfo = new BidderPenaltyDao().getTemporaryLockInfo(user.getId());
-            if (lockInfo.locked && (lockUntil == null || lockInfo.lockUntil.isAfter(lockUntil))) {
+            if (lockInfo.permanentLock) {
+                if (!"LOCKED".equals(status) || user.getLockUntil() != null) {
+                    userDao.updateStatusById(user.getId(), "LOCKED");
+                }
+                throw new AuthenticationException(
+                        "Tài khoản đang bị khóa vĩnh viễn, vui lòng liên hệ Admin.");
+            }
+            if (lockInfo.locked && lockInfo.lockUntil != null
+                    && (lockUntil == null || lockInfo.lockUntil.isAfter(lockUntil))) {
                 lockUntil = lockInfo.lockUntil;
             }
             if (lockUntil != null && lockUntil.isAfter(now)) {
