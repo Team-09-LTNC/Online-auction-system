@@ -66,7 +66,6 @@
                   <VBox spacing="10" style="-fx-background-color: #FFFCF8;                          -fx-border-color: #E8DCD2; -fx-border-width: 1px;                          -fx-border-radius: 12px; -fx-background-radius: 12px;                          -fx-padding: 24 28 24 28;                          -fx-effect: dropshadow(gaussian,rgba(26,15,10,0.08),10,0,0,3);" HBox.hgrow="ALWAYS">
                       <Label style="-fx-text-fill: #5E4A42; -fx-font-size: 12px;                                -fx-font-weight: bold;" text="🔨  Phiên đấu giá" />
                       <Label fx:id="lblAuctionCount" style="-fx-text-fill: #8F1D2C; -fx-font-size: 40px;                               -fx-font-weight: bold;" text="0" />
-                      <Label style="-fx-text-fill: #8c1e1e; -fx-font-size: 11px;                               " text="phiên đang &amp; sắp diễn ra" />
                   </VBox>
       
               </HBox>
