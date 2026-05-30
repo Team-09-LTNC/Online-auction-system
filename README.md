@@ -91,9 +91,7 @@ mvn -version
 
 ```text
 .
-├── .github/                         # Cấu hình GitHub nếu có
-├── .idea/                           # Cấu hình IDE IntelliJ IDEA
-├── .vscode/                         # Cấu hình Visual Studio Code
+├── .github/                         # Cấu hình GitHub 
 ├── logs/                            # Log sinh ra khi chạy ứng dụng
 ├── src/
 │   ├── main/
@@ -110,7 +108,6 @@ mvn -version
 │   └── test/
 │       ├── java/com/auction/        # Unit test và integration test
 │       └── resources/               # Cấu hình H2 cho test
-├── target/                          # Thư mục sinh ra sau khi build
 ├── .gitignore
 ├── pom.xml                          # Cấu hình Maven, dependency, build plugin
 └── README.md
