@@ -9,7 +9,7 @@ Online Auction System là ứng dụng đấu giá trực tuyến xây dựng b�
 | Nội dung | Link |
 |---|---|
 | Báo cáo PDF và video demo | [Google Drive](https://drive.google.com/drive/folders/1gD5xDIo2LHQo_NbtDFnH7xI1rS9u6G-w?usp=sharing) |
-| Bản phát hành JAR | [GitHub Release v2.0.0](https://github.com/Team-09-LTNC/Online-auction-system/releases/tag/v2.0.0) |
+| Bản phát hành JAR | [GitHub Release v2.0.1](https://github.com/Team-09-LTNC/Online-auction-system/releases/tag/v2.0.1) |
 
 ## 1. Mô Tả Bài Toán Và Phạm Vi Hệ Thống
 
@@ -172,17 +172,17 @@ Project có sẵn file JAR trong GitHub Release. Đây là cách chạy khuyến
 Truy cập:
 
 ```text
-https://github.com/Team-09-LTNC/Online-auction-system/releases/tag/v2.0.0
+https://github.com/Team-09-LTNC/Online-auction-system/releases/tag/v2.0.1
 ```
 
 Tải các file phù hợp:
 
 | File | Dùng cho |
 |---|---|
-| [ServerApp.jar](https://github.com/Team-09-LTNC/Online-auction-system/releases/download/v2.0.0/ServerApp.jar) | Máy chạy server |
-| [MainApp-Windows.jar](https://github.com/Team-09-LTNC/Online-auction-system/releases/download/v2.0.0/MainApp-Windows.jar) | Client trên Windows |
-| [MainApp-Linux.jar](https://github.com/Team-09-LTNC/Online-auction-system/releases/download/v2.0.0/MainApp-Linux.jar) | Client trên Linux |
-| [MainApp-macOS.jar](https://github.com/Team-09-LTNC/Online-auction-system/releases/download/v2.0.0/MainApp-macOS.jar) | Client trên macOS |
+| [ServerApp.jar](https://github.com/Team-09-LTNC/Online-auction-system/releases/download/v2.0.1/ServerApp.jar) | Máy chạy server |
+| [MainApp-Windows.jar](https://github.com/Team-09-LTNC/Online-auction-system/releases/download/v2.0.1/MainApp-Windows.jar) | Client trên Windows |
+| [MainApp-Linux.jar](https://github.com/Team-09-LTNC/Online-auction-system/releases/download/v2.0.1/MainApp-Linux.jar) | Client trên Linux |
+| [MainApp-macOS.jar](https://github.com/Team-09-LTNC/Online-auction-system/releases/download/v2.0.1/MainApp-macOS.jar) | Client trên macOS |
 
 Đặt `ServerApp.jar` và file client đã tải vào cùng một thư mục để dễ chạy lệnh. Ví dụ trên Windows:
 
