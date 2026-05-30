@@ -39,7 +39,11 @@ public class AutoBidConfig implements Comparable<AutoBidConfig> {
         int bidCompare = Long.compare(other.maxBid, this.maxBid);
         if (bidCompare != 0) return bidCompare;
 
-        // 2. Nếu giá tự động tối đa bằng nhau, ưu tiên người đăng ký trước (thời gian đăng ký nhỏ hơn)
+        // 2. Nếu giá tự động tối đa bằng nhau, ưu tiên bước auto-bid cao hơn
+        int stepCompare = Long.compare(other.bidStep, this.bidStep);
+        if (stepCompare != 0) return stepCompare;
+
+        // 3. Nếu cùng giá tối đa và bước auto-bid, ưu tiên người đăng ký trước
         return this.registerTime.compareTo(other.registerTime);
     }
 }
