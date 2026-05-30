@@ -111,6 +111,26 @@ class AuctionAutoBidServiceTest {
   }
 
   @Test
+  void equalMaxAutoBidPrefersHigherAutoBidStepBeforeRegistrationTime() {
+    RecordingAuctionDao dao = new RecordingAuctionDao();
+    Auction auction = runningAuction();
+    auction.setCurrentPrice(5_000_000L);
+    auction.getItem().setBidIncrement(20_000L);
+    Bidder bidderA = bidder(2, "a");
+    Bidder bidderB = bidder(3, "b");
+    LocalDateTime baseTime = LocalDateTime.of(2026, 5, 30, 10, 0, 1);
+    auction.addAutoBidConfig(new AutoBidConfig(bidderA, 7_000_000L, 30_000L, baseTime));
+    auction.addAutoBidConfig(new AutoBidConfig(bidderB, 7_000_000L, 50_000L, baseTime.plusSeconds(4)));
+
+    AuctionAutoBidService service = newService(dao);
+    service.triggerAutoBid(auction, null);
+
+    assertThat(dao.recordedBids).extracting(BidTransaction::getBidAmount).containsExactly(5_050_000L);
+    assertThat(auction.getCurrentWinner()).isSameAs(bidderB);
+    assertThat(auction.getCurrentHighestBid()).isEqualTo(5_050_000L);
+  }
+
+  @Test
   void equalMaxAutoBidDoesNotClimbToMaxWhenTriggeredRepeatedly() {
     RecordingAuctionDao dao = new RecordingAuctionDao();
     Auction auction = runningAuction();
