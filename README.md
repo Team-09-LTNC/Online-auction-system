@@ -1,664 +1,316 @@
 # Online Auction System
 
-Hệ thống đấu giá trực tuyến theo mô hình client-server, viết bằng Java 21 và JavaFX. Client giao tiếp với server bằng socket JSON; server xử lý nghiệp vụ, truy cập database qua DAO và đẩy sự kiện realtime ngược về các client đang theo dõi phiên đấu giá.
+> Bài tập lớn Lập trình nâng cao 2026 - Hệ thống đấu giá trực tuyến theo mô hình Client/Server.
 
-## Công Nghệ
+Online Auction System là ứng dụng đấu giá trực tuyến xây dựng bằng Java 21 và JavaFX. Hệ thống mô phỏng một sàn đấu giá có đủ các luồng nghiệp vụ chính: người bán đăng sản phẩm và tạo phiên đấu giá, quản trị viên kiểm duyệt và quản lý hệ thống, người mua tham gia đặt giá theo thời gian thực, thanh toán phiên thắng và nhận thông báo.
 
-- Java 21
-- JavaFX 21 + FXML
-- Maven
-- Gson
-- MySQL Connector/J + HikariCP
-- H2 cho test integration
-- JUnit 5 + AssertJ
-- SLF4J + Logback
+## Tài Liệu Nộp Bài
 
-## Entry Points
-
-| Thành phần | Class | Nhiệm vụ |
-|---|---|---|
-| Client | `com.auction.client.MainApp` | Khởi động JavaFX, load màn hình đăng nhập và stylesheet. |
-| Server | `com.auction.server.ServerApp` | Khởi động socket server, chờ client kết nối. |
-
-## Build Và Chạy JAR
-
-Build 2 file JAR phát hành:
-
-```bash
-mvn clean package
-```
-
-Artifact sau khi build:
-
-```text
-target/MainApp.jar
-target/ServerApp.jar
-```
-
-## Chạy Server Và Client Trên Cùng Một Máy
-
-Nếu chạy cả `ServerApp.jar` và `MainApp.jar` trên cùng một máy, không cần truyền IP server.
-
-Mở terminal thứ nhất và chạy server:
-
-```bash
-java -jar ServerApp.jar
-```
-
-Mở terminal thứ hai trên cùng máy đó và chạy client:
-
-```bash
-java -jar MainApp.jar
-```
-
-Trường hợp này app sẽ dùng mặc định `127.0.0.1:8080`, tức là kết nối về server đang chạy
-trên chính máy hiện tại.
-
-## Chạy Trên Nhiều Máy Cùng Wi-Fi/LAN
-
-Chọn 1 máy làm server. Máy này sẽ chạy `ServerApp.jar` và các máy còn lại sẽ chạy
-`MainApp.jar` để kết nối vào server.
-
-### 1. Trên máy làm server
-
-Lấy địa chỉ IPv4 của máy server:
-
-```bash
-ipconfig
-```
-
-Tìm dòng `IPv4 Address`, ví dụ máy server có IP là:
-
-```text
-192.168.1.15
-```
-
-Sau đó chạy server:
-
-```bash
-java -jar ServerApp.jar
-```
-
-Server mặc định lắng nghe ở port `8080`.
-
-### 2. Trên các máy client
-
-Các máy khác trong cùng Wi-Fi/LAN chạy `MainApp.jar` và truyền IP của máy server:
-
-```bash
-java -jar MainApp.jar --server-ip=192.168.1.15
-```
-
-Ví dụ: nếu máy chạy `ServerApp.jar` có IP là `192.168.1.15`, thì mọi máy client đều chạy:
-
-```bash
-java -jar MainApp.jar --server-ip=192.168.1.15
-```
-
-Có thể dùng cách tương đương bằng system property:
-
-```bash
-java -Dserver.ip=192.168.1.15 -jar MainApp.jar
-```
-
-### Lưu ý khi không kết nối được
-
-- Các máy phải cùng mạng Wi-Fi/LAN.
-- Máy server phải đang chạy `ServerApp.jar`.
-- Windows Firewall trên máy server phải cho phép TCP port `8080`.
-- Không dùng `127.0.0.1` cho máy client khác, vì `127.0.0.1` chỉ là chính máy đang chạy client.
-
-App cũng đọc `server.ip` và `server.port` từ file `application.properties` đặt cạnh file JAR,
-biến môi trường `AUCTION_SERVER_IP` / `AUCTION_SERVER_PORT`, hoặc file chỉ định bằng
-`-Dnetwork.config.file=client.properties`.
-
-## Chạy Server Trên Máy Chủ Ảo Azure
-
-Trường hợp muốn chạy `ServerApp.jar` trên máy chủ ảo Azure, máy Azure sẽ đóng vai trò
-server public. Các máy client ở bất kỳ mạng nào có Internet sẽ chạy `MainApp.jar` và kết nối
-vào public IP của máy Azure.
-
-### Thông tin server ảo của nhóm
-
-| Mục | Giá trị |
+| Nội dung | Link |
 |---|---|
-| Cloud | Azure VM |
-| Tên máy ảo | `AuctionServer` |
-| Public IP ví dụ | `4.194.28.97` |
-| User SSH | `admin_btl` |
-| Port app | `8080` |
-| File server cần chạy | `ServerApp.jar` |
-| Java runtime | OpenJDK 21 |
-| Mật khẩu SSH | Điền mật khẩu nội bộ. |
+| Báo cáo PDF và video demo | [Google Drive](https://drive.google.com/drive/folders/1gD5xDIo2LHQo_NbtDFnH7xI1rS9u6G-w?usp=sharing) |
+| Bản phát hành JAR | [GitHub Release v2.0.0](https://github.com/Team-09-LTNC/Online-auction-system/releases/tag/v2.0.0) |
 
-Nếu Azure đổi public IP, thay toàn bộ `4.194.28.97` trong các lệnh bên dưới bằng IP mới
-hiển thị ở Azure Portal.
+## 1. Mô Tả Bài Toán Và Phạm Vi Hệ Thống
 
-### 1. Trên Azure Portal
+### Bài toán
 
-Vào máy ảo `AuctionServer` và kiểm tra:
+Bài toán đặt ra là xây dựng một hệ thống đấu giá trực tuyến cho phép nhiều người dùng tham gia các phiên đấu giá sản phẩm. Hệ thống cần quản lý người dùng theo vai trò, đảm bảo cập nhật giá đấu realtime giữa các client, xử lý thanh toán sau khi kết thúc phiên và hỗ trợ quản trị viên theo dõi, kiểm duyệt, quản lý dữ liệu trong toàn hệ thống.
 
-- VM phải ở trạng thái `Running`. Nếu đang `Stopped (deallocated)` thì bấm `Start`.
-- Ghi lại `Public IP address` của VM.
-- Vào `Networking` / `Network settings`, thêm inbound rule cho TCP port `8080`.
+### Phạm vi hệ thống
 
-Ví dụ trong Azure Portal, public IP của máy server là:
+| Vai trò | Chức năng chính |
+|---|---|
+| `ADMIN` | Quản lý dashboard, tài khoản bidder/seller, duyệt phiên đấu giá, quản lý giao dịch và hóa đơn. |
+| `SELLER` | Đăng sản phẩm, tạo phiên đấu giá, chỉnh sửa/xóa sản phẩm và theo dõi trạng thái sản phẩm của mình. |
+| `BIDDER` | Xem danh sách phiên đấu giá, theo dõi phiên, đặt giá, auto-bid, mua ngay, thanh toán và nhận thông báo. |
 
-```text
-4.194.28.97
+### Kiến trúc tổng quát
+
+```mermaid
+flowchart LR
+    client["JavaFX Client<br/>FXML Views, Controllers"]
+    socket["Socket TCP + JSON<br/>Request / Response, Realtime Push"]
+    server["Server Socket Layer<br/>ServerManager, ClientHandler"]
+    handler["Request Handler / Controller<br/>Auth, Auction, Product, Admin"]
+    service["Business Manager / Service<br/>Auction, User, Product, Payment"]
+    dao["DAO Layer<br/>UserDao, AuctionDao, ItemDao, TransactionDao"]
+    db[("MySQL Database")]
+
+    client --> socket --> server --> handler --> service --> dao --> db
+    server -. "Push bid/status/chat" .-> client
 ```
 
-### 2. Trên máy Azure Linux
+Server là thành phần duy nhất truy cập cơ sở dữ liệu. Client chỉ giao tiếp với server thông qua socket TCP và dữ liệu JSON.
 
-Kết nối SSH vào VM:
+## 2. Công Nghệ Sử Dụng, Môi Trường Chạy Và Yêu Cầu Cài Đặt
 
-```bash
-ssh admin_btl@4.194.28.97
-```
+### Công nghệ sử dụng
 
-Nhập mật khẩu nội bộ của nhóm khi terminal hỏi. Nếu terminal hỏi xác nhận host lần đầu,
-gõ `yes` rồi Enter.
+| Nhóm | Công nghệ |
+|---|---|
+| Ngôn ngữ | Java 21 |
+| Giao diện | JavaFX 21, FXML, CSS |
+| Build tool | Maven |
+| Giao tiếp mạng | Java Socket TCP, JSON |
+| Xử lý JSON | Gson |
+| Database | MySQL, HikariCP connection pool |
+| Kiểm thử | JUnit 5, AssertJ, H2 Database |
+| Logging | SLF4J, Logback |
+| Đóng gói | Maven Shade Plugin, executable JAR |
 
-Cài Java 21 nếu máy chưa có:
+### Môi trường chạy
 
-```bash
-sudo apt update
-sudo apt install -y openjdk-21-jre
-```
+- Hệ điều hành: Windows, Linux hoặc macOS.
+- Java runtime: JDK/JRE 21 hoặc mới hơn.
+- Database: MySQL 8 hoặc database MySQL tương thích.
+- Client chạy trên máy có môi trường desktop để mở giao diện JavaFX.
 
-Kiểm tra Java:
+### Yêu cầu cài đặt
+
+- Cài JDK 21 để chạy các file JAR trong GitHub Release.
+- Cài Maven 3.9 hoặc mới hơn nếu muốn build lại project từ mã nguồn.
+- Cấu hình MySQL hoặc dùng database đã được cấu hình sẵn trong `src/main/resources/application.properties`.
+- Đảm bảo port `8080` trên máy chạy server chưa bị chương trình khác sử dụng.
+
+Kiểm tra Java bằng lệnh sau. Lệnh này dùng được trên Windows PowerShell, Linux Bash và macOS Terminal:
 
 ```bash
 java -version
 ```
 
-### 3. Upload JAR từ máy local lên Azure
+Kết quả mong muốn khi chạy bản Release: `java -version` hiển thị Java 21 hoặc cao hơn.
 
-Trên máy local, build lại JAR trước:
-
-```bash
-mvn clean package
-```
-
-Sau đó upload `ServerApp.jar` lên máy Azure:
+Nếu muốn build project từ source, kiểm tra thêm Maven:
 
 ```bash
-scp target/ServerApp.jar admin_btl@4.194.28.97:~/ServerApp.jar
+mvn -version
 ```
 
-Nếu muốn upload cả client để lưu bản phát hành trên server:
+## 3. Cấu Trúc Thư Mục Toàn Dự Án Và Các Module Chính
+
+```text
+.
+├── .github/                         # Cấu hình GitHub nếu có
+├── .idea/                           # Cấu hình IDE IntelliJ IDEA
+├── .vscode/                         # Cấu hình Visual Studio Code
+├── logs/                            # Log sinh ra khi chạy ứng dụng
+├── src/
+│   ├── main/
+│   │   ├── java/com/auction/
+│   │   │   ├── client/              # JavaFX client, controller, socket client, cache UI
+│   │   │   ├── common/              # DTO, enum, model, exception, util dùng chung
+│   │   │   └── server/              # Socket server, handler, manager nghiệp vụ, DAO, database
+│   │   └── resources/
+│   │       ├── application.properties
+│   │       ├── logback.xml
+│   │       ├── css/                 # Style giao diện
+│   │       ├── fxml/                # Layout JavaFX
+│   │       └── images/              # Ảnh/icon dùng trong ứng dụng
+│   └── test/
+│       ├── java/com/auction/        # Unit test và integration test
+│       └── resources/               # Cấu hình H2 cho test
+├── target/                          # Thư mục sinh ra sau khi build
+├── .gitignore
+├── pom.xml                          # Cấu hình Maven, dependency, build plugin
+└── README.md
+```
+
+### Module chính
+
+| Module | Vai trò |
+|---|---|
+| `client` | Chứa ứng dụng JavaFX, controller màn hình, xử lý sự kiện UI, socket client, push handler và cache giao diện. |
+| `common` | Chứa DTO, enum, model, exception và tiện ích dùng chung cho cả client và server. |
+| `server` | Chứa socket server, request dispatcher, handler, manager/service nghiệp vụ, DAO và cấu hình database. |
+| `resources/fxml` | Chứa layout FXML cho các màn hình đăng nhập, bidder, seller, admin và component dùng chung. |
+| `resources/css` | Chứa stylesheet cho giao diện JavaFX. |
+| `test` | Chứa test cho model, util, mapper, controller helper, server handler, manager và DAO integration. |
+
+### Entry point
+
+| Thành phần | Class | Nhiệm vụ |
+|---|---|---|
+| Server | `com.auction.server.ServerApp` | Khởi động socket server, lắng nghe client và xử lý request. |
+| Client | `com.auction.client.MainApp` | Khởi động ứng dụng JavaFX. |
+
+## 4. Cấu Hình Ứng Dụng
+
+File cấu hình mặc định:
+
+```text
+src/main/resources/application.properties
+```
+
+Ví dụ cấu hình database và network:
+
+```properties
+db.host=localhost
+db.port=3306
+db.name=auction_db
+db.user=root
+db.password=your_password
+db.ssl=false
+
+server.ip=127.0.0.1
+server.port=8080
+```
+
+Khi chạy server và client trên cùng một máy, giữ `server.ip=127.0.0.1` và `server.port=8080`.
+
+Nếu muốn dùng file cấu hình database riêng, tạo file `application-local.properties`, sau đó chạy server với:
 
 ```bash
-scp target/MainApp.jar admin_btl@4.194.28.97:~/MainApp.jar
+java -Ddb.config.file=application-local.properties -jar ServerApp.jar
 ```
 
-### 4. Chạy server trên Azure
+Nếu chạy từ file tự build trong thư mục `target/`, thay `ServerApp.jar` bằng `target/ServerApp.jar`.
 
-SSH vào Azure rồi chạy:
+## 5. Tải Và Chạy Chương Trình Trên Cùng Một Máy
+
+Project có sẵn file JAR trong GitHub Release. Đây là cách chạy khuyến nghị khi chấm bài vì không cần build lại mã nguồn. Quy trình dưới đây áp dụng cho Windows, Linux và macOS khi server và client chạy trên cùng một máy.
+
+### Bước 1: Tải bản phát hành phù hợp
+
+Truy cập:
+
+```text
+https://github.com/Team-09-LTNC/Online-auction-system/releases/tag/v2.0.0
+```
+
+Tải các file phù hợp:
+
+| File | Dùng cho |
+|---|---|
+| [ServerApp.jar](https://github.com/Team-09-LTNC/Online-auction-system/releases/download/v2.0.0/ServerApp.jar) | Máy chạy server |
+| [MainApp-Windows.jar](https://github.com/Team-09-LTNC/Online-auction-system/releases/download/v2.0.0/MainApp-Windows.jar) | Client trên Windows |
+| [MainApp-Linux.jar](https://github.com/Team-09-LTNC/Online-auction-system/releases/download/v2.0.0/MainApp-Linux.jar) | Client trên Linux |
+| [MainApp-macOS.jar](https://github.com/Team-09-LTNC/Online-auction-system/releases/download/v2.0.0/MainApp-macOS.jar) | Client trên macOS |
+
+Đặt `ServerApp.jar` và file client đã tải vào cùng một thư mục để dễ chạy lệnh. Ví dụ trên Windows:
+
+```text
+ServerApp.jar
+MainApp-Windows.jar
+```
+
+Trên Linux hoặc macOS, file client sẽ lần lượt là `MainApp-Linux.jar` hoặc `MainApp-macOS.jar`.
+
+### Bước 2: Chạy server
+
+Mở terminal thứ nhất tại thư mục chứa JAR và chạy:
 
 ```bash
 java -jar ServerApp.jar
 ```
 
-Server sẽ lắng nghe ở port `8080`.
+Server mặc định lắng nghe tại:
 
-Nếu muốn để server tiếp tục chạy sau khi đóng SSH, dùng `nohup`:
+```text
+127.0.0.1:8080
+```
+
+### Bước 3: Chạy client
+
+Giữ terminal server đang chạy. Mở terminal thứ hai tại thư mục chứa JAR.
+
+Windows:
 
 ```bash
-nohup java -jar ServerApp.jar > auction-server.log 2>&1 &
+java -jar MainApp-Windows.jar
 ```
 
-Xem log:
+Linux:
 
 ```bash
-tail -f auction-server.log
+java -jar MainApp-Linux.jar
 ```
 
-Kiểm tra process server:
+macOS:
 
 ```bash
-ps aux | grep ServerApp
+java -jar MainApp-macOS.jar
 ```
 
-Dừng server đang chạy nền:
+Client sẽ tự kết nối tới server tại `127.0.0.1:8080`.
 
-```bash
-pkill -f ServerApp.jar
-```
+### Bước 4: Đăng nhập và kiểm tra chức năng
 
-### 5. Trên các máy client
+Có thể dùng các tài khoản mẫu sau để kiểm tra nhanh các vai trò trong hệ thống:
 
-Các máy client chạy `MainApp.jar` và truyền public IP của Azure VM:
-
-```bash
-java -jar MainApp.jar --server-ip=4.194.28.97
-```
-
-Ví dụ: nếu Azure VM chạy `ServerApp.jar` có public IP là `4.194.28.97`, thì mọi client chạy:
-
-```bash
-java -jar MainApp.jar --server-ip=4.194.28.97
-```
-
-Nếu không muốn truyền tham số mỗi lần chạy, tạo file `client.properties` đặt cạnh
-`MainApp.jar`:
-
-```properties
-server.ip=4.194.28.97
-server.port=8080
-```
-
-Rồi chạy:
-
-```bash
-java -Dnetwork.config.file=client.properties -jar MainApp.jar
-```
-
-### Lưu ý khi dùng Azure
-
-- Azure VM phải đang chạy, không được ở trạng thái `Stopped (deallocated)`.
-- Azure Network Security Group phải mở inbound TCP port `8080`.
-- Nếu trong Linux có bật firewall như `ufw`, cần cho phép port `8080`.
-- Public IP của VM có thể thay đổi nếu chưa cấu hình static IP. Nếu IP thay đổi, client phải chạy lại với IP mới.
-- Database trong `application.properties` của server phải truy cập được từ Azure VM.
-- Nếu client báo không kết nối được, kiểm tra theo thứ tự: server process còn chạy không, port `8080` đã mở chưa, public IP có đổi không, firewall Linux/Azure có chặn không.
-
-File `application.properties` đang được đóng gói vào JAR để nhóm có thể chạy server trực tiếp. Nếu cần đổi database khi triển khai, có thể tạo file cấu hình riêng và chạy `java -Ddb.config.file=application-local.properties -jar ServerApp.jar`.
-
-## Cấu Trúc Tổng Quan
-
-```text
-src/
-├── main/
-│   ├── java/com/auction/
-│   │   ├── client/      # JavaFX client, controller, socket client, cache UI
-│   │   ├── common/      # DTO, enum, model, exception, util dùng chung
-│   │   └── server/      # Socket server, handler, manager nghiệp vụ, DAO, DB
-│   └── resources/
-│       ├── application.properties
-│       ├── logback.xml
-│       ├── css/
-│       ├── fxml/
-│       └── images/
-└── test/
-    ├── java/com/auction/
-    └── resources/application-test-h2.properties
-```
-
-## Tầng Client
-
-Client là ứng dụng JavaFX. Controller đọc dữ liệu từ FXML, tạo JSON request hoặc DTO, gửi qua `ClientSocket`, rồi cập nhật UI khi nhận response/push event.
-
-```text
-client/
-├── MainApp.java
-├── controller/
-│   ├── MainController.java
-│   ├── admin/
-│   ├── auth/
-│   ├── bidder/
-│   ├── components/
-│   └── seller/
-├── interfaces/
-├── manager/
-├── networkclient/
-└── util/
-```
-
-### Client Core
-
-| File | Nhiệm vụ |
-|---|---|
-| `MainApp.java` | Entry point JavaFX, cấu hình stage chính. |
-| `MainController.java` | Controller khung chính nếu dùng layout tổng. |
-| `networkclient/ClientApplication.java` | Lớp hỗ trợ khởi tạo phía client. |
-| `networkclient/ClientSocket.java` | Quản lý kết nối socket tới server, gửi JSON request, map response theo `requestId`/type. |
-| `networkclient/PushHandler.java` | Nhận sự kiện server push như bid mới, trạng thái phiên, chat, notification và gọi controller tương ứng. |
-
-### Client Auth
-
-| File | Nhiệm vụ |
-|---|---|
-| `controller/auth/LoginController.java` | Xử lý đăng nhập, điều hướng theo role `ADMIN`, `BIDDER`, `SELLER`. |
-| `controller/auth/RegisterController.java` | Xử lý đăng ký tài khoản bidder/seller. |
-| `controller/auth/UserSession.java` | Lưu trạng thái phiên đăng nhập hiện tại: user id, role, tên hiển thị. |
-
-### Client Bidder
-
-| File | Nhiệm vụ |
-|---|---|
-| `AuctionListScreenController.java` | Danh sách phiên đấu giá, lọc/tìm kiếm, mở phòng đấu giá. |
-| `MainDashboardController.java` | Dashboard bidder, thống kê nhanh và điều hướng. |
-| `MyAuctionsController.java` | Các phiên bidder đã tham gia. |
-| `FollowedAuctionsController.java` | Các phiên bidder đang theo dõi. |
-| `AuctionRoomController.java` | Điều phối phòng đấu giá: load snapshot, bid thường, auto-bid, mua đứt, realtime update. |
-| `AuctionRoomBase.java` | Lớp nền giữ FXML field, state chung, countdown và helper cơ bản của phòng đấu giá. |
-| `AuctionRoomSnapshotSupport.java` | Apply snapshot/refresh state từ server cho phòng đấu giá. |
-| `AuctionRoomHistorySupport.java` | Load lịch sử bid, cập nhật chart và realtime bid/status. |
-| `AuctionRoomCommandSupport.java` | Command UI đặt giá, mua đứt, đăng ký/xóa auto-bid. |
-| `AuctionRoomChartHelper.java` | Parse lịch sử bid và setup điểm chart/tooltip. |
-| `AuctionRoomViewHelper.java` | Dialog, alert, countdown label và trạng thái UI hết hạn. |
-| `AuctionRoomImageHelper.java` | Căn ảnh sản phẩm theo kiểu cover trong khung cố định. |
-| `AuctionRoomImageLoader.java` | Tải ảnh detail/preview từ cache và xử lý fallback khi ảnh lỗi. |
-| `AuctionRoomMoneyFormatter.java` | Format/parse tiền VND và formatter cho `TextField`. |
-| `AuctionJsonReader.java` | Đọc field từ `JsonObject` an toàn với fallback. |
-
-### Client Seller
-
-| File | Nhiệm vụ |
-|---|---|
-| `PostAuctionController.java` | Form đăng sản phẩm và tạo phiên đấu giá liên quan. |
-| `PostAuctionPreviewBinder.java` | Binding live preview, counter mô tả, preview tiền/thời gian/anti-sniping. |
-| `PostAuctionPreviewControls.java` | Record gom các control cần cho preview binder. |
-| `PostAuctionFormMapper.java` | Parse tiền, category và thời gian từ form đăng sản phẩm. |
-| `MyProductsController.java` | Quản lý sản phẩm/phiên của seller. |
-| `MyProductsRenderer.java` | Lọc, dựng card sản phẩm theo batch và gắn action sửa/xóa. |
-| `MyProductEditDialog.java` | Dialog sửa sản phẩm seller. |
-| `MyProductEditRequest.java` | Record dữ liệu từ dialog sửa sản phẩm. |
-| `MyProductsHelper.java` | Helper render/format cho màn hình sản phẩm seller. |
-
-### Client Admin
-
-| File | Nhiệm vụ |
-|---|---|
-| `AdminLayoutController.java` | Layout admin, sidebar, header, logout, load màn hình con. |
-| `DashboardViewController.java` | Dashboard tổng quan admin. |
-| `AuctionsViewController.java` | Quản lý phiên đấu giá. |
-| `ProductsCensorController.java` | Duyệt hoặc từ chối sản phẩm/phiên chờ duyệt. |
-| `BiddersViewController.java` | Quản lý tài khoản bidder. |
-| `SellersViewController.java` | Quản lý tài khoản seller. |
-| `TransactionsViewController.java` | Quản lý giao dịch. |
-| `InvoicesController.java` | Quản lý hóa đơn. |
-| `manager/AdminManager.java` | Client-side API wrapper cho các request admin. |
-| `manager/AdminResponseMapper.java` | Map JSON response admin sang DTO phía client. |
-
-### Client Components Và Util
-
-| File | Nhiệm vụ |
-|---|---|
-| `components/SidebarController.java` | Sidebar chung cho bidder/seller, điều hướng, logout, notification badge. |
-| `components/ProductCardController.java` | Card hiển thị sản phẩm/phiên đấu giá. |
-| `components/ProductCardStatusView.java` | Helper trạng thái badge/action button/countdown của product card. |
-| `components/ProductCardImageLoader.java` | Load/preload ảnh card bằng cache. |
-| `components/ProductCardSnapshotFactory.java` | Tạo snapshot tối thiểu khi mở phòng từ card. |
-| `components/ChatController.java` | Chat/thông báo realtime trong ứng dụng. |
-| `components/ChatNotificationRenderer.java` | Render card thông báo thường/thanh toán và countdown thanh toán. |
-| `components/ChatTimeUtil.java` | Parse/format thời gian notification. |
-| `components/WalletController.java` | UI ví và giao dịch ví. |
-| `interfaces/RefreshableCenterContent.java` | Contract cho màn hình có thể refresh khi được load lại. |
-| `interfaces/CategoryFilterListener.java` | Contract nhận filter danh mục từ sidebar. |
-| `util/AuctionTimeUtil.java` | Parse thời gian và tính trạng thái/countdown phiên đấu giá. |
-| `util/AuctionWarmupCache.java` | Cache khởi động trước dữ liệu đấu giá. |
-| `util/ClientTaskExecutor.java` | Chạy task nền phía client. |
-| `util/CloudStorageUtil.java` | Upload/resolve ảnh qua cloud storage. |
-| `util/ImageCacheManager.java` | Cache ảnh preview/detail. |
-| `util/ViewCacheManager.java` | Cache FXML/view để giảm load lại UI. |
-
-## Tầng Common
-
-`common` là phần dùng chung cho cả client và server. Không phụ thuộc JavaFX hoặc database.
-
-```text
-common/
-├── dto/
-├── enums/
-├── exception/
-├── model/
-├── observer/
-└── util/
-```
-
-| Nhóm/File | Nhiệm vụ |
-|---|---|
-| `dto/BaseDTOs.java` | Request/response gốc, response lỗi chung. |
-| `dto/AuthDTOs.java` | DTO đăng nhập, đăng ký, logout. |
-| `dto/AuctionDTOs.java` | DTO đấu giá: bid request, auction summary, điểm chart. |
-| `dto/ItemDTOs.java` | DTO sản phẩm. |
-| `dto/AdminDTOs.java` | DTO màn hình admin: user summary, transaction, invoice, auction summary. |
-| `enums/ActionType.java` | Danh sách action string client gửi lên server. Đây là contract protocol chính. |
-| `enums/AuctionStatus.java` | Trạng thái phiên đấu giá. |
-| `enums/StatusCode.java` | Mã trạng thái response nghiệp vụ. |
-| `enums/ErrorCode.java` | Mã lỗi chuẩn hóa. |
-| `exception/*` | Exception nghiệp vụ như lỗi xác thực, bid không hợp lệ, phiên đã đóng. |
-| `model/bid/*` | Domain model đấu giá: `Auction`, `BidTransaction`, `BidLine`, `AutoBidConfig`. |
-| `model/item/*` | Domain model sản phẩm và factory theo loại: art, electronics, vehicle, other. |
-| `model/user/*` | Domain model người dùng: `User`, `Admin`, `Bidder`, `Seller`. |
-| `model/entity/Entity.java` | Base entity có id. |
-| `observer/AuctionObserver.java` | Contract observer để server push sự kiện auction tới client handler. |
-| `util/GsonConfig.java` | Gson singleton có adapter cho thời gian. |
-| `util/LocalDateTimeAdapter.java` | Serialize/deserialize `LocalDateTime`. |
-
-## Tầng Server
-
-Server nhận kết nối socket, đọc JSON request, dispatch theo `ActionType`, gọi manager nghiệp vụ, manager gọi DAO để đọc/ghi database, sau đó trả response hoặc push realtime event về client.
-
-```text
-server/
-├── ServerApp.java
-├── db/
-├── dao/
-├── manager/
-└── networkserver/
-    └── handler/
-```
-
-### Server Network
-
-| File | Nhiệm vụ |
-|---|---|
-| `ServerApp.java` | Entry point server. |
-| `networkserver/ServerManager.java` | Lắng nghe port, nhận socket client, tạo `ClientHandler`. |
-| `networkserver/ClientHandler.java` | Quản lý một client connection, đọc request, ghi response, giữ `currentUser`, nhận push từ observer. |
-| `networkserver/RequestDispatcher.java` | Map `ActionType` sang handler tương ứng. |
-| `handler/RequestHandler.java` | Interface chung cho các handler xử lý request. |
-
-### Server Handlers
-
-| File | Nhiệm vụ |
-|---|---|
-| `handler/AuthController.java` | Login, register, logout, khóa/mở tài khoản. |
-| `handler/AuthWalletHandler.java` | Nạp/rút tiền, lịch sử ví và notification biến động số dư. |
-| `handler/AuctionController.java` | Dispatcher mỏng cho các `ActionType` thuộc đấu giá. |
-| `handler/AuctionCommandHandler.java` | Nhóm command ghi dữ liệu/trạng thái: join/leave, đặt giá, auto-bid, buy-now, settle, close auction. |
-| `handler/AuctionQueryHandler.java` | Nhóm request truy vấn auction: list, joined, followed, detail, history, dashboard stats. |
-| `handler/AuctionAccountGuard.java` | Kiểm tra seller tự bid và trạng thái khóa/tạm khóa của bidder. |
-| `handler/AuctionControllerUtil.java` | Helper response, copy `requestId`, build auction summary, kiểm tra seller của phiên. |
-| `handler/AuctionMiscHandler.java` | Các action phụ: follow/unfollow, system notification, chat. |
-| `handler/AuctionNotificationService.java` | Tạo payload push realtime cho auction event. |
-| `handler/ProductController.java` | Tạo/cập nhật/xóa/lấy sản phẩm và phiên liên quan seller. |
-| `handler/ProductQueryHandler.java` | Query sản phẩm: lấy tất cả và tìm kiếm. |
-| `handler/ProductResponseMapper.java` | Map auction/item sang JSON response sản phẩm seller. |
-| `handler/AdminController.java` | API admin: thống kê, quản lý user, duyệt phiên, giao dịch, hóa đơn. |
-
-### Server Managers
-
-| File | Nhiệm vụ |
-|---|---|
-| `manager/UserManager.java` | Nghiệp vụ đăng nhập, logout, quản lý session user. |
-| `manager/ProductManager.java` | Nghiệp vụ sản phẩm và tạo phiên từ sản phẩm. |
-| `manager/AuctionManager.java` | Facade nghiệp vụ đấu giá: đặt giá, mua đứt, auto-bid, quản lý phiên đang chạy. |
-| `manager/AuctionLifecycleService.java` | Scheduler mở/đóng phiên, dọn observer và kích hoạt thanh toán sau kết thúc. |
-| `manager/AuctionRealtimeNotifier.java` | Observer/realtime push cho bid, status, chat và auction changed. |
-| `manager/AuctionBidCommandService.java` | Mua đứt, đăng ký/xóa auto-bid và validation command bid phụ trợ. |
-| `manager/AuctionAdminSyncService.java` | Đồng bộ RAM/scheduler sau thao tác admin duyệt, đổi trạng thái hoặc xóa phiên. |
-| `manager/AuctionAutoBidService.java` | Thuật toán auto-bid: chọn bot dẫn đầu, tính giá kế tiếp, xử lý mua đứt tự động. |
-| `manager/AuctionPaymentTimeoutService.java` | Lên lịch quá hạn thanh toán, tự hủy phiên và áp dụng xử phạt bidder. |
-| `manager/AuctionSettlementNotifier.java` | Gửi thông báo sau khi phiên kết thúc/chờ thanh toán. |
-| `manager/SystemNotificationManager.java` | Tạo thông báo hệ thống cho user. |
-
-### Server DAO Và Database
-
-| File | Nhiệm vụ |
-|---|---|
-| `db/ConnectionProvider.java` | Interface cung cấp connection. |
-| `db/DatabaseConnection.java` | Cấu hình HikariCP/MySQL, đọc `application.properties`. |
-| `db/SetupDatabase.java` | Khởi tạo schema/database khi cần. |
-| `dao/UserDao.java` | CRUD user, tìm user theo username/id, cập nhật trạng thái khóa và mốc `lock_until`. |
-| `dao/AdminDao.java` | Query phục vụ admin dashboard, user summary, transaction, invoice, pending auction. |
-| `dao/AuctionDao.java` | Ghi/cập nhật phiên: tạo phiên, trạng thái/end time, bid transaction và delegate auto-bid/query. |
-| `dao/AuctionQueryDao.java` | Query/list/count/search phiên đấu giá. |
-| `dao/AutoBidDao.java` | SQL riêng cho cấu hình auto-bid: upsert, xóa, lấy bot theo phiên. |
-| `dao/AuctionRowMapper.java` | Map `ResultSet` sang `Auction`. |
-| `dao/BidTransactionDao.java` | Lịch sử bid và thống kê bid. |
-| `dao/BidderMoneySellerDao.java` | Giao dịch tiền giữa bidder/seller, thanh toán và trừ phí phạt 10% khi hủy/quá hạn. |
-| `dao/BidderPenaltyDao.java` | Ghi nhận vi phạm thanh toán, cập nhật khóa tạm/vĩnh viễn cho bidder. |
-| `dao/FollowDao.java` | Theo dõi/hủy theo dõi phiên đấu giá. |
-| `dao/ItemDao.java` | CRUD sản phẩm. |
-| `dao/SystemNotificationDao.java` | Lưu và đọc notification hệ thống. |
-| `dao/WalletTransactionDao.java` | Giao dịch ví. |
-
-## Resources
-
-| Thư mục/File | Nhiệm vụ |
-|---|---|
-| `resources/fxml/auth` | Màn hình login/register. |
-| `resources/fxml/bidder` | Layout và màn hình bidder. |
-| `resources/fxml/seller` | Màn hình seller. |
-| `resources/fxml/admin` | Layout và màn hình admin. |
-| `resources/fxml/components` | Component dùng chung như sidebar, chat, wallet, product card. |
-| `resources/css/style.css` | Style chung/bidder/component. |
-| `resources/css/seller.css` | Style seller. |
-| `resources/css/admin.css` | Style admin. |
-| `resources/css/chart.css` | Style chart. |
-| `resources/application.properties` | Cấu hình DB/server. |
-| `resources/logback.xml` | Cấu hình logging. |
-
-## Luồng Giao Tiếp Client-Server-Database
-
-### 1. Request Đồng Bộ
-
-```text
-JavaFX Controller
-  -> tạo DTO hoặc JsonObject có type = ActionType.*
-  -> ClientSocket.sendJsonRequest(...)
-  -> ServerManager/ClientHandler nhận JSON
-  -> RequestDispatcher chọn RequestHandler
-  -> Handler validate request/currentUser
-  -> Manager xử lý nghiệp vụ
-  -> DAO đọc/ghi database qua DatabaseConnection
-  -> Handler build JSON response
-  -> ClientSocket nhận response
-  -> callback Platform.runLater(...) cập nhật UI
-```
-
-Ví dụ đặt giá:
-
-```text
-AuctionRoomController.handlePlaceBid()
-  -> ActionType.PLACE_BID
-  -> AuctionController.handlePlaceBid()
-  -> AuctionManager xử lý bid
-  -> AuctionDao/BidTransactionDao ghi bid và cập nhật phiên
-  -> response BID_RESPONSE
-  -> client refreshAuctionState() + loadBidHistoryFromServer()
-```
-
-### 2. Push Realtime
-
-```text
-Client join auction
-  -> ActionType.JOIN_AUCTION
-  -> AuctionManager.subscribe(auctionId, ClientHandler)
-
-Khi có bid/status/chat mới:
-  -> AuctionManager notify observer
-  -> ClientHandler gửi JSON push qua socket
-  -> PushHandler nhận push
-  -> gọi controller đang mở phòng đấu giá/chat/admin
-  -> UI cập nhật realtime
-```
-
-### 3. Database
-
-Server là nơi duy nhất truy cập database. Client không gọi database trực tiếp.
-
-```text
-Client UI
-  -> Socket JSON
-  -> Server Handler
-  -> Manager nghiệp vụ
-  -> DAO
-  -> MySQL/H2
-```
-
-## Quy Tắc Thanh Toán Và Khóa Tài Khoản
-
-- Khi bidder thắng phiên nhưng hủy hoặc quá hạn thanh toán, hệ thống kiểm tra ví để xử lý phí phạt 10% giá chốt.
-- Nếu ví đủ tiền, hệ thống tự trừ 10%, hủy phiên và ghi biến động số dư; bidder không bị khóa tài khoản.
-- Nếu ví không đủ tiền, hệ thống hủy phiên và ghi nhận vi phạm thanh toán.
-- Vi phạm lần 1 khóa tài khoản 3 ngày, lần 2 khóa 7 ngày, từ lần 3 khóa vĩnh viễn.
-- Trạng thái khóa được lưu trực tiếp trong bảng `users.status`. Khóa tạm thời lưu thêm mốc mở lại ở `users.lock_until` để admin xem được.
-- Khi bidder đăng nhập trong thời gian khóa tạm, server trả thông báo còn bao lâu và thời điểm được đăng nhập lại. Nếu `lock_until` đã hết hạn, login sẽ tự mở lại tài khoản.
-- Khóa vĩnh viễn hoặc khóa thủ công bởi admin có `users.status = LOCKED` và `users.lock_until = NULL`; khi login sẽ báo tài khoản bị khóa vĩnh viễn và cần liên hệ Admin.
-
-## Kiểm Thử
-
-- Unit test và integration test nằm trong `src/test/java`.
-- Test DAO dùng H2 qua `src/test/resources/application-test-h2.properties`.
-- `mvn test` hiện chạy cả checkstyle, compile và test.
-
-### Client Tests
-
-| File test | Phần được test | Nội dung kiểm tra chính |
+| Vai trò | Username | Password |
 |---|---|---|
-| `BiddingLogicTest.java` | Logic đặt giá phía client | Giá bid hợp lệ phải lớn hơn giá hiện tại, giá thấp hơn bị xem là không hợp lệ. |
-| `StatusMappingTest.java` | Mapping thông báo lỗi/trạng thái client | Message hiển thị cho lỗi đăng nhập và phiên đấu giá đã kết thúc. |
-| `UserSessionTest.java` | Session đăng nhập phía client | Set/get thông tin user hiện tại và `clear()` reset toàn bộ session. |
-| `AuctionTimeUtilTest.java` | Tiện ích thời gian đấu giá | Parse thời gian ISO và tính countdown theo server clock cho trạng thái chưa mở/đang chạy. |
-| `AdminResponseMapperTest.java` | Mapping response admin phía client | Map danh sách user với status mặc định, map pending auctions với fallback an toàn, map transactions cho báo cáo admin. |
-| `PostAuctionFormMapperTest.java` | Form đăng sản phẩm seller | Parse tiền VND từ input form và map danh mục hiển thị sang enum sản phẩm. |
-| `MyProductsHelperTest.java` | Helper màn hình sản phẩm seller | Parse ngày giờ sửa phiên và resolve trạng thái hiển thị theo trạng thái lưu trong DB/thời gian hiện tại. |
+| Admin | `admin` | `admin` |
+| Seller | `seller1` | `123456` |
+| Bidder | `bidder1` | `123456` |
+| Bidder | `bidder2` | `123456` |
 
-### Common Tests
+## 6. Danh Sách Chức Năng Đã Hoàn Thành
 
-| File test | Phần được test | Nội dung kiểm tra chính |
-|---|---|---|
-| `AuctionTest.java` | Domain model `Auction` | Cập nhật winner/giá/lịch sử bid, tính trạng thái theo thời gian, giữ trạng thái terminal và extend end time. |
-| `AutoBidConfigTest.java` | Domain model auto-bid | Thứ tự ưu tiên auto-bid theo max bid, bid step và thời điểm đăng ký. |
-| `ItemFactoryTest.java` | Factory tạo sản phẩm | Tạo đúng subtype art/electronics/vehicle/other, map đủ field và trả `null` khi input không hợp lệ. |
-| `UserTest.java` | Domain model user | Role name, thao tác balance và trạng thái mặc định/chuyển trạng thái user. |
-| `GsonConfigTest.java` | Gson dùng chung | Singleton Gson, serialize/deserialize `LocalDateTime`, lỗi parse ngày không hợp lệ. |
+### Xác thực và phân quyền
 
-### Server DAO/Integration Tests
+- Đăng ký tài khoản bidder/seller.
+- Đăng nhập và điều hướng giao diện theo vai trò.
+- Lưu thông tin phiên đăng nhập phía client.
+- Kiểm tra trạng thái tài khoản khi đăng nhập, bao gồm tài khoản bị khóa tạm thời hoặc vĩnh viễn.
 
-| File test | Phần được test | Nội dung kiểm tra chính |
-|---|---|---|
-| `UserDaoIntegrationTest.java` | `UserDao` với H2 | Lưu user, tìm theo username và cập nhật balance trong database test. |
-| `ItemDaoIntegrationTest.java` | `ItemDao` với H2 | Lưu, đọc, sửa, tìm kiếm theo keyword/seller và xóa sản phẩm. |
-| `AuctionDaoIntegrationTest.java` | `AuctionDao` với H2 | Tạo seller/bidder/item/auction rồi đặt bid để kiểm tra cập nhật giá hiện tại và winner trong DB. |
-| `AutoBidDaoIntegrationTest.java` | `AutoBidDao` với H2 | Lưu/cập nhật auto-bid, đọc max bid/bid step, lấy danh sách bot theo phiên và xóa auto-bid. |
-| `FollowAndBidHistoryDaoIntegrationTest.java` | `FollowDao` và `BidTransactionDao` với H2 | Follow/unfollow/count phiên theo dõi, lưu và đọc lịch sử bid của một phiên. |
-| `AdminDaoIntegrationTest.java` | `AdminDao` với H2 | Lọc pending auctions, chỉ lấy hóa đơn `PAID`, chỉ lấy giao dịch terminal `FINISHED/PAID/CANCELED`. |
-| `AdminDaoWriteActionsIntegrationTest.java` | `AdminDao` write-actions với H2 | Duyệt phiên, đổi trạng thái, đọc thông tin phiên và xóa phiên đấu giá. |
-| `BidderMoneySellerDaoIntegrationTest.java` | Quyết toán tiền bidder-seller với H2 | Bidder thắng thanh toán thành công, cập nhật balance, wallet history, status `PAID`; xử lý phí phạt 10% khi hủy/quá hạn; chặn người không thắng thanh toán. |
-| `UserLockIntegrationTest.java` | Khóa tài khoản với H2 | Vi phạm thanh toán ghi `users.status/lock_until`, login báo khóa tạm kèm mốc mở lại, khóa vĩnh viễn báo liên hệ Admin và khóa tạm hết hạn tự mở. |
-| `AdminControllerReadActionsTest.java` | Read-actions admin qua controller + H2 | Response cho pending auctions, invoices, transactions có đúng `type`, `success`, `requestId` và data liên quan. |
+### Chức năng cho Bidder
 
-### Server Manager Tests
+- Xem danh sách phiên đấu giá.
+- Tìm kiếm và lọc phiên đấu giá.
+- Xem chi tiết phiên, ảnh sản phẩm, giá hiện tại và thời gian còn lại.
+- Theo dõi và hủy theo dõi phiên đấu giá.
+- Tham gia phòng đấu giá realtime.
+- Đặt giá thủ công.
+- Cấu hình auto-bid với giá tối đa và bước nhảy.
+- Mua ngay nếu phiên có giá mua ngay.
+- Xem lịch sử đặt giá và biểu đồ diễn biến giá.
+- Quản lý ví, nạp/rút tiền và xem lịch sử giao dịch.
+- Thanh toán phiên thắng và nhận thông báo hệ thống.
 
-| File test | Phần được test | Nội dung kiểm tra chính |
-|---|---|---|
-| `ProductManagerTest.java` | `ProductManager` | Tạo đúng subtype sản phẩm theo category và trả `null` khi dữ liệu đầu vào không hợp lệ. |
-| `AuctionAutoBidServiceTest.java` | `AuctionAutoBidService` | Nhiều auto-bid cạnh tranh, auto-bid thắng theo max bid; nhiều manual-bid xen kẽ auto-bid cho tới khi vượt max bid. |
+### Chức năng cho Seller
 
-### Server Network/Handler Tests
+- Đăng sản phẩm mới.
+- Nhập thông tin sản phẩm, ảnh, giá khởi điểm, bước giá, thời gian bắt đầu/kết thúc.
+- Tạo phiên đấu giá gắn với sản phẩm.
+- Xem danh sách sản phẩm/phiên của mình.
+- Cập nhật thông tin sản phẩm và phiên đấu giá khi hợp lệ.
+- Xóa sản phẩm/phiên thuộc quyền sở hữu.
+- Theo dõi trạng thái duyệt và trạng thái đấu giá.
 
-| File test | Phần được test | Nội dung kiểm tra chính |
-|---|---|---|
-| `RequestDispatcherTest.java` | `RequestDispatcher` | Action không tồn tại trả lỗi chuẩn, controller trả `null` được bọc thành lỗi fallback và giữ `requestId`. |
-| `AuthControllerTest.java` | `AuthController` | Request `null`, thiếu `type`, action không hỗ trợ đều trả lỗi bad request. |
-| `AuctionControllerTest.java` | `AuctionController` | Validate request đấu giá lỗi: request null, action không hỗ trợ, tạo auction trực tiếp, join/leave thiếu hoặc sai auction id. |
-| `ProductControllerTest.java` | `ProductController` | Validate request sản phẩm lỗi: request null, action không hỗ trợ, search thiếu keyword, delete/get thiếu item id hợp lệ. |
-| `ProductControllerCreateGetFlowTest.java` | Luồng sản phẩm seller qua `ProductController` + H2 | Seller tạo sản phẩm thành công qua `CREATE_PRODUCT` và `GET_MY_PRODUCTS` chỉ trả sản phẩm của seller hiện tại. |
-| `ProductControllerMutationFlowTest.java` | Luồng cập nhật sản phẩm seller qua `ProductController` + H2 | Seller cập nhật sản phẩm/phiên đang mở của chính mình qua `UPDATE_PRODUCT`. |
-| `AdminControllerTest.java` | `AdminController` với H2 | Kiểm tra payload admin cho pending auctions, tổng doanh thu invoices và transactions terminal. |
+### Chức năng cho Admin
 
-### Test Suite Và Helper
+- Xem dashboard tổng quan.
+- Quản lý danh sách bidder và seller.
+- Khóa/mở tài khoản người dùng.
+- Duyệt hoặc từ chối phiên đấu giá chờ kiểm duyệt.
+- Quản lý phiên đấu giá.
+- Theo dõi giao dịch và hóa đơn.
+- Xem doanh thu và các thống kê phục vụ quản trị.
 
-| File | Vai trò |
-|---|---|
-| `AllTestSuite.java` | Gom nhóm chạy test suite JUnit. |
-| `DaoIntegrationTestSupport.java` | Khởi tạo H2 schema dùng chung cho integration test DAO/controller. |
-| `AdminTestData.java` | Helper tạo và cleanup seller, bidder, item, auction cho test admin. |
-| `ProductControllerFlowSupport.java` | Helper test flow sản phẩm seller qua controller. |
-| `ProductControllerSeedData.java` | Helper seed seller/item/auction cho test cập nhật sản phẩm. |
+### Đấu giá realtime và thanh toán
+
+- Server push sự kiện realtime khi có bid mới, thay đổi trạng thái phiên hoặc thông báo mới.
+- Tự động cập nhật trạng thái phiên theo thời gian.
+- Hỗ trợ auto-bid cạnh tranh giữa nhiều bidder.
+- Xử lý mua ngay và kết thúc phiên.
+- Xử lý thanh toán cho người thắng phiên.
+- Ghi nhận giao dịch ví và hóa đơn.
+- Xử lý hủy/quá hạn thanh toán.
+- Áp dụng phí phạt 10% và khóa tài khoản theo số lần vi phạm.
+
+### Kỹ thuật và kiểm thử
+
+- Tách lớp rõ ràng: UI, network, handler, manager/service, DAO, model.
+- DTO và enum dùng chung giúp chuẩn hóa giao thức request/response.
+- Connection pool bằng HikariCP.
+- Logging bằng Logback.
+- Cache ảnh và cache view để giảm tải khi dùng client.
+- Bộ test bao phủ model, util, mapper, controller helper, handler, manager và DAO integration bằng H2.
+
+## 7. Lưu Ý Khi Chạy
+
+- Luôn chạy server trước client.
+- Server và client trong README này được hướng dẫn chạy trên cùng một máy, dùng địa chỉ mặc định `127.0.0.1:8080`.
+- Nếu port `8080` đang bị chiếm, cần đổi `server.port` trong file cấu hình hoặc truyền `--server-port` khi chạy server.
+- Nếu đổi database, cần cập nhật lại file cấu hình tương ứng trước khi chạy server.
