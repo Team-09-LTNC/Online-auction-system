@@ -4,6 +4,7 @@ import com.auction.client.controller.auth.UserSession;
 import com.auction.client.interfaces.RefreshableCenterContent;
 import com.auction.client.networkclient.ClientSocket;
 import com.auction.client.util.AuctionTimeUtil;
+import com.auction.client.util.CloudStorageUtil;
 import com.auction.common.enums.ActionType;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -191,12 +192,14 @@ public class MyProductsController implements Initializable, RefreshableCenterCon
     }
 
     private void showEditDialog(JsonObject itemObj) {
-        editDialog.show(itemObj).ifPresent(request -> submitProductUpdate(itemObj, request));
+        editDialog.show(itemObj, submission -> submitProductUpdate(itemObj, submission));
     }
 
-    private void submitProductUpdate(JsonObject itemObj, MyProductEditRequest editRequest) {
+    private void submitProductUpdate(JsonObject itemObj, MyProductEditDialog.Submission submission) {
+        MyProductEditRequest editRequest = submission.request();
         String trimmedName = editRequest.name() == null ? "" : editRequest.name().trim();
         if (trimmedName.isEmpty()) {
+            submission.reset();
             showAlert(Alert.AlertType.WARNING, "Thiếu thông tin", "Tên sản phẩm không được để trống.");
             return;
         }
@@ -205,11 +208,13 @@ public class MyProductsController implements Initializable, RefreshableCenterCon
         try {
             startingPrice = Long.parseLong(editRequest.priceText().replace(",", "").trim());
         } catch (Exception e) {
+            submission.reset();
             showAlert(Alert.AlertType.WARNING, "Giá không hợp lệ", "Giá khởi điểm phải là số nguyên dương.");
             return;
         }
 
         if (startingPrice <= 0) {
+            submission.reset();
             showAlert(Alert.AlertType.WARNING, "Giá không hợp lệ", "Giá khởi điểm phải lớn hơn 0.");
             return;
         }
@@ -217,32 +222,106 @@ public class MyProductsController implements Initializable, RefreshableCenterCon
         LocalDateTime startTime = MyProductsHelper.parseDateTime(editRequest.startDate(), editRequest.startTimeText());
         LocalDateTime endTime = MyProductsHelper.parseDateTime(editRequest.endDate(), editRequest.endTimeText());
         if (startTime == null || endTime == null) {
+            submission.reset();
             showAlert(Alert.AlertType.WARNING, "Thời gian không hợp lệ", "Vui lòng nhập ngày và giờ theo định dạng HH:mm.");
             return;
         }
         if (startTime.isBefore(LocalDateTime.now())) {
+            submission.reset();
             showAlert(Alert.AlertType.WARNING, "Thời gian không hợp lệ", "Thời gian bắt đầu không được ở quá khứ.");
             return;
         }
         if (!endTime.isAfter(startTime)) {
+            submission.reset();
             showAlert(Alert.AlertType.WARNING, "Thời gian không hợp lệ", "Thời gian kết thúc phải lớn hơn thời gian bắt đầu.");
             return;
         }
 
+        if (editRequest.imageFile() != null) {
+            CloudStorageUtil.uploadProductImageAsync(editRequest.imageFile())
+                    .thenAccept(uploadedImage -> Platform.runLater(() -> {
+                        if (uploadedImage == null || uploadedImage.getImageUrl() == null) {
+                            submission.reset();
+                            showAlert(Alert.AlertType.ERROR, "Lỗi kết nối", "Không thể tải ảnh lên đám mây!");
+                            return;
+                        }
+                        sendProductUpdateRequest(
+                                itemObj,
+                                trimmedName,
+                                editRequest.description(),
+                                startingPrice,
+                                editRequest.category(),
+                                uploadedImage.getImageUrl(),
+                                uploadedImage.getThumbnailUrl(),
+                                startTime,
+                                endTime,
+                                submission);
+                    }))
+                    .exceptionally(ex -> {
+                        Platform.runLater(() -> {
+                            submission.reset();
+                            showAlert(
+                                    Alert.AlertType.ERROR,
+                                    "Lỗi kết nối",
+                                    "Không thể tải ảnh lên đám mây!");
+                        });
+                        return null;
+                    });
+            return;
+        }
+
+        sendProductUpdateRequest(
+                itemObj,
+                trimmedName,
+                editRequest.description(),
+                startingPrice,
+                editRequest.category(),
+                editRequest.imageUrl(),
+                editRequest.imageThumbUrl(),
+                startTime,
+                endTime,
+                submission);
+    }
+
+    private void sendProductUpdateRequest(
+            JsonObject itemObj,
+            String name,
+            String description,
+            long startingPrice,
+            String category,
+            String imageUrl,
+            String imageThumbUrl,
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            MyProductEditDialog.Submission submission) {
         JsonObject request = new JsonObject();
         request.addProperty("type", ActionType.UPDATE_PRODUCT);
         request.addProperty("requestId", java.util.UUID.randomUUID().toString());
         request.addProperty("itemId", MyProductsHelper.getInt(itemObj, "itemId", MyProductsHelper.getInt(itemObj, "id", -1)));
-        request.addProperty("name", trimmedName);
-        request.addProperty("description", editRequest.description() == null ? "" : editRequest.description().trim());
+        request.addProperty("name", name);
+        request.addProperty("description", description == null ? "" : description.trim());
         request.addProperty("startingPrice", startingPrice);
-        request.addProperty("category", editRequest.category() == null ? "OTHER" : editRequest.category());
-        request.addProperty("imageUrl", editRequest.imageUrl() == null ? "" : editRequest.imageUrl().trim());
+        request.addProperty("category", category == null ? "OTHER" : category);
+        request.addProperty("imageUrl", imageUrl == null ? "" : imageUrl.trim());
+        request.addProperty("imageThumbUrl", imageThumbUrl == null ? "" : imageThumbUrl.trim());
         request.addProperty("startTime", startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         request.addProperty("endTime", endTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
         ClientSocket.getInstance().sendJsonRequest(request, ActionType.UPDATE_PRODUCT, response ->
-                Platform.runLater(() -> handleMutationResponse(response, "Cập nhật sản phẩm thành công.")));
+                Platform.runLater(() -> handleProductUpdateResponse(response, submission)));
+    }
+
+    private void handleProductUpdateResponse(JsonObject response, MyProductEditDialog.Submission submission) {
+        boolean success = response.has("success") && response.get("success").getAsBoolean();
+        if (success) {
+            applyReturnedImageUpdate(response);
+            submission.close();
+            loadMyPostedProducts();
+            return;
+        }
+
+        submission.reset();
+        showAlert(Alert.AlertType.WARNING, "Không thể thực hiện", MyProductsHelper.getString(response, "message", "Yêu cầu bị từ chối."));
     }
 
     private void confirmAndDelete(JsonObject itemObj) {
@@ -269,12 +348,40 @@ public class MyProductsController implements Initializable, RefreshableCenterCon
     private void handleMutationResponse(JsonObject response, String successMessage) {
         boolean success = response.has("success") && response.get("success").getAsBoolean();
         if (success) {
+            applyReturnedImageUpdate(response);
             showAlert(Alert.AlertType.INFORMATION, "Thành công", successMessage);
             loadMyPostedProducts();
             return;
         }
 
         showAlert(Alert.AlertType.WARNING, "Không thể thực hiện", MyProductsHelper.getString(response, "message", "Yêu cầu bị từ chối."));
+    }
+
+    private void applyReturnedImageUpdate(JsonObject response) {
+        if (!response.has("itemId") || !response.has("imageUrl")) {
+            return;
+        }
+        int itemId = MyProductsHelper.getInt(response, "itemId", -1);
+        if (itemId <= 0) {
+            return;
+        }
+        for (JsonElement element : loadedProducts) {
+            if (!element.isJsonObject()) {
+                continue;
+            }
+            JsonObject product = element.getAsJsonObject();
+            int productId = MyProductsHelper.getInt(product, "itemId", MyProductsHelper.getInt(product, "id", -1));
+            if (productId != itemId) {
+                continue;
+            }
+            product.addProperty("imageUrl", MyProductsHelper.getString(response, "imageUrl", ""));
+            product.addProperty("imageThumbUrl", MyProductsHelper.getString(
+                    response,
+                    "imageThumbUrl",
+                    MyProductsHelper.getString(response, "imageUrl", "")));
+            applyFiltersAndRender();
+            return;
+        }
     }
 
 

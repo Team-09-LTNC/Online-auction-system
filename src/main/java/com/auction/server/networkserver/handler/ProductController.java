@@ -318,6 +318,9 @@ public class ProductController implements RequestHandler {
                 JsonObject successPayload = new JsonObject();
                 successPayload.addProperty("success", true);
                 successPayload.addProperty("message", "Cập nhật sản phẩm thành công!");
+                successPayload.addProperty("itemId", sanPham.getId());
+                successPayload.addProperty("imageUrl", sanPham.getImageUrl());
+                successPayload.addProperty("imageThumbUrl", sanPham.getImageThumbUrl());
                 AuctionManager.getInstance().broadcastAuctionChanged(-1, "PRODUCT_UPDATED", null);
                 return buildResponse(yeuCau, ActionType.UPDATE_PRODUCT, successPayload);
             }

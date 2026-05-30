@@ -1,11 +1,14 @@
 package com.auction.server.manager;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.auction.common.model.item.ArtFactory;
 import com.auction.common.model.item.ElectronicsFactory;
@@ -17,12 +20,16 @@ import com.auction.common.model.item.VehicleFactory;
 import com.auction.server.dao.AuctionDao;
 import com.auction.server.dao.ItemDao;
 import com.auction.server.db.DatabaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Điều phối các nghiệp vụ liên quan đến sản phẩm
  * Khởi tạo đối tượng thông qua mẫu Factory
  */
 public class ProductManager {
+    private static final Logger logger = LoggerFactory.getLogger(ProductManager.class);
+    private static final AtomicBoolean checkedImageThumbColumn = new AtomicBoolean(false);
     private static volatile ProductManager instance;
     private final ItemDao itemDao;
     private final AuctionDao auctionDao;
@@ -182,6 +189,12 @@ public class ProductManager {
                 || !endTime.isAfter(startTime)) {
             return false;
         }
+        ensureImageThumbColumn();
+        if ((sanPham.getImageThumbUrl() == null || sanPham.getImageThumbUrl().isBlank())
+                && sanPham.getImageUrl() != null
+                && !sanPham.getImageUrl().isBlank()) {
+            sanPham.setImageThumbUrl(sanPham.getImageUrl());
+        }
 
         String sqlKiemTra = "SELECT a.id "
                 + "FROM items i "
@@ -191,7 +204,7 @@ public class ProductManager {
                 + "AND NOT EXISTS (SELECT 1 FROM bid_history b WHERE b.auction_id = a.id)";
 
         String sqlCapNhatSanPham = "UPDATE items "
-                + "SET name = ?, description = ?, starting_price = ?, category = ?, image_url = ? "
+                + "SET name = ?, description = ?, starting_price = ?, category = ?, image_url = ?, image_thumb_url = ? "
                 + "WHERE id = ? AND seller_id = ?";
 
         String sqlCapNhatThoiGian = "UPDATE auctions "
@@ -222,8 +235,9 @@ public class ProductManager {
                 pstmt.setLong(3, sanPham.getStartingPrice());
                 pstmt.setString(4, sanPham.getCategory());
                 pstmt.setString(5, sanPham.getImageUrl());
-                pstmt.setInt(6, sanPham.getId());
-                pstmt.setInt(7, sellerId);
+                pstmt.setString(6, sanPham.getImageThumbUrl());
+                pstmt.setInt(7, sanPham.getId());
+                pstmt.setInt(8, sellerId);
                 pstmt.executeUpdate();
             }
 
@@ -243,6 +257,7 @@ public class ProductManager {
             }
             return true;
         } catch (SQLException e) {
+            logger.error("Lỗi cập nhật sản phẩm OPEN itemId={}", sanPham.getId(), e);
             if (conn != null) {
                 try {
                     conn.rollback();
@@ -281,7 +296,29 @@ public class ProductManager {
             pstmt.setInt(2, sellerId);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
+            logger.error("Lỗi xóa sản phẩm OPEN itemId={}", itemId, e);
             return false;
+        }
+    }
+
+    private void ensureImageThumbColumn() {
+        if (checkedImageThumbColumn.get()) {
+            return;
+        }
+        try (Connection conn = DatabaseConnection.getInstance().getConnection()) {
+            DatabaseMetaData metaData = conn.getMetaData();
+            try (ResultSet columns = metaData.getColumns(null, null, "items", "image_thumb_url")) {
+                if (columns.next()) {
+                    checkedImageThumbColumn.set(true);
+                    return;
+                }
+            }
+            try (Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("ALTER TABLE items ADD COLUMN image_thumb_url VARCHAR(500) NULL");
+            }
+            checkedImageThumbColumn.set(true);
+        } catch (SQLException e) {
+            logger.error("Không thể đảm bảo cột image_thumb_url cho bảng items.", e);
         }
     }
 }

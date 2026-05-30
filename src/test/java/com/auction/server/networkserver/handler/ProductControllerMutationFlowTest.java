@@ -28,6 +28,11 @@ class ProductControllerMutationFlowTest extends ProductControllerFlowSupport {
             assertThat(response.get("success").getAsBoolean()).isTrue();
             assertThat(updated.getName()).startsWith("Updated Controller Product");
             assertThat(updated.getStartingPrice()).isEqualTo(1_500_000L);
+            assertThat(updated.getImageUrl()).isEqualTo("https://image.test/updated-product.png");
+            assertThat(updated.getImageThumbUrl()).isEqualTo("https://image.test/updated-product-thumb.png");
+            assertThat(response.get("imageUrl").getAsString()).isEqualTo("https://image.test/updated-product.png");
+            assertThat(response.get("imageThumbUrl").getAsString())
+                .isEqualTo("https://image.test/updated-product-thumb.png");
         } finally {
             cleanup(seller, itemId);
         }

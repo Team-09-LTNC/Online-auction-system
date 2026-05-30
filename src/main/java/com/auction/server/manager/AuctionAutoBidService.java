@@ -32,57 +32,58 @@ final class AuctionAutoBidService {
     }
 
     void triggerAutoBid(Auction phien, Integer manualBidderId) {
-        while (phien.isAcceptingBids()) {
-            List<AutoBidConfig> activeBots = getActiveAutoBids(phien);
-            if (activeBots.isEmpty()) {
-                return;
-            }
+        if (!phien.isAcceptingBids()) {
+            return;
+        }
 
-            AutoBidConfig leader = activeBots.get(0);
-            AutoBidConfig challenger = findNextCompetitor(activeBots, leader);
-            if (isCurrentWinner(phien, leader) && challenger == null) {
-                return;
-            }
+        List<AutoBidConfig> activeBots = getActiveAutoBids(phien);
+        if (activeBots.isEmpty()) {
+            return;
+        }
 
-            long nextBidAmount = calculateAutoBidAmount(
-                    phien,
-                    leader,
-                    challenger,
-                    isManualCurrentWinner(phien, leader, manualBidderId));
-            long minimumNextBid = phien.getCurrentHighestBid() + phien.getItem().getBidIncrement();
-            Long buyNowPrice = phien.getBuyNowPrice();
-            boolean reachedBuyNow = buyNowPrice != null
-                    && buyNowPrice > 0
-                    && phien.getCurrentHighestBid() < buyNowPrice
-                    && nextBidAmount >= buyNowPrice
-                    && leader.getMaxBid() >= buyNowPrice;
+        AutoBidConfig leader = activeBots.get(0);
+        AutoBidConfig challenger = findNextCompetitor(activeBots, leader);
+        if (isCurrentWinner(phien, leader) || isLastBidder(phien, leader)) {
+            return;
+        }
 
-            if (!reachedBuyNow && (nextBidAmount < minimumNextBid || nextBidAmount > leader.getMaxBid())) {
-                return;
-            }
+        long nextBidAmount = calculateAutoBidAmount(
+                phien,
+                leader,
+                challenger,
+                isManualCurrentWinner(phien, leader, manualBidderId));
+        long minimumNextBid = phien.getCurrentHighestBid() + phien.getItem().getBidIncrement();
+        Long buyNowPrice = phien.getBuyNowPrice();
+        boolean reachedBuyNow = buyNowPrice != null
+                && buyNowPrice > 0
+                && phien.getCurrentHighestBid() < buyNowPrice
+                && nextBidAmount >= buyNowPrice
+                && leader.getMaxBid() >= buyNowPrice;
 
-            if (reachedBuyNow) {
-                nextBidAmount = buyNowPrice;
-            }
+        if (!reachedBuyNow && (nextBidAmount < minimumNextBid || nextBidAmount > leader.getMaxBid())) {
+            return;
+        }
 
-            BidTransaction autoTx = new BidTransaction(
-                    phien.getId(),
-                    (Bidder) leader.getBidder(),
-                    nextBidAmount,
-                    LocalDateTime.now());
+        if (reachedBuyNow) {
+            nextBidAmount = buyNowPrice;
+        }
 
-            if (!auctionDao.executeBidTransaction(phien.getId(), autoTx)) {
-                return;
-            }
+        BidTransaction autoTx = new BidTransaction(
+                phien.getId(),
+                (Bidder) leader.getBidder(),
+                nextBidAmount,
+                LocalDateTime.now());
 
-            phien.updateWinner(autoTx);
-            extendIfLateBid.accept(phien);
-            notifyNewBid.accept(phien.getId(), autoTx);
+        if (!auctionDao.executeBidTransaction(phien.getId(), autoTx)) {
+            return;
+        }
 
-            if (reachedBuyNow) {
-                finishAfterBuyNow.accept(phien);
-                return;
-            }
+        phien.updateWinner(autoTx);
+        extendIfLateBid.accept(phien);
+        notifyNewBid.accept(phien.getId(), autoTx);
+
+        if (reachedBuyNow) {
+            finishAfterBuyNow.accept(phien);
         }
     }
 
@@ -124,7 +125,7 @@ final class AuctionAutoBidService {
         } else if (leader.getMaxBid() == challenger.getMaxBid()) {
             targetBid = currentPrice + effectiveAutoBidStep(phien, leader);
         } else {
-            targetBid = challenger.getMaxBid() + effectiveAutoBidStep(phien, challenger);
+            targetBid = challenger.getMaxBid() + phien.getItem().getBidIncrement();
         }
         return Math.max(targetBid, minimumNextBid);
     }
@@ -147,5 +148,15 @@ final class AuctionAutoBidService {
     private boolean isCurrentWinner(Auction phien, AutoBidConfig bot) {
         return phien.getCurrentWinner() != null
                 && phien.getCurrentWinner().getId() == bot.getBidder().getId();
+    }
+
+    private boolean isLastBidder(Auction phien, AutoBidConfig bot) {
+        List<BidTransaction> bidHistory = phien.getBidHistory();
+        if (bidHistory.isEmpty()) {
+            return false;
+        }
+        BidTransaction latestBid = bidHistory.get(bidHistory.size() - 1);
+        return latestBid.getBidder() != null
+                && latestBid.getBidder().getId() == bot.getBidder().getId();
     }
 }

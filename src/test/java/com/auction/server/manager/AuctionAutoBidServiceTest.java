@@ -33,6 +33,24 @@ class AuctionAutoBidServiceTest {
   }
 
   @Test
+  void higherAutoBidderBeatsChallengerBySellerIncrementOnly() {
+    RecordingAuctionDao dao = new RecordingAuctionDao();
+    Auction auction = runningAuction();
+    auction.getItem().setBidIncrement(20_000L);
+    Bidder bidderA = bidder(1, "a");
+    Bidder bidderB = bidder(2, "b");
+    auction.addAutoBidConfig(new AutoBidConfig(bidderA, 7_000_000L, 30_000L));
+    auction.addAutoBidConfig(new AutoBidConfig(bidderB, 6_000_000L, 40_000L));
+
+    AuctionAutoBidService service = newService(dao);
+    service.triggerAutoBid(auction, null);
+
+    assertThat(auction.getCurrentWinner()).isSameAs(bidderA);
+    assertThat(auction.getCurrentHighestBid()).isEqualTo(6_020_000L);
+    assertThat(dao.recordedBids).extracting(BidTransaction::getBidAmount).containsExactly(6_020_000L);
+  }
+
+  @Test
   void autoBidRespondsToSeveralManualBidsUntilMaxBidIsExceeded() {
     RecordingAuctionDao dao = new RecordingAuctionDao();
     Auction auction = runningAuction();
@@ -53,6 +71,82 @@ class AuctionAutoBidServiceTest {
         .containsExactly(1_300L, 1_800L);
     assertThat(auction.getCurrentWinner()).isSameAs(manualBidder);
     assertThat(auction.getCurrentHighestBid()).isEqualTo(1_900L);
+  }
+
+  @Test
+  void equalMaxAutoBidDoesNotRaisePriceWhenEarlierBidderAlreadyLeads() {
+    RecordingAuctionDao dao = new RecordingAuctionDao();
+    Auction auction = runningAuction();
+    Bidder earlyBidder = bidder(2, "early");
+    Bidder lateBidder = bidder(3, "late");
+    LocalDateTime earlyTime = LocalDateTime.of(2026, 5, 30, 10, 0);
+    auction.addAutoBidConfig(new AutoBidConfig(earlyBidder, 2_000L, 100L, earlyTime));
+    auction.addAutoBidConfig(new AutoBidConfig(lateBidder, 2_000L, 100L, earlyTime.plusMinutes(1)));
+    applyManualBid(auction, earlyBidder, 1_100L);
+
+    AuctionAutoBidService service = newService(dao);
+    service.triggerAutoBid(auction, null);
+
+    assertThat(dao.recordedBids).isEmpty();
+    assertThat(auction.getCurrentWinner()).isSameAs(earlyBidder);
+    assertThat(auction.getCurrentHighestBid()).isEqualTo(1_100L);
+  }
+
+  @Test
+  void equalMaxAutoBidCreatesAtMostOneBidWhenNoBidderLeadsYet() {
+    RecordingAuctionDao dao = new RecordingAuctionDao();
+    Auction auction = runningAuction();
+    Bidder earlyBidder = bidder(2, "early");
+    Bidder lateBidder = bidder(3, "late");
+    LocalDateTime earlyTime = LocalDateTime.of(2026, 5, 30, 10, 0);
+    auction.addAutoBidConfig(new AutoBidConfig(earlyBidder, 2_000L, 100L, earlyTime));
+    auction.addAutoBidConfig(new AutoBidConfig(lateBidder, 2_000L, 100L, earlyTime.plusMinutes(1)));
+
+    AuctionAutoBidService service = newService(dao);
+    service.triggerAutoBid(auction, null);
+
+    assertThat(dao.recordedBids).extracting(BidTransaction::getBidAmount).containsExactly(1_100L);
+    assertThat(auction.getCurrentWinner()).isSameAs(earlyBidder);
+    assertThat(auction.getCurrentHighestBid()).isEqualTo(1_100L);
+  }
+
+  @Test
+  void equalMaxAutoBidDoesNotClimbToMaxWhenTriggeredRepeatedly() {
+    RecordingAuctionDao dao = new RecordingAuctionDao();
+    Auction auction = runningAuction();
+    Bidder earlyBidder = bidder(2, "early");
+    Bidder lateBidder = bidder(3, "late");
+    LocalDateTime earlyTime = LocalDateTime.of(2026, 5, 30, 10, 0);
+    auction.addAutoBidConfig(new AutoBidConfig(earlyBidder, 90_000L, 1_000L, earlyTime));
+    auction.addAutoBidConfig(new AutoBidConfig(lateBidder, 90_000L, 1_000L, earlyTime.plusMinutes(1)));
+
+    AuctionAutoBidService service = newService(dao);
+    for (int i = 0; i < 20; i++) {
+      service.triggerAutoBid(auction, null);
+    }
+
+    assertThat(dao.recordedBids).extracting(BidTransaction::getBidAmount).containsExactly(2_000L);
+    assertThat(auction.getCurrentWinner()).isSameAs(earlyBidder);
+    assertThat(auction.getCurrentHighestBid()).isEqualTo(2_000L);
+  }
+
+  @Test
+  void equalMaxAutoBidRespondsOnlyOnceWhenLaterBidderTemporarilyLeads() {
+    RecordingAuctionDao dao = new RecordingAuctionDao();
+    Auction auction = runningAuction();
+    Bidder earlyBidder = bidder(2, "early");
+    Bidder lateBidder = bidder(3, "late");
+    LocalDateTime earlyTime = LocalDateTime.of(2026, 5, 30, 10, 0);
+    auction.addAutoBidConfig(new AutoBidConfig(earlyBidder, 2_000L, 100L, earlyTime));
+    auction.addAutoBidConfig(new AutoBidConfig(lateBidder, 2_000L, 100L, earlyTime.plusMinutes(1)));
+    applyManualBid(auction, lateBidder, 1_500L);
+
+    AuctionAutoBidService service = newService(dao);
+    service.triggerAutoBid(auction, lateBidder.getId());
+
+    assertThat(dao.recordedBids).extracting(BidTransaction::getBidAmount).containsExactly(1_600L);
+    assertThat(auction.getCurrentWinner()).isSameAs(earlyBidder);
+    assertThat(auction.getCurrentHighestBid()).isEqualTo(1_600L);
   }
 
   private AuctionAutoBidService newService(RecordingAuctionDao dao) {
