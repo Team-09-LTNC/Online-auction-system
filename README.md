@@ -95,17 +95,50 @@ mvn -version
 ├── src/
 │   ├── main/
 │   │   ├── java/com/auction/
-│   │   │   ├── client/              # JavaFX client, controller, socket client, cache UI
-│   │   │   ├── common/              # DTO, enum, model, exception, util dùng chung
-│   │   │   └── server/              # Socket server, handler, manager nghiệp vụ, DAO, database
+│   │   │   ├── client/              # Ứng dụng JavaFX phía client
+│   │   │   │   ├── controller/      # Controller màn hình
+│   │   │   │   │   ├── admin/       # Giao diện và thao tác của admin
+│   │   │   │   │   ├── auth/        # Đăng nhập, đăng ký
+│   │   │   │   │   ├── bidder/      # Màn hình bidder, đấu giá, ví
+│   │   │   │   │   ├── components/  # Component dùng chung
+│   │   │   │   │   └── seller/      # Màn hình seller, sản phẩm, phiên
+│   │   │   │   ├── interfaces/      # Interface callback/observer cho UI
+│   │   │   │   ├── manager/         # Quản lý trạng thái phía client
+│   │   │   │   ├── networkclient/   # Kết nối socket tới server
+│   │   │   │   └── util/            # Tiện ích client, cache view/ảnh
+│   │   │   ├── common/              # Thành phần dùng chung client/server
+│   │   │   │   ├── dto/             # Request/response truyền qua socket
+│   │   │   │   ├── enums/           # Enum vai trò, trạng thái, loại giao dịch
+│   │   │   │   ├── exception/       # Exception dùng chung
+│   │   │   │   ├── model/           # Model nghiệp vụ
+│   │   │   │   │   ├── bid/         # Auction, bid, auto-bid
+│   │   │   │   │   ├── entity/      # Entity phụ trợ
+│   │   │   │   │   ├── item/        # Sản phẩm
+│   │   │   │   │   └── user/        # Admin, seller, bidder
+│   │   │   │   ├── observer/        # Observer/event dùng chung
+│   │   │   │   └── util/            # Gson, network config, helper
+│   │   │   └── server/              # Ứng dụng server
+│   │   │       ├── dao/             # Truy vấn database
+│   │   │       ├── db/              # Kết nối và khởi tạo database
+│   │   │       ├── manager/         # Xử lý nghiệp vụ chính
+│   │   │       └── networkserver/   # Socket server và client handler
+│   │   │           └── handler/     # Handler request theo chức năng
 │   │   └── resources/
-│   │       ├── application.properties
-│   │       ├── logback.xml
+│   │       ├── application.properties # Cấu hình database và network
+│   │       ├── logback.xml          # Cấu hình logging
 │   │       ├── css/                 # Style giao diện
 │   │       ├── fxml/                # Layout JavaFX
+│   │       │   ├── admin/
+│   │       │   ├── auth/
+│   │       │   ├── bidder/
+│   │       │   ├── components/
+│   │       │   └── seller/
 │   │       └── images/              # Ảnh/icon dùng trong ứng dụng
 │   └── test/
 │       ├── java/com/auction/        # Unit test và integration test
+│       │   ├── client/              # Test controller, manager, util client
+│       │   ├── common/              # Test model và util dùng chung
+│       │   └── server/              # Test DAO, manager, handler server
 │       └── resources/               # Cấu hình H2 cho test
 ├── .gitignore
 ├── pom.xml                          # Cấu hình Maven, dependency, build plugin
