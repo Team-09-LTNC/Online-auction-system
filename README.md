@@ -29,16 +29,15 @@ Bài toán đặt ra là xây dựng một hệ thống đấu giá trực tuy�
 
 ```mermaid
 flowchart LR
-    client["JavaFX Client<br/>FXML Views, Controllers"]
-    socket["Socket TCP + JSON<br/>Request / Response, Realtime Push"]
-    server["Server Socket Layer<br/>ServerManager, ClientHandler"]
-    handler["Request Handler / Controller<br/>Auth, Auction, Product, Admin"]
-    service["Business Manager / Service<br/>Auction, User, Product, Payment"]
-    dao["DAO Layer<br/>UserDao, AuctionDao, ItemDao, TransactionDao"]
+    client["JavaFX Client<br/>FXML, Controller, ClientSocket"]
+    network["TCP Socket + JSON<br/>Request / Response"]
+    server["Server Layer<br/>ServerManager, ClientHandler"]
+    business["Business Layer<br/>Handler, Manager, Service"]
+    dao["DAO Layer<br/>User, Auction, Item, Wallet"]
     db[("MySQL Database")]
 
-    client --> socket --> server --> handler --> service --> dao --> db
-    server -. "Push bid/status/chat" .-> client
+    client --> network --> server --> business --> dao --> db
+    business -. "Realtime push<br/>bid, status, notification" .-> client
 ```
 
 Server là thành phần duy nhất truy cập cơ sở dữ liệu. Client chỉ giao tiếp với server thông qua socket TCP và dữ liệu JSON.
@@ -163,13 +162,13 @@ java -Ddb.config.file=application-local.properties -jar ServerApp.jar
 
 Nếu chạy từ file tự build trong thư mục `target/`, thay `ServerApp.jar` bằng `target/ServerApp.jar`.
 
-## 5. Tải Và Chạy Chương Trình Trên Cùng Một Máy
+## 5. Tải và chạy chương trình
 
-Project có sẵn file JAR trong GitHub Release. Đây là cách chạy khuyến nghị khi chấm bài vì không cần build lại mã nguồn. Quy trình dưới đây áp dụng cho Windows, Linux và macOS khi server và client chạy trên cùng một máy.
+Project có sẵn file JAR trong GitHub Release, không cần build lại mã nguồn.
 
-### Bước 1: Tải bản phát hành phù hợp
+### Tải file JAR
 
-Truy cập:
+Truy cập release:
 
 ```text
 https://github.com/Team-09-LTNC/Online-auction-system/releases/tag/v2.0.1
@@ -184,32 +183,15 @@ Tải các file phù hợp:
 | [MainApp-Linux.jar](https://github.com/Team-09-LTNC/Online-auction-system/releases/download/v2.0.1/MainApp-Linux.jar) | Client trên Linux |
 | [MainApp-macOS.jar](https://github.com/Team-09-LTNC/Online-auction-system/releases/download/v2.0.1/MainApp-macOS.jar) | Client trên macOS |
 
-Đặt `ServerApp.jar` và file client đã tải vào cùng một thư mục để dễ chạy lệnh. Ví dụ trên Windows:
+### 5.1. Chạy trên cùng một máy
 
-```text
-ServerApp.jar
-MainApp-Windows.jar
-```
-
-Trên Linux hoặc macOS, file client sẽ lần lượt là `MainApp-Linux.jar` hoặc `MainApp-macOS.jar`.
-
-### Bước 2: Chạy server
-
-Mở terminal thứ nhất tại thư mục chứa JAR và chạy:
+Mở terminal thứ nhất và chạy server:
 
 ```bash
 java -jar ServerApp.jar
 ```
 
-Server mặc định lắng nghe tại:
-
-```text
-127.0.0.1:8080
-```
-
-### Bước 3: Chạy client
-
-Giữ terminal server đang chạy. Mở terminal thứ hai tại thư mục chứa JAR.
+Mở terminal thứ hai và chạy client:
 
 Windows:
 
@@ -229,9 +211,41 @@ macOS:
 java -jar MainApp-macOS.jar
 ```
 
-Client sẽ tự kết nối tới server tại `127.0.0.1:8080`.
+Client sẽ kết nối tới server mặc định tại `127.0.0.1:8080`.
 
-### Bước 4: Đăng nhập và kiểm tra chức năng
+### 5.2. Chọn một máy làm server, các máy khác làm client
+
+Trên máy làm server, chạy:
+
+```bash
+java -jar ServerApp.jar
+```
+
+Lấy IP LAN của máy server bằng `ipconfig` trên Windows hoặc `ip addr` trên Linux/macOS. Ví dụ IP server là `192.168.1.15`.
+
+Trên các máy client, chạy:
+
+Windows:
+
+```bash
+java -jar MainApp-Windows.jar --server-ip=192.168.1.15 --server-port=8080
+```
+
+Linux:
+
+```bash
+java -jar MainApp-Linux.jar --server-ip=192.168.1.15 --server-port=8080
+```
+
+macOS:
+
+```bash
+java -jar MainApp-macOS.jar --server-ip=192.168.1.15 --server-port=8080
+```
+
+Thay `192.168.1.15` bằng IP thật của máy server. Các máy phải ở cùng mạng LAN.
+
+### Bước kiểm tra: Đăng nhập và kiểm tra chức năng
 
 Có thể dùng các tài khoản mẫu sau để kiểm tra nhanh các vai trò trong hệ thống:
 
@@ -263,7 +277,7 @@ Có thể dùng các tài khoản mẫu sau để kiểm tra nhanh các vai trò
 - Mua ngay nếu phiên có giá mua ngay.
 - Xem lịch sử đặt giá và biểu đồ diễn biến giá.
 - Quản lý ví, nạp/rút tiền và xem lịch sử giao dịch.
-- Thanh toán phiên thắng và nhận thông báo hệ thống.
+- Thanh toán tiền phiên thắng cho seller và nhận thông báo hệ thống.
 
 ### Chức năng cho Seller
 
@@ -274,6 +288,9 @@ Có thể dùng các tài khoản mẫu sau để kiểm tra nhanh các vai trò
 - Cập nhật thông tin sản phẩm và phiên đấu giá khi hợp lệ.
 - Xóa sản phẩm/phiên thuộc quyền sở hữu.
 - Theo dõi trạng thái duyệt và trạng thái đấu giá.
+- Quản lý ví, xem số dư và lịch sử giao dịch.
+- Nhận thông báo khi phiên được bán thành công.
+- Nhận tiền thanh toán phiên đấu giá từ bidder.
 
 ### Chức năng cho Admin
 
@@ -308,6 +325,7 @@ Có thể dùng các tài khoản mẫu sau để kiểm tra nhanh các vai trò
 ## 7. Lưu Ý Khi Chạy
 
 - Luôn chạy server trước client.
-- Server và client trong README này được hướng dẫn chạy trên cùng một máy, dùng địa chỉ mặc định `127.0.0.1:8080`.
+- Nếu chạy cùng một máy, client dùng địa chỉ mặc định `127.0.0.1:8080`.
+- Nếu chạy nhiều máy trong cùng mạng LAN, client phải trỏ tới IP LAN của máy server bằng `--server-ip`.
 - Nếu port `8080` đang bị chiếm, cần đổi `server.port` trong file cấu hình hoặc truyền `--server-port` khi chạy server.
 - Nếu đổi database, cần cập nhật lại file cấu hình tương ứng trước khi chạy server.
