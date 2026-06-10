@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio học tập - Phạm Việt Hoàng</title>
+  <meta name="description" content="Portfolio học tập cá nhân của Phạm Việt Hoàng trong học phần Nhập môn Công nghệ số và Ứng dụng Trí tuệ nhân tạo.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas id="motionCanvas" aria-hidden="true"></canvas>
+  <div class="progress" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="brand" href="#home">PVH</a>
+    <nav aria-label="Điều hướng portfolio">
+      <a href="#about">Giới thiệu</a>
+      <a href="#projects">Dự án</a>
+      <a href="#evidence">Kỹ năng</a>
+      <a href="#reflection">Tổng kết</a>
+    </nav>
+  </header>
+  <main>
+    <section id="home" class="hero section">
+      <div class="hero-copy reveal">
+        <p class="course">Nhập môn Công nghệ số và Ứng dụng Trí tuệ nhân tạo</p>
+        <h1>Portfolio học tập<br><span>Phạm Việt Hoàng</span></h1>
+        <p class="lead">Một hành trình học tập về kỹ năng số, tìm kiếm học thuật, thiết kế prompt, cộng tác trực tuyến, sáng tạo nội dung với AI và sử dụng AI có trách nhiệm.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#projects">Khám phá 6 bài thực hành</a>
+          <a class="btn secondary" href="#reflection">Xem tổng kết</a>
+        </div>
+      </div>
+      <aside class="hero-art reveal" data-tilt aria-label="Minh họa hành trình học tập">
+        <img class="hero-main-art" src="assets/project-5.png" alt="Sáng tạo nội dung với AI">
+        <div class="floating-art art-one"><img src="assets/project-1.png" alt="Quản lý tập tin"></div>
+        <div class="floating-art art-two"><img src="assets/project-6.png" alt="AI có trách nhiệm"></div>
+        <div class="hero-caption"><strong>Digital learning journey</strong><span>Học - thực hành - phản biện - sáng tạo</span></div>
+      </aside>
+    </section>
+    <section id="about" class="section about-section">
+      <div class="section-title reveal"><span>01</span><div><h2>Giới thiệu bản thân</h2><p id="aboutLead"></p></div></div>
+      <div class="about-grid"><article class="profile-card reveal" data-tilt><div class="avatar-orbit"></div><h3>Phạm Việt Hoàng</h3><div id="profileFacts" class="fact-list"></div></article><div id="skillIntro" class="skill-stack reveal"></div></div>
+    </section>
+    <section id="projects" class="section project-section">
+      <div class="section-title reveal"><span>02</span><div><h2>6 bài thực hành nổi bật</h2><p>Mỗi bài tập thể hiện một nhóm kỹ năng trọng tâm: thao tác dữ liệu, tìm kiếm thông tin, viết prompt, làm việc nhóm, sáng tạo bằng AI và trách nhiệm học thuật.</p></div></div>
+      <div class="filters reveal"><button class="filter active" data-filter="all">Tất cả</button><button class="filter" data-filter="digital">Kỹ năng số</button><button class="filter" data-filter="ai">AI</button><button class="filter" data-filter="collab">Cộng tác</button></div>
+      <div id="projectGrid" class="project-grid"></div>
+    </section>
+    <section id="evidence" class="section evidence-section">
+      <div class="section-title reveal"><span>03</span><div><h2>6 lĩnh vực kỹ năng</h2><p>Mỗi bài thực hành được đại diện bằng một hình ảnh riêng để người xem nhận ra ngay chủ đề học tập và nhóm kỹ năng trọng tâm.</p></div></div>
+      <div id="topicGallery" class="topic-gallery reveal"></div>
+      <div class="rubric reveal"><article><strong>Đầy đủ</strong><p>Bao quát đủ phần giới thiệu, bài tập, kỹ năng và tổng kết.</p></article><article><strong>Rõ quy trình</strong><p>Mỗi bài có mục tiêu, công cụ, quá trình thực hiện, kết quả và bài học.</p></article><article><strong>Có phản biện</strong><p>Nội dung nhấn mạnh kiểm chứng thông tin, đạo đức số và trách nhiệm khi dùng AI.</p></article><article><strong>Trình bày tốt</strong><p>Giao diện hiện đại, có tương tác, dễ đọc và xem được trên nhiều kích thước màn hình.</p></article></div>
+    </section>
+    <section id="reflection" class="section reflection-section">
+      <div class="section-title reveal"><span>04</span><div><h2>Tổng kết và định hướng</h2><p id="reflectionLead"></p></div></div>
+      <div class="reflection-grid"><blockquote class="quote reveal">Công nghệ số và trí tuệ nhân tạo chỉ thật sự phát huy hiệu quả khi người học biết sử dụng chúng chủ động, sáng tạo, trung thực và có kiểm soát.</blockquote><div id="reflectionContent" class="reflection-content reveal"></div></div>
+    </section>
+  </main>
+  <dialog id="projectDialog"><button class="close-dialog" aria-label="Đóng">×</button><div id="dialogContent"></div></dialog>
+  <script src="portfolio-data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
