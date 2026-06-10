@@ -52,8 +52,8 @@ function stepEvidence(page, index) {
   if (index > count) return "";
 
   return `
-    <figure class="step-evidence">
-      <img src="assets/evidence-steps/${page.slug}/step-${index}.png?v=hq-evidence" alt="Minh chung ${page.section} buoc ${index}" loading="lazy">
+    <figure class="step-evidence ${page.slug}">
+      <img src="assets/evidence-steps/${page.slug}/step-${index}.png?v=native-evidence" alt="Minh chung ${page.section} buoc ${index}" loading="lazy">
       <figcaption>Minh chứng bước ${index} từ Google Site gốc</figcaption>
     </figure>
   `;
