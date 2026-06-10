@@ -53,7 +53,7 @@ function stepEvidence(page, index) {
 
   return `
     <figure class="step-evidence">
-      <img src="assets/evidence-steps/${page.slug}/step-${index}.png?v=crisp-evidence" alt="Minh chung ${page.section} buoc ${index}" loading="lazy">
+      <img src="assets/evidence-steps/${page.slug}/step-${index}.png?v=hq-evidence" alt="Minh chung ${page.section} buoc ${index}" loading="lazy">
       <figcaption>Minh chứng bước ${index} từ Google Site gốc</figcaption>
     </figure>
   `;
