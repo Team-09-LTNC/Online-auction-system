@@ -82,15 +82,14 @@ function stepEvidence(page, index) {
   const mappedSteps = evidenceStepMap[page.slug];
   const imageIndex = mappedSteps ? mappedSteps[index] : index <= count ? index : null;
   if (!imageIndex) return "";
-  const imageSrc = `assets/evidence-steps/${page.slug}/step-${imageIndex}.png?v=clarity-full`;
-  const displaySrc = `assets/evidence-steps/${page.slug}/step-${imageIndex}-display.png?v=clarity-native`;
+  const imageSrc = `assets/evidence-steps/${page.slug}/step-${imageIndex}.png?v=clarity-original`;
   const displayWidth = evidenceDisplayWidths[page.slug]?.[imageIndex - 1];
   const figureStyle = displayWidth ? ` style="--evidence-width:${displayWidth}px"` : "";
 
   return `
     <figure class="step-evidence ${page.slug}"${figureStyle}>
       <a class="step-evidence-link" href="${imageSrc}" data-full-image="${imageSrc}" title="Mở ảnh toàn màn hình">
-        <img src="${displaySrc}" alt="Hình ảnh quy trình ${page.section} bước ${index}" loading="lazy" decoding="async">
+        <img src="${imageSrc}" alt="Hình ảnh quy trình ${page.section} bước ${index}" loading="lazy" decoding="async">
       </a>
     </figure>
   `;
