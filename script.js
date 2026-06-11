@@ -72,7 +72,7 @@ function stepEvidence(page, index) {
   const mappedSteps = evidenceStepMap[page.slug];
   const imageIndex = mappedSteps ? mappedSteps[index] : index <= count ? index : null;
   if (!imageIndex) return "";
-  const imageSrc = `assets/evidence-steps/${page.slug}/step-${imageIndex}.png?v=retina-evidence-2x`;
+  const imageSrc = `assets/evidence-steps/${page.slug}/step-${imageIndex}.png?v=clarity-3x`;
   const displayWidth = evidenceDisplayWidths[page.slug]?.[imageIndex - 1];
   const figureStyle = displayWidth ? ` style="--evidence-width:${displayWidth}px"` : "";
 
@@ -81,7 +81,6 @@ function stepEvidence(page, index) {
       <a class="step-evidence-link" href="${imageSrc}" data-full-image="${imageSrc}" title="Phóng to ảnh minh chứng">
         <img src="${imageSrc}" alt="Minh chung ${page.section} buoc ${index}" loading="lazy" decoding="async">
       </a>
-      <figcaption>Minh chứng bước ${index} từ ảnh chụp gốc · Bấm ảnh để xem ở kích thước thật</figcaption>
     </figure>
   `;
 }
