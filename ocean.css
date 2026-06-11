@@ -198,3 +198,64 @@ dialog::backdrop { background:rgba(47,124,158,.25); }
   .project-outline{padding:14px}.outline-intro{padding:15px}
 }
 @media(prefers-reduced-motion:reduce){.bubble,.jelly{animation:none}}
+
+/* Chibi ocean character refresh */
+.whale-chibi.whale-chibi-v2 {
+  position:absolute; left:24px; top:102px; width:465px; height:auto;
+  overflow:visible; border-radius:0; background:none; box-shadow:none;
+  transform:none; filter:drop-shadow(0 24px 20px rgba(30,111,155,.2));
+  animation:whaleSwim 5.5s ease-in-out infinite;
+}
+.whale-chibi.whale-chibi-v2:before,
+.whale-chibi.whale-chibi-v2:after { content:none; }
+.whale-spray-v2 { transform-origin:150px 75px; animation:sprayPulse 2.4s ease-in-out infinite; }
+.jelly-chibi.jelly-chibi-v2 {
+  position:absolute; width:88px; height:auto; overflow:visible;
+  border-radius:0; background:none; box-shadow:none;
+  filter:drop-shadow(0 14px 12px rgba(83,113,169,.16));
+  animation:jellyBob 4.8s ease-in-out infinite;
+}
+.jelly-chibi.jelly-chibi-v2:before,
+.jelly-chibi.jelly-chibi-v2:after { content:none; }
+.jelly-one.jelly-chibi-v2 { right:22px; top:48px; transform:none; }
+.jelly-two.jelly-chibi-v2 { left:22px; bottom:66px; width:64px; transform:none; animation-delay:-2.1s; }
+
+.rising-bubble {
+  position:absolute; bottom:-100px; width:var(--size); height:var(--size);
+  border:2px solid rgba(73,188,224,.28); border-radius:50%;
+  background:radial-gradient(circle at 32% 25%,rgba(255,255,255,.95) 0 7%,rgba(255,255,255,.28) 9% 35%,rgba(119,213,239,.1) 70%);
+  box-shadow:inset 3px 3px 9px rgba(255,255,255,.8),0 5px 16px rgba(47,160,202,.08);
+  animation:bubbleRise var(--duration) linear infinite; animation-delay:var(--delay);
+}
+.rb-1{left:4%;--size:22px;--duration:13s;--delay:-2s}.rb-2{left:13%;--size:46px;--duration:18s;--delay:-11s}
+.rb-3{left:27%;--size:16px;--duration:11s;--delay:-6s}.rb-4{left:39%;--size:31px;--duration:15s;--delay:-13s}
+.rb-5{left:51%;--size:56px;--duration:21s;--delay:-4s}.rb-6{left:63%;--size:19px;--duration:12s;--delay:-9s}
+.rb-7{left:72%;--size:37px;--duration:17s;--delay:-1s}.rb-8{left:82%;--size:25px;--duration:14s;--delay:-8s}
+.rb-9{left:91%;--size:48px;--duration:20s;--delay:-15s}.rb-10{left:96%;--size:14px;--duration:10s;--delay:-5s}
+.floating-jelly {
+  position:absolute; width:76px; height:auto; opacity:.34;
+  filter:drop-shadow(0 10px 15px rgba(68,137,179,.12));
+  animation:backgroundJelly 11s ease-in-out infinite;
+}
+.floating-jelly-a{right:2%;top:64%}.floating-jelly-b{left:2%;top:38%;width:58px;animation-delay:-5s}
+
+@keyframes bubbleRise {
+  0%{transform:translate3d(0,0,0) scale(.75);opacity:0}
+  10%{opacity:.75}
+  55%{transform:translate3d(22px,-55vh,0) scale(1)}
+  100%{transform:translate3d(-12px,-115vh,0) scale(1.08);opacity:0}
+}
+@keyframes whaleSwim { 50%{transform:translateY(-10px) rotate(1.5deg)} }
+@keyframes sprayPulse { 50%{transform:translateY(-5px) scale(1.06);opacity:.72} }
+@keyframes jellyBob { 50%{transform:translateY(-13px) rotate(3deg)} }
+@keyframes backgroundJelly { 50%{transform:translateY(-26px) translateX(8px) rotate(5deg)} }
+
+@media(max-width:560px){
+  .whale-chibi.whale-chibi-v2{left:4%;top:82px;width:94%;transform:none}
+  .jelly-one.jelly-chibi-v2{right:8px;top:42px;width:70px}
+  .jelly-two.jelly-chibi-v2{left:8px;bottom:54px;width:52px}
+  .floating-jelly{opacity:.22}
+}
+@media(prefers-reduced-motion:reduce){
+  .rising-bubble,.floating-jelly,.whale-chibi.whale-chibi-v2,.jelly-chibi.jelly-chibi-v2,.whale-spray-v2{animation:none!important}
+}

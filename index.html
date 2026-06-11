@@ -10,15 +10,29 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=portfolio-polish-9">
-  <link rel="stylesheet" href="ocean.css?v=ocean-chibi-1">
+  <link rel="stylesheet" href="ocean.css?v=ocean-chibi-2">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
   <canvas id="motionCanvas" aria-hidden="true"></canvas>
   <div class="ocean-decor" aria-hidden="true">
-    <span class="bubble bubble-a"></span><span class="bubble bubble-b"></span>
-    <span class="bubble bubble-c"></span><span class="bubble bubble-d"></span>
-    <span class="jelly jelly-a">◡</span><span class="jelly jelly-b">◡</span>
+    <span class="rising-bubble rb-1"></span><span class="rising-bubble rb-2"></span>
+    <span class="rising-bubble rb-3"></span><span class="rising-bubble rb-4"></span>
+    <span class="rising-bubble rb-5"></span><span class="rising-bubble rb-6"></span>
+    <span class="rising-bubble rb-7"></span><span class="rising-bubble rb-8"></span>
+    <span class="rising-bubble rb-9"></span><span class="rising-bubble rb-10"></span>
+    <svg class="floating-jelly floating-jelly-a" viewBox="0 0 100 130">
+      <path d="M15 55C15 25 30 10 50 10s35 15 35 45c-8 8-15 10-22 5-8 8-18 8-26 0-7 5-14 3-22-5Z" fill="#ffc9e9"/>
+      <path d="M29 61c-2 24 9 31 2 52M50 64c7 20-7 31 0 54M70 61c2 24-9 31-2 52" fill="none" stroke="#bd88d3" stroke-linecap="round" stroke-width="5"/>
+      <circle cx="39" cy="40" r="4" fill="#65528c"/><circle cx="62" cy="40" r="4" fill="#65528c"/>
+      <path d="M45 49c4 4 8 4 12 0" fill="none" stroke="#65528c" stroke-linecap="round" stroke-width="3"/>
+    </svg>
+    <svg class="floating-jelly floating-jelly-b" viewBox="0 0 100 130">
+      <path d="M15 55C15 25 30 10 50 10s35 15 35 45c-8 8-15 10-22 5-8 8-18 8-26 0-7 5-14 3-22-5Z" fill="#bdeaff"/>
+      <path d="M29 61c-2 24 9 31 2 52M50 64c7 20-7 31 0 54M70 61c2 24-9 31-2 52" fill="none" stroke="#77b9dc" stroke-linecap="round" stroke-width="5"/>
+      <circle cx="39" cy="40" r="4" fill="#416b94"/><circle cx="62" cy="40" r="4" fill="#416b94"/>
+      <path d="M45 49c4 4 8 4 12 0" fill="none" stroke="#416b94" stroke-linecap="round" stroke-width="3"/>
+    </svg>
   </div>
   <div class="progress" aria-hidden="true"></div>
   <header class="site-header">
@@ -43,13 +57,36 @@
       </div>
       <aside class="hero-art ocean-hero reveal" aria-label="Cá voi và sứa chibi dưới đại dương">
         <div class="sun-rays"></div>
-        <div class="whale-chibi">
-          <span class="whale-eye"></span><span class="whale-smile"></span>
-          <span class="whale-fin"></span><span class="whale-tail"></span>
-          <span class="whale-spray">• • •</span>
-        </div>
-        <div class="jelly-chibi jelly-one"><span></span></div>
-        <div class="jelly-chibi jelly-two"><span></span></div>
+        <svg class="whale-chibi whale-chibi-v2" viewBox="0 0 520 330" role="img" aria-label="Cá voi xanh chibi đang mỉm cười">
+          <defs>
+            <linearGradient id="whaleBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#72d6ef"/><stop offset="1" stop-color="#398fc9"/></linearGradient>
+            <linearGradient id="whaleBelly" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5fdff"/><stop offset="1" stop-color="#ccefff"/></linearGradient>
+          </defs>
+          <g class="whale-spray-v2">
+            <path d="M138 75c-4-30 4-47 24-58M159 78c9-30 24-42 45-43M119 80c-16-21-18-39-7-55" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="9"/>
+            <circle cx="110" cy="17" r="7" fill="#fff"/><circle cx="207" cy="30" r="6" fill="#fff"/>
+          </g>
+          <path d="M405 127c30-44 72-51 99-36-12 23-31 36-57 40 24 12 38 30 43 54-36 8-70-9-91-38Z" fill="#43a4d2" stroke="#267fb5" stroke-linejoin="round" stroke-width="7"/>
+          <path d="M74 115c42-57 142-75 247-50 71 17 116 57 111 111-7 76-95 111-203 103C116 270 48 221 52 165c1-19 8-36 22-50Z" fill="url(#whaleBody)" stroke="#267fb5" stroke-width="8"/>
+          <path d="M62 181c47 18 85 12 119-16 35-28 92-29 137-7 28 14 54 17 105 7-1 69-83 112-193 105-91-6-152-38-168-89Z" fill="url(#whaleBelly)"/>
+          <path d="M254 237c30 7 57 26 73 56-31 15-68 3-93-29-13-17-5-33 20-27Z" fill="#4eadd7" stroke="#2c8abd" stroke-linejoin="round" stroke-width="7"/>
+          <ellipse cx="135" cy="144" rx="12" ry="16" fill="#174f78"/><circle cx="131" cy="139" r="4" fill="#fff"/>
+          <ellipse cx="105" cy="174" rx="18" ry="10" fill="#ff9fbd" opacity=".65"/>
+          <path d="M148 169c14 14 31 15 48 2" fill="none" stroke="#174f78" stroke-linecap="round" stroke-width="7"/>
+          <path d="M164 176c7 7 15 8 23 1" fill="none" stroke="#ff8fac" stroke-linecap="round" stroke-width="4"/>
+          <circle cx="293" cy="102" r="12" fill="#a9e9f7" opacity=".65"/><circle cx="326" cy="119" r="6" fill="#d9f8ff" opacity=".8"/>
+        </svg>
+        <svg class="jelly-chibi jelly-one jelly-chibi-v2" viewBox="0 0 110 145" aria-hidden="true">
+          <path d="M13 62C13 27 30 10 55 10s42 17 42 52c-9 9-18 11-27 5-9 10-21 10-30 0-9 6-18 4-27-5Z" fill="#ffc4e7" stroke="#ce8fd2" stroke-width="4"/>
+          <path d="M29 68c-3 27 11 36 2 60M55 70c8 23-8 36 0 63M80 68c3 27-11 36-2 60" fill="none" stroke="#b579cb" stroke-linecap="round" stroke-width="5"/>
+          <circle cx="43" cy="44" r="4" fill="#65528c"/><circle cx="69" cy="44" r="4" fill="#65528c"/><path d="M49 54c5 4 10 4 15 0" fill="none" stroke="#65528c" stroke-linecap="round" stroke-width="3"/>
+          <circle cx="34" cy="54" r="7" fill="#ff8fbd" opacity=".55"/><circle cx="78" cy="54" r="7" fill="#ff8fbd" opacity=".55"/>
+        </svg>
+        <svg class="jelly-chibi jelly-two jelly-chibi-v2" viewBox="0 0 110 145" aria-hidden="true">
+          <path d="M13 62C13 27 30 10 55 10s42 17 42 52c-9 9-18 11-27 5-9 10-21 10-30 0-9 6-18 4-27-5Z" fill="#bcecff" stroke="#73b8dc" stroke-width="4"/>
+          <path d="M29 68c-3 27 11 36 2 60M55 70c8 23-8 36 0 63M80 68c3 27-11 36-2 60" fill="none" stroke="#65a6d0" stroke-linecap="round" stroke-width="5"/>
+          <circle cx="43" cy="44" r="4" fill="#416b94"/><circle cx="69" cy="44" r="4" fill="#416b94"/><path d="M49 54c5 4 10 4 15 0" fill="none" stroke="#416b94" stroke-linecap="round" stroke-width="3"/>
+        </svg>
         <div class="hero-caption"><strong>Hành trình dưới đại dương tri thức</strong><span>Khám phá · thực hành · phản biện · sáng tạo</span></div>
       </aside>
     </section>
@@ -93,6 +130,6 @@
   </dialog>
   <script src="portfolio-data.js"></script>
   <script src="report-data.js?v=portfolio-polish-9"></script>
-  <script src="script.js?v=ocean-chibi-1"></script>
+  <script src="script.js?v=ocean-chibi-2"></script>
 </body>
 </html>
