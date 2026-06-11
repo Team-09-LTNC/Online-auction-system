@@ -50,11 +50,14 @@ const asset = (slug) => `assets/project-${Number(slug.replace("bai-", ""))}.png`
 function stepEvidence(page, index) {
   const count = evidenceCounts[page.slug] || 0;
   if (index > count) return "";
+  const imageSrc = `assets/evidence-steps/${page.slug}/step-${index}.png?v=crisp-native-2x`;
 
   return `
     <figure class="step-evidence ${page.slug}">
-      <img src="assets/evidence-steps/${page.slug}/step-${index}.png?v=native-evidence" alt="Minh chung ${page.section} buoc ${index}" loading="lazy">
-      <figcaption>Minh chứng bước ${index} từ Google Site gốc</figcaption>
+      <a class="step-evidence-link" href="${imageSrc}" target="_blank" rel="noopener" title="Mở ảnh gốc trong thẻ mới">
+        <img src="${imageSrc}" alt="Minh chung ${page.section} buoc ${index}" loading="lazy" decoding="async">
+      </a>
+      <figcaption>Minh chứng bước ${index} từ Google Site gốc · Bấm ảnh để xem kích thước gốc</figcaption>
     </figure>
   `;
 }
