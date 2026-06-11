@@ -4,6 +4,17 @@ window.REPORT_DATA = {
     summary:
       "Thực hành trọn vẹn quy trình tạo, đổi tên, sao chép, di chuyển, xóa và khôi phục dữ liệu trong File Explorer. Đây là bài duy nhất sử dụng chuỗi ảnh chụp từng bước để chứng minh thao tác.",
     tags: ["File Explorer", "13 ảnh gốc", "Quản lý dữ liệu"],
+    table: {
+      targetHeading: "So sánh Delete và Shift + Delete",
+      caption: "Bảng so sánh hai phương thức xóa dữ liệu trên Windows",
+      columns: ["Tiêu chí", "Delete", "Shift + Delete"],
+      rows: [
+        ["Cách xử lý", "Chuyển tệp vào Recycle Bin", "Xóa trực tiếp khỏi vị trí lưu trữ"],
+        ["Khả năng khôi phục", "Có thể Restore nếu chưa dọn Recycle Bin", "Không thể khôi phục bằng thao tác thông thường"],
+        ["Trường hợp sử dụng", "Xóa tạm thời hoặc khi chưa chắc chắn", "Chỉ dùng khi chắc chắn không còn cần dữ liệu"],
+        ["Mức độ rủi ro", "Thấp hơn", "Cao hơn"],
+      ],
+    },
   },
   "bai-2": {
     title: "Bài 2: Tìm kiếm và tổng hợp tài liệu khoa học bằng AI",
@@ -103,6 +114,8 @@ window.REPORT_DATA = {
       },
     ],
     table: {
+      targetHeading: "Xây dựng tiêu chí và bảng so sánh",
+      caption: "Bảng đối chiếu các hướng ứng dụng Graphene trong pin Lithium-Sulfur",
       columns: ["Hướng tiếp cận", "Giá trị chính", "Hạn chế cần lưu ý"],
       rows: [
         ["GO làm chất neo giữ", "Khóa sulfur và polysulfide bằng tương tác hóa học", "Độ dẫn điện thấp hơn Graphene nguyên bản"],
@@ -158,6 +171,8 @@ window.REPORT_DATA = {
       },
     ],
     table: {
+      targetHeading: "Nguyên tắc viết prompt hiệu quả trong học tập",
+      caption: "Bảng thành phần của khung viết prompt C.R.E.A.T.E",
       columns: ["Thành phần", "Ý nghĩa trong khung C.R.E.A.T.E"],
       rows: [
         ["Context", "Cung cấp hoàn cảnh và dữ kiện cần thiết"],
@@ -168,6 +183,18 @@ window.REPORT_DATA = {
         ["Explicit Format", "Quy định định dạng, độ dài và cách trình bày"],
       ],
     },
+    tables: [
+      {
+        targetHeading: "So sánh các phiên bản prompt",
+        caption: "Bảng so sánh mức độ chi tiết và chất lượng đầu ra của ba phiên bản prompt",
+        columns: ["Phiên bản", "Đặc điểm câu lệnh", "Chất lượng đầu ra"],
+        rows: [
+          ["Prompt cơ bản", "Câu lệnh ngắn, ít ngữ cảnh và ít ràng buộc", "Thường chung chung, dễ lan man và chưa sát nhu cầu học tập"],
+          ["Prompt cải tiến", "Bổ sung yêu cầu về độ dài, định dạng hoặc đối tượng", "Rõ ràng, dễ đọc hơn nhưng đôi khi vẫn thiếu chiều sâu"],
+          ["Prompt nâng cao", "Có vai trò, ngữ cảnh, đối tượng, ví dụ mẫu và yêu cầu cụ thể", "Có cấu trúc tốt, sát mục tiêu và dễ sử dụng trong học tập"],
+        ],
+      },
+    ],
     reflection:
       "Prompt Engineering không chỉ là ra lệnh cho máy. Quá trình viết prompt buộc em phải diễn đạt mục tiêu rõ ràng, suy nghĩ có cấu trúc và biết đánh giá đầu ra theo tiêu chí cụ thể.",
   },
@@ -207,6 +234,8 @@ window.REPORT_DATA = {
       },
     ],
     table: {
+      targetHeading: "Phân tích thách thức và giải pháp",
+      caption: "Bảng phân tích thách thức, giải pháp và kết quả cộng tác trực tuyến",
       columns: ["Thách thức", "Giải pháp", "Kết quả"],
       rows: [
         ["Trôi thông tin", "Ghim nội dung và tạo luồng thảo luận riêng", "Thông tin quan trọng được phản hồi đúng hạn"],
@@ -292,6 +321,8 @@ window.REPORT_DATA = {
       { title: "Không rập khuôn", text: "Template và gợi ý từ AI phải được biên tập để phản ánh mục tiêu, ngữ cảnh và dấu ấn cá nhân." },
     ],
     table: {
+      targetHeading: "Nghiên cứu chính sách sử dụng AI",
+      caption: "Bảng so sánh định hướng sử dụng AI trong học thuật",
       columns: ["Tiêu chí", "VNU-UET", "Stanford"],
       rows: [
         ["Mức độ cho phép", "Hỗ trợ ý tưởng và tối ưu quy trình", "Phụ thuộc quy định cụ thể của từng môn học"],

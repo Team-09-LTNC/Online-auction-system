@@ -183,6 +183,15 @@ dialog::backdrop { background:rgba(47,124,158,.25); }
 .dialog-keyline { color:#366a7d!important;background:#eefcf8;border-radius:16px }
 .report-reflection { background:linear-gradient(135deg,#4ebfd7,#6b9be2);border-radius:24px }.report-reflection strong{color:#fff}
 .report-table-wrap { border-radius:20px }.report-table th{background:#3d9fc0}
+.report-table-block { margin:18px 0 26px; }
+.report-table-block figcaption {
+  margin:0; padding:15px 18px; color:#1f6282; background:linear-gradient(135deg,#d9f7ff,#edfaff);
+  border:1px solid rgba(61,159,192,.2); border-bottom:0; border-radius:20px 20px 0 0;
+  font-weight:800; line-height:1.5;
+}
+.report-table-block .report-table-wrap { margin-top:0; border-radius:0 0 20px 20px; }
+.report-table tbody tr:nth-child(even) td { background:#f4fbfe; }
+.report-table tbody tr:hover td { background:#eaf9fe; }
 .source-link { border-radius:999px;background:linear-gradient(135deg,#35bdd8,#629ae4) }
 .step-evidence { border-radius:20px;box-shadow:0 14px 34px rgba(56,137,171,.1) }
 

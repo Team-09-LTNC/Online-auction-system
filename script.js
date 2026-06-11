@@ -142,6 +142,59 @@ function renderContent(page) {
   return page.text.map((line) => classifyLine(line, page, state)).join("");
 }
 
+function renderReportTable(table) {
+  return `
+    <figure class="report-table-block">
+      ${table.caption ? `<figcaption>${table.caption}</figcaption>` : ""}
+      <div class="report-table-wrap">
+        <table class="report-table">
+          <thead><tr>${table.columns.map((column) => `<th>${column}</th>`).join("")}</tr></thead>
+          <tbody>
+            ${table.rows
+              .map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`)
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+    </figure>
+  `;
+}
+
+function renderStructuredContent(page, lines, tables) {
+  const state = { step: 0, section: 0 };
+  const renderedTables = new Set();
+  let currentHeading = "";
+  let html = "";
+
+  const appendTablesForHeading = (heading) => {
+    tables.forEach((table, index) => {
+      if (
+        !renderedTables.has(index) &&
+        table.targetHeading &&
+        heading.toLowerCase().includes(table.targetHeading.toLowerCase())
+      ) {
+        html += renderReportTable(table);
+        renderedTables.add(index);
+      }
+    });
+  };
+
+  lines.forEach((line) => {
+    const text = (line || "").trim();
+    if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s/.test(text)) {
+      appendTablesForHeading(currentHeading);
+      currentHeading = text.replace(/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s*/, "");
+    }
+    html += classifyLine(line, page, state);
+  });
+
+  appendTablesForHeading(currentHeading);
+  tables.forEach((table, index) => {
+    if (!renderedTables.has(index)) html += renderReportTable(table);
+  });
+  return html;
+}
+
 function renderOutline(report, page) {
   const sourceLines = report.content || page.text || [];
   const headings = sourceLines.filter((line) =>
@@ -196,7 +249,8 @@ function renderReport(report, page) {
     if (index === 0 && /^Bài \d+:/.test(line.trim())) return false;
     return !/^Minh chứng\s*:/i.test(line.trim());
   });
-  const structuredContent = renderContent({ ...page, text: detailedLines });
+  const tables = [...(report.tables || []), ...(report.table ? [report.table] : [])];
+  const structuredContent = renderStructuredContent(page, detailedLines, tables);
 
   const findings = (report.findings || [])
     .map(
@@ -210,27 +264,11 @@ function renderReport(report, page) {
     )
     .join("");
 
-  const table = report.table
-    ? `
-      <div class="report-table-wrap">
-        <table class="report-table">
-          <thead><tr>${report.table.columns.map((column) => `<th>${column}</th>`).join("")}</tr></thead>
-          <tbody>
-            ${report.table.rows
-              .map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`)
-              .join("")}
-          </tbody>
-        </table>
-      </div>
-    `
-    : "";
-
   return `
     <p class="report-lead">${report.summary}</p>
     ${metrics ? `<div class="report-metrics">${metrics}</div>` : ""}
     <div class="report-google-structure">${structuredContent}</div>
     ${findings ? `<section class="report-section report-recap"><h3>Điểm nổi bật</h3><div class="report-findings">${findings}</div></section>` : ""}
-    ${table}
     ${
       report.reflection
         ? `<blockquote class="report-reflection"><strong>Bài học cá nhân</strong><p>${report.reflection}</p></blockquote>`
@@ -346,7 +384,14 @@ function openProject(slug) {
     </header>
     <div class="dialog-content">
       ${renderOutline(report, page)}
-      ${isEvidenceLesson ? renderContent(page) : renderReport(report, page)}
+      ${
+        isEvidenceLesson
+          ? renderStructuredContent(page, page.text, [
+              ...(report.tables || []),
+              ...(report.table ? [report.table] : []),
+            ])
+          : renderReport(report, page)
+      }
       ${
         page.sourceUrl
           ? `<a class="source-link" href="${page.sourceUrl}" target="_blank" rel="noopener noreferrer">Đối chiếu nội dung gốc trên Google Sites</a>`
