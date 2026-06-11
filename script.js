@@ -147,7 +147,7 @@ function renderReportTable(table) {
     <figure class="report-table-block">
       ${table.caption ? `<figcaption>${table.caption}</figcaption>` : ""}
       <div class="report-table-wrap">
-        <table class="report-table">
+        <table class="report-table${table.columns.length > 4 ? " report-table-wide" : ""}">
           <thead><tr>${table.columns.map((column) => `<th>${column}</th>`).join("")}</tr></thead>
           <tbody>
             ${table.rows
@@ -226,8 +226,48 @@ function renderOutline(report, page) {
             `,
           )
           .join("")}
+        ${
+          report.reportFile
+            ? `
+              <li>
+                <a href="#${page.slug}-full-report">
+                  <span>${String(items.length + 1).padStart(2, "0")}</span>
+                  <strong>Báo cáo chi tiết</strong>
+                </a>
+              </li>
+            `
+            : ""
+        }
       </ol>
     </nav>
+  `;
+}
+
+function renderFullReport(report, page) {
+  if (!report.reportFile) return "";
+
+  return `
+    <section class="full-report-section" id="${page.slug}-full-report">
+      <div class="full-report-heading">
+        <div>
+          <p>Tài liệu gốc</p>
+          <h3>Báo cáo chi tiết</h3>
+          <span>${report.reportName || `Báo cáo ${page.section}`} · ${report.reportPages || "Nhiều"} trang PDF</span>
+        </div>
+        <div class="full-report-actions">
+          <a href="${report.reportFile}" target="_blank" rel="noopener noreferrer">Mở toàn màn hình</a>
+          <a href="${report.reportFile}" download>Tải báo cáo PDF</a>
+        </div>
+      </div>
+      <details class="pdf-preview">
+        <summary>Xem trực tiếp toàn bộ báo cáo</summary>
+        <iframe
+          src="${report.reportFile}#view=FitH"
+          title="${report.reportName || `Báo cáo chi tiết ${page.section}`}"
+          loading="lazy"
+        ></iframe>
+      </details>
+    </section>
   `;
 }
 
@@ -397,6 +437,7 @@ function openProject(slug) {
           ? `<a class="source-link" href="${page.sourceUrl}" target="_blank" rel="noopener noreferrer">Đối chiếu nội dung gốc trên Google Sites</a>`
           : ""
       }
+      ${renderFullReport(report, page)}
     </div>
   `;
   qs("#projectDialog").showModal();

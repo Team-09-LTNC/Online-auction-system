@@ -4,6 +4,9 @@ window.REPORT_DATA = {
     summary:
       "Thực hành trọn vẹn quy trình tạo, đổi tên, sao chép, di chuyển, xóa và khôi phục dữ liệu trong File Explorer. Đây là bài duy nhất sử dụng chuỗi ảnh chụp từng bước để chứng minh thao tác.",
     tags: ["File Explorer", "13 ảnh gốc", "Quản lý dữ liệu"],
+    reportFile: "assets/reports/bai-1.pdf",
+    reportName: "Báo cáo thao tác cơ bản với tập tin và thư mục",
+    reportPages: 6,
     table: {
       targetHeading: "So sánh Delete và Shift + Delete",
       caption: "Bảng so sánh hai phương thức xóa dữ liệu trên Windows",
@@ -21,6 +24,9 @@ window.REPORT_DATA = {
     summary:
       "Sử dụng Elicit để xây dựng tổng quan tài liệu về vật liệu Graphene trong pin Lithium-Sulfur, so sánh cơ chế tác động, hiệu suất và hạn chế của các hướng nghiên cứu tiêu biểu.",
     tags: ["Elicit", "Graphene", "Pin Li-S"],
+    reportFile: "assets/reports/bai-2.pdf",
+    reportName: "Tổng quan tài liệu khoa học bằng công cụ AI",
+    reportPages: 4,
     metrics: [
       ["Công cụ", "Elicit"],
       ["Đối tượng", "GO, rGO và Graphene 3D"],
@@ -115,13 +121,13 @@ window.REPORT_DATA = {
     ],
     table: {
       targetHeading: "Xây dựng tiêu chí và bảng so sánh",
-      caption: "Bảng đối chiếu các hướng ứng dụng Graphene trong pin Lithium-Sulfur",
-      columns: ["Hướng tiếp cận", "Giá trị chính", "Hạn chế cần lưu ý"],
+      caption: "Bảng kết quả trích xuất từ các tài liệu nghiên cứu trong báo cáo gốc",
+      columns: ["Tác giả & năm", "Phương pháp", "Cơ chế tác động", "Kết quả chính", "Hiệu suất", "Hạn chế"],
       rows: [
-        ["GO làm chất neo giữ", "Khóa sulfur và polysulfide bằng tương tác hóa học", "Độ dẫn điện thấp hơn Graphene nguyên bản"],
-        ["Màng trung gian rGO", "Hạn chế khuếch tán và kéo dài tuổi thọ chu kỳ", "Tăng độ dày, điện trở nội và khối lượng pin"],
-        ["Khung Graphene 3D", "Tăng dẫn điện, diện tích bề mặt và khả năng chứa sulfur", "Liên kết vật lý có thể chưa đủ bền ở điều kiện dài hạn"],
-        ["Phân tích cơ chế sau chu kỳ", "Làm rõ phản ứng phụ và nguyên nhân suy giảm dung lượng", "Có thể xuất hiện lớp sản phẩm phụ cách điện"],
+        ["Ji et al. (2011), JACS", "Dùng Graphene Oxide làm chất neo giữ sulfur trong cathode", "Nhóm chức oxy tạo liên kết hóa học và phân cực mạnh với sulfur, polysulfide", "Dung lượng đảo ngược cao và chu kỳ sạc xả ổn định", "High reversible capacity", "GO dẫn điện kém hơn Graphene nguyên bản do mạng carbon bị gián đoạn"],
+        ["Huang et al. (2015)", "Thiết kế lớp màng ngăn hoặc lớp phủ xen kẽ dựa trên rGO", "Rào cản vật lý kết hợp bộ lọc ion chọn lọc, hỗ trợ tái sử dụng vật liệu hoạt tính", "Duy trì tuổi thọ chu kỳ dài", "Giữ khoảng 95% dung lượng ban đầu sau 400 chu kỳ", "Tăng độ dày, điện trở nội và làm giảm mật độ năng lượng tổng thể"],
+        ["Peng et al. (2016), bài review", "Dùng Graphene 3D/xốp làm khung dẫn điện cho cathode", "Mạng dẫn điện lớn, chứa nhiều sulfur và bẫy vật lý polysulfide", "Giảm hiệu ứng con thoi, hấp thụ biến đổi thể tích khi sạc xả", "Cải thiện độ dẫn điện và độ ổn định cơ học", "Liên kết chủ yếu là vật lý nên polysulfide vẫn có thể rò rỉ"],
+        ["Nghiên cứu cơ chế in-situ/ex-situ", "Phân tích bề mặt điện cực GO sau quá trình vận hành", "Phát hiện phản ứng phụ giữa GO và điện phân hệ ether", "Hình thành sản phẩm phụ cách điện và lớp màng chặn", "Hiệu suất Coulombic ban đầu cao nhưng dung lượng suy giảm dài hạn", "Capacity fade do phản ứng phụ tích lũy"],
       ],
     },
     reflection:
@@ -132,6 +138,9 @@ window.REPORT_DATA = {
     summary:
       "Thử nghiệm ba cấp độ prompt trên ba tác vụ học tập để chứng minh rằng vai trò, ngữ cảnh, đối tượng và định dạng đầu ra quyết định trực tiếp đến chất lượng câu trả lời của AI.",
     tags: ["Gemini", "Prompt Engineering", "C.R.E.A.T.E"],
+    reportFile: "assets/reports/bai-3.pdf",
+    reportName: "Phát triển kỹ năng viết Prompt hiệu quả trong học tập",
+    reportPages: 24,
     metrics: [
       ["Tác vụ thử nghiệm", "3"],
       ["Cấp độ prompt", "Cơ bản → nâng cao"],
@@ -203,6 +212,9 @@ window.REPORT_DATA = {
     summary:
       "Trong vai trò người khởi xướng và điều phối, em kết hợp Trello, Google Docs và Discord để quản lý dự án nhóm về tổng quan Trí tuệ nhân tạo, kiểm soát tiến độ và tránh xung đột phiên bản.",
     tags: ["Trello", "Google Docs", "Discord"],
+    reportFile: "assets/reports/bai-4.pdf",
+    reportName: "Báo cáo cá nhân về kỹ năng cộng tác trực tuyến",
+    reportPages: 6,
     metrics: [
       ["Công cụ phối hợp", "3"],
       ["Cập nhật tiến độ", "Ít nhất 3 lần/tuần"],
@@ -238,9 +250,9 @@ window.REPORT_DATA = {
       caption: "Bảng phân tích thách thức, giải pháp và kết quả cộng tác trực tuyến",
       columns: ["Thách thức", "Giải pháp", "Kết quả"],
       rows: [
-        ["Trôi thông tin", "Ghim nội dung và tạo luồng thảo luận riêng", "Thông tin quan trọng được phản hồi đúng hạn"],
-        ["Xung đột phiên bản", "Quy tắc đặt tên và Version History", "Loại bỏ nhầm file và ghi đè"],
-        ["Tiến độ không đều", "Nhắc tự động trước hạn 24 giờ", "Cải thiện tỷ lệ hoàn thành đúng hạn"],
+        ["Trôi thông tin", "Sử dụng tính năng Ghim và tạo Luồng thảo luận riêng", "100% thông tin quan trọng được phản hồi đúng hạn"],
+        ["Xung đột phiên bản", "Áp dụng quy tắc đặt tên file nghiêm ngặt và dùng Version History", "Loại bỏ hoàn toàn tình trạng ghi đè hoặc nhầm file"],
+        ["Tiến độ không đều", "Thiết lập nhắc nhở tự động trước deadline 24 giờ", "Tỷ lệ hoàn thành công việc đúng hạn đạt mức tối đa"],
       ],
     },
     reflection:
@@ -251,6 +263,9 @@ window.REPORT_DATA = {
     summary:
       "Xây dựng Infographic “Tác động của AI đối với các ngành nghề trong tương lai” bằng quy trình kết hợp Gemini, DALL-E 3 và Canva, trong đó AI cung cấp nguyên liệu còn con người kiểm định và hoàn thiện.",
     tags: ["Gemini", "DALL-E 3", "Canva"],
+    reportFile: "assets/reports/bai-5.pdf",
+    reportName: "Dự án sáng tạo nội dung số với Trí tuệ nhân tạo",
+    reportPages: 6,
     metrics: [
       ["Sản phẩm", "Infographic"],
       ["Công cụ chính", "3"],
@@ -263,7 +278,7 @@ window.REPORT_DATA = {
           "Gemini xây dựng dàn ý 5 phần dành cho sinh viên và người đi làm.",
           "DALL-E 3 tạo hình ảnh biểu tượng về con người làm việc cùng AI.",
           "Canva Magic Design gợi ý bố cục ban đầu.",
-          "Font, màu sắc, biểu tượng và khoảng 30% văn bản được chỉnh thủ công để phù hợp ngữ cảnh học thuật.",
+          "Font, màu sắc, biểu tượng và bố cục được chỉnh thủ công để bảo đảm tính thẩm mỹ và dấu ấn cá nhân.",
         ],
       },
       {
@@ -286,6 +301,15 @@ window.REPORT_DATA = {
         text: "Hình ảnh do AI tạo ra đặt ra yêu cầu minh bạch về công cụ và thận trọng khi xác định quyền sở hữu.",
       },
     ],
+    table: {
+      targetHeading: "Tạo hình ảnh minh họa bằng DALL-E 3",
+      caption: "Bảng so sánh hai lần tạo ảnh minh họa bằng DALL-E 3",
+      columns: ["Lần thử", "Prompt sử dụng", "Kết quả và đánh giá"],
+      rows: [
+        ["Lần 1", "A futuristic office", "Hình ảnh quá chung chung, chưa làm nổi bật sự tương tác giữa AI và con người"],
+        ["Lần 2", "A futuristic office, cinematic lighting, 3D render style, vibrant colors, human and robot working together", "Hình ảnh ấn tượng, ánh sáng chuyên nghiệp và phù hợp với phong cách Infographic hiện đại"],
+      ],
+    },
     reflection:
       "Em chuyển từ quy trình làm việc tuần tự sang cộng tác có kiểm soát với AI: máy gợi ý nhiều phương án, còn em chịu trách nhiệm chọn lọc, chỉnh sửa và bảo đảm thông điệp cuối cùng.",
   },
@@ -294,6 +318,9 @@ window.REPORT_DATA = {
     summary:
       "So sánh định hướng sử dụng AI trong học thuật, ghi lại quá trình dùng Gemini và Canva, phân tích ranh giới hỗ trợ–gian lận và xây dựng bộ 7 nguyên tắc cá nhân.",
     tags: ["Liêm chính học thuật", "70/30", "Kiểm chứng"],
+    reportFile: "assets/reports/bai-6.pdf",
+    reportName: "Phát triển kỹ năng sử dụng AI có trách nhiệm trong học thuật",
+    reportPages: 6,
     metrics: [
       ["Chính sách đối chiếu", "VNU-UET và Stanford"],
       ["Nguyên tắc cá nhân", "7"],
@@ -325,9 +352,9 @@ window.REPORT_DATA = {
       caption: "Bảng so sánh định hướng sử dụng AI trong học thuật",
       columns: ["Tiêu chí", "VNU-UET", "Stanford"],
       rows: [
-        ["Mức độ cho phép", "Hỗ trợ ý tưởng và tối ưu quy trình", "Phụ thuộc quy định cụ thể của từng môn học"],
-        ["Minh bạch", "Trích dẫn khi AI đóng góp vào nội dung chính", "Công khai sự hỗ trợ của AI"],
-        ["Trọng tâm", "Liêm chính và trung thực học thuật", "Sáng tạo đi cùng trách nhiệm cá nhân"],
+        ["Mức độ cho phép", "Hỗ trợ ý tưởng, tối ưu hóa quy trình", "Cho phép rộng rãi nhưng yêu cầu giảng viên từng môn quy định cụ thể"],
+        ["Quy định trích dẫn", "Bắt buộc trích dẫn nếu AI đóng góp vào nội dung chính", "Bắt buộc công khai sự hỗ trợ của AI (Disclosure)"],
+        ["Quan điểm", "Tập trung vào liêm chính và sự trung thực", "Tập trung vào sự sáng tạo và trách nhiệm cá nhân"],
       ],
     },
     reflection:
