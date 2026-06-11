@@ -129,7 +129,7 @@ function renderContent(page) {
   return page.text.map((line) => classifyLine(line, page, state)).join("");
 }
 
-function renderReport(report) {
+function renderReport(report, page) {
   const metrics = (report.metrics || [])
     .map(
       ([label, value]) => `
@@ -141,21 +141,13 @@ function renderReport(report) {
     )
     .join("");
 
-  const sections = (report.sections || [])
-    .map(
-      (section) => `
-        <section class="report-section">
-          <h3>${section.title}</h3>
-          ${section.body ? `<p>${section.body}</p>` : ""}
-          ${
-            section.bullets
-              ? `<ul>${section.bullets.map((item) => `<li>${item}</li>`).join("")}</ul>`
-              : ""
-          }
-        </section>
-      `,
-    )
-    .join("");
+  const sourceLines = report.content || page.text || [];
+  const detailedLines = sourceLines.filter((line, index) => {
+    if (!line?.trim()) return false;
+    if (index === 0 && /^Bài \d+:/.test(line.trim())) return false;
+    return !/^Minh chứng\s*:/i.test(line.trim());
+  });
+  const structuredContent = renderContent({ ...page, text: detailedLines });
 
   const findings = (report.findings || [])
     .map(
@@ -187,8 +179,8 @@ function renderReport(report) {
   return `
     <p class="report-lead">${report.summary}</p>
     ${metrics ? `<div class="report-metrics">${metrics}</div>` : ""}
-    ${sections}
-    ${findings ? `<section class="report-section"><h3>Kết quả nổi bật</h3><div class="report-findings">${findings}</div></section>` : ""}
+    <div class="report-google-structure">${structuredContent}</div>
+    ${findings ? `<section class="report-section report-recap"><h3>Kết quả nổi bật từ báo cáo gốc</h3><div class="report-findings">${findings}</div></section>` : ""}
     ${table}
     ${
       report.reflection
@@ -294,7 +286,7 @@ function openProject(slug) {
       <span>${isEvidenceLesson ? "13 ảnh chụp gốc" : "Dữ liệu từ báo cáo gốc"}</span>
       <span>${topicNames[slug]}</span>
     </div>
-    <div class="dialog-content">${isEvidenceLesson ? renderContent(page) : renderReport(report)}</div>
+    <div class="dialog-content">${isEvidenceLesson ? renderContent(page) : renderReport(report, page)}</div>
   `;
   qs("#projectDialog").showModal();
 }
