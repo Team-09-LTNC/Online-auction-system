@@ -1,4 +1,5 @@
 const data = window.PORTFOLIO_DATA;
+const reportData = window.REPORT_DATA || {};
 const pages = data.pages || [];
 const projects = pages.filter((page) => /^bai-/.test(page.slug));
 const intro = pages.find((page) => page.slug === "intro");
@@ -15,11 +16,6 @@ const categories = {
 
 const evidenceCounts = {
   "bai-1": 13,
-  "bai-2": 11,
-  "bai-3": 6,
-  "bai-4": 3,
-  "bai-5": 5,
-  "bai-6": 4,
 };
 
 const evidenceStepMap = {
@@ -46,7 +42,7 @@ const evidenceDisplayWidths = {
 
 const tags = {
   "bai-1": ["File Explorer", "Quản lý dữ liệu", "An toàn tập tin"],
-  "bai-2": ["Google Scholar", "IEEE", "Đánh giá nguồn"],
+  "bai-2": ["Elicit", "Graphene", "Pin Li-S"],
   "bai-3": ["Prompt", "AI học thuật", "So sánh đầu ra"],
   "bai-4": ["Trello", "Google Drive", "Discord"],
   "bai-5": ["Gemini", "DALL-E 3", "Canva"],
@@ -55,7 +51,7 @@ const tags = {
 
 const topicNames = {
   "bai-1": "Quản lý tập tin",
-  "bai-2": "Tìm kiếm học thuật",
+  "bai-2": "Tổng hợp khoa học",
   "bai-3": "Prompt hiệu quả",
   "bai-4": "Hợp tác trực tuyến",
   "bai-5": "Sáng tạo với AI",
@@ -67,7 +63,9 @@ const qsa = (selector) => [...document.querySelectorAll(selector)];
 const short = (text, limit = 240) =>
   text && text.length > limit ? `${text.slice(0, limit).trim()}...` : text;
 const cleanTitle = (text) => (text || "").replace(/^Portfolio\s*-\s*/i, "");
-const asset = (slug) => `assets/project-${Number(slug.replace("bai-", ""))}.png`;
+const asset = (slug) =>
+  slug === "bai-2" ? "assets/project-2.svg" : `assets/project-${Number(slug.replace("bai-", ""))}.png`;
+const projectReport = (page) => reportData[page.slug] || {};
 
 function stepEvidence(page, index) {
   const count = evidenceCounts[page.slug] || 0;
@@ -131,6 +129,76 @@ function renderContent(page) {
   return page.text.map((line) => classifyLine(line, page, state)).join("");
 }
 
+function renderReport(report) {
+  const metrics = (report.metrics || [])
+    .map(
+      ([label, value]) => `
+        <article>
+          <span>${label}</span>
+          <strong>${value}</strong>
+        </article>
+      `,
+    )
+    .join("");
+
+  const sections = (report.sections || [])
+    .map(
+      (section) => `
+        <section class="report-section">
+          <h3>${section.title}</h3>
+          ${section.body ? `<p>${section.body}</p>` : ""}
+          ${
+            section.bullets
+              ? `<ul>${section.bullets.map((item) => `<li>${item}</li>`).join("")}</ul>`
+              : ""
+          }
+        </section>
+      `,
+    )
+    .join("");
+
+  const findings = (report.findings || [])
+    .map(
+      (finding, index) => `
+        <article class="report-finding">
+          <span>${String(index + 1).padStart(2, "0")}</span>
+          <h4>${finding.title}</h4>
+          <p>${finding.text}</p>
+        </article>
+      `,
+    )
+    .join("");
+
+  const table = report.table
+    ? `
+      <div class="report-table-wrap">
+        <table class="report-table">
+          <thead><tr>${report.table.columns.map((column) => `<th>${column}</th>`).join("")}</tr></thead>
+          <tbody>
+            ${report.table.rows
+              .map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`)
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+    `
+    : "";
+
+  return `
+    <p class="report-lead">${report.summary}</p>
+    ${metrics ? `<div class="report-metrics">${metrics}</div>` : ""}
+    ${sections}
+    ${findings ? `<section class="report-section"><h3>Kết quả nổi bật</h3><div class="report-findings">${findings}</div></section>` : ""}
+    ${table}
+    ${
+      report.reflection
+        ? `<blockquote class="report-reflection"><strong>Bài học cá nhân</strong><p>${report.reflection}</p></blockquote>`
+        : ""
+    }
+    <p class="report-source">Nội dung được biên tập từ báo cáo bài tập gốc của Phạm Việt Hoàng.</p>
+  `;
+}
+
 function renderAbout() {
   const text = intro?.text || [];
   qs("#aboutLead").textContent =
@@ -168,8 +236,10 @@ function renderAbout() {
 function renderProjects() {
   qs("#projectGrid").innerHTML = projects
     .map((page, index) => {
-      const title = cleanTitle(page.title);
+      const report = projectReport(page);
+      const title = report.title || cleanTitle(page.title);
       const introLine =
+        report.summary ||
         page.text.find((line) => line.includes("Bài tập này")) ||
         page.description ||
         page.text[0] ||
@@ -182,7 +252,7 @@ function renderProjects() {
             <div class="project-number">${String(index + 1).padStart(2, "0")}</div>
             <h3>${title}</h3>
             <p>${short(introLine, 270)}</p>
-            <div class="tag-row">${(tags[page.slug] || []).map((tag) => `<span>${tag}</span>`).join("")}</div>
+            <div class="tag-row">${(report.tags || tags[page.slug] || []).map((tag) => `<span>${tag}</span>`).join("")}</div>
             <button class="open-detail" data-slug="${page.slug}">Xem nội dung chi tiết</button>
           </div>
         </article>
@@ -213,16 +283,18 @@ function renderReflection() {
 function openProject(slug) {
   const page = projects.find((project) => project.slug === slug);
   if (!page) return;
+  const report = projectReport(page);
+  const isEvidenceLesson = slug === "bai-1";
 
   qs("#dialogContent").innerHTML = `
     <img class="dialog-cover" src="${asset(slug)}" alt="${topicNames[slug]}">
-    <h2>${cleanTitle(page.title)}</h2>
+    <h2>${report.title || cleanTitle(page.title)}</h2>
     <div class="dialog-meta">
       <span>${page.section}</span>
-      <span>${page.text.length} mục nội dung</span>
+      <span>${isEvidenceLesson ? "13 ảnh chụp gốc" : "Dữ liệu từ báo cáo gốc"}</span>
       <span>${topicNames[slug]}</span>
     </div>
-    <div class="dialog-content">${renderContent(page)}</div>
+    <div class="dialog-content">${isEvidenceLesson ? renderContent(page) : renderReport(report)}</div>
   `;
   qs("#projectDialog").showModal();
 }
