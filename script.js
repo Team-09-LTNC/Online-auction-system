@@ -83,7 +83,8 @@ function stepEvidence(page, index) {
   const mappedSteps = evidenceStepMap[page.slug];
   const imageIndex = mappedSteps ? mappedSteps[index] : index <= count ? index : null;
   if (!imageIndex) return "";
-  const imageSrc = `assets/evidence-steps/${page.slug}/step-${imageIndex}.png?v=clarity-original`;
+  const evidenceVersion = page.slug === "bai-1" && imageIndex === 2 ? "clarity-step-2-v2" : "clarity-original";
+  const imageSrc = `assets/evidence-steps/${page.slug}/step-${imageIndex}.png?v=${evidenceVersion}`;
   const displayWidth = evidenceDisplayWidths[page.slug]?.[imageIndex - 1];
   const figureStyle = displayWidth ? ` style="--evidence-width:${displayWidth}px"` : "";
 
