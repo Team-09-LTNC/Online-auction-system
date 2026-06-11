@@ -40,6 +40,10 @@ const evidenceStepMap = {
   },
 };
 
+const evidenceDisplayWidths = {
+  "bai-1": [466, 624, 613, 624, 624, 624, 624, 624, 624, 624, 624, 624, 624],
+};
+
 const tags = {
   "bai-1": ["File Explorer", "Quản lý dữ liệu", "An toàn tập tin"],
   "bai-2": ["Google Scholar", "IEEE", "Đánh giá nguồn"],
@@ -70,10 +74,12 @@ function stepEvidence(page, index) {
   const mappedSteps = evidenceStepMap[page.slug];
   const imageIndex = mappedSteps ? mappedSteps[index] : index <= count ? index : null;
   if (!imageIndex) return "";
-  const imageSrc = `assets/evidence-steps/${page.slug}/step-${imageIndex}.png?v=original-evidence`;
+  const imageSrc = `assets/evidence-steps/${page.slug}/step-${imageIndex}.png?v=retina-evidence-2x`;
+  const displayWidth = evidenceDisplayWidths[page.slug]?.[imageIndex - 1];
+  const figureStyle = displayWidth ? ` style="--evidence-width:${displayWidth}px"` : "";
 
   return `
-    <figure class="step-evidence ${page.slug}">
+    <figure class="step-evidence ${page.slug}"${figureStyle}>
       <a class="step-evidence-link" href="${imageSrc}" data-full-image="${imageSrc}" title="Phóng to ảnh minh chứng">
         <img src="${imageSrc}" alt="Minh chung ${page.section} buoc ${index}" loading="lazy" decoding="async">
       </a>
