@@ -36,6 +36,10 @@ const evidenceStepMap = {
   },
 };
 
+const evidenceDisplayWidths = {
+  "bai-1": [466, 624, 613, 624, 624, 624, 624, 624, 624, 624, 624, 624, 624],
+};
+
 const tags = {
   "bai-1": ["File Explorer", "Quản lý dữ liệu", "An toàn tập tin"],
   "bai-2": ["Elicit", "Graphene", "Pin Li-S"],
@@ -78,12 +82,15 @@ function stepEvidence(page, index) {
   const mappedSteps = evidenceStepMap[page.slug];
   const imageIndex = mappedSteps ? mappedSteps[index] : index <= count ? index : null;
   if (!imageIndex) return "";
-  const imageSrc = `assets/evidence-steps/${page.slug}/step-${imageIndex}.png?v=clarity-sharp`;
+  const imageSrc = `assets/evidence-steps/${page.slug}/step-${imageIndex}.png?v=clarity-full`;
+  const displaySrc = `assets/evidence-steps/${page.slug}/step-${imageIndex}-display.png?v=clarity-native`;
+  const displayWidth = evidenceDisplayWidths[page.slug]?.[imageIndex - 1];
+  const figureStyle = displayWidth ? ` style="--evidence-width:${displayWidth}px"` : "";
 
   return `
-    <figure class="step-evidence ${page.slug}">
+    <figure class="step-evidence ${page.slug}"${figureStyle}>
       <a class="step-evidence-link" href="${imageSrc}" data-full-image="${imageSrc}" title="Mở ảnh toàn màn hình">
-        <img src="${imageSrc}" alt="Hình ảnh quy trình ${page.section} bước ${index}" loading="lazy" decoding="async">
+        <img src="${displaySrc}" alt="Hình ảnh quy trình ${page.section} bước ${index}" loading="lazy" decoding="async">
       </a>
     </figure>
   `;
