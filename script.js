@@ -14,12 +14,30 @@ const categories = {
 };
 
 const evidenceCounts = {
-  "bai-1": 12,
+  "bai-1": 13,
   "bai-2": 11,
   "bai-3": 6,
   "bai-4": 3,
   "bai-5": 5,
   "bai-6": 4,
+};
+
+const evidenceStepMap = {
+  "bai-1": {
+    1: 1,
+    2: 2,
+    3: 3,
+    4: 4,
+    5: 5,
+    6: 6,
+    7: 7,
+    8: 8,
+    11: 9,
+    15: 10,
+    17: 11,
+    21: 12,
+    25: 13,
+  },
 };
 
 const tags = {
@@ -49,15 +67,17 @@ const asset = (slug) => `assets/project-${Number(slug.replace("bai-", ""))}.png`
 
 function stepEvidence(page, index) {
   const count = evidenceCounts[page.slug] || 0;
-  if (index > count) return "";
-  const imageSrc = `assets/evidence-steps/${page.slug}/step-${index}.png?v=all-evidence-4k`;
+  const mappedSteps = evidenceStepMap[page.slug];
+  const imageIndex = mappedSteps ? mappedSteps[index] : index <= count ? index : null;
+  if (!imageIndex) return "";
+  const imageSrc = `assets/evidence-steps/${page.slug}/step-${imageIndex}.png?v=original-evidence`;
 
   return `
     <figure class="step-evidence ${page.slug}">
       <a class="step-evidence-link" href="${imageSrc}" data-full-image="${imageSrc}" title="Phóng to ảnh minh chứng">
         <img src="${imageSrc}" alt="Minh chung ${page.section} buoc ${index}" loading="lazy" decoding="async">
       </a>
-      <figcaption>Minh chứng bước ${index} từ Google Site gốc · Bấm ảnh để phóng to và xem rõ chữ</figcaption>
+      <figcaption>Minh chứng bước ${index} từ ảnh chụp gốc · Bấm ảnh để xem ở kích thước thật</figcaption>
     </figure>
   `;
 }
