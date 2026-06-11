@@ -201,11 +201,12 @@ dialog::backdrop { background:rgba(47,124,158,.25); }
 
 /* Chibi ocean character refresh */
 .whale-chibi.whale-chibi-v2 {
-  position:absolute; left:8px; top:70px; width:505px; height:auto;
+  position:absolute; left:48px; top:48px; width:420px; height:auto;
   overflow:visible; border-radius:0; background:none; box-shadow:none;
   transform:none; filter:drop-shadow(0 24px 20px rgba(30,111,155,.2));
   animation:whaleSwim 5.5s ease-in-out infinite;
 }
+.whale-illustration { object-fit:contain; }
 .whale-chibi.whale-chibi-v2:before,
 .whale-chibi.whale-chibi-v2:after { content:none; }
 .whale-spray-v2 { transform-origin:231px 96px; animation:sprayPulse 2.4s ease-in-out infinite; }
@@ -251,7 +252,7 @@ dialog::backdrop { background:rgba(47,124,158,.25); }
 @keyframes backgroundJelly { 50%{transform:translateY(-26px) translateX(8px) rotate(5deg)} }
 
 @media(max-width:560px){
-  .whale-chibi.whale-chibi-v2{left:0;top:58px;width:100%;transform:none}
+  .whale-chibi.whale-chibi-v2{left:6%;top:38px;width:88%;transform:none}
   .jelly-one.jelly-chibi-v2{right:8px;top:42px;width:70px}
   .jelly-two.jelly-chibi-v2{left:8px;bottom:54px;width:52px}
   .floating-jelly{opacity:.22}
