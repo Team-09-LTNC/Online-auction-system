@@ -50,14 +50,14 @@ const asset = (slug) => `assets/project-${Number(slug.replace("bai-", ""))}.png`
 function stepEvidence(page, index) {
   const count = evidenceCounts[page.slug] || 0;
   if (index > count) return "";
-  const imageSrc = `assets/evidence-steps/${page.slug}/step-${index}.png?v=enhanced-evidence-2x`;
+  const imageSrc = `assets/evidence-steps/${page.slug}/step-${index}.png?v=enhanced-evidence-4x`;
 
   return `
     <figure class="step-evidence ${page.slug}">
-      <a class="step-evidence-link" href="${imageSrc}" target="_blank" rel="noopener" title="Mở ảnh gốc trong thẻ mới">
+      <a class="step-evidence-link" href="${imageSrc}" data-full-image="${imageSrc}" title="Phóng to ảnh minh chứng">
         <img src="${imageSrc}" alt="Minh chung ${page.section} buoc ${index}" loading="lazy" decoding="async">
       </a>
-      <figcaption>Minh chứng bước ${index} từ Google Site gốc · Bấm ảnh để xem kích thước gốc</figcaption>
+      <figcaption>Minh chứng bước ${index} từ Google Site gốc · Bấm ảnh để phóng to và xem rõ chữ</figcaption>
     </figure>
   `;
 }
@@ -202,7 +202,54 @@ function openProject(slug) {
 }
 
 function initInteractions() {
+  const viewer = qs("#imageViewer");
+  const viewerImage = qs("#imageViewer img");
+  let viewerZoom = 1;
+
+  const updateViewerZoom = () => {
+    viewerImage.style.width = viewerZoom === 0 ? "min(100%, 1400px)" : `${viewerImage.naturalWidth * viewerZoom}px`;
+  };
+
+  const openImageViewer = (src, alt) => {
+    viewerImage.alt = alt;
+    viewerZoom = 0;
+    viewer.hidden = false;
+    document.body.classList.add("viewer-open");
+    viewerImage.onload = updateViewerZoom;
+    viewerImage.src = src;
+    updateViewerZoom();
+  };
+
+  const closeImageViewer = () => {
+    viewer.hidden = true;
+    viewerImage.removeAttribute("src");
+    document.body.classList.remove("viewer-open");
+  };
+
   document.addEventListener("click", (event) => {
+    const evidenceLink = event.target.closest("[data-full-image]");
+    if (evidenceLink) {
+      event.preventDefault();
+      openImageViewer(evidenceLink.dataset.fullImage, evidenceLink.querySelector("img")?.alt || "Ảnh minh chứng");
+      return;
+    }
+
+    const zoomControl = event.target.closest("[data-zoom]");
+    if (zoomControl) {
+      const action = zoomControl.dataset.zoom;
+      if (action === "reset") viewerZoom = 0;
+      if (action === "actual") viewerZoom = 1;
+      if (action === "in") viewerZoom = Math.min(3, (viewerZoom || 0.5) + 0.25);
+      if (action === "out") viewerZoom = Math.max(0.25, (viewerZoom || 1) - 0.25);
+      updateViewerZoom();
+      return;
+    }
+
+    if (event.target.closest("[data-viewer-close]") || event.target === viewer) {
+      closeImageViewer();
+      return;
+    }
+
     const detail = event.target.closest(".open-detail");
     if (detail) openProject(detail.dataset.slug);
 
@@ -219,6 +266,9 @@ function initInteractions() {
   qs(".close-dialog").addEventListener("click", () => qs("#projectDialog").close());
   qs("#projectDialog").addEventListener("click", (event) => {
     if (event.target.id === "projectDialog") qs("#projectDialog").close();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !viewer.hidden) closeImageViewer();
   });
 
   qsa("[data-tilt]").forEach((card) => {
