@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=evidence-clarity-3x">
+  <link rel="stylesheet" href="styles.css?v=portfolio-polish-4">
 </head>
 <body>
   <canvas id="motionCanvas" aria-hidden="true"></canvas>
@@ -30,7 +30,7 @@
         <h1>Portfolio học tập<br><span>Phạm Việt Hoàng</span></h1>
         <p class="lead">Một hành trình học tập về kỹ năng số, tổng hợp tài liệu khoa học, thiết kế prompt, cộng tác trực tuyến, sáng tạo nội dung và sử dụng AI có trách nhiệm.</p>
         <div class="hero-actions">
-          <a class="btn primary" href="#projects">Khám phá 6 bài thực hành</a>
+          <a class="btn primary" href="#projects">Khám phá 6 dự án học tập</a>
           <a class="btn secondary" href="#reflection">Xem tổng kết</a>
         </div>
       </div>
@@ -46,12 +46,12 @@
       <div class="about-grid"><article class="profile-card reveal" data-tilt><div class="avatar-orbit"></div><h3>Phạm Việt Hoàng</h3><div id="profileFacts" class="fact-list"></div></article><div id="skillIntro" class="skill-stack reveal"></div></div>
     </section>
     <section id="projects" class="section project-section">
-      <div class="section-title reveal"><span>02</span><div><h2>6 bài thực hành nổi bật</h2><p>Nội dung được biên tập trực tiếp từ các báo cáo gốc, tập trung vào mục tiêu, quy trình, kết quả và điều em thực sự học được sau mỗi bài.</p></div></div>
+      <div class="section-title reveal"><span>02</span><div><h2>6 dự án học tập nổi bật</h2><p>Mỗi dự án là một hành trình hoàn chỉnh, từ xác định mục tiêu, lựa chọn công cụ đến triển khai, đánh giá kết quả và đúc kết kinh nghiệm.</p></div></div>
       <div class="filters reveal"><button class="filter active" data-filter="all">Tất cả</button><button class="filter" data-filter="digital">Kỹ năng số</button><button class="filter" data-filter="ai">AI</button><button class="filter" data-filter="collab">Cộng tác</button></div>
       <div id="projectGrid" class="project-grid"></div>
     </section>
     <section id="evidence" class="section evidence-section">
-      <div class="section-title reveal"><span>03</span><div><h2>6 lĩnh vực kỹ năng</h2><p>Bài 1 có ảnh chụp từng bước làm minh chứng; các bài còn lại ưu tiên dữ liệu, kết quả và phân tích từ báo cáo để nội dung rõ ràng hơn.</p></div></div>
+      <div class="section-title reveal"><span>03</span><div><h2>6 lĩnh vực kỹ năng</h2><p>Sáu dự án kết nối kỹ năng số, nghiên cứu học thuật, tư duy AI, cộng tác trực tuyến, sáng tạo nội dung và trách nhiệm công nghệ.</p></div></div>
       <div id="topicGallery" class="topic-gallery reveal"></div>
       <div class="rubric reveal"><article><strong>Đầy đủ</strong><p>Bao quát đủ phần giới thiệu, bài tập, kỹ năng và tổng kết.</p></article><article><strong>Rõ quy trình</strong><p>Mỗi bài có mục tiêu, công cụ, quá trình thực hiện, kết quả và bài học.</p></article><article><strong>Có phản biện</strong><p>Nội dung nhấn mạnh kiểm chứng thông tin, đạo đức số và trách nhiệm khi dùng AI.</p></article><article><strong>Trình bày tốt</strong><p>Giao diện hiện đại, có tương tác, dễ đọc và xem được trên nhiều kích thước màn hình.</p></article></div>
     </section>
@@ -60,20 +60,23 @@
       <div class="reflection-grid"><blockquote class="quote reveal">Công nghệ số và trí tuệ nhân tạo chỉ thật sự phát huy hiệu quả khi người học biết sử dụng chúng chủ động, sáng tạo, trung thực và có kiểm soát.</blockquote><div id="reflectionContent" class="reflection-content reveal"></div></div>
     </section>
   </main>
-  <dialog id="projectDialog"><button class="close-dialog" aria-label="Đóng">×</button><div id="dialogContent"></div></dialog>
-  <div id="imageViewer" class="image-viewer" hidden>
-    <div class="image-viewer-toolbar">
-      <strong>Ảnh minh chứng</strong>
-      <button type="button" data-zoom="out" aria-label="Thu nhỏ">−</button>
-      <button type="button" data-zoom="reset">Vừa màn hình</button>
-      <button type="button" data-zoom="actual">100%</button>
-      <button type="button" data-zoom="in" aria-label="Phóng to">+</button>
-      <button type="button" data-viewer-close aria-label="Đóng trình xem">×</button>
+  <dialog id="projectDialog">
+    <button class="close-dialog" aria-label="Đóng">×</button>
+    <div id="dialogContent"></div>
+    <div id="imageViewer" class="image-viewer" hidden>
+      <div class="image-viewer-toolbar">
+        <strong>Thư viện hình ảnh</strong>
+        <button type="button" data-zoom="out" aria-label="Thu nhỏ">−</button>
+        <button type="button" data-zoom="reset">Vừa màn hình</button>
+        <button type="button" data-zoom="actual">100%</button>
+        <button type="button" data-zoom="in" aria-label="Phóng to">+</button>
+        <button type="button" data-viewer-close aria-label="Đóng trình xem">×</button>
+      </div>
+      <div class="image-viewer-stage"><img alt="Hình ảnh quy trình phóng to"></div>
     </div>
-    <div class="image-viewer-stage"><img alt="Ảnh minh chứng phóng to"></div>
-  </div>
+  </dialog>
   <script src="portfolio-data.js"></script>
-  <script src="report-data.js?v=google-site-structure-2"></script>
-  <script src="script.js?v=evidence-clarity-3x"></script>
+  <script src="report-data.js?v=portfolio-polish-4"></script>
+  <script src="script.js?v=portfolio-polish-4"></script>
 </body>
 </html>

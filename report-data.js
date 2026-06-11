@@ -54,7 +54,7 @@ window.REPORT_DATA = {
       "3. Nhận xét: GO có lợi về mặt tương tác hóa học nhưng cần được kết hợp với vật liệu dẫn điện để cân bằng hiệu suất.",
       "V. Phân tích rGO và cấu trúc Graphene 3D",
       "Các nghiên cứu về rGO và Graphene 3D chuyển trọng tâm từ liên kết hóa học sang thiết kế cấu trúc dẫn điện và rào cản vật lý.",
-      "1. Lớp trung gian rGO vừa hạn chế polysulfide khuếch tán, vừa hỗ trợ tái sử dụng vật liệu hoạt tính; báo cáo ghi nhận khả năng duy trì khoảng 95% dung lượng ban đầu sau 400 chu kỳ.",
+      "1. Lớp trung gian rGO vừa hạn chế polysulfide khuếch tán, vừa hỗ trợ tái sử dụng vật liệu hoạt tính; nghiên cứu ghi nhận khả năng duy trì khoảng 95% dung lượng ban đầu sau 400 chu kỳ.",
       "2. Nhược điểm của lớp trung gian là làm tăng độ dày, điện trở nội và khối lượng không hoạt tính của viên pin.",
       "3. Khung Graphene 3D tạo mạng dẫn điện, diện tích bề mặt lớn và không gian xốp để chứa sulfur.",
       "4. Tuy nhiên, lực giữ chủ yếu mang tính vật lý nên polysulfide vẫn có thể rò rỉ trong điều kiện vận hành dài hạn.",
@@ -91,7 +91,7 @@ window.REPORT_DATA = {
       },
       {
         title: "rGO làm lớp trung gian",
-        text: "Lớp rGO vừa cản khuếch tán polysulfide vừa hỗ trợ tái sử dụng vật liệu hoạt tính; báo cáo ghi nhận khả năng duy trì 95% dung lượng sau 400 chu kỳ.",
+        text: "Lớp rGO vừa cản khuếch tán polysulfide vừa hỗ trợ tái sử dụng vật liệu hoạt tính; nghiên cứu ghi nhận khả năng duy trì 95% dung lượng sau 400 chu kỳ.",
       },
       {
         title: "Graphene 3D tạo khung dẫn",

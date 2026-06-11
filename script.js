@@ -66,6 +66,16 @@ const cleanTitle = (text) => (text || "").replace(/^Portfolio\s*-\s*/i, "");
 const asset = (slug) =>
   slug === "bai-2" ? "assets/project-2.svg" : `assets/project-${Number(slug.replace("bai-", ""))}.png`;
 const projectReport = (page) => reportData[page.slug] || {};
+const publicHeadings = {
+  "Giới thiệu bài tập": "Giới thiệu",
+  "Thông tin bài tập": "Tổng quan dự án",
+  "Mục tiêu và kỹ năng đạt được": "Năng lực phát triển",
+};
+const polishPublicLine = (text) =>
+  text
+    .replace(/^Bài báo cáo cũng so sánh/i, "Phần nghiên cứu cũng so sánh")
+    .replace(/hoàn thành báo cáo nghiên cứu/gi, "hoàn thành sản phẩm nghiên cứu")
+    .replace(/trong bài báo cáo/gi, "trong dự án");
 
 function stepEvidence(page, index) {
   const count = evidenceCounts[page.slug] || 0;
@@ -78,8 +88,8 @@ function stepEvidence(page, index) {
 
   return `
     <figure class="step-evidence ${page.slug}"${figureStyle}>
-      <a class="step-evidence-link" href="${imageSrc}" data-full-image="${imageSrc}" title="Phóng to ảnh minh chứng">
-        <img src="${imageSrc}" alt="Minh chung ${page.section} buoc ${index}" loading="lazy" decoding="async">
+      <a class="step-evidence-link" href="${imageSrc}" data-full-image="${imageSrc}" title="Mở ảnh toàn màn hình">
+        <img src="${imageSrc}" alt="Hình ảnh quy trình ${page.section} bước ${index}" loading="lazy" decoding="async">
       </a>
     </figure>
   `;
@@ -88,9 +98,10 @@ function stepEvidence(page, index) {
 function classifyLine(line, page, state) {
   const text = line.trim();
   if (!text) return "";
+  const publicText = polishPublicLine(publicHeadings[text] || text);
 
-  if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s/.test(text)) {
-    return `<h3 class="dialog-section-heading">${text}</h3>`;
+  if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s/.test(publicText)) {
+    return `<h3 class="dialog-section-heading">${publicText}</h3>`;
   }
 
   if (/^\d+\.\s?/.test(text)) {
@@ -110,17 +121,17 @@ function classifyLine(line, page, state) {
 
   if (
     /^(Bài học cốt lõi|Minh chứng|Kết luận|Điểm mạnh|Điểm cần cải thiện|Mức độ hoàn thành|Delete:|Shift \+ Delete:|Thông tin bài tập|Mục tiêu và kỹ năng đạt được|Giới thiệu bài tập|Tổng kết Portfolio học tập)/.test(
-      text,
+      publicText,
     )
   ) {
-    return `<p class="dialog-callout">${text}</p>`;
+    return `<p class="dialog-callout">${publicText}</p>`;
   }
 
   if (/:/.test(text) && text.length < 130) {
     return `<p class="dialog-keyline">${text}</p>`;
   }
 
-  return `<p>${text}</p>`;
+  return `<p>${publicText}</p>`;
 }
 
 function renderContent(page) {
@@ -179,14 +190,13 @@ function renderReport(report, page) {
     <p class="report-lead">${report.summary}</p>
     ${metrics ? `<div class="report-metrics">${metrics}</div>` : ""}
     <div class="report-google-structure">${structuredContent}</div>
-    ${findings ? `<section class="report-section report-recap"><h3>Kết quả nổi bật từ báo cáo gốc</h3><div class="report-findings">${findings}</div></section>` : ""}
+    ${findings ? `<section class="report-section report-recap"><h3>Điểm nổi bật</h3><div class="report-findings">${findings}</div></section>` : ""}
     ${table}
     ${
       report.reflection
         ? `<blockquote class="report-reflection"><strong>Bài học cá nhân</strong><p>${report.reflection}</p></blockquote>`
         : ""
     }
-    <p class="report-source">Nội dung được biên tập từ báo cáo bài tập gốc của Phạm Việt Hoàng.</p>
   `;
 }
 
@@ -266,9 +276,15 @@ function renderTopics() {
 }
 
 function renderReflection() {
-  const lines = summary?.text || [];
-  qs("#reflectionLead").textContent = summary?.description || lines[0] || "";
-  qs("#reflectionContent").innerHTML = lines.slice(0, 34).map((line) => `<p>${line}</p>`).join("");
+  const lines = [
+    "Portfolio ghi lại quá trình em phát triển năng lực số theo hướng chủ động, có hệ thống và gắn với những tình huống thực tế.",
+    "Qua sáu dự án, em không chỉ học cách sử dụng công cụ mà còn rèn luyện khả năng xác định vấn đề, tổ chức quy trình, đánh giá đầu ra và cải thiện sản phẩm.",
+    "Kỹ năng quan trọng nhất em đạt được là biết kết hợp tư duy cá nhân với công nghệ: dùng AI để mở rộng lựa chọn nhưng luôn tự kiểm chứng và chịu trách nhiệm với quyết định cuối cùng.",
+    "Trong thời gian tới, em muốn tiếp tục nâng cao kỹ năng nghiên cứu, thiết kế sản phẩm số và xây dựng các dự án có chiều sâu hơn, hữu ích hơn cho người dùng.",
+  ];
+  qs("#reflectionLead").textContent =
+    "Nhìn lại hành trình học tập, mỗi dự án đều góp phần hình thành một cách làm việc rõ ràng, sáng tạo và có trách nhiệm hơn.";
+  qs("#reflectionContent").innerHTML = lines.map((line) => `<p>${line}</p>`).join("");
 }
 
 function openProject(slug) {
@@ -282,7 +298,7 @@ function openProject(slug) {
     <h2>${report.title || cleanTitle(page.title)}</h2>
     <div class="dialog-meta">
       <span>${page.section}</span>
-      <span>${isEvidenceLesson ? "13 ảnh chụp gốc" : "Dữ liệu từ báo cáo gốc"}</span>
+      <span>${isEvidenceLesson ? "Quy trình trực quan" : "Nội dung chuyên đề"}</span>
       <span>${topicNames[slug]}</span>
     </div>
     <div class="dialog-content">${isEvidenceLesson ? renderContent(page) : renderReport(report, page)}</div>
@@ -319,7 +335,7 @@ function initInteractions() {
     const evidenceLink = event.target.closest("[data-full-image]");
     if (evidenceLink) {
       event.preventDefault();
-      openImageViewer(evidenceLink.dataset.fullImage, evidenceLink.querySelector("img")?.alt || "Ảnh minh chứng");
+      openImageViewer(evidenceLink.dataset.fullImage, evidenceLink.querySelector("img")?.alt || "Hình ảnh quy trình");
       return;
     }
 
