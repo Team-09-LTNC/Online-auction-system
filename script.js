@@ -50,7 +50,7 @@ const asset = (slug) => `assets/project-${Number(slug.replace("bai-", ""))}.png`
 function stepEvidence(page, index) {
   const count = evidenceCounts[page.slug] || 0;
   if (index > count) return "";
-  const imageSrc = `assets/evidence-steps/${page.slug}/step-${index}.png?v=crisp-native-2x`;
+  const imageSrc = `assets/evidence-steps/${page.slug}/step-${index}.png?v=enhanced-evidence-2x`;
 
   return `
     <figure class="step-evidence ${page.slug}">
