@@ -213,6 +213,7 @@ function renderAbout() {
       line.startsWith("Trường:") ||
       line.startsWith("Học phần:"),
   );
+  facts.splice(1, 0, "Mã sinh viên: 25020163");
 
   qs("#profileFacts").innerHTML = facts.map((line) => `<p>${line}</p>`).join("");
 
@@ -295,13 +296,20 @@ function openProject(slug) {
 
   qs("#dialogContent").innerHTML = `
     <img class="dialog-cover" src="${asset(slug)}" alt="${topicNames[slug]}">
-    <h2>${report.title || cleanTitle(page.title)}</h2>
+    <h2 id="dialogTitle">${report.title || cleanTitle(page.title)}</h2>
     <div class="dialog-meta">
       <span>${page.section}</span>
       <span>${isEvidenceLesson ? "Quy trình trực quan" : "Nội dung chuyên đề"}</span>
       <span>${topicNames[slug]}</span>
     </div>
-    <div class="dialog-content">${isEvidenceLesson ? renderContent(page) : renderReport(report, page)}</div>
+    <div class="dialog-content">
+      ${isEvidenceLesson ? renderContent(page) : renderReport(report, page)}
+      ${
+        page.sourceUrl
+          ? `<a class="source-link" href="${page.sourceUrl}" target="_blank" rel="noopener noreferrer">Đối chiếu nội dung gốc trên Google Sites</a>`
+          : ""
+      }
+    </div>
   `;
   qs("#projectDialog").showModal();
 }
@@ -431,6 +439,10 @@ function initProgress() {
 
 function initCanvas() {
   const canvas = qs("#motionCanvas");
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    canvas.remove();
+    return;
+  }
   const ctx = canvas.getContext("2d");
   let dots = [];
 

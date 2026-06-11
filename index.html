@@ -9,13 +9,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=portfolio-polish-4">
+  <link rel="stylesheet" href="styles.css?v=portfolio-polish-6">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
   <canvas id="motionCanvas" aria-hidden="true"></canvas>
   <div class="progress" aria-hidden="true"></div>
   <header class="site-header">
-    <a class="brand" href="#home">PVH</a>
+    <a class="brand" href="#home" aria-label="Về đầu trang">PVH</a>
     <nav aria-label="Điều hướng portfolio">
       <a href="#about">Giới thiệu</a>
       <a href="#projects">Dự án</a>
@@ -23,7 +24,7 @@
       <a href="#reflection">Tổng kết</a>
     </nav>
   </header>
-  <main>
+  <main id="main-content">
     <section id="home" class="hero section">
       <div class="hero-copy reveal">
         <p class="course">Nhập môn Công nghệ số và Ứng dụng Trí tuệ nhân tạo</p>
@@ -60,7 +61,11 @@
       <div class="reflection-grid"><blockquote class="quote reveal">Công nghệ số và trí tuệ nhân tạo chỉ thật sự phát huy hiệu quả khi người học biết sử dụng chúng chủ động, sáng tạo, trung thực và có kiểm soát.</blockquote><div id="reflectionContent" class="reflection-content reveal"></div></div>
     </section>
   </main>
-  <dialog id="projectDialog">
+  <footer class="site-footer">
+    <strong>Phạm Việt Hoàng · 25020163 · IT4 - K70I</strong>
+    <p>Nội dung do người học biên tập và chịu trách nhiệm. AI được sử dụng để hỗ trợ lên ý tưởng, cấu trúc, hình ảnh và diễn đạt; các kết quả quan trọng được kiểm tra và điều chỉnh trước khi công bố.</p>
+  </footer>
+  <dialog id="projectDialog" aria-labelledby="dialogTitle">
     <button class="close-dialog" aria-label="Đóng">×</button>
     <div id="dialogContent"></div>
     <div id="imageViewer" class="image-viewer" hidden>
@@ -76,7 +81,7 @@
     </div>
   </dialog>
   <script src="portfolio-data.js"></script>
-  <script src="report-data.js?v=portfolio-polish-4"></script>
-  <script src="script.js?v=portfolio-polish-4"></script>
+  <script src="report-data.js?v=portfolio-polish-6"></script>
+  <script src="script.js?v=portfolio-polish-6"></script>
 </body>
 </html>
