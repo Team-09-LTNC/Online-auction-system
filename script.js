@@ -66,6 +66,7 @@ const cleanTitle = (text) => (text || "").replace(/^Portfolio\s*-\s*/i, "");
 const asset = (slug) =>
   slug === "bai-2" ? "assets/project-2.svg" : `assets/project-${Number(slug.replace("bai-", ""))}.png`;
 const projectReport = (page) => reportData[page.slug] || {};
+const sectionId = (slug, index) => `${slug}-section-${index + 1}`;
 const publicHeadings = {
   "Giới thiệu bài tập": "Giới thiệu",
   "Thông tin bài tập": "Tổng quan dự án",
@@ -101,7 +102,9 @@ function classifyLine(line, page, state) {
   const publicText = polishPublicLine(publicHeadings[text] || text);
 
   if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s/.test(publicText)) {
-    return `<h3 class="dialog-section-heading">${publicText}</h3>`;
+    const id = sectionId(page.slug, state.section);
+    state.section += 1;
+    return `<h3 class="dialog-section-heading" id="${id}">${publicText}</h3>`;
   }
 
   if (/^\d+\.\s?/.test(text)) {
@@ -135,8 +138,44 @@ function classifyLine(line, page, state) {
 }
 
 function renderContent(page) {
-  const state = { step: 0 };
+  const state = { step: 0, section: 0 };
   return page.text.map((line) => classifyLine(line, page, state)).join("");
+}
+
+function renderOutline(report, page) {
+  const sourceLines = report.content || page.text || [];
+  const headings = sourceLines.filter((line) =>
+    /^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s/.test((line || "").trim()),
+  );
+  const fallback = (report.sections || []).map((section) => section.title);
+  const items = headings.length ? headings : fallback;
+
+  return `
+    <nav class="project-outline" aria-label="Mục lục ${page.section}">
+      <div class="outline-intro">
+        <span class="outline-icon">⌁</span>
+        <div>
+          <p>Lộ trình khám phá</p>
+          <h3>Mục lục bài làm</h3>
+          <span>Nhìn nhanh toàn bộ nội dung trước khi đi vào chi tiết.</span>
+        </div>
+      </div>
+      <ol>
+        ${items
+          .map(
+            (heading, index) => `
+              <li>
+                <a href="#${sectionId(page.slug, index)}">
+                  <span>${String(index + 1).padStart(2, "0")}</span>
+                  <strong>${heading.replace(/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s*/, "")}</strong>
+                </a>
+              </li>
+            `,
+          )
+          .join("")}
+      </ol>
+    </nav>
+  `;
 }
 
 function renderReport(report, page) {
@@ -249,7 +288,7 @@ function renderProjects() {
 
       return `
         <article class="project-card reveal" data-category="${categories[page.slug] || "digital"}" data-slug="${page.slug}" data-tilt>
-          <img class="project-image" src="${asset(page.slug)}" alt="${topicNames[page.slug] || title}" loading="lazy">
+          <div class="project-watermark" aria-hidden="true">${String(index + 1).padStart(2, "0")}</div>
           <div class="project-body">
             <div class="project-number">${String(index + 1).padStart(2, "0")}</div>
             <h3>${title}</h3>
@@ -268,8 +307,8 @@ function renderTopics() {
     .map(
       (page, index) => `
         <article class="topic-card">
-          <img src="${asset(page.slug)}" alt="${topicNames[page.slug]}" loading="lazy">
-          <h3>${String(index + 1).padStart(2, "0")} · ${topicNames[page.slug]}</h3>
+          <span class="topic-bubble">${String(index + 1).padStart(2, "0")}</span>
+          <div><h3>${topicNames[page.slug]}</h3><p>${(projectReport(page).tags || tags[page.slug] || []).join(" · ")}</p></div>
         </article>
       `,
     )
@@ -295,14 +334,18 @@ function openProject(slug) {
   const isEvidenceLesson = slug === "bai-1";
 
   qs("#dialogContent").innerHTML = `
-    <img class="dialog-cover" src="${asset(slug)}" alt="${topicNames[slug]}">
-    <h2 id="dialogTitle">${report.title || cleanTitle(page.title)}</h2>
-    <div class="dialog-meta">
-      <span>${page.section}</span>
-      <span>${isEvidenceLesson ? "Quy trình trực quan" : "Nội dung chuyên đề"}</span>
-      <span>${topicNames[slug]}</span>
-    </div>
+    <header class="dialog-hero">
+      <span class="dialog-whale" aria-hidden="true">◜◡◝</span>
+      <p>${page.section}</p>
+      <h2 id="dialogTitle">${report.title || cleanTitle(page.title)}</h2>
+      <div class="dialog-meta">
+        <span>${isEvidenceLesson ? "Quy trình trực quan" : "Nội dung chuyên đề"}</span>
+        <span>${topicNames[slug]}</span>
+        <span>${(report.tags || tags[slug] || []).length} trọng tâm</span>
+      </div>
+    </header>
     <div class="dialog-content">
+      ${renderOutline(report, page)}
       ${isEvidenceLesson ? renderContent(page) : renderReport(report, page)}
       ${
         page.sourceUrl

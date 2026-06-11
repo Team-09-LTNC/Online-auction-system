@@ -10,10 +10,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=portfolio-polish-9">
+  <link rel="stylesheet" href="ocean.css?v=ocean-chibi-1">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
   <canvas id="motionCanvas" aria-hidden="true"></canvas>
+  <div class="ocean-decor" aria-hidden="true">
+    <span class="bubble bubble-a"></span><span class="bubble bubble-b"></span>
+    <span class="bubble bubble-c"></span><span class="bubble bubble-d"></span>
+    <span class="jelly jelly-a">◡</span><span class="jelly jelly-b">◡</span>
+  </div>
   <div class="progress" aria-hidden="true"></div>
   <header class="site-header">
     <a class="brand" href="#home" aria-label="Về đầu trang">PVH</a>
@@ -35,11 +41,16 @@
           <a class="btn secondary" href="#reflection">Xem tổng kết</a>
         </div>
       </div>
-      <aside class="hero-art reveal" data-tilt aria-label="Minh họa hành trình học tập">
-        <img class="hero-main-art" src="assets/project-5.png" alt="Sáng tạo nội dung với AI">
-        <div class="floating-art art-one"><img src="assets/project-1.png" alt="Quản lý tập tin"></div>
-        <div class="floating-art art-two"><img src="assets/project-6.png" alt="AI có trách nhiệm"></div>
-        <div class="hero-caption"><strong>Digital learning journey</strong><span>Học - thực hành - phản biện - sáng tạo</span></div>
+      <aside class="hero-art ocean-hero reveal" aria-label="Cá voi và sứa chibi dưới đại dương">
+        <div class="sun-rays"></div>
+        <div class="whale-chibi">
+          <span class="whale-eye"></span><span class="whale-smile"></span>
+          <span class="whale-fin"></span><span class="whale-tail"></span>
+          <span class="whale-spray">• • •</span>
+        </div>
+        <div class="jelly-chibi jelly-one"><span></span></div>
+        <div class="jelly-chibi jelly-two"><span></span></div>
+        <div class="hero-caption"><strong>Hành trình dưới đại dương tri thức</strong><span>Khám phá · thực hành · phản biện · sáng tạo</span></div>
       </aside>
     </section>
     <section id="about" class="section about-section">
@@ -82,6 +93,6 @@
   </dialog>
   <script src="portfolio-data.js"></script>
   <script src="report-data.js?v=portfolio-polish-9"></script>
-  <script src="script.js?v=portfolio-polish-9"></script>
+  <script src="script.js?v=ocean-chibi-1"></script>
 </body>
 </html>
