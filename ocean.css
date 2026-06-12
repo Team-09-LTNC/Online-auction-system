@@ -223,7 +223,6 @@ dialog::backdrop { background:rgba(47,124,158,.25); }
   list-style-position:inside; background:#f8fdff;
 }
 .pdf-preview iframe { display:block; width:100%; height:min(76vh,850px); border:0; background:#eef8fb; }
-.source-link { border-radius:999px;background:linear-gradient(135deg,#35bdd8,#629ae4) }
 .step-evidence { border-radius:20px;box-shadow:0 14px 34px rgba(56,137,171,.1) }
 
 @media(max-width:900px){

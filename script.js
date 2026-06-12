@@ -433,11 +433,6 @@ function openProject(slug) {
             ])
           : renderReport(report, page)
       }
-      ${
-        page.sourceUrl
-          ? `<a class="source-link" href="${page.sourceUrl}" target="_blank" rel="noopener noreferrer">Đối chiếu nội dung gốc trên Google Sites</a>`
-          : ""
-      }
       ${renderFullReport(report, page)}
     </div>
   `;
